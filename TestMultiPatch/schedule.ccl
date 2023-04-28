@@ -1,0 +1,23 @@
+# Schedule definitions for thorn TestMultiPatch
+
+STORAGE: multipatch_test_gfs
+
+if(CCTK_EQUALS(fill_region, "all"))
+{
+  SCHEDULE TestMultiPatch_fill_all AT initial
+  {
+    LANG: C
+    READS: Coordinates::vertex_coords(everywhere)
+    WRITES: multipatch_test_gfs(everywhere)
+  } "Fill test grid function with data everywhere"
+}
+else if(CCTK_EQUALS(fill_region, "int"))
+{
+  SCHEDULE TestMultiPatch_fill_int AT initial
+  {
+    LANG: C
+    READS: Coordinates::vertex_coords(interior)
+    WRITES: multipatch_test_gfs(interior)
+    SYNC: multipatch_test_gfs
+  } "Fill test grid function with data in the interior"
+}

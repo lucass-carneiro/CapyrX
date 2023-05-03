@@ -17,7 +17,7 @@ namespace TestMultiPatch {
 /**
  * Stores a 3-vector
  */
-template <typename real_t> using svec = Arith::vec<real_t, Loop::dim>;
+template <typename real_t> using svec = Arith::vec<real_t, 3>;
 
 /**
  * Stores a 4-vector
@@ -87,7 +87,7 @@ extern "C" void TestMultiPatch_initialize(CCTK_ARGUMENTS) {
         gf_test_gf(index) = cos(plane_wave_w(wave_numbers, offsets, coords));
       };
 
-  grid.loop_all_device<0, 0, 0>(grid.nghostzones, loop_lambda);
+  grid.loop_int_device<0, 0, 0>(grid.nghostzones, loop_lambda);
 }
 
 } // namespace TestMultiPatch

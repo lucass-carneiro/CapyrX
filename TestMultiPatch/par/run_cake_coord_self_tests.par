@@ -48,8 +48,6 @@ TestMultiPatch::space_offset[2] = 0.0
 
 TestMultiPatch::time_offset = 0.0
 
-TestMultiPatch::fill_region = "int"
-
 IO::out_dir = $parfile
 IO::out_every = 1
 

@@ -1,6 +1,7 @@
 #include "cake.hxx"
 #include "tests.hxx"
 
+#include <cctk_Arguments.h>
 #include <cctk_Parameters.h>
 
 #include <cstddef>
@@ -449,8 +450,9 @@ std::string djacobian_test(const PatchTransformations &pt, int patch,
 /**
  * Runs all tests pertaining to the cake patch
  */
-extern "C" void run_cake_tests() {
-  DECLARE_CCTK_PARAMETERS
+extern "C" void MultiPatch_run_cake_tests(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTS;
+  DECLARE_CCTK_PARAMETERS;
 
   using std::mt19937_64;
   using std::uniform_int_distribution;

@@ -1,8 +1,8 @@
 #include "multipatch.hxx"
 
 // TODO: Don't include files from other thorn; create a proper interface
-#include "../../CarpetX/src/driver.hxx"
-#include "../../CarpetX/src/schedule.hxx"
+#include "../../../CarpetX/CarpetX/src/driver.hxx"
+#include "../../../CarpetX/CarpetX/src/schedule.hxx"
 
 #include <loop.hxx>
 

@@ -106,7 +106,7 @@ global_to_local_cake_core(const PatchTransformations &pt, CCTK_REAL a,
 CCTK_DEVICE CCTK_HOST svec local2global(const PatchTransformations &pt,
                                         int patch, const svec &local_vars) {
 
-  svec global_vars = {0.0, 0.0, 0.0};
+  svec global_vars = {0, 0, 0};
 
   const auto a = local_vars(0);
   const auto b = local_vars(1);
@@ -211,10 +211,8 @@ global2local(const PatchTransformations &pt, const svec &global_vars) {
 
   default:
 #ifndef __CUDACC__
-    throw std::runtime_error("error");
-    CCTK_VERROR("At point (%f, %f, %f): No global -> local transformations "
-                "available for patch %s.",
-                x, y, z, piece_name(piece).c_str());
+    CCTK_VERROR("No global -> local transformations available for patch %s",
+                piece_name(piece).c_str());
 #else
     assert(0);
 #endif
@@ -291,8 +289,8 @@ template <patch_piece p> Patch make_patch(const PatchTransformations &pt) {
   patch.ncells = {pt.cake_angular_cells, pt.cake_angular_cells,
                   pt.cake_radial_cells};
 
-  patch.xmin = {-1.0, -1.0, -1.0};
-  patch.xmax = {1.0, 1.0, 1.0};
+  patch.xmin = {-1, -1, -1};
+  patch.xmax = {+1, +1, +1};
 
   patch.is_cartesian = false;
 

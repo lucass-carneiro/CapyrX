@@ -1,8 +1,8 @@
 #include "multipatch.hxx"
 
 // TODO: Don't include files from other thorn; create a proper interface
-#include "../../../CarpetX/CarpetX/src/driver.hxx"
-#include "../../../CarpetX/CarpetX/src/schedule.hxx"
+#include "../../CarpetX/src/driver.hxx"
+#include "../../CarpetX/src/schedule.hxx"
 
 #include <loop.hxx>
 
@@ -116,41 +116,6 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
     SourcePoints source_points;
     // Note: This includes symmetry points
     grid.loop_bnd<0, 0, 0>(grid.nghostzones, [&](const Loop::PointDesc &p) {
-      const auto &normal{p.NI};
-      const auto &current_patch{the_patch_system->patches.at(patch)};
-      const auto &patch_faces{current_patch.faces};
-
-      // TODO: Do not continue, do a loop, clen up.
-      // -x face
-      if (normal[0] < 0 && patch_faces[0][0].is_outer_boundary) {
-        return;
-      }
-
-      // +x face
-      if (normal[0] > 0 && patch_faces[1][0].is_outer_boundary) {
-        return;
-      }
-
-      // -y face
-      if (normal[1] < 0 && patch_faces[0][1].is_outer_boundary) {
-        return;
-      }
-
-      // +y face
-      if (normal[1] > 0 && patch_faces[1][1].is_outer_boundary) {
-        return;
-      }
-
-      // -z face
-      if (normal[2] < 0 && patch_faces[0][2].is_outer_boundary) {
-        return;
-      }
-
-      // +z face
-      if (normal[2] > 0 && patch_faces[1][2].is_outer_boundary) {
-        return;
-      }
-
       for (int d = 0; d < dim; ++d)
         source_points[d].push_back(vcoords[d](p.I));
     });
@@ -219,41 +184,6 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
       std::size_t pos = 0;
       // Note: This includes symmetry points
       grid.loop_bnd<0, 0, 0>(grid.nghostzones, [&](const Loop::PointDesc &p) {
-        const auto &normal{p.NI};
-        const auto &current_patch{the_patch_system->patches.at(patch)};
-        const auto &patch_faces{current_patch.faces};
-
-        // TODO: See line 123
-        // -x face
-        if (normal[0] < 0 && patch_faces[0][0].is_outer_boundary) {
-          return;
-        }
-
-        // +x face
-        if (normal[0] > 0 && patch_faces[1][0].is_outer_boundary) {
-          return;
-        }
-
-        // -y face
-        if (normal[1] < 0 && patch_faces[0][1].is_outer_boundary) {
-          return;
-        }
-
-        // +y face
-        if (normal[1] > 0 && patch_faces[1][1].is_outer_boundary) {
-          return;
-        }
-
-        // -z face
-        if (normal[2] < 0 && patch_faces[0][2].is_outer_boundary) {
-          return;
-        }
-
-        // +z face
-        if (normal[2] > 0 && patch_faces[1][2].is_outer_boundary) {
-          return;
-        }
-
         var(p.I) = result_values_n[pos++];
       });
       assert(pos == result_values.at(0).size());

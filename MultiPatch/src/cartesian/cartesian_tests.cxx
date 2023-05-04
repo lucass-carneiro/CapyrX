@@ -1,7 +1,6 @@
 #include "multipatch.hxx"
 #include "tests.hxx"
 
-#include <cctk_Arguments.h>
 #include <cctk_Parameters.h>
 
 #include <string>
@@ -82,8 +81,7 @@ std::string global2local(const PatchTransformations &pt,
 
 } // namespace MultiPatch
 
-extern "C" void MultiPatch_run_cartesian_tests(CCTK_ARGUMENTS) {
-  DECLARE_CCTK_ARGUMENTS;
+extern "C" void run_cartesian_tests(CCTK_ARGUMENTS) {
   DECLARE_CCTK_PARAMETERS;
 
   using std::mt19937_64;

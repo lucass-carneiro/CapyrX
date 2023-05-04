@@ -1,7 +1,6 @@
 #include "cake.hxx"
 #include "tests.hxx"
 
-#include <cctk_Arguments.h>
 #include <cctk_Parameters.h>
 
 #include <cstddef>
@@ -450,8 +449,7 @@ std::string djacobian_test(const PatchTransformations &pt, int patch,
 /**
  * Runs all tests pertaining to the cake patch
  */
-extern "C" void MultiPatch_run_cake_tests(CCTK_ARGUMENTS) {
-  DECLARE_CCTK_ARGUMENTS;
+extern "C" void run_cake_tests(CCTK_ARGUMENTS) {
   DECLARE_CCTK_PARAMETERS;
 
   using std::mt19937_64;
@@ -478,8 +476,8 @@ extern "C" void MultiPatch_run_cake_tests(CCTK_ARGUMENTS) {
   const auto r0 = pt.cake_inner_boundary_radius;
   const auto r1 = pt.cake_outer_boundary_radius;
 
-  const auto cube_midpoint = r0 / 2.0;
-  const auto patch_midpoint = r0 + (r1 - r0) / 2.0;
+  const auto cube_midpoint = r0 / 2;
+  const auto patch_midpoint = r0 + (r1 - r0) / 2;
 
   CCTK_INFO("Running cake patch tests:");
 
@@ -504,37 +502,36 @@ extern "C" void MultiPatch_run_cake_tests(CCTK_ARGUMENTS) {
       std::make_pair(svec{r0, r0, -r0}, patch_piece::inner_boundary),
 
       // Middle of the +x patch
-      std::make_pair(svec{r0, 0.0, 0.0}, patch_piece::inner_boundary),
-      std::make_pair(svec{patch_midpoint, 0.0, 0.0}, patch_piece::plus_x),
-      std::make_pair(svec{r1, 0.0, 0.0}, patch_piece::outer_boundary),
+      std::make_pair(svec{r0, 0, 0}, patch_piece::inner_boundary),
+      std::make_pair(svec{patch_midpoint, 0, 0}, patch_piece::plus_x),
+      std::make_pair(svec{r1, 0, 0}, patch_piece::outer_boundary),
 
       // Middle of the -x patch
-      std::make_pair(svec{-r0, 0.0, 0.0}, patch_piece::inner_boundary),
-      std::make_pair(svec{-patch_midpoint, 0.0, 0.0}, patch_piece::minus_x),
-      std::make_pair(svec{-r1, 0.0, 0.0}, patch_piece::outer_boundary),
+      std::make_pair(svec{-r0, 0, 0}, patch_piece::inner_boundary),
+      std::make_pair(svec{-patch_midpoint, 0, 0}, patch_piece::minus_x),
+      std::make_pair(svec{-r1, 0, 0}, patch_piece::outer_boundary),
 
       // Middle of the +y patch
-      std::make_pair(svec{0.0, r0, 0.0}, patch_piece::inner_boundary),
-      std::make_pair(svec{0.0, patch_midpoint, 0.0}, patch_piece::plus_y),
-      std::make_pair(svec{0.0, r1, 0.0}, patch_piece::outer_boundary),
+      std::make_pair(svec{0, r0, 0}, patch_piece::inner_boundary),
+      std::make_pair(svec{0, patch_midpoint, 0}, patch_piece::plus_y),
+      std::make_pair(svec{0, r1, 0}, patch_piece::outer_boundary),
 
       // Middle of the -y patch
-      std::make_pair(svec{0.0, -r0, 0.0}, patch_piece::inner_boundary),
-      std::make_pair(svec{0.0, -patch_midpoint, 0.0}, patch_piece::minus_y),
-      std::make_pair(svec{0.0, -r1, 0.0}, patch_piece::outer_boundary),
+      std::make_pair(svec{0, -r0, 0}, patch_piece::inner_boundary),
+      std::make_pair(svec{0, -patch_midpoint, 0}, patch_piece::minus_y),
+      std::make_pair(svec{0, -r1, 0}, patch_piece::outer_boundary),
 
       // Middle of the +z patch
-      std::make_pair(svec{0.0, 0.0, r0}, patch_piece::inner_boundary),
-      std::make_pair(svec{0.0, 0.0, patch_midpoint}, patch_piece::plus_z),
-      std::make_pair(svec{0.0, 0.0, r1}, patch_piece::outer_boundary),
+      std::make_pair(svec{0, 0, r0}, patch_piece::inner_boundary),
+      std::make_pair(svec{0, 0, patch_midpoint}, patch_piece::plus_z),
+      std::make_pair(svec{0, 0, r1}, patch_piece::outer_boundary),
 
       // Middle of the -z patch
-      std::make_pair(svec{0.0, 0.0, -r0}, patch_piece::inner_boundary),
-      std::make_pair(svec{0.0, 0.0, -patch_midpoint}, patch_piece::minus_z),
-      std::make_pair(svec{0.0, 0.0, -r1}, patch_piece::outer_boundary),
+      std::make_pair(svec{0, 0, -r0}, patch_piece::inner_boundary),
+      std::make_pair(svec{0, 0, -patch_midpoint}, patch_piece::minus_z),
+      std::make_pair(svec{0, 0, -r1}, patch_piece::outer_boundary),
 
-      std::make_pair(svec{r1 + 1.0, r1 + 1.0, r1 + 1.0},
-                     patch_piece::exterior)};
+      std::make_pair(svec{r1 + 1, r1 + 1, r1 + 1}, patch_piece::exterior)};
 
   // Tests if the patch owner is correct.
   for (const auto &data : owner_test_data) {
@@ -548,17 +545,17 @@ extern "C" void MultiPatch_run_cake_tests(CCTK_ARGUMENTS) {
    */
   mt19937_64 engine(random_seed);
 
-  uniform_real_distribution<CCTK_REAL> r_distrib(0.0, r1);
-  uniform_real_distribution<CCTK_REAL> theta_distrib(0.0, M_PI);
-  uniform_real_distribution<CCTK_REAL> phi_distrib(0.0, 2.0 * M_PI);
+  uniform_real_distribution<CCTK_REAL> r_distrib(0, r1);
+  uniform_real_distribution<CCTK_REAL> theta_distrib(0, CCTK_REAL(M_PI));
+  uniform_real_distribution<CCTK_REAL> phi_distrib(0, 2 * CCTK_REAL(M_PI));
 
-  uniform_real_distribution<CCTK_REAL> local_distrib(-1.0, 1.0);
+  uniform_real_distribution<CCTK_REAL> local_distrib(-1, 1);
 
   uniform_int_distribution<int> patch_distrib(0, 6);
 
-  auto global_point = svec{0.0, 0.0, 0.0};
-  auto local_point = svec{0.0, 0.0, 0.0};
-  double r = 0.0, theta = 0.0, phi = 0.0;
+  auto global_point = svec{0, 0, 0};
+  auto local_point = svec{0, 0, 0};
+  CCTK_REAL r = 0, theta = 0, phi = 0;
   int patch = 0;
 
   // Tests if local2global(global2local(global)) == global

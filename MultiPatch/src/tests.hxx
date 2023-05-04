@@ -1,6 +1,9 @@
 #ifndef MULTIPATCH_TESTS_HXX
 #define MULTIPATCH_TESTS_HXX
 
+#include <cctk.h>
+#include <cctk_Arguments.h>
+
 #include <cmath>
 #include <functional>
 #include <limits>
@@ -165,5 +168,19 @@ inline vector_t fd2_4(const function_t &function, vector_t point) {
 }
 
 } // namespace MultiPatchTests
+
+/**
+ * Runs all Cartesian patch tests.
+ *
+ * This function needs to be scheduled scheduled at the wragh bin
+ */
+extern "C" void run_cartesian_tests(CCTK_ARGUMENTS);
+
+/**
+ * Runs all Cake patch tests.
+ *
+ * This function needs to be scheduled scheduled at the wragh bin
+ */
+extern "C" void run_cake_tests(CCTK_ARGUMENTS);
 
 #endif // MULTIPATCH_TESTS_HXX

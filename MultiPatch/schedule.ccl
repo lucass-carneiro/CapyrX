@@ -28,7 +28,7 @@ if (!CCTK_EQUALS(patch_system, "none")) {
 
 if (run_tests) {
   if (CCTK_EQUALS(patch_system, "Cartesian")) {
-    SCHEDULE MultiPatch_run_cartesian_tests AT wragh
+    SCHEDULE run_cartesian_tests AT wragh
     {
       LANG: C
       OPTIONS: meta
@@ -36,7 +36,7 @@ if (run_tests) {
   }
 
   if (CCTK_EQUALS(patch_system, "Cake")) {
-    SCHEDULE MultiPatch_run_cake_tests AT wragh
+    SCHEDULE run_cake_tests AT wragh
     {
       LANG: C
       OPTIONS: meta

@@ -1,6 +1,7 @@
 #include "cake.hxx"
 
 #include <cassert>
+#include <cmath>
 
 CCTK_DEVICE CCTK_HOST MultiPatch::Cake::patch_piece
 MultiPatch::Cake::get_owner_patch(const PatchTransformations &pt,
@@ -17,15 +18,15 @@ MultiPatch::Cake::get_owner_patch(const PatchTransformations &pt,
 
   const auto r0 = pt.cake_inner_boundary_radius;
   // const auto r1 = pt.cake_outer_boundary_radius;
-  const auto r = sqrt(Power(x, 2) + Power(y, 2) + Power(z, 2));
+  // const auto r = sqrt(Power(x, 2) + Power(y, 2) + Power(z, 2));
 
-  // Are we on the exterior?
-  // if (r > r1) {
-  //  return patch_piece::exterior;
-  //}
+  // Are we on the inner boundary?
+  if (at_boundary(x, r0) || at_boundary(y, r0) || at_boundary(z, r0)) {
+    return patch_piece::cartesian;
+  }
 
-  // We could be on the interior or on one of the 6 patches
-  if (r <= r0) {
+  // Are we on the Cartesian core?
+  if (within(x, r0) && within(y, r0) && within(z, r0)) {
     return patch_piece::cartesian;
   }
 
@@ -57,7 +58,17 @@ MultiPatch::Cake::get_owner_patch(const PatchTransformations &pt,
     return patch_piece::plus_y;
   } else if (max_coord_sign < 0 && max_coord_idx == 2) {
     return patch_piece::minus_z;
-  } else /*if (max_coord_sign > 0 && max_coord_idx == 2)*/ {
+  } else if (max_coord_sign > 0 && max_coord_idx == 2) {
     return patch_piece::plus_z;
   }
+
+// We don't know where we are. This is unexpected
+#ifndef __CUDACC__
+  CCTK_VERROR("Coordinate triplet (%f, %f, %f) cannot be located within "
+              "the simulation domain",
+              x, y, z);
+#else
+  assert(0);
+#endif
+  return patch_piece::exterior;
 }

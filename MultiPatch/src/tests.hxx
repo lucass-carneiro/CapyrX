@@ -1,6 +1,9 @@
 #ifndef MULTIPATCH_TESTS_HXX
 #define MULTIPATCH_TESTS_HXX
 
+#include <cctk.h>
+#include <cctk_Arguments.h>
+
 #include <cmath>
 #include <functional>
 #include <limits>
@@ -59,8 +62,7 @@ CCTK_DEVICE CCTK_HOST inline bool isapprox(fp_type x, fp_type y,
  */
 template <typename T>
 CCTK_DEVICE CCTK_HOST inline bool within(T variable, T boundary) {
-  return (variable > -boundary && !isapprox(variable, -boundary)) &&
-         (variable < boundary && !isapprox(variable, boundary));
+  return (variable >= -boundary) && (variable <= boundary);
 }
 
 /**

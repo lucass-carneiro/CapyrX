@@ -1,7 +1,6 @@
 #include "cake.hxx"
 #include "tests.hxx"
 
-#include <cctk_Arguments.h>
 #include <cctk_Parameters.h>
 
 #include <cstddef>

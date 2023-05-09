@@ -1,7 +1,6 @@
 #ifndef MULTIPATCH_HXX
 #define MULTIPATCH_HXX
 
-#include <fixmath.hxx>
 #include <cctk.h>
 
 #include <loop.hxx>

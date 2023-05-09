@@ -211,7 +211,7 @@ global2local(const PatchTransformations &pt, const svec &global_vars) {
 
   default:
 #ifndef __CUDACC__
-    throw std::runtime_error("error");
+    // throw std::runtime_error("error");
     CCTK_VERROR("At point (%f, %f, %f): No global -> local transformations "
                 "available for patch %s.",
                 x, y, z, piece_name(piece).c_str());

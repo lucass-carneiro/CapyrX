@@ -157,11 +157,13 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
     const std::size_t length = source_points[0].size();
     std::vector<std::vector<CCTK_REAL> > result_values(nvars);
     for (std::size_t n = 0; n < nvars; ++n)
-      result_values.at(nvars).insert(result_values.at(nvars).begin(),
-                                     &results.at(n).at(pos),
-                                     &results.at(n).at(pos + length));
+      result_values.at(n).insert(result_values.at(n).begin(),
+                                 results.at(n).data() + pos,
+                                 results.at(n).data() + pos + length);
+    pos += length;
     result_mapping[location] = std::move(result_values);
   }
+  assert(pos == results.at(0).size());
 
   // Step 3: Write back results
 

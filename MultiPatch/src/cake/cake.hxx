@@ -37,7 +37,7 @@ using djac_t = vec<smat, dim>;
  * @param predicate The predicate to test.
  * @param msg The message to display while aborting the code.
  */
-CCTK_DEVICE CCTK_HOST inline void expects(bool predicate, const char *msg) {
+/*CCTK_DEVICE CCTK_HOST inline void expects(bool predicate, const char *msg) {
   if (!predicate) {
 #ifndef __CUDACC__
     CCTK_ERROR(msg);
@@ -45,7 +45,7 @@ CCTK_DEVICE CCTK_HOST inline void expects(bool predicate, const char *msg) {
     assert(0);
 #endif
   }
-}
+}*/
 
 /**
  * Compatibility wrapper for replacing Mathematica's Power function.
@@ -85,10 +85,9 @@ enum class patch_piece : int {
   plus_z = 5,
   minus_z = 6,
 
-  inner_boundary = 7,
-  outer_boundary = 8,
+  exterior = 7,
 
-  exterior = -1
+  unknown = 8
 };
 
 /**
@@ -113,12 +112,10 @@ inline const std::string piece_name(const patch_piece &p) {
     return "plus z";
   case static_cast<int>(patch_piece::minus_z):
     return "minus z";
-  case static_cast<int>(patch_piece::inner_boundary):
-    return "inner boundary";
-  case static_cast<int>(patch_piece::outer_boundary):
-    return "outer boundary";
-  default:
+  case static_cast<int>(patch_piece::exterior):
     return "exterior";
+  default:
+    return "unknown";
   }
 }
 

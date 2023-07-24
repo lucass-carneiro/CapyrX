@@ -17,13 +17,6 @@ MultiPatch::Cake::get_owner_patch(const PatchTransformations &pt,
   const auto z = global_vars(2);
 
   const auto r0 = pt.cake_inner_boundary_radius;
-  // const auto r1 = pt.cake_outer_boundary_radius;
-  // const auto r = sqrt(Power(x, 2) + Power(y, 2) + Power(z, 2));
-
-  // Are we on the inner boundary?
-  // if (at_boundary(x, r0) || at_boundary(y, r0) || at_boundary(z, r0)) {
-  //  return patch_piece::cartesian;
-  //}
 
   // Are we on the Cartesian core?
   if (within(x, r0) && within(y, r0) && within(z, r0)) {
@@ -70,5 +63,5 @@ MultiPatch::Cake::get_owner_patch(const PatchTransformations &pt,
 #else
   assert(0);
 #endif
-  return patch_piece::exterior;
+  return patch_piece::unknown;
 }

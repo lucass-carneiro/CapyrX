@@ -3,6 +3,13 @@
 #include <cassert>
 #include <cmath>
 
+/**
+ * @brief Get the patch piece that owns a global coordinate point.
+ *
+ * @param pt The PatchTransformations structure describing the patch system.
+ * @param global_vars The global coordinate triplet to locate the owner for.
+ * @return The patch piece owning the global coordinates.
+ */
 CCTK_DEVICE CCTK_HOST MultiPatch::Cake::patch_piece
 MultiPatch::Cake::get_owner_patch(const PatchTransformations &pt,
                                   const svec &global_vars) {

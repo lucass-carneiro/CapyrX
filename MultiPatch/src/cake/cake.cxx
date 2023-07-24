@@ -211,7 +211,6 @@ global2local(const PatchTransformations &pt, const svec &global_vars) {
 
   default:
 #ifndef __CUDACC__
-    // throw std::runtime_error("error");
     CCTK_VERROR("At point (%f, %f, %f): No global -> local transformations "
                 "available for patch %s.",
                 x, y, z, piece_name(piece).c_str());
@@ -276,7 +275,7 @@ dlocal_dglobal(const PatchTransformations &pt, int patch,
 }
 
 /**
- * Creates a cake patch piece
+ * @brief Creates a cake patch piece
  *
  * @tparam p The piece of the patch to make.
  * @param pt The patch transformation object with patch data.
@@ -345,10 +344,9 @@ template <patch_piece p> Patch make_patch(const PatchTransformations &pt) {
 } // namespace Cake
 
 /**
- * TODO: Add correct host/device annotations for the functions. This work as is
- * if not compiling with the CUDA compiler Creates a Cake patch system
- *
- * @return A PatchSystem object with Cake data and functions
+ * @brief Creates the Cake patch system
+ * 
+ * @return PatchSystem object with Cake data and functions
  */
 PatchSystem SetupCake() {
   PatchTransformations pt;

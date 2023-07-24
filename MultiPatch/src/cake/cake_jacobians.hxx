@@ -4,6 +4,14 @@
 namespace MultiPatch {
 namespace Cake {
 
+/**
+ * @brief Computes the jacobians and Jacobian derivatives of the Cake patch
+ * 
+ * @param pt The patch transformation structures for the patch
+ * @param patch The index of the patch to find the Jacobians for
+ * @param global_vars The global point to evaluate the jacobian in.
+ * @return The jacobian and jacobian derivative data arrays
+*/
 CCTK_DEVICE CCTK_HOST inline std_tuple<jac_t, djac_t>
 cake_jacs(const PatchTransformations &pt, int patch,
           const svec &global_vars) {

@@ -12,43 +12,28 @@ namespace MultiPatch {
 namespace Cake {
 
 /**
- * Stores a 3-vector
+ * @brief Stores a 3-vector
  */
 using svec = vec<CCTK_REAL, dim>;
 
 /**
- * Stores a 3-matrix
+ * @brief Stores a 3-matrix
  */
 using smat = smat<CCTK_REAL, dim>;
 
 /**
- * Stores a Jacobian matrix of 3 dimensions
+ * @brief Stores a Jacobian matrix of 3 dimensions
  */
 using jac_t = vec<vec<CCTK_REAL, dim>, dim>;
 
 /**
- * Stores a the derivatives of a Jacobian matrix of 3 dimensions
+ * @brief Stores a the derivatives of a Jacobian matrix of 3 dimensions
  */
 using djac_t = vec<smat, dim>;
 
-/**
- * Precondition assertion. If the precondition fails, the code is aborted.
- *
- * @param predicate The predicate to test.
- * @param msg The message to display while aborting the code.
- */
-/*CCTK_DEVICE CCTK_HOST inline void expects(bool predicate, const char *msg) {
-  if (!predicate) {
-#ifndef __CUDACC__
-    CCTK_ERROR(msg);
-#else
-    assert(0);
-#endif
-  }
-}*/
 
 /**
- * Compatibility wrapper for replacing Mathematica's Power function.
+ * @brief Compatibility wrapper for replacing Mathematica's Power function.
  *
  * @param n The exponent.
  * @param x The base.
@@ -61,7 +46,7 @@ CCTK_DEVICE CCTK_HOST static inline auto Power(base_type x, exponent_type n) {
 }
 
 /**
- * Compatibility wrapper for replacing Mathematica's Sqrt function.
+ * @brief Compatibility wrapper for replacing Mathematica's Sqrt function.
  *
  * @param x The radicand.
  */
@@ -71,7 +56,7 @@ template <typename T> CCTK_DEVICE CCTK_HOST static inline auto Sqrt(T x) {
 }
 
 /**
- * Tags for each patch piece in the cake
+ * @brief Tags for each patch piece in the cake
  */
 enum class patch_piece : int {
   cartesian = 0,
@@ -91,9 +76,9 @@ enum class patch_piece : int {
 };
 
 /**
- * Gets name from patch piece
+ * @brief Gets name from patch piece
  *
- * @tparam p A patch piece type.
+ * @param p A patch piece type.
  * @return A string representing the name of the piece.
  */
 inline const std::string piece_name(const patch_piece &p) {
@@ -120,7 +105,7 @@ inline const std::string piece_name(const patch_piece &p) {
 }
 
 /**
- * Get the patch piece that owns a global coordinate point.
+ * @brief Get the patch piece that owns a global coordinate point.
  *
  * @param pt The PatchTransformations structure describing the patch system.
  * @param global_vars The global coordinate triplet to locate the owner for.

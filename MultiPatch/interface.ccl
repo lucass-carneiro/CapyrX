@@ -6,6 +6,8 @@ INHERITS: Coordinates
 
 USES INCLUDE HEADER: loop.hxx
 USES INCLUDE HEADER: loop_device.hxx
+USES INCLUDE HEADER: driver.hxx
+USES INCLUDE HEADER: schedule.hxx
 USES INCLUDE HEADER: mat.hxx
 USES INCLUDE HEADER: sum.hxx
 USES INCLUDE HEADER: tuple.hxx

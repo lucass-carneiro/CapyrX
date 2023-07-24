@@ -1,10 +1,8 @@
 #include "multipatch.hxx"
 
-// TODO: Don't include files from other thorn; create a proper interface
-#include "../../../CarpetX/CarpetX/src/driver.hxx"
-#include "../../../CarpetX/CarpetX/src/schedule.hxx"
-
 #include <loop.hxx>
+#include "../../../carpetx/CarpetX/src/driver.hxx"
+#include "../../../carpetx/CarpetX/src/schedule.hxx"
 
 #include <cctk.h>
 
@@ -166,8 +164,8 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
   assert(pos == results.at(0).size());
 
   // Step 3: Write back results
-
-  loop_over_blocks(active_levels_t(), [&](int patch, int level, int index,
+  using namespace CarpetX;
+  loop_over_blocks(CarpetX::active_levels_t(), [&](int patch, int level, int index,
                                           int block, const cGH *cctkGH) {
     const Loop::GridDescBase grid(cctkGH);
     const std::array<int, dim> centering{0, 0, 0};

@@ -1,5 +1,5 @@
-#ifndef MULTIPATCH_HXX
-#define MULTIPATCH_HXX
+#ifndef CAPYRX_MULTIPATCH_MULTIPATCH_HXX
+#define CAPYRX_MULTIPATCH_MULTIPATCH_HXX
 
 #include <cctk.h>
 
@@ -137,4 +137,4 @@ extern std::unique_ptr<PatchSystem> the_patch_system;
 
 } // namespace MultiPatch
 
-#endif // #ifndef MULTIPATCH_HXX
+#endif // #ifndef CAPYRX_MULTIPATCH_MULTIPATCH_HXX

@@ -1,15 +1,12 @@
-#ifndef MULTIPATCH_TESTS_HXX
-#define MULTIPATCH_TESTS_HXX
-
-#include <cctk.h>
-#include <cctk_Arguments.h>
+#ifndef CAPYRX_MULTIPATCH_TESTS_HXX
+#define CAPYRX_MULTIPATCH_TESTS_HXX
 
 #include <cmath>
 #include <functional>
 #include <limits>
 #include <random>
-#include <string>
 #include <sstream>
+#include <string>
 
 namespace MultiPatchTests {
 
@@ -168,4 +165,4 @@ inline vector_t fd2_4(const function_t &function, vector_t point) {
 
 } // namespace MultiPatchTests
 
-#endif // MULTIPATCH_TESTS_HXX
+#endif // CAPYRX_MULTIPATCH_TESTS_HXX

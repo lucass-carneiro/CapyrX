@@ -130,12 +130,12 @@ struct PatchTransformations {
    * Cartesian %Patch: Number of cells in the x direction
    */
   int cartesian_ncells_i;
-  
+
   /**
    * Cartesian %Patch: Number of cells in the y direction
    */
   int cartesian_ncells_j;
-  
+
   /**
    * Cartesian %Patch: Number of cells in the z direction
    */
@@ -145,7 +145,7 @@ struct PatchTransformations {
    * Cubed Sphere %Patch: Inner radius
    */
   CCTK_REAL cubed_sphere_rmin;
-  
+
   /**
    * Cubed Sphere %Patch: Outer radius
    */
@@ -155,12 +155,12 @@ struct PatchTransformations {
    * Swirl %Patch: Number of cells in the x direction
    */
   int swirl_ncells_i;
-  
+
   /**
    * Swirl %Patch: Number of cells in the y direction
    */
   int swirl_ncells_j;
-  
+
   /**
    * Swirl %Patch: Number of cells in the z direction
    */
@@ -170,37 +170,47 @@ struct PatchTransformations {
    * Cake %Patch: Radius of the outer boundary
    */
   CCTK_REAL cake_outer_boundary_radius;
-  
+
   /**
-   * Cake %Patch: Half the coordinate length of the central cartesian cube's face
+   * Cake %Patch: Half the coordinate length of the central cartesian cube's
+   * face
    */
   CCTK_REAL cake_inner_boundary_radius;
-  
+
   /**
-   * Cake %Patch: The number of cells in the x direction of the central cartesian cube.
+   * Cake %Patch: The number of cells in the x direction of the central
+   * cartesian cube.
    */
   int cake_cartesian_ncells_i;
-  
+
   /**
-   * Cake %Patch: The number of cells in the y direction of the central cartesian cube.
+   * Cake %Patch: The number of cells in the y direction of the central
+   * cartesian cube.
    */
   int cake_cartesian_ncells_j;
-  
+
   /**
-   * Cake %Patch: The number of cells in the z direction of the central cartesian cube.
+   * Cake %Patch: The number of cells in the z direction of the central
+   * cartesian cube.
    */
   int cake_cartesian_ncells_k;
-  
+
   /**
-   * Cake %Patch: The number of cells in the angular direction of spherical patches.
+   * Cake %Patch: The number of cells in the angular direction of spherical
+   * patches.
    */
   int cake_angular_cells;
 
   /**
-   * Cake %Patch: The number of cells in the radial direction of spherical patches.
+   * Cake %Patch: The number of cells in the radial direction of spherical
+   * patches.
    */
   int cake_radial_cells;
 
+  /**
+   * Constructs a PatchTransformations object by filling its patch data members
+   * using information from `params.ccl`
+   */
   PatchTransformations();
 
   PatchTransformations(const PatchTransformations &) = default;

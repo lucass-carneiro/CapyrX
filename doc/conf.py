@@ -70,7 +70,7 @@ html_theme_options = {
 }
 html_logo = './CapyrX_logo.png'
 github_url = 'https://github.com/lucass-carneiro/CapyrX'
-# html_baseurl = ''
+html_baseurl = 'https://lucass-carneiro.github.io/CapyrX/index.html'
 
 html_static_path = ['_static']
 

@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="500" src="CapyrX_logo.png">
+  <img width="500" src="doc/CapyrX_logo.png">
 </p>
 
 

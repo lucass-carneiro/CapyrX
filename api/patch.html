@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Patch System Description &mdash; CapyrX 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="API Documentation" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CapyrX
+              <img src="../_static/CapyrX_logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Welcome to CapyrX’s documentation!</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">API Documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Patch System Description</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CapyrX</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">API Documentation</a></li>
+      <li class="breadcrumb-item active">Patch System Description</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/patch.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="patch-system-description">
+<span id="api-foo"></span><h1>Patch System Description<a class="headerlink" href="#patch-system-description" title="Permalink to this heading"></a></h1>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch3dimE">
+<span id="_CPPv3N10MultiPatch3dimE"></span><span id="_CPPv2N10MultiPatch3dimE"></span><span id="MultiPatch::dim__i"></span><span class="target" id="multipatch_8hxx_1a0a7b448518681e0d8e0dd8a1e19aa785"></span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">MultiPatch</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">dim</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">3</span></span><a class="headerlink" href="#_CPPv4N10MultiPatch3dimE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>The number of spatial dimentions each patch will cover </p>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch9PatchFaceE">
+<span id="_CPPv3N10MultiPatch9PatchFaceE"></span><span id="_CPPv2N10MultiPatch9PatchFaceE"></span><span id="MultiPatch::PatchFace"></span><span class="target" id="structMultiPatch_1_1PatchFace"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PatchFace</span></span></span><a class="headerlink" href="#_CPPv4N10MultiPatch9PatchFaceE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Describes the connections of one patch with another patch.</p>
+<p>The interface between two patches is called a patch face. This struct describes such interfaces wherever two patches meet. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch9PatchFace17is_outer_boundaryE">
+<span id="_CPPv3N10MultiPatch9PatchFace17is_outer_boundaryE"></span><span id="_CPPv2N10MultiPatch9PatchFace17is_outer_boundaryE"></span><span id="MultiPatch::PatchFace::is_outer_boundary__b"></span><span class="target" id="structMultiPatch_1_1PatchFace_1aee08febb7877c5b5dfe1d3658b8bc4a8"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">is_outer_boundary</span></span></span><a class="headerlink" href="#_CPPv4N10MultiPatch9PatchFace17is_outer_boundaryE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>True if the face connects with the exterior of the simulation domain. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch9PatchFace11other_patchE">
+<span id="_CPPv3N10MultiPatch9PatchFace11other_patchE"></span><span id="_CPPv2N10MultiPatch9PatchFace11other_patchE"></span><span id="MultiPatch::PatchFace::other_patch__i"></span><span class="target" id="structMultiPatch_1_1PatchFace_1ad3818aa94ae9dce425930cfca299da54"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">other_patch</span></span></span><a class="headerlink" href="#_CPPv4N10MultiPatch9PatchFace11other_patchE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>The index of the neighbouring patch, or -1 if the face is the outer boundary. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch5PatchE">
+<span id="_CPPv3N10MultiPatch5PatchE"></span><span id="_CPPv2N10MultiPatch5PatchE"></span><span id="MultiPatch::Patch"></span><span class="target" id="structMultiPatch_1_1Patch"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Patch</span></span></span><a class="headerlink" href="#_CPPv4N10MultiPatch5PatchE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Describes a patch in the patch system </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch5Patch4nameE">
+<span id="_CPPv3N10MultiPatch5Patch4nameE"></span><span id="_CPPv2N10MultiPatch5Patch4nameE"></span><span id="MultiPatch::Patch::name__ss"></span><span class="target" id="structMultiPatch_1_1Patch_1aa3f1bea6d62a854182813b189fd61463"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">name</span></span></span><a class="headerlink" href="#_CPPv4N10MultiPatch5Patch4nameE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>String repreentation of the name of the patch. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch5Patch6ncellsE">
+<span id="_CPPv3N10MultiPatch5Patch6ncellsE"></span><span id="_CPPv2N10MultiPatch5Patch6ncellsE"></span><span id="MultiPatch::Patch::ncells__vect:i.dim:"></span><span class="target" id="structMultiPatch_1_1Patch_1a98e53e4a9f6b00ac6ceb24b300867eda"></span><span class="n"><span class="pre">vect</span></span><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">int</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch3dimE" title="MultiPatch::dim"><span class="n"><span class="pre">dim</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ncells</span></span></span><a class="headerlink" href="#_CPPv4N10MultiPatch5Patch6ncellsE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>The number of cells in the logical x, y and z dimentions that the patch wil contain. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch5Patch4xminE">
+<span id="_CPPv3N10MultiPatch5Patch4xminE"></span><span id="_CPPv2N10MultiPatch5Patch4xminE"></span><span id="MultiPatch::Patch::xmin__vect:CCTK_REAL.dim:"></span><span class="target" id="structMultiPatch_1_1Patch_1a5290524cb3eb57d11659ffac264cd73c"></span><span class="n"><span class="pre">vect</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">CCTK_REAL</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch3dimE" title="MultiPatch::dim"><span class="n"><span class="pre">dim</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">xmin</span></span></span><a class="headerlink" href="#_CPPv4N10MultiPatch5Patch4xminE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Lower coordinate boundary for each logical x, y, z dimention in the patch </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch5Patch4xmaxE">
+<span id="_CPPv3N10MultiPatch5Patch4xmaxE"></span><span id="_CPPv2N10MultiPatch5Patch4xmaxE"></span><span id="MultiPatch::Patch::xmax__vect:CCTK_REAL.dim:"></span><span class="target" id="structMultiPatch_1_1Patch_1a137d0632d6bf9b64437a42d320407373"></span><span class="n"><span class="pre">vect</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">CCTK_REAL</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch3dimE" title="MultiPatch::dim"><span class="n"><span class="pre">dim</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">xmax</span></span></span><a class="headerlink" href="#_CPPv4N10MultiPatch5Patch4xmaxE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Upper coordinate boundary for each logical x, y, z dimention in the patch </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch5Patch12is_cartesianE">
+<span id="_CPPv3N10MultiPatch5Patch12is_cartesianE"></span><span id="_CPPv2N10MultiPatch5Patch12is_cartesianE"></span><span id="MultiPatch::Patch::is_cartesian__b"></span><span class="target" id="structMultiPatch_1_1Patch_1a028d4ef4aadfa55a0a08e16d27b79e15"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">is_cartesian</span></span></span><a class="headerlink" href="#_CPPv4N10MultiPatch5Patch12is_cartesianE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Wether or not a patch is cartesian. If true, this flag is used to save time during Jacobian calculations. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch5Patch5facesE">
+<span id="_CPPv3N10MultiPatch5Patch5facesE"></span><span id="_CPPv2N10MultiPatch5Patch5facesE"></span><span id="MultiPatch::Patch::faces__vect:vect:PatchFace.dim:.2:"></span><span class="target" id="structMultiPatch_1_1Patch_1a6ef7616a29fa40b7540dc5c4ed470e7f"></span><span class="n"><span class="pre">vect</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">vect</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N10MultiPatch9PatchFaceE" title="MultiPatch::PatchFace"><span class="n"><span class="pre">PatchFace</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch3dimE" title="MultiPatch::dim"><span class="n"><span class="pre">dim</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">2</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">faces</span></span></span><a class="headerlink" href="#_CPPv4N10MultiPatch5Patch5facesE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>TODO: Request Erik’s help </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformationsE">
+<span id="_CPPv3N10MultiPatch20PatchTransformationsE"></span><span id="_CPPv2N10MultiPatch20PatchTransformationsE"></span><span id="MultiPatch::PatchTransformations"></span><span class="target" id="structMultiPatch_1_1PatchTransformations"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PatchTransformations</span></span></span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformationsE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Stores patch transformation functions and patch data.</p>
+<p>Patch transformation functions refer to the local -&gt; global and global -&gt; local coordinate transformations, as well as coordinate transformation Jacobian and their respective derivatives. These functions are patch system specific, and so they are stored as funcion pointers within the struct. All function pointers are duplicate, since one set of functions is intended to be executed on hosts (CPUs) and another set is intended to be executed on devices (GPUs).</p>
+<p>Patch data refers to each patch specific data that is required to setup a patch, such as the number of cells in the patch, global extensions and other parameters that may be required. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformations20PatchTransformationsEv">
+<span id="_CPPv3N10MultiPatch20PatchTransformations20PatchTransformationsEv"></span><span id="_CPPv2N10MultiPatch20PatchTransformations20PatchTransformationsEv"></span><span id="MultiPatch::PatchTransformations::PatchTransformations"></span><span class="target" id="structMultiPatch_1_1PatchTransformations_1aa214b8e96fa33941a351b9fa2dcc056e"></span><span class="sig-name descname"><span class="n"><span class="pre">PatchTransformations</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformations20PatchTransformationsEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformations20PatchTransformationsERK20PatchTransformations">
+<span id="_CPPv3N10MultiPatch20PatchTransformations20PatchTransformationsERK20PatchTransformations"></span><span id="_CPPv2N10MultiPatch20PatchTransformations20PatchTransformationsERK20PatchTransformations"></span><span id="MultiPatch::PatchTransformations::PatchTransformations__PatchTransformationsCR"></span><span class="target" id="structMultiPatch_1_1PatchTransformations_1a8b85f776c2a5a4ecdb715cf8a80ba6c2"></span><span class="sig-name descname"><span class="n"><span class="pre">PatchTransformations</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch20PatchTransformations20PatchTransformationsERK20PatchTransformations" title="MultiPatch::PatchTransformations::PatchTransformations"><span class="n"><span class="pre">PatchTransformations</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">default</span></span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformations20PatchTransformationsERK20PatchTransformations" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformations20PatchTransformationsERR20PatchTransformations">
+<span id="_CPPv3N10MultiPatch20PatchTransformations20PatchTransformationsERR20PatchTransformations"></span><span id="_CPPv2N10MultiPatch20PatchTransformations20PatchTransformationsERR20PatchTransformations"></span><span id="MultiPatch::PatchTransformations::PatchTransformations__PatchTransformationsRR"></span><span class="target" id="structMultiPatch_1_1PatchTransformations_1a80183de88bdf92900d70364cc7b1a329"></span><span class="sig-name descname"><span class="n"><span class="pre">PatchTransformations</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N10MultiPatch20PatchTransformations20PatchTransformationsERR20PatchTransformations" title="MultiPatch::PatchTransformations::PatchTransformations"><span class="n"><span class="pre">PatchTransformations</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">default</span></span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformations20PatchTransformationsERR20PatchTransformations" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformationsaSERK20PatchTransformations">
+<span id="_CPPv3N10MultiPatch20PatchTransformationsaSERK20PatchTransformations"></span><span id="_CPPv2N10MultiPatch20PatchTransformationsaSERK20PatchTransformations"></span><span id="MultiPatch::PatchTransformations::assign-operator__PatchTransformationsCR"></span><span class="target" id="structMultiPatch_1_1PatchTransformations_1a6ff9d1d0ca1116294155ff29b4af3a94"></span><a class="reference internal" href="#_CPPv4N10MultiPatch20PatchTransformationsE" title="MultiPatch::PatchTransformations"><span class="n"><span class="pre">PatchTransformations</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">=</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch20PatchTransformationsE" title="MultiPatch::PatchTransformations"><span class="n"><span class="pre">PatchTransformations</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">default</span></span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformationsaSERK20PatchTransformations" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformationsaSERR20PatchTransformations">
+<span id="_CPPv3N10MultiPatch20PatchTransformationsaSERR20PatchTransformations"></span><span id="_CPPv2N10MultiPatch20PatchTransformationsaSERR20PatchTransformations"></span><span id="MultiPatch::PatchTransformations::assign-operator__PatchTransformationsRR"></span><span class="target" id="structMultiPatch_1_1PatchTransformations_1a5b53baf04bb537686690f23ac2d49538"></span><a class="reference internal" href="#_CPPv4N10MultiPatch20PatchTransformationsE" title="MultiPatch::PatchTransformations"><span class="n"><span class="pre">PatchTransformations</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">=</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N10MultiPatch20PatchTransformationsE" title="MultiPatch::PatchTransformations"><span class="n"><span class="pre">PatchTransformations</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">default</span></span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformationsaSERR20PatchTransformations" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformations14cartesian_xminE">
+<span id="_CPPv3N10MultiPatch20PatchTransformations14cartesian_xminE"></span><span id="_CPPv2N10MultiPatch20PatchTransformations14cartesian_xminE"></span><span id="MultiPatch::PatchTransformations::cartesian_xmin__CCTK_REAL"></span><span class="target" id="structMultiPatch_1_1PatchTransformations_1a1985220dc92324e348e56dabf2f896d9"></span><span class="n"><span class="pre">CCTK_REAL</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">cartesian_xmin</span></span></span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformations14cartesian_xminE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Cartesian Patch: Lower x coordinate boundary </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformations14cartesian_xmaxE">
+<span id="_CPPv3N10MultiPatch20PatchTransformations14cartesian_xmaxE"></span><span id="_CPPv2N10MultiPatch20PatchTransformations14cartesian_xmaxE"></span><span id="MultiPatch::PatchTransformations::cartesian_xmax__CCTK_REAL"></span><span class="target" id="structMultiPatch_1_1PatchTransformations_1a9adb062ab2f9a4ae90675f99d42ed58f"></span><span class="n"><span class="pre">CCTK_REAL</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">cartesian_xmax</span></span></span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformations14cartesian_xmaxE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Cartesian Patch: Upper x coordinate boundary </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformations14cartesian_yminE">
+<span id="_CPPv3N10MultiPatch20PatchTransformations14cartesian_yminE"></span><span id="_CPPv2N10MultiPatch20PatchTransformations14cartesian_yminE"></span><span id="MultiPatch::PatchTransformations::cartesian_ymin__CCTK_REAL"></span><span class="target" id="structMultiPatch_1_1PatchTransformations_1aa673c61466c9bd9c78113b8a19b96bc5"></span><span class="n"><span class="pre">CCTK_REAL</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">cartesian_ymin</span></span></span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformations14cartesian_yminE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Cartesian Patch: Lower y coordinate boundary </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformations14cartesian_ymaxE">
+<span id="_CPPv3N10MultiPatch20PatchTransformations14cartesian_ymaxE"></span><span id="_CPPv2N10MultiPatch20PatchTransformations14cartesian_ymaxE"></span><span id="MultiPatch::PatchTransformations::cartesian_ymax__CCTK_REAL"></span><span class="target" id="structMultiPatch_1_1PatchTransformations_1aa4055c0a51dd1a409ee7012c82c85c33"></span><span class="n"><span class="pre">CCTK_REAL</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">cartesian_ymax</span></span></span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformations14cartesian_ymaxE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Cartesian Patch: Upper y coordinate boundary </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformations14cartesian_zminE">
+<span id="_CPPv3N10MultiPatch20PatchTransformations14cartesian_zminE"></span><span id="_CPPv2N10MultiPatch20PatchTransformations14cartesian_zminE"></span><span id="MultiPatch::PatchTransformations::cartesian_zmin__CCTK_REAL"></span><span class="target" id="structMultiPatch_1_1PatchTransformations_1a49719c24d99d1dbaafec5723d0f3d87a"></span><span class="n"><span class="pre">CCTK_REAL</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">cartesian_zmin</span></span></span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformations14cartesian_zminE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Cartesian Patch: Lower z coordinate boundary </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformations14cartesian_zmaxE">
+<span id="_CPPv3N10MultiPatch20PatchTransformations14cartesian_zmaxE"></span><span id="_CPPv2N10MultiPatch20PatchTransformations14cartesian_zmaxE"></span><span id="MultiPatch::PatchTransformations::cartesian_zmax__CCTK_REAL"></span><span class="target" id="structMultiPatch_1_1PatchTransformations_1a94ff3493dc89e36d3ef49a0b86b6cf0d"></span><span class="n"><span class="pre">CCTK_REAL</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">cartesian_zmax</span></span></span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformations14cartesian_zmaxE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Cartesian Patch: Upper z coordinate boundary </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformations18cartesian_ncells_iE">
+<span id="_CPPv3N10MultiPatch20PatchTransformations18cartesian_ncells_iE"></span><span id="_CPPv2N10MultiPatch20PatchTransformations18cartesian_ncells_iE"></span><span id="MultiPatch::PatchTransformations::cartesian_ncells_i__i"></span><span class="target" id="structMultiPatch_1_1PatchTransformations_1a445a8b10d59302cfa82bec40db636e1c"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">cartesian_ncells_i</span></span></span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformations18cartesian_ncells_iE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Cartesian Patch: Number of cells in the x direction </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformations18cartesian_ncells_jE">
+<span id="_CPPv3N10MultiPatch20PatchTransformations18cartesian_ncells_jE"></span><span id="_CPPv2N10MultiPatch20PatchTransformations18cartesian_ncells_jE"></span><span id="MultiPatch::PatchTransformations::cartesian_ncells_j__i"></span><span class="target" id="structMultiPatch_1_1PatchTransformations_1a4b52ce1714f3802498e042b3b32e7968"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">cartesian_ncells_j</span></span></span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformations18cartesian_ncells_jE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Cartesian Patch: Number of cells in the y direction </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformations18cartesian_ncells_kE">
+<span id="_CPPv3N10MultiPatch20PatchTransformations18cartesian_ncells_kE"></span><span id="_CPPv2N10MultiPatch20PatchTransformations18cartesian_ncells_kE"></span><span id="MultiPatch::PatchTransformations::cartesian_ncells_k__i"></span><span class="target" id="structMultiPatch_1_1PatchTransformations_1ad6a9baed7aa4ff2cb7f92a5a3294c665"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">cartesian_ncells_k</span></span></span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformations18cartesian_ncells_kE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Cartesian Patch: Number of cells in the z direction </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformations17cubed_sphere_rminE">
+<span id="_CPPv3N10MultiPatch20PatchTransformations17cubed_sphere_rminE"></span><span id="_CPPv2N10MultiPatch20PatchTransformations17cubed_sphere_rminE"></span><span id="MultiPatch::PatchTransformations::cubed_sphere_rmin__CCTK_REAL"></span><span class="target" id="structMultiPatch_1_1PatchTransformations_1a609b8d957d8cf196dd61198daf8deb32"></span><span class="n"><span class="pre">CCTK_REAL</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">cubed_sphere_rmin</span></span></span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformations17cubed_sphere_rminE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Cubed Sphere Patch: Inner radius </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformations17cubed_sphere_rmaxE">
+<span id="_CPPv3N10MultiPatch20PatchTransformations17cubed_sphere_rmaxE"></span><span id="_CPPv2N10MultiPatch20PatchTransformations17cubed_sphere_rmaxE"></span><span id="MultiPatch::PatchTransformations::cubed_sphere_rmax__CCTK_REAL"></span><span class="target" id="structMultiPatch_1_1PatchTransformations_1aac6e4eee6ae6af34eb2a5640e1693ba7"></span><span class="n"><span class="pre">CCTK_REAL</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">cubed_sphere_rmax</span></span></span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformations17cubed_sphere_rmaxE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Cubed Sphere Patch: Outer radius </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformations14swirl_ncells_iE">
+<span id="_CPPv3N10MultiPatch20PatchTransformations14swirl_ncells_iE"></span><span id="_CPPv2N10MultiPatch20PatchTransformations14swirl_ncells_iE"></span><span id="MultiPatch::PatchTransformations::swirl_ncells_i__i"></span><span class="target" id="structMultiPatch_1_1PatchTransformations_1a2df2a816357a1543eb85f79c4d70f5db"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">swirl_ncells_i</span></span></span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformations14swirl_ncells_iE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Swirl Patch: Number of cells in the x direction </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformations14swirl_ncells_jE">
+<span id="_CPPv3N10MultiPatch20PatchTransformations14swirl_ncells_jE"></span><span id="_CPPv2N10MultiPatch20PatchTransformations14swirl_ncells_jE"></span><span id="MultiPatch::PatchTransformations::swirl_ncells_j__i"></span><span class="target" id="structMultiPatch_1_1PatchTransformations_1ac58e175f24f50db1cedb34ec8cda289d"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">swirl_ncells_j</span></span></span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformations14swirl_ncells_jE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Swirl Patch: Number of cells in the y direction </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformations14swirl_ncells_kE">
+<span id="_CPPv3N10MultiPatch20PatchTransformations14swirl_ncells_kE"></span><span id="_CPPv2N10MultiPatch20PatchTransformations14swirl_ncells_kE"></span><span id="MultiPatch::PatchTransformations::swirl_ncells_k__i"></span><span class="target" id="structMultiPatch_1_1PatchTransformations_1a55d16403431b5af6c39b979d59e3bf7d"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">swirl_ncells_k</span></span></span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformations14swirl_ncells_kE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Swirl Patch: Number of cells in the z direction </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformations26cake_outer_boundary_radiusE">
+<span id="_CPPv3N10MultiPatch20PatchTransformations26cake_outer_boundary_radiusE"></span><span id="_CPPv2N10MultiPatch20PatchTransformations26cake_outer_boundary_radiusE"></span><span id="MultiPatch::PatchTransformations::cake_outer_boundary_radius__CCTK_REAL"></span><span class="target" id="structMultiPatch_1_1PatchTransformations_1a4f903f5e5e1ed61de66ff78a80fe3c6f"></span><span class="n"><span class="pre">CCTK_REAL</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">cake_outer_boundary_radius</span></span></span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformations26cake_outer_boundary_radiusE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Cake Patch: Radius of the outer boundary </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformations26cake_inner_boundary_radiusE">
+<span id="_CPPv3N10MultiPatch20PatchTransformations26cake_inner_boundary_radiusE"></span><span id="_CPPv2N10MultiPatch20PatchTransformations26cake_inner_boundary_radiusE"></span><span id="MultiPatch::PatchTransformations::cake_inner_boundary_radius__CCTK_REAL"></span><span class="target" id="structMultiPatch_1_1PatchTransformations_1a17386d29521af4d643c1a1d9f31698a7"></span><span class="n"><span class="pre">CCTK_REAL</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">cake_inner_boundary_radius</span></span></span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformations26cake_inner_boundary_radiusE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Cake Patch: Half the coordinate length of the central cartesian cube’s face </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformations23cake_cartesian_ncells_iE">
+<span id="_CPPv3N10MultiPatch20PatchTransformations23cake_cartesian_ncells_iE"></span><span id="_CPPv2N10MultiPatch20PatchTransformations23cake_cartesian_ncells_iE"></span><span id="MultiPatch::PatchTransformations::cake_cartesian_ncells_i__i"></span><span class="target" id="structMultiPatch_1_1PatchTransformations_1a1e5c515abd5cfef58e291611ac46a7a3"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">cake_cartesian_ncells_i</span></span></span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformations23cake_cartesian_ncells_iE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Cake Patch: The number of cells in the x direction of the central cartesian cube. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformations23cake_cartesian_ncells_jE">
+<span id="_CPPv3N10MultiPatch20PatchTransformations23cake_cartesian_ncells_jE"></span><span id="_CPPv2N10MultiPatch20PatchTransformations23cake_cartesian_ncells_jE"></span><span id="MultiPatch::PatchTransformations::cake_cartesian_ncells_j__i"></span><span class="target" id="structMultiPatch_1_1PatchTransformations_1a11ffb9b598030ac807cb46a6f650adcd"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">cake_cartesian_ncells_j</span></span></span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformations23cake_cartesian_ncells_jE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Cake Patch: The number of cells in the y direction of the central cartesian cube. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformations23cake_cartesian_ncells_kE">
+<span id="_CPPv3N10MultiPatch20PatchTransformations23cake_cartesian_ncells_kE"></span><span id="_CPPv2N10MultiPatch20PatchTransformations23cake_cartesian_ncells_kE"></span><span id="MultiPatch::PatchTransformations::cake_cartesian_ncells_k__i"></span><span class="target" id="structMultiPatch_1_1PatchTransformations_1a2faef107f325ab7aaa45235dbbb9cc6a"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">cake_cartesian_ncells_k</span></span></span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformations23cake_cartesian_ncells_kE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Cake Patch: The number of cells in the z direction of the central cartesian cube. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformations18cake_angular_cellsE">
+<span id="_CPPv3N10MultiPatch20PatchTransformations18cake_angular_cellsE"></span><span id="_CPPv2N10MultiPatch20PatchTransformations18cake_angular_cellsE"></span><span id="MultiPatch::PatchTransformations::cake_angular_cells__i"></span><span class="target" id="structMultiPatch_1_1PatchTransformations_1ab7acdf233f28c9cd9e579061d61c9148"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">cake_angular_cells</span></span></span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformations18cake_angular_cellsE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Cake Patch: The number of cells in the angular direction of spherical patches. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformations17cake_radial_cellsE">
+<span id="_CPPv3N10MultiPatch20PatchTransformations17cake_radial_cellsE"></span><span id="_CPPv2N10MultiPatch20PatchTransformations17cake_radial_cellsE"></span><span id="MultiPatch::PatchTransformations::cake_radial_cells__i"></span><span class="target" id="structMultiPatch_1_1PatchTransformations_1af4ceece413b675fb5497786878450a44"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">cake_radial_cells</span></span></span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformations17cake_radial_cellsE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Cake Patch: The number of cells in the radial direction of spherical patches. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformations12global2localE">
+<span id="_CPPv3N10MultiPatch20PatchTransformations12global2localE"></span><span id="_CPPv2N10MultiPatch20PatchTransformations12global2localE"></span><span class="target" id="structMultiPatch_1_1PatchTransformations_1a9ec76ffdd62745a0bd71034800ea3981"></span><span class="n"><span class="pre">std_tuple</span></span><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">int</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">vec</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">CCTK_REAL</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch3dimE" title="MultiPatch::dim"><span class="n"><span class="pre">dim</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">global2local</span></span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">(</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch20PatchTransformationsE" title="MultiPatch::PatchTransformations"><span class="n"><span class="pre">PatchTransformations</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n"><span class="pre">pt</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">vec</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">CCTK_REAL</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch3dimE" title="MultiPatch::dim"><span class="n"><span class="pre">dim</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">)</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformations12global2localE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformations12local2globalE">
+<span id="_CPPv3N10MultiPatch20PatchTransformations12local2globalE"></span><span id="_CPPv2N10MultiPatch20PatchTransformations12local2globalE"></span><span class="target" id="structMultiPatch_1_1PatchTransformations_1a77cdd548b98cc7156f661d61bc042bcb"></span><span class="n"><span class="pre">vec</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">CCTK_REAL</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch3dimE" title="MultiPatch::dim"><span class="n"><span class="pre">dim</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">local2global</span></span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">(</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch20PatchTransformationsE" title="MultiPatch::PatchTransformations"><span class="n"><span class="pre">PatchTransformations</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n"><span class="pre">pt</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">patch</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">vec</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">CCTK_REAL</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch3dimE" title="MultiPatch::dim"><span class="n"><span class="pre">dim</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">)</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformations12local2globalE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformations14dlocal_dglobalE">
+<span id="_CPPv3N10MultiPatch20PatchTransformations14dlocal_dglobalE"></span><span id="_CPPv2N10MultiPatch20PatchTransformations14dlocal_dglobalE"></span><span class="target" id="structMultiPatch_1_1PatchTransformations_1ada29eeff93b53e07d5b1c48b38604779"></span><span class="n"><span class="pre">std_tuple</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">vec</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">CCTK_REAL</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch3dimE" title="MultiPatch::dim"><span class="n"><span class="pre">dim</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">vec</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">vec</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">CCTK_REAL</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch3dimE" title="MultiPatch::dim"><span class="n"><span class="pre">dim</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch3dimE" title="MultiPatch::dim"><span class="n"><span class="pre">dim</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">dlocal_dglobal</span></span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">(</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch20PatchTransformationsE" title="MultiPatch::PatchTransformations"><span class="n"><span class="pre">PatchTransformations</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n"><span class="pre">pt</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">patch</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">vec</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">CCTK_REAL</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch3dimE" title="MultiPatch::dim"><span class="n"><span class="pre">dim</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">)</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformations14dlocal_dglobalE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformations16d2local_dglobal2E">
+<span id="_CPPv3N10MultiPatch20PatchTransformations16d2local_dglobal2E"></span><span id="_CPPv2N10MultiPatch20PatchTransformations16d2local_dglobal2E"></span><span class="target" id="structMultiPatch_1_1PatchTransformations_1a03fa5f9d852dcb2cd84da3debdddf979"></span><span class="n"><span class="pre">std_tuple</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">vec</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">CCTK_REAL</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch3dimE" title="MultiPatch::dim"><span class="n"><span class="pre">dim</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">vec</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">vec</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">CCTK_REAL</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch3dimE" title="MultiPatch::dim"><span class="n"><span class="pre">dim</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch3dimE" title="MultiPatch::dim"><span class="n"><span class="pre">dim</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">vec</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">smat</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">CCTK_REAL</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch3dimE" title="MultiPatch::dim"><span class="n"><span class="pre">dim</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch3dimE" title="MultiPatch::dim"><span class="n"><span class="pre">dim</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">d2local_dglobal2</span></span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">(</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch20PatchTransformationsE" title="MultiPatch::PatchTransformations"><span class="n"><span class="pre">PatchTransformations</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n"><span class="pre">pt</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">patch</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">vec</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">CCTK_REAL</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch3dimE" title="MultiPatch::dim"><span class="n"><span class="pre">dim</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">)</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformations16d2local_dglobal2E" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformations19global2local_deviceE">
+<span id="_CPPv3N10MultiPatch20PatchTransformations19global2local_deviceE"></span><span id="_CPPv2N10MultiPatch20PatchTransformations19global2local_deviceE"></span><span class="target" id="structMultiPatch_1_1PatchTransformations_1a47f9f32b6fdb56333adbcb1a599dcf1a"></span><span class="n"><span class="pre">std_tuple</span></span><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">int</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">vec</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">CCTK_REAL</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch3dimE" title="MultiPatch::dim"><span class="n"><span class="pre">dim</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">global2local_device</span></span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">(</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch20PatchTransformationsE" title="MultiPatch::PatchTransformations"><span class="n"><span class="pre">PatchTransformations</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n"><span class="pre">pt</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">vec</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">CCTK_REAL</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch3dimE" title="MultiPatch::dim"><span class="n"><span class="pre">dim</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">)</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformations19global2local_deviceE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformations19local2global_deviceE">
+<span id="_CPPv3N10MultiPatch20PatchTransformations19local2global_deviceE"></span><span id="_CPPv2N10MultiPatch20PatchTransformations19local2global_deviceE"></span><span class="target" id="structMultiPatch_1_1PatchTransformations_1a45d20cb20c3d5d6e59f0bad151604c9c"></span><span class="n"><span class="pre">vec</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">CCTK_REAL</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch3dimE" title="MultiPatch::dim"><span class="n"><span class="pre">dim</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">local2global_device</span></span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">(</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch20PatchTransformationsE" title="MultiPatch::PatchTransformations"><span class="n"><span class="pre">PatchTransformations</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n"><span class="pre">pt</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">patch</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">vec</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">CCTK_REAL</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch3dimE" title="MultiPatch::dim"><span class="n"><span class="pre">dim</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">)</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformations19local2global_deviceE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformations21dlocal_dglobal_deviceE">
+<span id="_CPPv3N10MultiPatch20PatchTransformations21dlocal_dglobal_deviceE"></span><span id="_CPPv2N10MultiPatch20PatchTransformations21dlocal_dglobal_deviceE"></span><span class="target" id="structMultiPatch_1_1PatchTransformations_1addb234b93f57922c6e92810dbedd111d"></span><span class="n"><span class="pre">std_tuple</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">vec</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">CCTK_REAL</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch3dimE" title="MultiPatch::dim"><span class="n"><span class="pre">dim</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">vec</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">vec</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">CCTK_REAL</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch3dimE" title="MultiPatch::dim"><span class="n"><span class="pre">dim</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch3dimE" title="MultiPatch::dim"><span class="n"><span class="pre">dim</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">dlocal_dglobal_device</span></span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">(</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch20PatchTransformationsE" title="MultiPatch::PatchTransformations"><span class="n"><span class="pre">PatchTransformations</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n"><span class="pre">pt</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">patch</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">vec</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">CCTK_REAL</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch3dimE" title="MultiPatch::dim"><span class="n"><span class="pre">dim</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">)</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformations21dlocal_dglobal_deviceE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N10MultiPatch20PatchTransformations23d2local_dglobal2_deviceE">
+<span id="_CPPv3N10MultiPatch20PatchTransformations23d2local_dglobal2_deviceE"></span><span id="_CPPv2N10MultiPatch20PatchTransformations23d2local_dglobal2_deviceE"></span><span class="target" id="structMultiPatch_1_1PatchTransformations_1a5fac65ea083bea78f19b2d1817fd350d"></span><span class="n"><span class="pre">std_tuple</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">vec</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">CCTK_REAL</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch3dimE" title="MultiPatch::dim"><span class="n"><span class="pre">dim</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">vec</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">vec</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">CCTK_REAL</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch3dimE" title="MultiPatch::dim"><span class="n"><span class="pre">dim</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch3dimE" title="MultiPatch::dim"><span class="n"><span class="pre">dim</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">vec</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">smat</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">CCTK_REAL</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch3dimE" title="MultiPatch::dim"><span class="n"><span class="pre">dim</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch3dimE" title="MultiPatch::dim"><span class="n"><span class="pre">dim</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">d2local_dglobal2_device</span></span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">(</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch20PatchTransformationsE" title="MultiPatch::PatchTransformations"><span class="n"><span class="pre">PatchTransformations</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n"><span class="pre">pt</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">patch</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">vec</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">CCTK_REAL</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N10MultiPatch3dimE" title="MultiPatch::dim"><span class="n"><span class="pre">dim</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">)</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N10MultiPatch20PatchTransformations23d2local_dglobal2_deviceE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="API Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Lucas T. Sanches and Erik Schnetter.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

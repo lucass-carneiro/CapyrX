@@ -78,6 +78,8 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:aa214b8e96fa33941a351b9fa2dcc056e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMultiPatch_1_1PatchTransformations.html#aa214b8e96fa33941a351b9fa2dcc056e">PatchTransformations</a> ()</td></tr>
+<tr class="separator:aa214b8e96fa33941a351b9fa2dcc056e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8b85f776c2a5a4ecdb715cf8a80ba6c2"><td class="memItemLeft" align="right" valign="top"><a id="a8b85f776c2a5a4ecdb715cf8a80ba6c2"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>PatchTransformations</b> (const <a class="el" href="structMultiPatch_1_1PatchTransformations.html">PatchTransformations</a> &amp;)=default</td></tr>
 <tr class="separator:a8b85f776c2a5a4ecdb715cf8a80ba6c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -164,7 +166,26 @@ std_tuple&lt; vec&lt; CCTK_REAL, dim &gt;, vec&lt; vec&lt; CCTK_REAL, dim &gt;, 
 <div class="textblock"><p>Stores patch transformation functions and patch data.</p>
 <p>Patch transformation functions refer to the local -&gt; global and global -&gt; local coordinate transformations, as well as coordinate transformation Jacobian and their respective derivatives. These functions are patch system specific, and so they are stored as funcion pointers within the struct. All function pointers are duplicate, since one set of functions is intended to be executed on hosts (CPUs) and another set is intended to be executed on devices (GPUs).</p>
 <p>Patch data refers to each patch specific data that is required to setup a patch, such as the number of cells in the patch, global extensions and other parameters that may be required. </p>
-</div><h2 class="groupheader">Member Data Documentation</h2>
+</div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a id="aa214b8e96fa33941a351b9fa2dcc056e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa214b8e96fa33941a351b9fa2dcc056e">&#9670;&nbsp;</a></span>PatchTransformations()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">MultiPatch::PatchTransformations::PatchTransformations </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Constructs a <a class="el" href="structMultiPatch_1_1PatchTransformations.html">PatchTransformations</a> object by filling its patch data members using information from <code>params.ccl</code> </p>
+
+</div>
+</div>
+<h2 class="groupheader">Member Data Documentation</h2>
 <a id="ab7acdf233f28c9cd9e579061d61c9148"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab7acdf233f28c9cd9e579061d61c9148">&#9670;&nbsp;</a></span>cake_angular_cells</h2>
 

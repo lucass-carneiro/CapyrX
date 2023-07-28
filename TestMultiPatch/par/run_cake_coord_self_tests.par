@@ -11,6 +11,7 @@ Cactus::cctk_show_schedule = yes
 Cactus::cctk_itlast = 0
 
 CarpetX::verbose = yes
+CarpetX::poison_undefined_values = yes
 
 # TODO: Blocking factors != 1 throw "domain size not divisible by blocking_factor"
 CarpetX::blocking_factor_x = 1

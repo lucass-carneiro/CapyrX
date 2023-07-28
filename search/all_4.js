@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['is_5fcartesian_21',['is_cartesian',['../structMultiPatch_1_1Patch.html#a028d4ef4aadfa55a0a08e16d27b79e15',1,'MultiPatch::Patch']]],
-  ['is_5fouter_5fboundary_22',['is_outer_boundary',['../structMultiPatch_1_1PatchFace.html#aee08febb7877c5b5dfe1d3658b8bc4a8',1,'MultiPatch::PatchFace']]]
+  ['global2local_28',['global2local',['../structMultiPatch_1_1PatchTransformations.html#a569c2c43c2535292133087abfa824efb',1,'MultiPatch::PatchTransformations']]],
+  ['global2local_5fdevice_29',['global2local_device',['../structMultiPatch_1_1PatchTransformations.html#a6b8200371dca6a47e32b00c7a9205941',1,'MultiPatch::PatchTransformations']]],
+  ['global2local_5ffunc_30',['global2local_func',['../structMultiPatch_1_1PatchTransformations.html#af5667525b010184c912418c04c77dd1f',1,'MultiPatch::PatchTransformations']]]
 ];

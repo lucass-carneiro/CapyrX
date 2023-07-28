@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['other_5fpatch_69',['other_patch',['../structMultiPatch_1_1PatchFace.html#ad3818aa94ae9dce425930cfca299da54',1,'MultiPatch::PatchFace']]]
+  ['is_5fcartesian_108',['is_cartesian',['../structMultiPatch_1_1Patch.html#a028d4ef4aadfa55a0a08e16d27b79e15',1,'MultiPatch::Patch']]],
+  ['is_5fouter_5fboundary_109',['is_outer_boundary',['../structMultiPatch_1_1PatchFace.html#aee08febb7877c5b5dfe1d3658b8bc4a8',1,'MultiPatch::PatchFace']]]
 ];

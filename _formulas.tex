@@ -1,0 +1,24 @@
+\documentclass{article}
+\usepackage{ifthen}
+\usepackage{epsfig}
+\usepackage[utf8]{inputenc}
+\usepackage{newunicodechar}
+  \newunicodechar{⁻}{${}^{-}$}% Superscript minus
+  \newunicodechar{²}{${}^{2}$}% Superscript two
+  \newunicodechar{³}{${}^{3}$}% Superscript three
+
+\pagestyle{empty}
+\begin{document}
+\[J^{i}_{\phantom{i}j} = \frac{\mathrm{d} a^i}{\mathrm{d} x^j}\]
+\pagebreak
+
+$J^{i}_{\phantom{i}j}$
+\pagebreak
+
+\[J^{i}_{\phantom{i}jk} = \frac{\mathrm{d}^2 a^i}{\mathrm{d} x^j \mathrm{d}x^k}\]
+\pagebreak
+
+$J^{i}_{\phantom{i}jk}$
+\pagebreak
+
+\end{document}

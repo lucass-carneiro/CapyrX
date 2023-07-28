@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['hash_3c_20multipatch_3a_3alocation_20_3e_20',['hash&lt; MultiPatch::Location &gt;',['../structstd_1_1hash_3_01MultiPatch_1_1Location_01_4.html',1,'std']]]
+  ['faces_27',['faces',['../structMultiPatch_1_1Patch.html#a6ef7616a29fa40b7540dc5c4ed470e7f',1,'MultiPatch::Patch']]]
 ];

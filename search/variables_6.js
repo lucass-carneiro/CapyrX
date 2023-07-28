@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['xmax_73',['xmax',['../structMultiPatch_1_1Patch.html#a137d0632d6bf9b64437a42d320407373',1,'MultiPatch::Patch']]],
-  ['xmin_74',['xmin',['../structMultiPatch_1_1Patch.html#a5290524cb3eb57d11659ffac264cd73c',1,'MultiPatch::Patch']]]
+  ['name_112',['name',['../structMultiPatch_1_1Patch.html#aa3f1bea6d62a854182813b189fd61463',1,'MultiPatch::Patch::name()'],['../structMultiPatch_1_1PatchSystem.html#a086ab80ecdb412f922098138a86ce179',1,'MultiPatch::PatchSystem::name()']]],
+  ['ncells_113',['ncells',['../structMultiPatch_1_1Patch.html#a98e53e4a9f6b00ac6ceb24b300867eda',1,'MultiPatch::Patch']]]
 ];

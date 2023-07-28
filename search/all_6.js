@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['name_25',['name',['../structMultiPatch_1_1Patch.html#aa3f1bea6d62a854182813b189fd61463',1,'MultiPatch::Patch']]],
-  ['ncells_26',['ncells',['../structMultiPatch_1_1Patch.html#a98e53e4a9f6b00ac6ceb24b300867eda',1,'MultiPatch::Patch']]]
+  ['is_5fcartesian_32',['is_cartesian',['../structMultiPatch_1_1Patch.html#a028d4ef4aadfa55a0a08e16d27b79e15',1,'MultiPatch::Patch']]],
+  ['is_5fouter_5fboundary_33',['is_outer_boundary',['../structMultiPatch_1_1PatchFace.html#aee08febb7877c5b5dfe1d3658b8bc4a8',1,'MultiPatch::PatchFace']]]
 ];

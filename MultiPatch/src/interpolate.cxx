@@ -25,7 +25,7 @@ struct Location {
   int patch;
   int level;
   int index;
-  int block;
+  int component;
 };
 } // namespace MultiPatch
 
@@ -34,16 +34,16 @@ template <> struct equal_to<MultiPatch::Location> {
   bool operator()(const MultiPatch::Location &x,
                   const MultiPatch::Location &y) const {
     return std::equal_to<std::array<int, 4> >()(
-        std::array<int, 4>{x.patch, x.level, x.index, x.block},
-        std::array<int, 4>{y.patch, y.level, y.index, y.block});
+        std::array<int, 4>{x.patch, x.level, x.index, x.component},
+        std::array<int, 4>{y.patch, y.level, y.index, y.component});
   }
 };
 template <> struct less<MultiPatch::Location> {
   bool operator()(const MultiPatch::Location &x,
                   const MultiPatch::Location &y) const {
     return std::less<std::array<int, 4> >()(
-        std::array<int, 4>{x.patch, x.level, x.index, x.block},
-        std::array<int, 4>{y.patch, y.level, y.index, y.block});
+        std::array<int, 4>{x.patch, x.level, x.index, x.component},
+        std::array<int, 4>{y.patch, y.level, y.index, y.component});
   }
 };
 template <> struct hash<MultiPatch::Location> {
@@ -51,7 +51,7 @@ template <> struct hash<MultiPatch::Location> {
     return hash_combine(hash_combine(hash_combine(std::hash<int>()(x.patch),
                                                   std::hash<int>()(x.level)),
                                      std::hash<int>()(x.index)),
-                        std::hash<int>()(x.block));
+                        std::hash<int>()(x.component));
   }
 };
 } // namespace std
@@ -92,8 +92,9 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
   // Step 1: Find coordinates where we need to interpolate
 
   std::map<Location, SourcePoints> source_mapping;
-  loop_over_blocks(active_levels_t(), [&](int patch, int level, int index,
-                                          int block, const cGH *cctkGH) {
+  loop_over_components(active_levels_t(), [&](int patch, int level, int index,
+                                              int component,
+                                              const cGH *cctkGH) {
     const Loop::GridDescBase grid(cctkGH);
     const std::array<int, dim> centering{0, 0, 0};
     const Loop::GF3D2layout layout(cctkGH, centering);
@@ -101,7 +102,7 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
     const auto &current_patch{the_patch_system->patches.at(patch)};
     const auto &patch_faces{current_patch.faces};
 
-    const Location location{patch, level, index, block};
+    const Location location{patch, level, index, component};
 
     const std::array<Loop::GF3D2<const CCTK_REAL>, dim> vcoords{
         Loop::GF3D2<const CCTK_REAL>(
@@ -187,8 +188,9 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
 
   // Step 3: Write back results
   using namespace CarpetX;
-  loop_over_blocks(CarpetX::active_levels_t(), [&](int patch, int level, int index,
-                                          int block, const cGH *cctkGH) {
+  loop_over_components(CarpetX::active_levels_t(), [&](int patch, int level,
+                                                       int index, int component,
+                                                       const cGH *cctkGH) {
     const Loop::GridDescBase grid(cctkGH);
     const std::array<int, dim> centering{0, 0, 0};
     const Loop::GF3D2layout layout(cctkGH, centering);
@@ -196,7 +198,7 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
     const auto &current_patch{the_patch_system->patches.at(patch)};
     const auto &patch_faces{current_patch.faces};
 
-    const Location location{patch, level, index, block};
+    const Location location{patch, level, index, component};
     const std::vector<std::vector<CCTK_REAL> > &result_values =
         result_mapping.at(location);
 

@@ -32,14 +32,18 @@ constexpr const CCTK_REAL fd_comp_tol = 1.0e-7; // sqrt(machine eps)
 /**
  * Test two floating point values for approximate equality.
  *
- * This function is based on
- * https://docs.julialang.org/en/v1/base/math/#Base.isapprox
+ * This function is based on the [Julia langage
+ * implementation](https://docs.julialang.org/en/v1/base/math/#Base.isapprox)
  *
- * @param x The first number to compare.
- * @param y The second number to compare.
- * @param atol The absolute tolerance for the comparison.
- * @param rtol The relative tolerance of the comparison.
- * @return True if x ~ y, false otherwise.
+ * @par Inputs:
+ * 1. `fp_type`: A floating point type.
+ * 2. `fp_type x`: The first number to compare.
+ * 3. `fp_type y`: The second number to compare.
+ * 4. `fp_type atol`: The absolute tolerance for the comparison.
+ * 5. `fp_type rtol`: The relative tolerance of the comparison.
+ *
+ * @par Returns:
+ * True if `x` ~ `y`, false otherwise.
  */
 template <typename fp_type>
 CCTK_DEVICE CCTK_HOST inline bool isapprox(fp_type x, fp_type y,
@@ -54,11 +58,16 @@ CCTK_DEVICE CCTK_HOST inline bool isapprox(fp_type x, fp_type y,
 }
 
 /**
- * Test if -boundary < variable < boundary. Fails if variable ~= +/- boundary.
+ * Test if `-boundary < variable < boundary`.
+ * Fails if `variable ~= (+/- boundary)`.
  *
- * @param variable The variable to test.
- * @param boundary The absolute value of the region boundary
- * @return A boolean indicating if the variable is within the region.
+ * @par Inputs:
+ * 1. `T`: A floating point type.
+ * 2. `T variable`: The variable to test.
+ * 3. `T boundary`: The absolute value of the region boundary
+ *
+ * @par Returns:
+ * True if the variable is within the region, false otherwise.
  */
 template <typename T>
 CCTK_DEVICE CCTK_HOST inline bool within(T variable, T boundary) {
@@ -66,11 +75,15 @@ CCTK_DEVICE CCTK_HOST inline bool within(T variable, T boundary) {
 }
 
 /**
- * Test if -boundary ~= variable or variable ~= boundary.
+ * Test if `-boundary ~= variable` or `variable ~= boundary`.
  *
- * @param variable The variable to test.
- * @param boundary The absolute value of the region boundary
- * @return A boolean indicating if the variable is within the region.
+ * @par Inputs
+ * 1. `T`: A floating point type.
+ * 2. `T variable`: The variable to test.
+ * 3. `T boundary`: The absolute value of the region boundary
+ *
+ * @par Returns:
+ * True if `variable ~= boundary`, false otherwise.
  */
 template <typename T>
 CCTK_DEVICE CCTK_HOST inline bool at_boundary(T variable, T boundary) {
@@ -78,16 +91,19 @@ CCTK_DEVICE CCTK_HOST inline bool at_boundary(T variable, T boundary) {
 }
 
 /**
- * Tag representing possible colors to apply to strings.
+ * Tag representing possible colors to apply to diagnostic strings.
  */
 enum class string_color { green, red };
 
 /**
  * Formats a string to be colored in ANSI compatible terminals.
  *
- * @tparam color The color to use.
- * @param string The string to color.
- * @return The colored string.
+ * @par Inputs:
+ * 1. `string_color color`: The color to use.
+ * 2. `std::string &str`: The string to color.
+ *
+ * @par Returns:
+ * The colored string.
  */
 template <string_color color> std::string colored(const std ::string &str) {
   std::ostringstream output;
@@ -105,27 +121,39 @@ template <string_color color> std::string colored(const std ::string &str) {
   return output.str();
 }
 
+/**
+ * Test passed banner.
+ */
 const auto PASSED = colored<string_color::green>("PASSED");
+
+/**
+ * Test failed banner.
+ */
 const auto FAILED = colored<string_color::red>("FAILED");
 
 /**
- * Determines the direction that a finite difference derivative will be
+ * Tags for the direction that a finite difference derivative will be
  * performed
  */
 enum class fd_direction { x = 0, y = 1, z = 2 };
 
 /**
- * Computes the second order accurate finite difference derivative of a
- * function that takes a vector as input and produces another vector as output
- * in a specified direction.
+ * Computes the fourth order accurate finite difference approximation to the
+ * first derivative of a function that takes a vector as input and produces
+ * another vector as output in a specified direction.
  *
- * @param function The function to derivate
- * @param point The point where the derivative is to be computed.
- * @tparam dir The direction of the derivative.
- * @return The derivative of function in the specified direction and point.
+ * @par Inputs:
+ * 1. `fd_direction dir`: The direction of the derivative
+ * 2. `vector_t`: A vector/array type.
+ * 3. `function_t`: The type signature of the function being derived.
+ * 4. `function_t &function`: The function to be derived.
+ * 5. `const vector_t &point`: The point where the derivative is to be computed.
+ *
+ * @par Returns:
+ * The first derivative of function in the specified direction and point.
  */
 template <fd_direction dir, typename vector_t, typename function_t>
-inline vector_t fd_4(const function_t &function, vector_t point) {
+inline vector_t fd_4(const function_t &function, const vector_t &point) {
 
   vector_t point_p_1d = point;
   vector_t point_p_2d = point;
@@ -144,9 +172,25 @@ inline vector_t fd_4(const function_t &function, vector_t point) {
   return (f_m_2d - 8 * f_m_1d + 8 * f_p_1d - f_p_2d) / (12 * fd_delta);
 }
 
+/**
+ * Computes the fourth order accurate finite difference approximation to the
+ * second derivative of a function that takes a vector as input and produces
+ * another vector as output in a specified direction.
+ *
+ * @par Inputs:
+ * 1. `fd_direction dir_inner`: The direction of the first derivative
+ * 2. `fd_direction dir_inner`: The direction of the second derivative
+ * 3. `vector_t`: A vector/array type.
+ * 4. `function_t`: The type signature of the function being derived.
+ * 5. `function_t &function`: The function to be derived.
+ * 6. `const vector_t &point`: The point where the derivative is to be computed.
+ *
+ * @par Returns:
+ * The second derivative of function in the specified direction and point.
+ */
 template <fd_direction dir_inner, fd_direction dir_outer, typename vector_t,
           typename function_t>
-inline vector_t fd2_4(const function_t &function, vector_t point) {
+inline vector_t fd2_4(const function_t &function, const vector_t &point) {
 
   vector_t point_p_1d = point;
   vector_t point_p_2d = point;

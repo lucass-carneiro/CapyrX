@@ -14,13 +14,19 @@
 #include <utility>
 #include <vector>
 
+/**
+ * The namespace where all MultiPatch related infrastructure is located
+ */
 namespace MultiPatch {
+
 using namespace Arith;
 
 /**
  * The number of spatial dimentions each patch will cover
  */
 constexpr int dim = 3;
+
+////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Describes the connections of one patch with another patch.
@@ -45,7 +51,6 @@ struct PatchFace {
  * Describes a patch in the patch system
  */
 struct Patch {
-
   /**
    * String repreentation of the name of the patch.
    */
@@ -74,10 +79,12 @@ struct Patch {
   bool is_cartesian;
 
   /**
-   * TODO: Request Erik's help
+   * Store the 6 faces of a patch, repreenting its connection with other patches
    */
   vect<vect<PatchFace, dim>, 2> faces;
 };
+
+////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Stores patch transformation functions and patch data.
@@ -95,11 +102,207 @@ struct Patch {
  * parameters that may be required.
  */
 struct PatchTransformations {
+  /**
+   * Construct a new Patch Transformations object.
+   *
+   * The constructor reads cactus parameters and assigns them to the internal
+   * data storage during construction.
+   */
+  PatchTransformations();
 
   /**
-   * Cartesian %Patch: Lower x coordinate boundary
+   * Construct a new Patch Transformations object by copying another object of
+   * the same type
    */
-  CCTK_REAL cartesian_xmin;
+  PatchTransformations(const PatchTransformations &) = default;
+
+  /**
+   * Construct a new Patch Transformations object by moving from another object
+   * of the same type
+   */
+  PatchTransformations(PatchTransformations &&) = default;
+
+  /**
+   * Construct a new Patch Transformations object using the assignment operator
+   * by copying another object of the same type
+   */
+  PatchTransformations &operator=(const PatchTransformations &) = default;
+
+  /**
+   * Construct a new Patch Transformations object using the assignment operator
+   * by moving from another object of the same type
+   */
+  PatchTransformations &operator=(PatchTransformations &&) = default;
+
+  /**
+   * Type alias for representing spatial vectors. Used for representing
+   * coordinate tuples.
+   */
+  using svec_t = vec<CCTK_REAL, dim>;
+
+  /**
+   * Type alias for representing Jacobian components
+   */
+  using jac_t = vec<vec<CCTK_REAL, dim>, dim>;
+
+  /**
+   * Type alias for representing Jacobian derivative components
+   */
+  using djac_t = vec<smat<CCTK_REAL, dim>, dim>;
+
+  /**
+   * Type alias for a function pointer that points to a `global2local` like
+   * function, responsible for transforming coordinates from global coordinates
+   * to patch local coordinates.
+   *
+   * @par Inputs:
+   * 1. `const PatchTransformations &pt`: Reference to a PatchTransformations
+   * structure from which patch data will be obtained.
+   * 2. `const svec_t &global_vars`: Reference to a tuple of global coordinates
+   * to be transformed to local coordiantes.
+   *
+   * @par Returns:
+   *  A 2-element tuple containing:
+   *  1. The index of the patch owning the local coordinates.\n
+   *  2. The local coordinates.
+   */
+  using global2local_func = std_tuple<int, svec_t> (*)(
+      const PatchTransformations &pt, const svec_t &global_vars);
+
+  /**
+   * Type alias for a function pointer that points to a `local2global` like
+   * function, responsible for transforming coordinates from patch local
+   * coordinates to global coordinates.
+   *
+   * @par Inputs:
+   * 1. `const PatchTransformations &pt`: Reference to a PatchTransformations
+   * structure from which patch data will be obtained.
+   * 2. `int patch`: The index of the patch that owns the local coordinates to
+   * be transformed.
+   * 3. `const svec_t &local_vars`: Reference to a tuple of local coordinates
+   * to be transformed to global coordiantes.
+   *
+   * @par Returns:
+   * An svec_t object containing the transformd global coordinates.
+   */
+  using local2global_func = svec_t (*)(const PatchTransformations &pt,
+                                       int patch, const svec_t &local_vars);
+
+  /**
+   * Type alias for a function pointer that points to a `dlocal_dglobal` like
+   * function, responsible for computing the coordinate transformation's
+   * Jacobian components.
+   *
+   * @par Inputs:
+   * 1. `const PatchTransformations &pt`: Reference to a PatchTransformations
+   * structure from which patch data will be obtained.
+   * 2. `int patch`: The index representing the patch for which Jacobians should
+   * be calculated.
+   * 3. `const svec_t &local_vars`: Reference to a tuple of local coordinates
+   * where the Jacobian will be evaluated.
+   *
+   * @par Returns:
+   * A 2 element tuple containing:
+   * 1. The global coordinates obtained by calling `local2global` on the
+   * `local_vars` input.
+   * 2. The components of the local -> global coordinate transformation
+   * Jacobian.
+   *
+   * @note Mathematically, Jacobians are defined as
+   * \f[J^{i}_{\phantom{i}j} = \frac{\mathrm{d} a^i}{\mathrm{d} x^j}\f]
+   * In code, \f$J^{i}_{\phantom{i}j}\f$ is acessed by calling `J(i)(j)` on a
+   * `jac_t` type object.
+   */
+  using dlocal_dglobal_fun = std_tuple<svec_t, jac_t> (*)(
+      const PatchTransformations &pt, int patch, const svec_t &local_vars);
+
+  /**
+   * Type alias for a function pointer that points to a `d2local_dglobal2_fun`
+   * like function, responsible for computing the coordinate transformation's
+   * Jacobian derivative components.
+   *
+   * @par Inputs:
+   * 1. `const PatchTransformations &pt`: Reference to a PatchTransformations
+   * structure from which patch data will be obtained.
+   * 2. `int patch`: The index representing the patch for which Jacobian
+   * derivatives should be calculated.
+   * 3. `const svec_t &local_vars`: Reference to a tuple of local coordinates
+   * where the Jacobian will be evaluated.
+   *
+   * @par Returns:
+   * A 3 element tuple containing:
+   * 1. The global coordinates obtained by calling `local2global` on the
+   * `local_vars` input.
+   * 2. The components of the local -> global coordinate transformation
+   * Jacobian, obtained by calling `dlocal_dglobal` on the input data.
+   * 3. The components of the local -> global coordinate transformation Jacobian
+   * derivatives.
+   *
+   * @note Mathematically, Jacobians are defined as
+   * \f[J^{i}_{\phantom{i}j} = \frac{\mathrm{d} a^i}{\mathrm{d} x^j}\f]
+   * and their derivatives as
+   * \f[J^{i}_{\phantom{i}jk} = \frac{\mathrm{d}^2 a^i}{\mathrm{d} x^j
+   * \mathrm{d}x^k}\f] In code, \f$J^{i}_{\phantom{i}jk}\f$ is acessed by
+   * calling `J(i)(j,k)` on a `djac_t` type object.
+   */
+  using d2local_dglobal2_fun = std_tuple<svec_t, jac_t, djac_t> (*)(
+      const PatchTransformations &pt, int patch, const svec_t &local_vars);
+
+  /**
+   * Pointer to a function with signature as described in global2local_func,
+   * performing global -> local coordinate transformations. This function is
+   * called on the host (CPU).
+   */
+  global2local_func global2local{nullptr};
+
+  /**
+   * Pointer to a function with signature as described in local2global_func,
+   * performing local -> global coordinate transformations. This function is
+   * called on the host (CPU).
+   */
+  local2global_func local2global{nullptr};
+
+  /**
+   * Pointer to a function with signature as described in dlocal_dglobal_fun,
+   * computing local -> global coordinate transformations Jacobian components.
+   * This function is called on the host (CPU).
+   */
+  dlocal_dglobal_fun dlocal_dglobal{nullptr};
+
+  /**
+   * Pointer to a function with signature as described in d2local_dglobal2_fun,
+   * computing local -> global coordinate transformations. Jacobian derivative
+   * components. This function is called on the host (CPU).
+   */
+  d2local_dglobal2_fun d2local_dglobal2{nullptr};
+
+  /**
+   * Pointer to a function with signature as described in global2local_func,
+   * performing global -> local coordinate transformations. This function is
+   * called on the device (GPU).
+   */
+  global2local_func global2local_device{nullptr};
+
+  /**
+   * Pointer to a function with signature as described in local2global_func,
+   * performing local -> global coordinate transformations. This function is
+   * called on the device (GPU).
+   */
+  local2global_func local2global_device{nullptr};
+
+  /**
+   * Pointer to a function with signature as described in dlocal_dglobal_fun,
+   * computing local -> global coordinate transformations Jacobian components.
+   * This function is called on the device (GPU).
+   */
+  dlocal_dglobal_fun dlocal_dglobal_device{nullptr};
+
+  /**
+   * Pointer to a function with signature as described in d2local_dglobal2_fun,
+   * computing local -> global coordinate transformations. Jacobian derivative
+   * components. This function is called on the device (GPU).
+   */
+  d2local_dglobal2_fun d2local_dglobal2_device{nullptr};
 
   /**
    * Cartesian %Patch: Upper x coordinate boundary
@@ -107,9 +310,9 @@ struct PatchTransformations {
   CCTK_REAL cartesian_xmax;
 
   /**
-   * Cartesian %Patch: Lower y coordinate boundary
+   * Cartesian %Patch: Lower x coordinate boundary
    */
-  CCTK_REAL cartesian_ymin;
+  CCTK_REAL cartesian_xmin;
 
   /**
    * Cartesian %Patch: Upper y coordinate boundary
@@ -117,14 +320,19 @@ struct PatchTransformations {
   CCTK_REAL cartesian_ymax;
 
   /**
-   * Cartesian %Patch: Lower z coordinate boundary
+   * Cartesian %Patch: Lower y coordinate boundary
    */
-  CCTK_REAL cartesian_zmin;
+  CCTK_REAL cartesian_ymin;
 
   /**
    * Cartesian %Patch: Upper z coordinate boundary
    */
   CCTK_REAL cartesian_zmax;
+
+  /**
+   * Cartesian %Patch: Lower z coordinate boundary
+   */
+  CCTK_REAL cartesian_zmin;
 
   /**
    * Cartesian %Patch: Number of cells in the x direction
@@ -206,62 +414,54 @@ struct PatchTransformations {
    * patches.
    */
   int cake_radial_cells;
-
-  /**
-   * Constructs a PatchTransformations object by filling its patch data members
-   * using information from `params.ccl`
-   */
-  PatchTransformations();
-
-  PatchTransformations(const PatchTransformations &) = default;
-  PatchTransformations(PatchTransformations &&) = default;
-  PatchTransformations &operator=(const PatchTransformations &) = default;
-  PatchTransformations &operator=(PatchTransformations &&) = default;
-
-  std_tuple<int, vec<CCTK_REAL, dim> > (*global2local)(
-      const PatchTransformations &pt, const vec<CCTK_REAL, dim> &x) = 0;
-
-  vec<CCTK_REAL, dim> (*local2global)(const PatchTransformations &pt, int patch,
-                                      const vec<CCTK_REAL, dim> &a) = 0;
-
-  // Calculating global derivatives d/dx from local derivatives d/da
-  // requires the Jacobian da/dx, and also its derivative d^2/dx^2 for
-  // second derivatives
-
-  // da/dx[i,j] = da[i] / dx[j]
-  std_tuple<vec<CCTK_REAL, dim>, vec<vec<CCTK_REAL, dim>, dim> > (
-      *dlocal_dglobal)(const PatchTransformations &pt, int patch,
-                       const vec<CCTK_REAL, dim> &a) = 0;
-
-  // d^2a/dx^2[i,j,k] = d^2a[i] / dx^2[j,k]
-  std_tuple<vec<CCTK_REAL, dim>, vec<vec<CCTK_REAL, dim>, dim>,
-            vec<smat<CCTK_REAL, dim>, dim> > (*d2local_dglobal2)(
-      const PatchTransformations &pt, int patch,
-      const vec<CCTK_REAL, dim> &a) = 0;
-
-  // Device functions mirroring the function above
-  std_tuple<int, vec<CCTK_REAL, dim> > (*global2local_device)(
-      const PatchTransformations &pt, const vec<CCTK_REAL, dim> &x) = 0;
-  vec<CCTK_REAL, dim> (*local2global_device)(const PatchTransformations &pt,
-                                             int patch,
-                                             const vec<CCTK_REAL, dim> &a) = 0;
-  std_tuple<vec<CCTK_REAL, dim>, vec<vec<CCTK_REAL, dim>, dim> > (
-      *dlocal_dglobal_device)(const PatchTransformations &pt, int patch,
-                              const vec<CCTK_REAL, dim> &a) = 0;
-  std_tuple<vec<CCTK_REAL, dim>, vec<vec<CCTK_REAL, dim>, dim>,
-            vec<smat<CCTK_REAL, dim>, dim> > (*d2local_dglobal2_device)(
-      const PatchTransformations &pt, int patch,
-      const vec<CCTK_REAL, dim> &a) = 0;
 };
 
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Describes a patch system, that is, a collection of patches and patch
+ * transformations
+ */
 struct PatchSystem {
+
+  /**
+   * String repreentation of the name of the patch system
+   */
   std::string name;
+
+  /**
+   * A vector containing all patches in the system.
+   */
   std::vector<Patch> patches;
+
+  /**
+   * Returns the current number of patches in the system.
+   *
+   * @par Returns:
+   * an `int` containing the number of patches in the system.
+   */
   int num_patches() const { return patches.size(); }
 
+  /**
+   * A PatchTransformations containing patch data and coordinate transfomation
+   * functions.
+   */
   PatchTransformations transformations;
 
+  /**
+   * Constructs a new empty PatchSystem object
+   */
   PatchSystem() {}
+
+  /**
+   * Construct a new Patch System object
+   *
+   * @par Inputs:
+   * 1. `std::string name`: The name of the patch system.
+   * 2. `std::vector<Patch> patches`: The patches comprising the patch system.
+   * 3. `PatchTransformations transformations`: The patch system coordinate
+   * transformations and data object.
+   */
   PatchSystem(std::string name, std::vector<Patch> patches,
               PatchTransformations transformations)
       : name(std::move(name)), patches(std::move(patches)),
@@ -270,11 +470,41 @@ struct PatchSystem {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * @brief Creates a Cartesian patch system
+ *
+ * @par Returns:
+ * A PatchSystem object with Cartesian coordinates.
+ */
 PatchSystem SetupCartesian();
+
+/**
+ * @brief Creates a Cubed Sphere sphere patch system
+ *
+ * @par Returns:
+ * A PatchSystem object with Cubed Sphere coordinates.
+ */
 PatchSystem SetupCubedSphere();
+
+/**
+ * @brief Creates a Swirl patch system
+ *
+ * @par Returns:
+ * A PatchSystem object with Swirl coordinates.
+ */
 PatchSystem SetupSwirl();
+
+/**
+ * @brief Creates a Cake patch system
+ *
+ * @par Returns:
+ * A PatchSystem object with Cake coordinates.
+ */
 PatchSystem SetupCake();
 
+/**
+ * Pointer to the global PatchSystem objct use during a simulation
+ */
 extern std::unique_ptr<PatchSystem> the_patch_system;
 
 } // namespace MultiPatch

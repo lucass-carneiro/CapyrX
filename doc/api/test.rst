@@ -1,7 +1,7 @@
 .. _api_test_hxx:
 
 Testing facilities
-==================
+##################
 
 .. doxygenvariable:: MultiPatchTests::random_seed
    :project: CapyrX

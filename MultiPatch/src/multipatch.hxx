@@ -17,58 +17,200 @@
 namespace MultiPatch {
 using namespace Arith;
 
+/**
+ * The number of spatial dimentions each patch will cover
+ */
 constexpr int dim = 3;
 
+/**
+ * Describes the connections of one patch with another patch.
+ *
+ * The interface between two patches is called a patch face. This struct
+ * describes such interfaces wherever two patches meet.
+ */
 struct PatchFace {
+  /**
+   * True if the face connects with the exterior of the simulation domain.
+   */
   bool is_outer_boundary;
-  int other_patch; // -1 if outer boundary
+
+  /**
+   * The index of the neighbouring patch, or -1 if the face is the outer
+   *boundary.
+   **/
+  int other_patch;
 };
 
+/**
+ * Describes a patch in the patch system
+ */
 struct Patch {
+
+  /**
+   * String repreentation of the name of the patch.
+   */
   std::string name;
+
+  /**
+   * The number of cells in the logical x, y and z dimentions that the patch wil
+   * contain.
+   */
   vect<int, dim> ncells;
-  vect<CCTK_REAL, dim> xmin, xmax; // cell boundaries
-  bool is_cartesian;               // Jacobian is trivial
+
+  /**
+   * Lower coordinate boundary for each logical x, y, z dimention in the patch
+   */
+  vect<CCTK_REAL, dim> xmin;
+
+  /**
+   * Upper coordinate boundary for each logical x, y, z dimention in the patch
+   */
+  vect<CCTK_REAL, dim> xmax;
+
+  /**
+   * Wether or not a patch is cartesian. If true, this flag is used to save time
+   * during Jacobian calculations.
+   */
+  bool is_cartesian;
+
+  /**
+   * TODO: Request Erik's help
+   */
   vect<vect<PatchFace, dim>, 2> faces;
 };
 
+/**
+ * Stores patch transformation functions and patch data.
+ *
+ * %Patch transformation functions refer to the local -> global and global ->
+ * local coordinate transformations, as well as coordinate transformation
+ * Jacobian and their respective derivatives. These functions are patch system
+ * specific, and so they are stored as funcion pointers within the struct. All
+ * function pointers are duplicate, since one set of functions is intended to be
+ * executed on hosts (CPUs) and another set is intended to be executed on
+ * devices (GPUs).
+ *
+ * %Patch data refers to each patch specific data that is required to setup a
+ * patch, such as the number of cells in the patch, global extensions and other
+ * parameters that may be required.
+ */
 struct PatchTransformations {
-  // Cartesian
-  CCTK_REAL cartesian_xmax;
+
+  /**
+   * Cartesian %Patch: Lower x coordinate boundary
+   */
   CCTK_REAL cartesian_xmin;
-  CCTK_REAL cartesian_ymax;
+
+  /**
+   * Cartesian %Patch: Upper x coordinate boundary
+   */
+  CCTK_REAL cartesian_xmax;
+
+  /**
+   * Cartesian %Patch: Lower y coordinate boundary
+   */
   CCTK_REAL cartesian_ymin;
-  CCTK_REAL cartesian_zmax;
+
+  /**
+   * Cartesian %Patch: Upper y coordinate boundary
+   */
+  CCTK_REAL cartesian_ymax;
+
+  /**
+   * Cartesian %Patch: Lower z coordinate boundary
+   */
   CCTK_REAL cartesian_zmin;
+
+  /**
+   * Cartesian %Patch: Upper z coordinate boundary
+   */
+  CCTK_REAL cartesian_zmax;
+
+  /**
+   * Cartesian %Patch: Number of cells in the x direction
+   */
   int cartesian_ncells_i;
+
+  /**
+   * Cartesian %Patch: Number of cells in the y direction
+   */
   int cartesian_ncells_j;
+
+  /**
+   * Cartesian %Patch: Number of cells in the z direction
+   */
   int cartesian_ncells_k;
 
-  // Cubed sphere
+  /**
+   * Cubed Sphere %Patch: Inner radius
+   */
   CCTK_REAL cubed_sphere_rmin;
+
+  /**
+   * Cubed Sphere %Patch: Outer radius
+   */
   CCTK_REAL cubed_sphere_rmax;
 
-  // Swirl
+  /**
+   * Swirl %Patch: Number of cells in the x direction
+   */
   int swirl_ncells_i;
+
+  /**
+   * Swirl %Patch: Number of cells in the y direction
+   */
   int swirl_ncells_j;
+
+  /**
+   * Swirl %Patch: Number of cells in the z direction
+   */
   int swirl_ncells_k;
 
-  // Cake
-  // The radius of the outer boundary
+  /**
+   * Cake %Patch: Radius of the outer boundary
+   */
   CCTK_REAL cake_outer_boundary_radius;
-  // Half the coordinate length of the central cartesian cube's face
+
+  /**
+   * Cake %Patch: Half the coordinate length of the central cartesian cube's
+   * face
+   */
   CCTK_REAL cake_inner_boundary_radius;
-  // The number of cells in the x direction of the central cartesian cube
+
+  /**
+   * Cake %Patch: The number of cells in the x direction of the central
+   * cartesian cube.
+   */
   int cake_cartesian_ncells_i;
-  // The number of cells in the y direction of the central cartesian cube
+
+  /**
+   * Cake %Patch: The number of cells in the y direction of the central
+   * cartesian cube.
+   */
   int cake_cartesian_ncells_j;
-  // The number of cells in the z direction of the central cartesian cube
+
+  /**
+   * Cake %Patch: The number of cells in the z direction of the central
+   * cartesian cube.
+   */
   int cake_cartesian_ncells_k;
-  // The number of cells in the angular direction of spherical patches
+
+  /**
+   * Cake %Patch: The number of cells in the angular direction of spherical
+   * patches.
+   */
   int cake_angular_cells;
-  // The number of cells in the radial direction of spherical patches
+
+  /**
+   * Cake %Patch: The number of cells in the radial direction of spherical
+   * patches.
+   */
   int cake_radial_cells;
 
+  /**
+   * Constructs a PatchTransformations object by filling its patch data members
+   * using information from `params.ccl`
+   */
   PatchTransformations();
 
   PatchTransformations(const PatchTransformations &) = default;

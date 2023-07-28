@@ -1,7 +1,7 @@
 .. _api_multipatch_hxx:
 
 Patch System Description
-========================
+########################
 
 .. doxygenvariable:: MultiPatch::the_patch_system
    :project: CapyrX

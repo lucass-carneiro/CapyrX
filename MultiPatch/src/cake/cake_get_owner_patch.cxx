@@ -1,7 +1,6 @@
 #include "cake.hxx"
 
 #include <cassert>
-#include <cmath>
 
 /**
  * @brief Get the patch piece that owns a global coordinate point.

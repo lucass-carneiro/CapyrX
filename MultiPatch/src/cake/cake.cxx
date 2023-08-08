@@ -246,8 +246,8 @@ CCTK_DEVICE CCTK_HOST std_tuple<svec, jac_t, djac_t>
 d2local_dglobal2(const PatchTransformations &pt, int patch,
                  const svec &local_vars) {
 
-  auto local_to_global_result = pt.local2global(pt, patch, local_vars);
-  auto jacobian_results = cake_jacs(pt, patch, local_to_global_result);
+  const auto local_to_global_result = pt.local2global(pt, patch, local_vars);
+  const auto jacobian_results = cake_jacs(pt, patch, local_to_global_result);
 
   return std_make_tuple(local_to_global_result, std::get<0>(jacobian_results),
                         std::get<1>(jacobian_results));

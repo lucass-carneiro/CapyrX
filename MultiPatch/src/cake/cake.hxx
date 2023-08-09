@@ -4,7 +4,6 @@
 #include "multipatch.hxx"
 #include "tests.hxx"
 
-#include <cmath>
 #include <string>
 #include <type_traits>
 

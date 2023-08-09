@@ -1,8 +1,9 @@
 #include "multipatch.hxx"
 
+#include "../../../CarpetX/CarpetX/src/driver.hxx"
+#include "../../../CarpetX/CarpetX/src/schedule.hxx"
+
 #include <loop.hxx>
-#include "../../../carpetx/CarpetX/src/driver.hxx"
-#include "../../../carpetx/CarpetX/src/schedule.hxx"
 
 #include <cctk.h>
 
@@ -188,7 +189,6 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
   assert(pos == results.at(0).size());
 
   // Step 3: Write back results
-  using namespace CarpetX;
   loop_over_components(CarpetX::active_levels_t(), [&](int patch, int level,
                                                        int index, int component,
                                                        const cGH *cctkGH) {

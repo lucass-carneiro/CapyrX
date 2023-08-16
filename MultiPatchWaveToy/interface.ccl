@@ -1,0 +1,35 @@
+# Interface definition for thorn MultiPatchWaveToy
+
+IMPLEMENTS: MultiPatchWaveToy
+
+INHERITS: CarpetX Coordinates MultiPatch
+
+USES INCLUDE HEADER: loop_device.hxx
+USES INCLUDE HEADER: vect.hxx
+
+INCLUDES HEADER: mpwavetoy.hxx IN mpwavetoy.hxx
+
+
+
+CCTK_REAL state TYPE=gf TAGS='rhs="rhs" dependents="energy error"'
+{
+  u
+  rho
+} "Scalar wave state vector"
+
+CCTK_REAL rhs TYPE=gf TAGS='checkpoint="no"'
+{
+  u_rhs
+  rho_rhs
+} "RHS of scalar wave state vector"
+
+CCTK_REAL energy TYPE=gf TAGS='checkpoint="no"'
+{
+  eps
+} "Energy density"
+
+CCTK_REAL error TYPE=gf TAGS='checkpoint="no"'
+{
+  u_err
+  rho_err
+} "Error in scalar wave state vector"

@@ -1,0 +1,7 @@
+# Main make.code.defn file for thorn MultiPatchWaveToy
+
+# Source files in this directory
+SRCS = initial.cxx rhs.cxx
+
+# Subdirectories containing source files
+SUBDIRS =

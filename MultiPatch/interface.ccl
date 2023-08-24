@@ -45,7 +45,7 @@ PROVIDES FUNCTION MultiPatch_GetBoundarySpecification2 \
     WITH MultiPatch1_GetBoundarySpecification2 \
     LANGUAGE C
 
-void FUNCTION MultiPatch_GlobalToLocal( \
+void FUNCTION MultiPatch_GlobalToLocal2( \
   CCTK_INT IN npoints, \
   CCTK_REAL ARRAY IN globalsx, \
   CCTK_REAL ARRAY IN globalsy, \
@@ -54,8 +54,8 @@ void FUNCTION MultiPatch_GlobalToLocal( \
   CCTK_REAL ARRAY OUT localsx, \
   CCTK_REAL ARRAY OUT localsy, \
   CCTK_REAL ARRAY OUT localsz)
-PROVIDES FUNCTION MultiPatch_GlobalToLocal \
-  WITH MultiPatch1_GlobalToLocal \
+PROVIDES FUNCTION MultiPatch_GlobalToLocal2 \
+  WITH MultiPatch1_GlobalToLocal2 \
   LANGUAGE C
 
 void FUNCTION Interpolate(

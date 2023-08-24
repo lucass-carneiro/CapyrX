@@ -2,7 +2,7 @@
 
 IMPLEMENTS: MultiPatchWaveToy
 
-INHERITS: CarpetX Coordinates MultiPatch
+INHERITS: CarpetX CoordinatesX MultiPatch
 
 USES INCLUDE HEADER: loop_device.hxx
 USES INCLUDE HEADER: vect.hxx

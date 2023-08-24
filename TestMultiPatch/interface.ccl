@@ -2,7 +2,7 @@
 
 IMPLEMENTS: TestMultiPatch
 
-INHERITS: Coordinates MultiPatch
+INHERITS: CoordinatesX MultiPatch
 
 USES INCLUDE HEADER: arith.hxx
 USES INCLUDE HEADER: loop.hxx

@@ -5,7 +5,7 @@ STORAGE: multipatch_test_gfs
 SCHEDULE TestMultiPatch_initialize AT initial
 {
   LANG: C
-  READS: Coordinates::vertex_coords(everywhere)
+  READS: CoordinatesX::vertex_coords(everywhere)
   WRITES: multipatch_test_gfs(interior)
   SYNC: multipatch_test_gfs
 } "Fill test grid function with data"

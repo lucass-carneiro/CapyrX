@@ -5,7 +5,7 @@ STORAGE: state
 SCHEDULE MultiPatchWaveToy_Initial AT initial
 {
   LANG: C
-  READS: Coordinates::vertex_coords(everywhere)
+  READS: CoordinatesX::vertex_coords(everywhere)
   WRITES: state(interior)
   SYNC: state
 } "Initialize scalar wave state"

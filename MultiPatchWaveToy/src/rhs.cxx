@@ -6,13 +6,16 @@ extern "C" void MultiPatchWaveToy_RHS(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTSX_MultiPatchWaveToy_RHS;
   DECLARE_CCTK_PARAMETERS;
 
-  if (CCTK_EQUALS(boundary_condition, "CarpetX")) {
+  grid.loop_int_device<0, 0, 0>(
+      grid.nghostzones,
+      [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+        using std::pow;
 
-    grid.loop_int_device<0, 0, 0>(
-        grid.nghostzones,
-        [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-          using std::pow;
-
+        if (p.BI[0] != 0 || p.BI[1] != 0 || p.BI[2] != 0) {
+          // Reflecting BCS
+          u_rhs(p.I) = 0;
+          rho_rhs(p.I) = 0;
+        } else {
           // Standard finite differencing for first order derivatives
           const CCTK_REAL duda{(-u(-p.DI[0] + p.I) + u(p.DI[0] + p.I)) /
                                (2. * p.DX[0])};
@@ -100,11 +103,8 @@ extern "C" void MultiPatchWaveToy_RHS(CCTK_ARGUMENTS) {
 
           u_rhs(p.I) = rho(p.I);
           rho_rhs(p.I) = dudxdx + dudydy + dudzdz;
-        });
-
-  } else {
-    CCTK_ERROR("Internal error");
-  }
+        }
+      });
 }
 
 } // namespace MultiPatchWaveToy

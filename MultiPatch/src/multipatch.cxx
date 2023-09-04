@@ -149,7 +149,7 @@ extern "C" CCTK_INT MultiPatch1_GetBoundarySpecification2(
   return 0;
 }
 
-extern "C" void MultiPatch1_GlobalToLocal(
+extern "C" void MultiPatch1_GlobalToLocal2(
     const CCTK_INT npoints, const CCTK_REAL *restrict const globalsx,
     const CCTK_REAL *restrict const globalsy,
     const CCTK_REAL *restrict const globalsz, CCTK_INT *restrict const patches,

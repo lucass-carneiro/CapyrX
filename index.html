@@ -13,11 +13,11 @@
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="_static/jquery.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=8d563738"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -74,13 +74,13 @@
            <div itemprop="articleBody">
              
   <section id="welcome-to-capyrx-s-documentation">
-<h1>Welcome to CapyrX’s documentation!<a class="headerlink" href="#welcome-to-capyrx-s-documentation" title="Permalink to this heading"></a></h1>
+<h1>Welcome to CapyrX’s documentation!<a class="headerlink" href="#welcome-to-capyrx-s-documentation" title="Link to this heading"></a></h1>
 <section id="what-is-it">
-<h2>What is it?<a class="headerlink" href="#what-is-it" title="Permalink to this heading"></a></h2>
+<h2>What is it?<a class="headerlink" href="#what-is-it" title="Link to this heading"></a></h2>
 <p><strong>CapyrX</strong> is a GPU-accelerated multipatch infrastructure, written in C++ for the <a class="reference external" href="https://github.com/eschnett/CarpetX">CarpetX</a> AMR driver, which is intended for the <a class="reference external" href="https://einsteintoolkit.org/">Einstein Toolkit</a>. <strong>CarpetX</strong> is based on <a class="reference external" href="https://amrex-codes.github.io">AMReX</a>, a software framework for block-structured AMR (adaptive mesh refinement).</p>
 </section>
 <section id="table-of-contents">
-<h2>Table of Contents<a class="headerlink" href="#table-of-contents" title="Permalink to this heading"></a></h2>
+<h2>Table of Contents<a class="headerlink" href="#table-of-contents" title="Link to this heading"></a></h2>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="patch_systems/index.html">Available Patch systems</a><ul>
@@ -88,8 +88,103 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="api/index.html">API Documentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/patch.html">Patch System Description</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/test.html">Testing facilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/patch.html">Patch System Description</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch16the_patch_systemE"><code class="docutils literal notranslate"><span class="pre">the_patch_system</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch3dimE"><code class="docutils literal notranslate"><span class="pre">dim</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch11PatchSystemE"><code class="docutils literal notranslate"><span class="pre">PatchSystem</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4NK10MultiPatch11PatchSystem11num_patchesEv"><code class="docutils literal notranslate"><span class="pre">PatchSystem::num_patches()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch11PatchSystem11PatchSystemEv"><code class="docutils literal notranslate"><span class="pre">PatchSystem::PatchSystem()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch11PatchSystem11PatchSystemENSt6stringENSt6vectorI5PatchEE20PatchTransformations"><code class="docutils literal notranslate"><span class="pre">PatchSystem::PatchSystem()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch11PatchSystem4nameE"><code class="docutils literal notranslate"><span class="pre">PatchSystem::name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch11PatchSystem7patchesE"><code class="docutils literal notranslate"><span class="pre">PatchSystem::patches</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch11PatchSystem15transformationsE"><code class="docutils literal notranslate"><span class="pre">PatchSystem::transformations</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch5PatchE"><code class="docutils literal notranslate"><span class="pre">Patch</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch5Patch4nameE"><code class="docutils literal notranslate"><span class="pre">Patch::name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch5Patch6ncellsE"><code class="docutils literal notranslate"><span class="pre">Patch::ncells</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch5Patch4xminE"><code class="docutils literal notranslate"><span class="pre">Patch::xmin</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch5Patch4xmaxE"><code class="docutils literal notranslate"><span class="pre">Patch::xmax</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch5Patch12is_cartesianE"><code class="docutils literal notranslate"><span class="pre">Patch::is_cartesian</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch5Patch5facesE"><code class="docutils literal notranslate"><span class="pre">Patch::faces</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch9PatchFaceE"><code class="docutils literal notranslate"><span class="pre">PatchFace</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch9PatchFace17is_outer_boundaryE"><code class="docutils literal notranslate"><span class="pre">PatchFace::is_outer_boundary</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch9PatchFace11other_patchE"><code class="docutils literal notranslate"><span class="pre">PatchFace::other_patch</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformationsE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations6svec_tE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::svec_t</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations5jac_tE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::jac_t</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations6djac_tE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::djac_t</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations17global2local_funcE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::global2local_func</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations17local2global_funcE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::local2global_func</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations18dlocal_dglobal_funE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::dlocal_dglobal_fun</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations20d2local_dglobal2_funE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::d2local_dglobal2_fun</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations20PatchTransformationsEv"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::PatchTransformations()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations20PatchTransformationsERK20PatchTransformations"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::PatchTransformations()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations20PatchTransformationsERR20PatchTransformations"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::PatchTransformations()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformationsaSERK20PatchTransformations"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::operator=()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformationsaSERR20PatchTransformations"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::operator=()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations12global2localE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::global2local</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations12local2globalE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::local2global</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations14dlocal_dglobalE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::dlocal_dglobal</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations16d2local_dglobal2E"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::d2local_dglobal2</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations19global2local_deviceE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::global2local_device</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations19local2global_deviceE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::local2global_device</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations21dlocal_dglobal_deviceE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::dlocal_dglobal_device</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations23d2local_dglobal2_deviceE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::d2local_dglobal2_device</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations14cartesian_xmaxE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::cartesian_xmax</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations14cartesian_xminE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::cartesian_xmin</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations14cartesian_ymaxE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::cartesian_ymax</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations14cartesian_yminE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::cartesian_ymin</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations14cartesian_zmaxE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::cartesian_zmax</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations14cartesian_zminE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::cartesian_zmin</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations18cartesian_ncells_iE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::cartesian_ncells_i</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations18cartesian_ncells_jE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::cartesian_ncells_j</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations18cartesian_ncells_kE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::cartesian_ncells_k</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations17cubed_sphere_rminE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::cubed_sphere_rmin</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations17cubed_sphere_rmaxE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::cubed_sphere_rmax</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations14swirl_ncells_iE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::swirl_ncells_i</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations14swirl_ncells_jE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::swirl_ncells_j</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations14swirl_ncells_kE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::swirl_ncells_k</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations26cake_outer_boundary_radiusE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::cake_outer_boundary_radius</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations26cake_inner_boundary_radiusE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::cake_inner_boundary_radius</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations23cake_cartesian_ncells_iE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::cake_cartesian_ncells_i</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations23cake_cartesian_ncells_jE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::cake_cartesian_ncells_j</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations23cake_cartesian_ncells_kE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::cake_cartesian_ncells_k</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations18cake_angular_cellsE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::cake_angular_cells</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/patch.html#_CPPv4N10MultiPatch20PatchTransformations17cake_radial_cellsE"><code class="docutils literal notranslate"><span class="pre">PatchTransformations::cake_radial_cells</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/test.html">Testing facilities</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/test.html#_CPPv4N15MultiPatchTests11random_seedE"><code class="docutils literal notranslate"><span class="pre">random_seed</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/test.html#_CPPv4N15MultiPatchTests8fd_deltaE"><code class="docutils literal notranslate"><span class="pre">fd_delta</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/test.html#_CPPv4N15MultiPatchTests11fd_comp_tolE"><code class="docutils literal notranslate"><span class="pre">fd_comp_tol</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/test.html#_CPPv4I0EN15MultiPatchTests8isapproxEb7fp_type7fp_type7fp_type"><code class="docutils literal notranslate"><span class="pre">isapprox()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/test.html#_CPPv4I0EN15MultiPatchTests6withinEb1T1T"><code class="docutils literal notranslate"><span class="pre">within()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/test.html#_CPPv4I0EN15MultiPatchTests11at_boundaryEb1T1T"><code class="docutils literal notranslate"><span class="pre">at_boundary()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/test.html#_CPPv4N15MultiPatchTests12string_colorE"><code class="docutils literal notranslate"><span class="pre">string_color</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/test.html#_CPPv4N15MultiPatchTests12string_color5greenE"><code class="docutils literal notranslate"><span class="pre">string_color::green</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/test.html#_CPPv4N15MultiPatchTests12string_color3redE"><code class="docutils literal notranslate"><span class="pre">string_color::red</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/test.html#_CPPv4I_12string_colorEN15MultiPatchTests7coloredENSt6stringERKNSt6stringE"><code class="docutils literal notranslate"><span class="pre">colored()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/test.html#_CPPv4N15MultiPatchTests6PASSEDE"><code class="docutils literal notranslate"><span class="pre">PASSED</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/test.html#_CPPv4N15MultiPatchTests6FAILEDE"><code class="docutils literal notranslate"><span class="pre">FAILED</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/test.html#_CPPv4N15MultiPatchTests12fd_directionE"><code class="docutils literal notranslate"><span class="pre">fd_direction</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/test.html#_CPPv4N15MultiPatchTests12fd_direction1xE"><code class="docutils literal notranslate"><span class="pre">fd_direction::x</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/test.html#_CPPv4N15MultiPatchTests12fd_direction1yE"><code class="docutils literal notranslate"><span class="pre">fd_direction::y</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/test.html#_CPPv4N15MultiPatchTests12fd_direction1zE"><code class="docutils literal notranslate"><span class="pre">fd_direction::z</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/test.html#_CPPv4I_12fd_direction00EN15MultiPatchTests4fd_4E8vector_tRK10function_tRK8vector_t"><code class="docutils literal notranslate"><span class="pre">fd_4()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/test.html#_CPPv4I_12fd_direction_12fd_direction00EN15MultiPatchTests5fd2_4E8vector_tRK10function_tRK8vector_t"><code class="docutils literal notranslate"><span class="pre">fd2_4()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

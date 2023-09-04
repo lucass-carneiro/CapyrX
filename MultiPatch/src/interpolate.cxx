@@ -108,13 +108,13 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
     const std::array<Loop::GF3D2<const CCTK_REAL>, dim> vcoords{
         Loop::GF3D2<const CCTK_REAL>(
             layout, static_cast<const CCTK_REAL *>(
-                        CCTK_VarDataPtr(cctkGH, 0, "Coordinates::vcoordx"))),
+                        CCTK_VarDataPtr(cctkGH, 0, "CoordinatesX::vcoordx"))),
         Loop::GF3D2<const CCTK_REAL>(
             layout, static_cast<const CCTK_REAL *>(
-                        CCTK_VarDataPtr(cctkGH, 0, "Coordinates::vcoordy"))),
+                        CCTK_VarDataPtr(cctkGH, 0, "CoordinatesX::vcoordy"))),
         Loop::GF3D2<const CCTK_REAL>(
             layout, static_cast<const CCTK_REAL *>(
-                        CCTK_VarDataPtr(cctkGH, 0, "Coordinates::vcoordz")))};
+                        CCTK_VarDataPtr(cctkGH, 0, "CoordinatesX::vcoordz")))};
 
     SourcePoints source_points;
     // Note: This includes symmetry points

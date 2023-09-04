@@ -1,7 +1,7 @@
 ActiveThorns = "
     CarpetX
     IOUtil
-    Coordinates
+    CoordinatesX
     MultiPatch
     TestMultiPatch
 "
@@ -56,9 +56,9 @@ IO::out_every = 1
 
 CarpetX::out_tsv = yes
 CarpetX::out_tsv_vars = "
-    Coordinates::vertex_coords
-    Coordinates::cell_coords
-    Coordinates::cell_volume
+    CoordinatesX::vertex_coords
+    CoordinatesX::cell_coords
+    CoordinatesX::cell_volume
     MultiPatch::vertex_Jacobians
     MultiPatch::vertex_dJacobians
     TestMultiPatch::multipatch_test_gfs

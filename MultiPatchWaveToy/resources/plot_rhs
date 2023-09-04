@@ -4,20 +4,11 @@ import numpy as np
 import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import sys
 import subprocess
 
 # MPL settings.
 mpl.rcParams['mathtext.fontset'] = 'cm'
 mpl.rcParams['font.family'] = 'Latin Modern Roman'
-
-# Cmdline args
-if len(sys.argv) != 3:
-    it = "0".zfill(6)
-    var = "u"
-else:
-    it = str(sys.argv[1]).zfill(6)
-    var = str(sys.argv[2])
 
 # Datafile vars, for pandas
 vars = [
@@ -32,20 +23,19 @@ vars = [
     "x",
     "y",
     "z",
-    "u",
-    "rho",
+    "u_rhs",
+    "rho_rhs",
     "vcoordx",
     "vcoordy",
     "vcoordz"
 ]
 
 # Files and data
-coord_file = "standing_wave/coordinates-vertex_coords.it" + it + ".p0000.tsv"
-state_file = "standing_wave/multipatchwavetoy-state.it" + it + ".p0000.tsv"
+coord_file = "standing_wave/coordinates-vertex_coords.it000000.p0000.tsv"
+state_file = "standing_wave/multipatchwavetoy-rhs.it000000.p0000.tsv"
 
 print("Coordinate file:", coord_file)
 print("State file:", state_file)
-print("State variable:", var)
 
 print("Creating temporary plot data file")
 p1 = subprocess.Popen(
@@ -93,11 +83,8 @@ print("Creating plot")
 plt.tricontourf(
     sliced_data["vcoordx"],
     sliced_data["vcoordy"],
-    sliced_data[var],
-    cmap="seismic",
-    levels=100,
-    vmin=-1.0,
-    vmax=1.0
+    sliced_data["rho_rhs"],
+    levels=100
 )
 
 plt.colorbar()

@@ -3,7 +3,7 @@ ActiveThorns = "
     IOUtil
     TimerReport
     ODESolvers
-    CoordinatesX
+    Coordinates
     MultiPatch
     MultiPatchWaveToy
 "
@@ -20,7 +20,7 @@ CarpetX::blocking_factor_z = 1
 
 CarpetX::max_num_levels = 1
 
-Cactus::cctk_itlast = 80
+Cactus::cctk_itlast = 0
 CarpetX::dtfac = 0.5
 ODESolvers::method = "RK4"
 
@@ -29,14 +29,14 @@ MultiPatch::patch_system = "Cake"
 MultiPatch::cake_outer_boundary_radius = 11.0
 MultiPatch::cake_inner_boundary_radius = 1.0
 
-MultiPatch::cake_cartesian_ncells_i    = 20
-MultiPatch::cake_cartesian_ncells_j    = 20
-MultiPatch::cake_cartesian_ncells_k    = 20
+MultiPatch::cake_cartesian_ncells_i    = 100
+MultiPatch::cake_cartesian_ncells_j    = 100
+MultiPatch::cake_cartesian_ncells_k    = 100
 
-MultiPatch::cake_angular_cells         = 20
-MultiPatch::cake_radial_cells          = 20
+MultiPatch::cake_angular_cells         = 100
+MultiPatch::cake_radial_cells          = 100
 
-MultiPatchWaveToy::initial_condition  = "Gaussian"
+MultiPatchWaveToy::initial_condition  = "standing wave"
 MultiPatchWaveToy::amplitude          = 1.0
 MultiPatchWaveToy::gaussian_width     = 1.0
 
@@ -53,7 +53,7 @@ IO::out_every = 1
 
 CarpetX::out_tsv = yes
 CarpetX::out_tsv_vars = "
-    CoordinatesX::vertex_coords
+    Coordinates::vertex_coords
     MultiPatchWaveToy::state
     MultiPatchWaveToy::rhs
     MultiPatchWaveToy::energy

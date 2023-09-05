@@ -37,8 +37,6 @@ MultiPatch::cake_angular_cells         = 100
 MultiPatch::cake_radial_cells          = 100
 
 MultiPatchWaveToy::initial_condition  = "standing wave"
-MultiPatchWaveToy::amplitude          = 1.0
-MultiPatchWaveToy::gaussian_width     = 1.0
 
 # These are unused. Boundary conditions are set internally in the RHS function
 CarpetX::boundary_x = "neumann"

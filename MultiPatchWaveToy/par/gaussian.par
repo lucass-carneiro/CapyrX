@@ -20,7 +20,7 @@ CarpetX::blocking_factor_z = 1
 
 CarpetX::max_num_levels = 1
 
-Cactus::cctk_itlast = 80
+Cactus::cctk_itlast = 10
 CarpetX::dtfac = 0.5
 ODESolvers::method = "RK4"
 
@@ -29,16 +29,22 @@ MultiPatch::patch_system = "Cake"
 MultiPatch::cake_outer_boundary_radius = 11.0
 MultiPatch::cake_inner_boundary_radius = 1.0
 
-MultiPatch::cake_cartesian_ncells_i    = 20
-MultiPatch::cake_cartesian_ncells_j    = 20
-MultiPatch::cake_cartesian_ncells_k    = 20
+MultiPatch::cake_cartesian_ncells_i    = 80
+MultiPatch::cake_cartesian_ncells_j    = 80
+MultiPatch::cake_cartesian_ncells_k    = 80
 
-MultiPatch::cake_angular_cells         = 20
-MultiPatch::cake_radial_cells          = 20
+MultiPatch::cake_angular_cells         = 80
+MultiPatch::cake_radial_cells          = 80
+
+# Make sure that the gaussian is not underresolved by making it have a fixed number
+# of points across its width
+
+$points_per_width = 100
+$dx = (2.0 * MultiPatch::cake_inner_boundary_radius) / MultiPatch::cake_cartesian_ncells_i
+$width = $points_per_width * $dx
 
 MultiPatchWaveToy::initial_condition  = "Gaussian"
-MultiPatchWaveToy::amplitude          = 1.0
-MultiPatchWaveToy::gaussian_width     = 1.0
+MultiPatchWaveToy::gaussian_width     = $width
 
 # These are unused. Boundary conditions are set internally in the RHS function
 CarpetX::boundary_x = "neumann"

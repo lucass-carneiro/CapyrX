@@ -4,15 +4,16 @@
 
 Usage:
   mpx augment <data-file> <coord-file>
-  mpx plot <augmented-data> <var> [--rhs] [--save]
+  mpx plot <augmented-data> <var> [--rhs] [--save] [--diverging]
   mpx (-h | --help)
   mpx --version
 
 Options:
-  -h --help  Show this screen.
-  --version  Show version.
-  --rhs      Plot RHS variables.
-  --save     Save plot to file.
+  -h --help    Show this screen.
+  --version    Show version.
+  --rhs        Plot RHS variables.
+  --save       Save plot to file.
+  --diverging  Use a diverging color map.
 """
 
 import numpy as np
@@ -53,7 +54,7 @@ def augment_file(state_file, coord_file):
     fout.close()
 
 
-def make_plot(x, y, z, var, save_file, diverging=False):
+def make_plot(x, y, z, var, save_file, diverging):
     plt.close("all")
 
     if diverging == True:
@@ -69,7 +70,7 @@ def make_plot(x, y, z, var, save_file, diverging=False):
             x,
             y,
             z,
-            levels=100
+            levels=100  # np.linspace(0.0, 0.04, 100),
         )
 
     cb = plt.colorbar()
@@ -80,7 +81,7 @@ def make_plot(x, y, z, var, save_file, diverging=False):
     if not save_file:
         plt.show()
     else:
-        plt.savefig(var + ".pdf")
+        plt.savefig(var + ".png")
 
     plt.close("all")
 
@@ -91,6 +92,7 @@ def plot(vars1, vars2, arguments):
     augmented_state_data = arguments["<augmented-data>"]
     var = arguments["<var>"]
     save_file = arguments["--save"]
+    diverging = arguments["--diverging"]
 
     # Datafile vars, for pandas
     if rhs:
@@ -112,8 +114,6 @@ def plot(vars1, vars2, arguments):
         (np.abs(data["z"]) <= 1.0)
     ]
 
-    # Plots
-
     # RHS error data
     if rhs:
         print("Creating error plot")
@@ -126,11 +126,11 @@ def plot(vars1, vars2, arguments):
         error = error / max_error
 
         make_plot(sliced_data["vcoordx"], sliced_data["vcoordy"],
-                  error, var + "_err", save_file)
+                  error, var + "_err", save_file, diverging)
 
     print("Creating data plot")
     make_plot(sliced_data["vcoordx"], sliced_data["vcoordy"],
-              sliced_data[var], var, save_file, True)
+              sliced_data[var], var, save_file, diverging)
 
 
 def main():

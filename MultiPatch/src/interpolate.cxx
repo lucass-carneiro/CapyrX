@@ -93,46 +93,45 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
   // Step 1: Find coordinates where we need to interpolate
 
   std::map<Location, SourcePoints> source_mapping;
-  loop_over_components(active_levels_t(), [&](int patch, int level, int index,
-                                              int component,
-                                              const cGH *cctkGH) {
-    const Loop::GridDescBase grid(cctkGH);
-    const std::array<int, dim> centering{0, 0, 0};
-    const Loop::GF3D2layout layout(cctkGH, centering);
+  CarpetX::active_levels_t().loop_parallel(
+      [&](int patch, int level, int index, int component, const cGH *cctkGH) {
+        const Loop::GridDescBase grid(cctkGH);
+        const std::array<int, dim> centering{0, 0, 0};
+        const Loop::GF3D2layout layout(cctkGH, centering);
 
-    const auto &current_patch{the_patch_system->patches.at(patch)};
-    const auto &patch_faces{current_patch.faces};
+        const auto &current_patch{the_patch_system->patches.at(patch)};
+        const auto &patch_faces{current_patch.faces};
 
-    const Location location{patch, level, index, component};
+        const Location location{patch, level, index, component};
 
-    const std::array<Loop::GF3D2<const CCTK_REAL>, dim> vcoords{
-        Loop::GF3D2<const CCTK_REAL>(
-            layout, static_cast<const CCTK_REAL *>(
-                        CCTK_VarDataPtr(cctkGH, 0, "CoordinatesX::vcoordx"))),
-        Loop::GF3D2<const CCTK_REAL>(
-            layout, static_cast<const CCTK_REAL *>(
-                        CCTK_VarDataPtr(cctkGH, 0, "CoordinatesX::vcoordy"))),
-        Loop::GF3D2<const CCTK_REAL>(
-            layout, static_cast<const CCTK_REAL *>(
-                        CCTK_VarDataPtr(cctkGH, 0, "CoordinatesX::vcoordz")))};
+        const std::array<Loop::GF3D2<const CCTK_REAL>, dim> vcoords{
+            Loop::GF3D2<const CCTK_REAL>(
+                layout, static_cast<const CCTK_REAL *>(CCTK_VarDataPtr(
+                            cctkGH, 0, "CoordinatesX::vcoordx"))),
+            Loop::GF3D2<const CCTK_REAL>(
+                layout, static_cast<const CCTK_REAL *>(CCTK_VarDataPtr(
+                            cctkGH, 0, "CoordinatesX::vcoordy"))),
+            Loop::GF3D2<const CCTK_REAL>(
+                layout, static_cast<const CCTK_REAL *>(CCTK_VarDataPtr(
+                            cctkGH, 0, "CoordinatesX::vcoordz")))};
 
-    SourcePoints source_points;
-    // Note: This includes symmetry points
-    grid.loop_bnd<0, 0, 0>(grid.nghostzones, [&](const Loop::PointDesc &p) {
-      // Skip outer boundaries
-      for (int d = 0; d < dim; ++d) {
-        if (p.NI[d] < 0 && patch_faces[0][d].is_outer_boundary)
-          return;
-        if (p.NI[d] > 0 && patch_faces[1][d].is_outer_boundary)
-          return;
-      }
+        SourcePoints source_points;
+        // Note: This includes symmetry points
+        grid.loop_bnd<0, 0, 0>(grid.nghostzones, [&](const Loop::PointDesc &p) {
+          // Skip outer boundaries
+          for (int d = 0; d < dim; ++d) {
+            if (p.NI[d] < 0 && patch_faces[0][d].is_outer_boundary)
+              return;
+            if (p.NI[d] > 0 && patch_faces[1][d].is_outer_boundary)
+              return;
+          }
 
-      for (int d = 0; d < dim; ++d)
-        source_points[d].push_back(vcoords[d](p.I));
-    });
+          for (int d = 0; d < dim; ++d)
+            source_points[d].push_back(vcoords[d](p.I));
+        });
 #pragma omp critical
-    source_mapping[location] = std::move(source_points);
-  });
+        source_mapping[location] = std::move(source_points);
+      });
 
   // Step 2: Interpolate to these coordinates
 
@@ -189,9 +188,9 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
   assert(pos == results.at(0).size());
 
   // Step 3: Write back results
-  loop_over_components(CarpetX::active_levels_t(), [&](int patch, int level,
-                                                       int index, int component,
-                                                       const cGH *cctkGH) {
+  CarpetX::active_levels_t().loop_parallel([&](int patch, int level, int index,
+                                               int component,
+                                               const cGH *cctkGH) {
     const Loop::GridDescBase grid(cctkGH);
     const std::array<int, dim> centering{0, 0, 0};
     const Loop::GF3D2layout layout(cctkGH, centering);

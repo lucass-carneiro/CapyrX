@@ -2,7 +2,7 @@
 
 IMPLEMENTS: MultiPatch
 
-INHERITS: Coordinates
+INHERITS: CoordinatesX
 
 USES INCLUDE HEADER: loop.hxx
 USES INCLUDE HEADER: loop_device.hxx

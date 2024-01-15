@@ -3,7 +3,7 @@
 Usage:
   mpx augment-tsv <data-file> <coord-file>
   mpx plot-tsv <augmented-data> <var> [--rhs] [--save] [--diverging]
-  mpx plot-openpmd <data-file> <thorn-name> <group-name> <var-name> <num-patches> <iteration> [--refinement-level=<level>] [--z-slice=<zval>] [--openpmd-format=<format>] [--save] [--diverging] [--verbose]
+  mpx plot-openpmd <data-file> <thorn-name> <group-name> <var-name> <iteration> [--refinement-level=<level>] [--z-slice=<zval>] [--openpmd-format=<format>] [--save] [--diverging] [--verbose]
   mpx (-h | --help)
   mpx --version
 
@@ -245,7 +245,8 @@ def openpmd_to_dataframe(fname, verbose, iteration_index, mesh_name, gf_name):
     return merged_df
 
 
-def merge_multipatch_dataframes(verbose, fname, iteration_index, patch, level, mesh_name, gf_name, z_slice_value):
+def merge_multipatch_dataframes(verbose, fname, iteration_index, patch, level, thorn_name, group_name, gf_name, z_slice_value):
+    # Coordiantes
     if verbose:
         print("Loading coordinate data")
 
@@ -281,8 +282,11 @@ def merge_multipatch_dataframes(verbose, fname, iteration_index, patch, level, m
     coords_df = pd.merge(vcoordx_df, vcoordy_df, on=merge_cols)
     coords_df = pd.merge(coords_df, vcoordz_df, on=merge_cols)
 
+    # Main data
+    mesh_name = f"{thorn_name}_{group_name}_patch{patch}_lev{level}"
+
     if verbose:
-        print("Loading main data")
+        print("Loading main data", mesh_name, "/", gf_name)
 
     main_gf_df = openpmd_to_dataframe(
         fname,
@@ -316,9 +320,7 @@ def plot_openpmd(args):
     group_name = args["<group-name>"]
     var_name = args["<var-name>"]
 
-    patch = args["<num-patches>"].zfill(2)
-    int_patch = int(args["<num-patches>"])
-    patch_range = range(int_patch + 1)
+    patches = ["00", "01", "02", "03", "04"]
 
     level = args["--refinement-level"].zfill(2)
     iteration_index = int(args["<iteration>"])
@@ -327,30 +329,33 @@ def plot_openpmd(args):
     save_file = bool(args["--save"])
     diverging = bool(args["--diverging"])
 
-    mesh_name = f"{thorn_name}_{group_name}_patch{patch}_lev{level}"
     gf_name = f"{thorn_name}_{var_name}"
 
     # Get dataframes for each patch in parallel
-    with multiprocessing.Pool(processes=(int_patch + 1)) as pool:
-        futures = [
+    with multiprocessing.Pool(processes=len(patches)) as pool:
+        results = [
             pool.apply_async(
                 merge_multipatch_dataframes,
                 [
                     verbose,
                     fname,
                     iteration_index,
-                    str(p).zfill(2),
+                    p,
                     level,
-                    mesh_name,
+                    thorn_name,
+                    group_name,
                     gf_name,
                     z_slice_value
-                ]
-            ) for p in patch_range
+                ],
+            )
+            for p in patches
         ]
 
         plt.close("all")
-        for future in futures:
-            df = future.get()
+
+        for result in results:
+            df = result.get()
+
             if diverging == True:
                 plt.tricontourf(
                     df["coordinatesx_vcoordx"],

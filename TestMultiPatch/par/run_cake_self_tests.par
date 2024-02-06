@@ -37,17 +37,11 @@ MultiPatch::cake_cartesian_ncells_k    = 10
 MultiPatch::cake_angular_cells         = 10
 MultiPatch::cake_radial_cells          = 10
 
-TestMultiPatch::test_data = "plane_wave"
+CarpetX::ghost_size_x = 1
+CarpetX::ghost_size_y = 1
+CarpetX::ghost_size_z = 1
 
-TestMultiPatch::wave_number[0] = 1.0
-TestMultiPatch::wave_number[1] = 1.0
-TestMultiPatch::wave_number[2] = 0.0
-
-TestMultiPatch::space_offset[0] = 0.0
-TestMultiPatch::space_offset[1] = 0.0
-TestMultiPatch::space_offset[2] = 0.0
-
-TestMultiPatch::time_offset = 0.0
+CarpetX::interpolation_order = 1
 
 IO::out_dir = $parfile
 IO::out_every = 1

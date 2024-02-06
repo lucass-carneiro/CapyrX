@@ -58,6 +58,19 @@ PROVIDES FUNCTION MultiPatch_GlobalToLocal2 \
   WITH MultiPatch1_GlobalToLocal2 \
   LANGUAGE C
 
+void FUNCTION MultiPatch_LocalToGlobal2( \
+  CCTK_INT IN npoints, \
+  CCTK_INT ARRAY IN patches, \
+  CCTK_REAL ARRAY IN localsx, \
+  CCTK_REAL ARRAY IN localsy, \
+  CCTK_REAL ARRAY IN localsz, \
+  CCTK_REAL ARRAY OUT globalsx, \
+  CCTK_REAL ARRAY OUT globalsy, \
+  CCTK_REAL ARRAY OUT globalsz)
+PROVIDES FUNCTION MultiPatch_LocalToGlobal2 \
+  WITH MultiPatch1_LocalToGlobal2 \
+  LANGUAGE C
+
 void FUNCTION Interpolate(
   CCTK_POINTER_TO_CONST IN cctkGH,
   CCTK_INT IN npoints,

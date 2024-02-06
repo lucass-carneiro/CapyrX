@@ -171,6 +171,27 @@ extern "C" void MultiPatch1_GlobalToLocal2(
   }
 }
 
+extern "C" void MultiPatch1_LocalToGlobal2(
+    const CCTK_INT npoints, const CCTK_INT *restrict const patches,
+    const CCTK_REAL *restrict const localsx,
+    const CCTK_REAL *restrict const localsy,
+    const CCTK_REAL *restrict const localsz, CCTK_REAL *restrict const globalsx,
+    CCTK_REAL *restrict const globalsy, CCTK_REAL *restrict const globalsz) {
+
+  const auto &pt{the_patch_system->transformations};
+  const auto &local2global{*pt.local2global};
+
+  for (CCTK_INT i = 0; i < npoints; i++) {
+    const auto patch{patches[i]};
+    const vec<CCTK_REAL, dim> local_vars{localsx[i], localsy[i], localsz[i]};
+
+    const auto global_vars{local2global(pt, patch, local_vars)};
+    globalsx[i] = global_vars(0);
+    globalsy[i] = global_vars(1);
+    globalsz[i] = global_vars(2);
+  }
+}
+
 // Scheduled functions
 
 extern "C" int MultiPatch_Setup() {

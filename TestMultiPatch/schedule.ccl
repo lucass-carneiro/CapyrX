@@ -2,10 +2,16 @@
 
 STORAGE: multipatch_test_gfs
 
-SCHEDULE TestMultiPatch_initialize AT initial
+SCHEDULE TestMultiPatch_TestSync AT initial
 {
   LANG: C
   READS: CoordinatesX::vertex_coords(everywhere)
   WRITES: multipatch_test_gfs(interior)
   SYNC: multipatch_test_gfs
 } "Fill test grid function with data"
+
+SCHEDULE TestMultiPatch_TestGhostInterp AT poststep
+{
+  LANG: C
+  READS: CoordinatesX::vertex_coords(everywhere)
+} "Checks if ghost zone coordinates are correct"

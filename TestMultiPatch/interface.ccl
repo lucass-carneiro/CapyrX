@@ -9,6 +9,17 @@ USES INCLUDE HEADER: loop.hxx
 USES INCLUDE HEADER: loop_device.hxx
 USES INCLUDE HEADER: vec.hxx
 
+void FUNCTION MultiPatch_LocalToGlobal2(
+  CCTK_INT IN npoints,
+  CCTK_INT ARRAY IN patches,
+  CCTK_REAL ARRAY IN localsx,
+  CCTK_REAL ARRAY IN localsy,
+  CCTK_REAL ARRAY IN localsz,
+  CCTK_REAL ARRAY OUT globalsx,
+  CCTK_REAL ARRAY OUT globalsy,
+  CCTK_REAL ARRAY OUT globalsz)
+REQUIRES FUNCTION MultiPatch_LocalToGlobal2
+
 CCTK_REAL multipatch_test_gfs TYPE=gf CENTERING={vvv} TAGS='checkpoint="no"'
 {
     test_gf

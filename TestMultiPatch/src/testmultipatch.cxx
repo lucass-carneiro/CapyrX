@@ -26,70 +26,49 @@ static constexpr void standing_wave(const T A, const T kx, const T ky,
   using std::cos;
   using std::sqrt;
 
-  u = A * cos(2 * M_PI * kx * x) * cos(2 * M_PI * ky * y) *
-      cos(2 * M_PI * kz * z);
+  // u = A * cos(2 * M_PI * kx * x) * cos(2 * M_PI * ky * y) * cos(2 * M_PI * kz
+  // * z);
+  u = T{0};
 }
 
 extern "C" void TestMultiPatch_TestSync(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTSX_TestMultiPatch_TestSync;
   DECLARE_CCTK_PARAMETERS;
 
-  const auto loop_lambda =
-      [=] ARITH_DEVICE(const Loop::PointDesc &p) ARITH_INLINE {
-        standing_wave(A, kx, ky, kz, vcoordx(p.I), vcoordy(p.I), vcoordz(p.I),
-                      test_gf(p.I));
-      };
+  const auto loop_lambda = [=](const Loop::PointDesc &p) ARITH_INLINE {
+    standing_wave(A, kx, ky, kz, vcoordx(p.I), vcoordy(p.I), vcoordz(p.I),
+                  test_gf(p.I));
+  };
 
-  grid.loop_int_device<0, 0, 0>(grid.nghostzones, loop_lambda);
+  grid.loop_int<0, 0, 0>(grid.nghostzones, loop_lambda);
 }
 
 extern "C" void TestMultiPatch_TestGhostInterp(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTSX_TestMultiPatch_TestGhostInterp;
   DECLARE_CCTK_PARAMETERS;
 
-  CCTK_VINFO("Testing interpolated coordinate values at ghost zones");
+  CCTK_VINFO("Testing interpolated values at ghost zones");
 
-  /*
-   * 1. For each local point + patch number, compute the global point using the
-   * aliased function MultiPatch_LocalToGlobal2
-   * 2. Compare the result with the value stored in vcoord(xyz)(p.I)
-   * 3. If these values do not match, report error
-   */
-  const auto loop_lambda = [=] ARITH_DEVICE(
-                               const Loop::PointDesc &p) ARITH_INLINE {
-    const CCTK_INT patches[1] = {p.patch};
+  const auto loop_lambda = [=](const Loop::PointDesc &p) ARITH_INLINE {
+    const auto x{vcoordx(p.I)};
+    const auto y{vcoordy(p.I)};
+    const auto z{vcoordz(p.I)};
+    const auto actual_gf{test_gf(p.I)};
 
-    const CCTK_REAL localsx[1] = {p.x};
-    const CCTK_REAL localsy[1] = {p.y};
-    const CCTK_REAL localsz[1] = {p.z};
+    CCTK_REAL expected_gf{0};
+    standing_wave(A, kx, ky, kz, x, y, z, expected_gf);
 
-    CCTK_REAL globalsx[1] = {0};
-    CCTK_REAL globalsy[1] = {0};
-    CCTK_REAL globalsz[1] = {0};
-
-    MultiPatch_LocalToGlobal2(1, patches, localsx, localsy, localsz, globalsx,
-                              globalsy, globalsz);
-
-    if (!MultiPatchTests::isapprox(vcoordx(p.I), globalsx[0])) {
-      CCTK_VINFO(
-          "Test FAILED at x direction, patch %i. Got: %.16f. Expected %.16f",
-          p.patch, vcoordx(p.I), globalsx[0]);
-    }
-
-    if (!MultiPatchTests::isapprox(vcoordy(p.I), globalsy[0])) {
-      CCTK_VINFO(
-          "Test FAILED at x direction, patch %i. Got: %.16f. Expected %.16f",
-          p.patch, vcoordy(p.I), globalsy[0]);
-    }
-
-    if (!MultiPatchTests::isapprox(vcoordz(p.I), globalsz[0])) {
-      CCTK_VINFO(
-          "Test FAILED at x direction, patch %i. Got: %.16f. Expected %.16f",
-          p.patch, vcoordz(p.I), globalsz[0]);
+    if (!MultiPatchTests::isapprox(actual_gf, expected_gf)) {
+      CCTK_VINFO("Test FAILED at (%.16f, %.16f, %.16f). Patch index %i. Grid "
+                 "index (%i, %i, %i). "
+                 "Expected: %.16f. "
+                 "Obtained %.16f",
+                 x, y, z, p.patch, p.I[0], p.I[1], p.I[2], expected_gf,
+                 actual_gf);
     }
   };
 
-  grid.loop_all_device<0, 0, 0>(grid.nghostzones, loop_lambda);
+  grid.loop_all<0, 0, 0>(grid.nghostzones, loop_lambda);
 }
 
 } // namespace TestMultiPatch

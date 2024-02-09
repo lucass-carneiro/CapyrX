@@ -41,6 +41,13 @@ CarpetX::ghost_size_x = 1
 CarpetX::ghost_size_y = 1
 CarpetX::ghost_size_z = 1
 
+CarpetX::boundary_x = "neumann"
+CarpetX::boundary_y = "neumann"
+CarpetX::boundary_z = "neumann"
+CarpetX::boundary_upper_x = "neumann"
+CarpetX::boundary_upper_y = "neumann"
+CarpetX::boundary_upper_z = "neumann"
+
 CarpetX::interpolation_order = 1
 
 IO::out_dir = $parfile

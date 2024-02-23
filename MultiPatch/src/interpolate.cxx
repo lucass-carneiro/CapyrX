@@ -214,13 +214,13 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
       grid.loop_bnd<0, 0, 0>(grid.nghostzones, [&](const Loop::PointDesc &p) {
         // Skip outer boundaries
         for (int d = 0; d < dim; ++d) {
-#warning "TODO"
+#warning "TODO: Why are we writting these arbitrary values in the outer boundaries?"
           if (p.NI[d] < 0 && patch_faces[0][d].is_outer_boundary) {
             var(p.I) = -4;
             return;
           }
           if (p.NI[d] > 0 && patch_faces[1][d].is_outer_boundary) {
-            var(p.I) = -5;
+            // var(p.I) = -5;
             return;
           }
         }

@@ -20,7 +20,7 @@ void FUNCTION MultiPatch_LocalToGlobal2(
   CCTK_REAL ARRAY OUT globalsz)
 REQUIRES FUNCTION MultiPatch_LocalToGlobal2
 
-CCTK_REAL multipatch_test_gfs TYPE=gf CENTERING={vvv} TAGS='checkpoint="no"'
+CCTK_REAL multipatch_test_gfs TYPE=gf CENTERING={vvv} TAGS='checkpoint="no" dirichlet_values={1138.0}'
 {
     test_gf
 } "The test grid functions to be loaded with initial data"

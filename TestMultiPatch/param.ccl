@@ -19,3 +19,9 @@ CCTK_REAL kz "ky for standing wave"
 {
   *:* :: ""
 } 0.5
+
+CCTK_REAL tolerance "Tolerance for testing interpolator accuracy"
+{
+  *:* :: ""
+}
+1.0e-2

@@ -214,123 +214,74 @@ extern "C" int MultiPatch_Setup() {
 }
 
 extern "C" void MultiPatch_Coordinates_Setup(CCTK_ARGUMENTS) {
-  DECLARE_CCTK_ARGUMENTS_MultiPatch_Coordinates_Setup;
+  DECLARE_CCTK_ARGUMENTSX_MultiPatch_Coordinates_Setup;
   DECLARE_CCTK_PARAMETERS;
 
-  // const Loop::GridDescBase grid(cctkGH);
-  const Loop::GridDescBaseDevice grid(cctkGH);
-
-  const std::array<int, dim> indextype_vc = {0, 0, 0};
-  const std::array<int, dim> indextype_cc = {1, 1, 1};
-  const Loop::GF3D2layout layout_vc(cctkGH, indextype_vc);
-  const Loop::GF3D2layout layout_cc(cctkGH, indextype_cc);
-
-  const Loop::GF3D2<CCTK_REAL> gf_vcoordx(layout_vc, vcoordx);
-  const Loop::GF3D2<CCTK_REAL> gf_vcoordy(layout_vc, vcoordy);
-  const Loop::GF3D2<CCTK_REAL> gf_vcoordz(layout_vc, vcoordz);
-
-  const Loop::GF3D2<CCTK_REAL> gf_ccoordx(layout_cc, ccoordx);
-  const Loop::GF3D2<CCTK_REAL> gf_ccoordy(layout_cc, ccoordy);
-  const Loop::GF3D2<CCTK_REAL> gf_ccoordz(layout_cc, ccoordz);
-
-  const Loop::GF3D2<CCTK_REAL> gf_cvol(layout_cc, cvol);
-
-  // Vertex centered Jacobian matrix
-  const Loop::GF3D2<CCTK_REAL> gf_vJ_da_dx(layout_vc, vJ_da_dx);
-  const Loop::GF3D2<CCTK_REAL> gf_vJ_da_dy(layout_vc, vJ_da_dy);
-  const Loop::GF3D2<CCTK_REAL> gf_vJ_da_dz(layout_vc, vJ_da_dz);
-  const Loop::GF3D2<CCTK_REAL> gf_vJ_db_dx(layout_vc, vJ_db_dx);
-  const Loop::GF3D2<CCTK_REAL> gf_vJ_db_dy(layout_vc, vJ_db_dy);
-  const Loop::GF3D2<CCTK_REAL> gf_vJ_db_dz(layout_vc, vJ_db_dz);
-  const Loop::GF3D2<CCTK_REAL> gf_vJ_dc_dx(layout_vc, vJ_dc_dx);
-  const Loop::GF3D2<CCTK_REAL> gf_vJ_dc_dy(layout_vc, vJ_dc_dy);
-  const Loop::GF3D2<CCTK_REAL> gf_vJ_dc_dz(layout_vc, vJ_dc_dz);
-
-  // Vertex centered Jacobian matrix derivative
-  const Loop::GF3D2<CCTK_REAL> gf_vdJ_d2a_dxdx(layout_vc, vdJ_d2a_dxdx);
-  const Loop::GF3D2<CCTK_REAL> gf_vdJ_d2a_dxdy(layout_vc, vdJ_d2a_dxdy);
-  const Loop::GF3D2<CCTK_REAL> gf_vdJ_d2a_dxdz(layout_vc, vdJ_d2a_dxdz);
-  const Loop::GF3D2<CCTK_REAL> gf_vdJ_d2a_dydy(layout_vc, vdJ_d2a_dydy);
-  const Loop::GF3D2<CCTK_REAL> gf_vdJ_d2a_dydz(layout_vc, vdJ_d2a_dydz);
-  const Loop::GF3D2<CCTK_REAL> gf_vdJ_d2a_dzdz(layout_vc, vdJ_d2a_dzdz);
-  const Loop::GF3D2<CCTK_REAL> gf_vdJ_d2b_dxdx(layout_vc, vdJ_d2b_dxdx);
-  const Loop::GF3D2<CCTK_REAL> gf_vdJ_d2b_dxdy(layout_vc, vdJ_d2b_dxdy);
-  const Loop::GF3D2<CCTK_REAL> gf_vdJ_d2b_dxdz(layout_vc, vdJ_d2b_dxdz);
-  const Loop::GF3D2<CCTK_REAL> gf_vdJ_d2b_dydy(layout_vc, vdJ_d2b_dydy);
-  const Loop::GF3D2<CCTK_REAL> gf_vdJ_d2b_dydz(layout_vc, vdJ_d2b_dydz);
-  const Loop::GF3D2<CCTK_REAL> gf_vdJ_d2b_dzdz(layout_vc, vdJ_d2b_dzdz);
-  const Loop::GF3D2<CCTK_REAL> gf_vdJ_d2c_dxdx(layout_vc, vdJ_d2c_dxdx);
-  const Loop::GF3D2<CCTK_REAL> gf_vdJ_d2c_dxdy(layout_vc, vdJ_d2c_dxdy);
-  const Loop::GF3D2<CCTK_REAL> gf_vdJ_d2c_dxdz(layout_vc, vdJ_d2c_dxdz);
-  const Loop::GF3D2<CCTK_REAL> gf_vdJ_d2c_dydy(layout_vc, vdJ_d2c_dydy);
-  const Loop::GF3D2<CCTK_REAL> gf_vdJ_d2c_dydz(layout_vc, vdJ_d2c_dydz);
-  const Loop::GF3D2<CCTK_REAL> gf_vdJ_d2c_dzdz(layout_vc, vdJ_d2c_dzdz);
-
   const PatchTransformations pt = the_patch_system->transformations;
+
   grid.loop_all_device<0, 0, 0>(
       grid.nghostzones,
       [=] ARITH_DEVICE(const Loop::PointDesc &p) ARITH_INLINE {
-        const Loop::GF3D2index index(layout_vc, p.I);
         const vec<CCTK_REAL, dim> a = {p.x, p.y, p.z};
 
         const auto d2J_tuple = pt.d2local_dglobal2(pt, cctk_patch, a);
-        const auto x = std::get<0>(d2J_tuple);
-        const auto J = std::get<1>(d2J_tuple);
-        const auto dJ = std::get<2>(d2J_tuple);
+        const auto &x = std::get<0>(d2J_tuple);
+        const auto &J = std::get<1>(d2J_tuple);
+        const auto &dJ = std::get<2>(d2J_tuple);
 
-        gf_vcoordx(index) = x(0);
-        gf_vcoordy(index) = x(1);
-        gf_vcoordz(index) = x(2);
+        vcoordx(p.I) = x(0);
+        vcoordy(p.I) = x(1);
+        vcoordz(p.I) = x(2);
 
-        gf_vJ_da_dx(index) = J(0)(0);
-        gf_vJ_da_dy(index) = J(0)(1);
-        gf_vJ_da_dz(index) = J(0)(2);
-        gf_vJ_db_dx(index) = J(1)(0);
-        gf_vJ_db_dy(index) = J(1)(1);
-        gf_vJ_db_dz(index) = J(1)(2);
-        gf_vJ_dc_dx(index) = J(2)(0);
-        gf_vJ_dc_dy(index) = J(2)(1);
-        gf_vJ_dc_dz(index) = J(2)(2);
+        vJ_da_dx(p.I) = J(0)(0);
+        vJ_da_dy(p.I) = J(0)(1);
+        vJ_da_dz(p.I) = J(0)(2);
+        vJ_db_dx(p.I) = J(1)(0);
+        vJ_db_dy(p.I) = J(1)(1);
+        vJ_db_dz(p.I) = J(1)(2);
+        vJ_dc_dx(p.I) = J(2)(0);
+        vJ_dc_dy(p.I) = J(2)(1);
+        vJ_dc_dz(p.I) = J(2)(2);
 
-        gf_vdJ_d2a_dxdx(index) = dJ(0)(0, 0);
-        gf_vdJ_d2a_dxdy(index) = dJ(0)(0, 1);
-        gf_vdJ_d2a_dxdz(index) = dJ(0)(0, 2);
-        gf_vdJ_d2a_dydy(index) = dJ(0)(1, 1);
-        gf_vdJ_d2a_dydz(index) = dJ(0)(1, 2);
-        gf_vdJ_d2a_dzdz(index) = dJ(0)(2, 2);
-        gf_vdJ_d2b_dxdx(index) = dJ(1)(0, 0);
-        gf_vdJ_d2b_dxdy(index) = dJ(1)(0, 1);
-        gf_vdJ_d2b_dxdz(index) = dJ(1)(0, 2);
-        gf_vdJ_d2b_dydy(index) = dJ(1)(1, 1);
-        gf_vdJ_d2b_dydz(index) = dJ(1)(1, 2);
-        gf_vdJ_d2b_dzdz(index) = dJ(1)(2, 2);
-        gf_vdJ_d2c_dxdx(index) = dJ(2)(0, 0);
-        gf_vdJ_d2c_dxdy(index) = dJ(2)(0, 1);
-        gf_vdJ_d2c_dxdz(index) = dJ(2)(0, 2);
-        gf_vdJ_d2c_dydy(index) = dJ(2)(1, 1);
-        gf_vdJ_d2c_dydz(index) = dJ(2)(1, 2);
-        gf_vdJ_d2c_dzdz(index) = dJ(2)(2, 2);
+        vdJ_d2a_dxdx(p.I) = dJ(0)(0, 0);
+        vdJ_d2a_dxdy(p.I) = dJ(0)(0, 1);
+        vdJ_d2a_dxdz(p.I) = dJ(0)(0, 2);
+        vdJ_d2a_dydy(p.I) = dJ(0)(1, 1);
+        vdJ_d2a_dydz(p.I) = dJ(0)(1, 2);
+        vdJ_d2a_dzdz(p.I) = dJ(0)(2, 2);
+        vdJ_d2b_dxdx(p.I) = dJ(1)(0, 0);
+        vdJ_d2b_dxdy(p.I) = dJ(1)(0, 1);
+        vdJ_d2b_dxdz(p.I) = dJ(1)(0, 2);
+        vdJ_d2b_dydy(p.I) = dJ(1)(1, 1);
+        vdJ_d2b_dydz(p.I) = dJ(1)(1, 2);
+        vdJ_d2b_dzdz(p.I) = dJ(1)(2, 2);
+        vdJ_d2c_dxdx(p.I) = dJ(2)(0, 0);
+        vdJ_d2c_dxdy(p.I) = dJ(2)(0, 1);
+        vdJ_d2c_dxdz(p.I) = dJ(2)(0, 2);
+        vdJ_d2c_dydy(p.I) = dJ(2)(1, 1);
+        vdJ_d2c_dydz(p.I) = dJ(2)(1, 2);
+        vdJ_d2c_dzdz(p.I) = dJ(2)(2, 2);
       });
 
   grid.loop_all_device<1, 1, 1>(
       grid.nghostzones,
       [=] ARITH_DEVICE(const Loop::PointDesc &p) ARITH_INLINE {
-        const Loop::GF3D2index index(layout_cc, p.I);
         const vec<CCTK_REAL, dim> a = {p.x, p.y, p.z};
-        const std_tuple<vec<CCTK_REAL, dim>, vec<vec<CCTK_REAL, dim>, dim> >
-            x_dadx = pt.dlocal_dglobal(pt, cctk_patch, a);
-        const vec<CCTK_REAL, dim> &x = std::get<0>(x_dadx);
-        const vec<vec<CCTK_REAL, dim>, dim> &dadx = std::get<1>(x_dadx);
-        const CCTK_REAL det_dadx = det(dadx);
-        const CCTK_REAL vol =
-            (p.dx * p.dy * p.dz) *
-            det_dadx; // TODO: Is it det_dadx or sqrt(det_dadx)? As far as we
-                      // know no sqrt is necessary. Note that det_dadx is
-                      // negative in the cake patch, so that causes NaNs
-        gf_ccoordx(index) = x(0);
-        gf_ccoordy(index) = x(1);
-        gf_ccoordz(index) = x(2);
-        gf_cvol(index) = vol;
+
+        const auto x_dadx = pt.dlocal_dglobal(pt, cctk_patch, a);
+        const auto &x = std::get<0>(x_dadx);
+        const auto &dadx = std::get<1>(x_dadx);
+        const auto det_dadx = det(dadx);
+
+        // TODO: Is it det_dadx or sqrt(det_dadx)? As far as we
+        // know no sqrt is necessary. Note that det_dadx is
+        // negative in the cake patch, so that causes NaNs
+        const auto vol = (p.dx * p.dy * p.dz) * det_dadx;
+
+        ccoordx(p.I) = x(0);
+        ccoordy(p.I) = x(1);
+        ccoordz(p.I) = x(2);
+        cvol(p.I) = vol;
       });
 }
 

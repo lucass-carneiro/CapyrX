@@ -30,24 +30,23 @@ MultiPatch::patch_system = "Cake"
 MultiPatch::cake_outer_boundary_radius = 5.0
 MultiPatch::cake_inner_boundary_radius = 1.0
 
-MultiPatch::cake_cartesian_ncells_i    = 10
-MultiPatch::cake_cartesian_ncells_j    = 10
-MultiPatch::cake_cartesian_ncells_k    = 10
+MultiPatch::cake_cartesian_ncells_i    = 5
+MultiPatch::cake_cartesian_ncells_j    = 5
+MultiPatch::cake_cartesian_ncells_k    = 5
 
-MultiPatch::cake_angular_cells         = 10
-MultiPatch::cake_radial_cells          = 10
+MultiPatch::cake_angular_cells         = 5
+MultiPatch::cake_radial_cells          = 5
 
-CarpetX::ghost_size_x = 1
-CarpetX::ghost_size_y = 1
-CarpetX::ghost_size_z = 1
+CarpetX::boundary_x = "dirichlet"
+CarpetX::boundary_y = "dirichlet"
+CarpetX::boundary_z = "dirichlet"
+CarpetX::boundary_upper_x = "dirichlet"
+CarpetX::boundary_upper_y = "dirichlet"
+CarpetX::boundary_upper_z = "dirichlet"
 
-CarpetX::boundary_x = "neumann"
-CarpetX::boundary_y = "neumann"
-CarpetX::boundary_z = "neumann"
-CarpetX::boundary_upper_x = "neumann"
-CarpetX::boundary_upper_y = "neumann"
-CarpetX::boundary_upper_z = "neumann"
 
+#TODO: Make sure that the number of cells supports the asked interpolation order.
+CarpetX::ghost_size = 1
 CarpetX::interpolation_order = 1
 
 IO::out_dir = $parfile

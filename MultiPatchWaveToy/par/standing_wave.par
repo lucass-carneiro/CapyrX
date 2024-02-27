@@ -36,7 +36,6 @@ MultiPatch::cake_radial_cells          = 80
 
 MultiPatchWaveToy::initial_condition  = "standing wave"
 
-# These are unused. Boundary conditions are set internally in the RHS function
 CarpetX::boundary_x = "dirichlet"
 CarpetX::boundary_y = "dirichlet"
 CarpetX::boundary_z = "dirichlet"
@@ -47,10 +46,8 @@ CarpetX::boundary_upper_z = "dirichlet"
 IO::out_dir = $parfile
 IO::out_every = 1
 
-CarpetX::out_tsv = no
-CarpetX::out_tsv_vars = ""
-
-CarpetX::out_openpmd_vars = "
+CarpetX::out_tsv = yes
+CarpetX::out_tsv_vars = "
     CoordinatesX::vertex_coords
     MultiPatchWaveToy::state
     MultiPatchWaveToy::rhs

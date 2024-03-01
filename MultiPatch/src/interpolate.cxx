@@ -196,7 +196,6 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
     const Loop::GF3D2layout layout(cctkGH, centering);
 
     const auto &current_patch{the_patch_system->patches.at(patch)};
-    const auto &patch_faces{current_patch.faces};
 
     const Location location{patch, level, index, component};
     const std::vector<std::vector<CCTK_REAL> > &result_values =
@@ -212,19 +211,6 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
       std::size_t pos = 0;
       // Note: This includes symmetry points
       grid.loop_bnd<0, 0, 0>(grid.nghostzones, [&](const Loop::PointDesc &p) {
-        // Skip outer boundaries
-        for (int d = 0; d < dim; ++d) {
-#warning "TODO: Why are we writting these arbitrary values in the outer boundaries?"
-          if (p.NI[d] < 0 && patch_faces[0][d].is_outer_boundary) {
-            var(p.I) = -4;
-            return;
-          }
-          if (p.NI[d] > 0 && patch_faces[1][d].is_outer_boundary) {
-            // var(p.I) = -5;
-            return;
-          }
-        }
-
         var(p.I) = result_values_n[pos++];
       });
       assert(pos == result_values.at(0).size());

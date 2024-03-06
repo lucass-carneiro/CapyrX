@@ -196,6 +196,7 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
     const Loop::GF3D2layout layout(cctkGH, centering);
 
     const auto &current_patch{the_patch_system->patches.at(patch)};
+    const auto &patch_faces{current_patch.faces};
 
     const Location location{patch, level, index, component};
     const std::vector<std::vector<CCTK_REAL> > &result_values =
@@ -211,6 +212,24 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
       std::size_t pos = 0;
       // Note: This includes symmetry points
       grid.loop_bnd<0, 0, 0>(grid.nghostzones, [&](const Loop::PointDesc &p) {
+        // Skip outer boundaries
+        // TODO: There is no reason to write arbotrary values (-4 and -5)
+        // to the outer boundary.
+        // This loop should not be required, but if it is not present,
+        // the assertion a few lines bellow will fail. Find a way to remove
+        // this dead code without disturbing the assert. For now, this is
+        // fine but it shoulde be fixed
+        for (int d = 0; d < dim; ++d) {
+          if (p.NI[d] < 0 && patch_faces[0][d].is_outer_boundary) {
+            // var(p.I) = -4;
+            return;
+          }
+          if (p.NI[d] > 0 && patch_faces[1][d].is_outer_boundary) {
+            // var(p.I) = -5;
+            return;
+          }
+        }
+
         var(p.I) = result_values_n[pos++];
       });
       assert(pos == result_values.at(0).size());

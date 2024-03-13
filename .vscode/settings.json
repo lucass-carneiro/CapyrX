@@ -1,4 +1,5 @@
 {
     "python.defaultInterpreterPath": "MultiPatchWaveToy/resources/venv/",
-    "julia.environmentPath": "/home/lucas/EinsteinToolkit/Cactus/repos/CapyrX"
+    "julia.environmentPath": "/home/lucas/EinsteinToolkit/Cactus/repos/CapyrX",
+    "editor.formatOnSave": true
 }

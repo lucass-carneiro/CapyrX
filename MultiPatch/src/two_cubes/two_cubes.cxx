@@ -72,6 +72,33 @@ CCTK_DEVICE CCTK_HOST svec local2global(const PatchTransformations &pt,
   return global_vars;
 }
 
+static inline patch_piece get_owner_patch(const PatchTransformations &pt,
+                                          const svec &global_vars) {
+  const auto x = global_vars(0);
+  const auto y = global_vars(0);
+  const auto z = global_vars(0);
+
+  const auto xmin{pt.two_cubes_xmin};
+  const auto xmax{pt.two_cubes_xmax};
+
+  const auto x_bnd{xmin + (xmax - xmin) / 2.0};
+
+  if (x < x_bnd) {
+    return patch_piece::left_cube;
+  } else if (x > x_bnd) {
+    return patch_piece::right_cube;
+  } else {
+#ifndef __CUDACC__
+    CCTK_VERROR("Coordinate triplet (%f, %f, %f) cannot be located within "
+                "the simulation domain",
+                x, y, z);
+#else
+    assert(0);
+#endif
+    return patch_piece::unknown;
+  }
+}
+
 CCTK_DEVICE CCTK_HOST std_tuple<int, svec>
 global2local(const PatchTransformations &pt, const svec &global_vars) {
   const auto x{global_vars(0)};
@@ -109,7 +136,7 @@ global2local(const PatchTransformations &pt, const svec &global_vars) {
 #ifndef __CUDACC__
     CCTK_VERROR("At point (%f, %f, %f): No global -> local transformations "
                 "available for patch %s.",
-                x, y, z, piece_name(piece).c_str());
+                x, y, z, piece_name(piece));
 #else
     assert(0);
 #endif
@@ -120,9 +147,88 @@ global2local(const PatchTransformations &pt, const svec &global_vars) {
 }
 
 /**
+ * @brief Computes the jacobians and Jacobian derivatives of the Two Cubes
+ * patch
+ *
+ * @param pt The patch transformation structures for the patch
+ * @param patch The index of the patch to find the Jacobians for
+ * @param global_vars The global point to evaluate the jacobian in.
+ * @return The jacobian and jacobian derivative data arrays
+ */
+static inline std_tuple<jac_t, djac_t>
+two_cubes_jacs(const PatchTransformations &pt, int patch,
+               const svec &global_vars) {
+
+  using std::pow;
+  using std::sqrt;
+
+  jac_t J{};
+  djac_t dJ{};
+
+  const auto xmin{pt.two_cubes_xmin};
+  const auto xmax{pt.two_cubes_xmax};
+
+  const auto ymin{pt.two_cubes_ymin};
+  const auto ymax{pt.two_cubes_ymax};
+
+  const auto zmin{pt.two_cubes_zmin};
+  const auto zmax{pt.two_cubes_zmax};
+
+  if (patch == static_cast<int>(patch_piece::left_cube) ||
+      patch == static_cast<int>(patch_piece::right_cube)) {
+    J(0)(0) = 4.0 / (xmax - xmin);
+    J(0)(1) = 0.0;
+    J(0)(2) = 0.0;
+    J(1)(0) = 0.0;
+    J(1)(1) = 2.0 / (ymax - ymin);
+    J(1)(2) = 0.0;
+    J(2)(0) = 0.0;
+    J(2)(1) = 0.0;
+    J(2)(2) = 2.0 / (zmax - zmin);
+
+    dJ(0)(0, 0) = 0;
+    dJ(0)(0, 1) = 0;
+    dJ(0)(0, 2) = 0;
+    dJ(0)(1, 0) = 0;
+    dJ(0)(1, 1) = 0;
+    dJ(0)(1, 2) = 0;
+    dJ(0)(2, 0) = 0;
+    dJ(0)(2, 1) = 0;
+    dJ(0)(2, 2) = 0;
+    dJ(1)(0, 0) = 0;
+    dJ(1)(0, 1) = 0;
+    dJ(1)(0, 2) = 0;
+    dJ(1)(1, 0) = 0;
+    dJ(1)(1, 1) = 0;
+    dJ(1)(1, 2) = 0;
+    dJ(1)(2, 0) = 0;
+    dJ(1)(2, 1) = 0;
+    dJ(1)(2, 2) = 0;
+    dJ(2)(0, 0) = 0;
+    dJ(2)(0, 1) = 0;
+    dJ(2)(0, 2) = 0;
+    dJ(2)(1, 0) = 0;
+    dJ(2)(1, 1) = 0;
+    dJ(2)(1, 2) = 0;
+    dJ(2)(2, 0) = 0;
+    dJ(2)(2, 1) = 0;
+    dJ(2)(2, 2) = 0;
+  } else {
+#ifndef __CUDACC__
+    CCTK_VERROR("No jacobians available for patch %s",
+                piece_name(static_cast<patch_piece>(patch)));
+#else
+    assert(0);
+#endif
+  }
+
+  return std_make_tuple(J, dJ);
+}
+
+/**
  * @brief This function computes the local to global coordinate
- * transformation, the jacobian and it's derivative. It can be passed directly
- * to CarpetX.
+ * transformation, the jacobian and it's derivative. It can be passed
+ * directly to CarpetX.
  *
  * @note The Jacobians are defined as
  * J(i)(j) = $J^{i}_{j} = \frac{d a^i}{d x^j}$.
@@ -140,16 +246,17 @@ CCTK_DEVICE CCTK_HOST std_tuple<svec, jac_t, djac_t>
 d2local_dglobal2(const PatchTransformations &pt, int patch,
                  const svec &local_vars) {
 
-  const auto local_to_global_result = pt.local2global(pt, patch, local_vars);
-  const auto jacobian_results = cake_jacs(pt, patch, local_to_global_result);
+  const auto local_to_global_result{pt.local2global(pt, patch, local_vars)};
+  const auto jacobian_results{
+      two_cubes_jacs(pt, patch, local_to_global_result)};
 
   return std_make_tuple(local_to_global_result, std::get<0>(jacobian_results),
                         std::get<1>(jacobian_results));
 } // namespace TwoCubes
 
 /**
- * @brief This function computes the local to global coordinate transformation
- * and the jacobian. It can be passed directly to CarpetX.
+ * @brief This function computes the local to global coordinate
+ * transformation and the jacobian. It can be passed directly to CarpetX.
  *
  * @note NThe Jacobians is defined as:
  * J(i)(j) = $J^{i}_{j} = \frac{d a^i}{d x^j}$.
@@ -179,57 +286,25 @@ template <patch_piece p> Patch make_patch(const PatchTransformations &pt) {
   Patch patch;
 
   patch.name = piece_name(p);
-
-  // Basic configuration for a thornburg patch piece
-  patch.ncells = {pt.cake_angular_cells, pt.cake_angular_cells,
-                  pt.cake_radial_cells};
-
   patch.xmin = {-1.0, -1.0, -1.0};
   patch.xmax = {1.0, 1.0, 1.0};
-
   patch.is_cartesian = false;
 
-  PatchFace co{false, static_cast<int>(patch_piece::cartesian)};
   PatchFace ex{true, static_cast<int>(patch_piece::exterior)};
-  PatchFace px{false, static_cast<int>(patch_piece::plus_x)};
-  PatchFace mx{false, static_cast<int>(patch_piece::minus_x)};
-  PatchFace py{false, static_cast<int>(patch_piece::plus_y)};
-  PatchFace my{false, static_cast<int>(patch_piece::minus_y)};
-  PatchFace pz{false, static_cast<int>(patch_piece::plus_z)};
-  PatchFace mz{false, static_cast<int>(patch_piece::minus_z)};
+  PatchFace lc{false, static_cast<int>(patch_piece::left_cube)};
+  PatchFace rc{false, static_cast<int>(patch_piece::right_cube)};
 
-  if constexpr (p == patch_piece::cartesian) {
-    patch.ncells = {pt.cake_cartesian_ncells_i, pt.cake_cartesian_ncells_j,
-                    pt.cake_cartesian_ncells_k};
+  if constexpr (p == patch_piece::left_cube) {
+    patch.ncells = {pt.two_cubes_ncells_left, pt.two_cubes_ncells_y,
+                    pt.two_cubes_ncells_z};
 
-    patch.xmin = {-pt.cake_inner_boundary_radius,
-                  -pt.cake_inner_boundary_radius,
-                  -pt.cake_inner_boundary_radius};
+    patch.faces = {{ex, ex, ex}, {rc, ex, ex}};
 
-    patch.xmax = {pt.cake_inner_boundary_radius, pt.cake_inner_boundary_radius,
-                  pt.cake_inner_boundary_radius};
+  } else if constexpr (p == patch_piece::right_cube) {
+    patch.ncells = {pt.two_cubes_ncells_right, pt.two_cubes_ncells_y,
+                    pt.two_cubes_ncells_z};
 
-    patch.is_cartesian = true;
-
-    patch.faces = {{mx, my, mz}, {px, py, pz}};
-
-  } else if constexpr (p == patch_piece::plus_x) {
-    patch.faces = {{mz, my, co}, {pz, py, ex}};
-
-  } else if constexpr (p == patch_piece::minus_x) {
-    patch.faces = {{mz, py, co}, {pz, my, ex}};
-
-  } else if constexpr (p == patch_piece::plus_y) {
-    patch.faces = {{mz, px, co}, {pz, mx, ex}};
-
-  } else if constexpr (p == patch_piece::minus_y) {
-    patch.faces = {{mz, mx, co}, {pz, px, ex}};
-
-  } else if constexpr (p == patch_piece::plus_z) {
-    patch.faces = {{px, my, co}, {mx, py, ex}};
-
-  } else if constexpr (p == patch_piece::minus_z) {
-    patch.faces = {{mx, my, co}, {px, py, ex}};
+    patch.faces = {{lc, ex, ex}, {ex, ex, ex}};
   }
 
   return patch;
@@ -242,7 +317,7 @@ template <patch_piece p> Patch make_patch(const PatchTransformations &pt) {
  *
  * @return PatchSystem object with TwoCubes data and functions
  */
-PatchSystem SetupCake() {
+PatchSystem SetupTwoCubes() {
   PatchTransformations pt;
   pt.global2local = &TwoCubes::global2local;
   pt.local2global = &TwoCubes::local2global;
@@ -254,15 +329,10 @@ PatchSystem SetupCake() {
   pt.d2local_dglobal2_device = &TwoCubes::d2local_dglobal2;
 
   const auto patches = std::vector<Patch>{
-      TwoCubes::make_patch<TwoCubes::patch_piece::cartesian>(pt),
-      TwoCubes::make_patch<TwoCubes::patch_piece::minus_x>(pt),
-      TwoCubes::make_patch<TwoCubes::patch_piece::plus_x>(pt),
-      TwoCubes::make_patch<TwoCubes::patch_piece::minus_y>(pt),
-      TwoCubes::make_patch<TwoCubes::patch_piece::plus_y>(pt),
-      TwoCubes::make_patch<TwoCubes::patch_piece::minus_z>(pt),
-      TwoCubes::make_patch<TwoCubes::patch_piece::plus_z>(pt)};
+      TwoCubes::make_patch<TwoCubes::patch_piece::left_cube>(pt),
+      TwoCubes::make_patch<TwoCubes::patch_piece::right_cube>(pt)};
 
-  return PatchSystem("TwoCubes", std::move(patches), std::move(pt));
+  return PatchSystem("Two Cubes", std::move(patches), std::move(pt));
 }
 
 } // namespace MultiPatch

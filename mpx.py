@@ -3,6 +3,7 @@
 Usage:
   mpx augment-tsv <data-file> <coord-file>
   mpx plot-tsv <augmented-data> <var> [--rhs] [--save] [--diverging]
+  mpx plot-grid-tsv <coordinates-tsv-file> [--save]
   mpx plot-openpmd <data-file> <thorn-name> <group-name> <var-name> <iteration> [--refinement-level=<level>] [--z-slice=<zval>] [--openpmd-format=<format>] [--save] [--diverging] [--verbose]
   mpx (-h | --help)
   mpx --version
@@ -32,6 +33,74 @@ import multiprocessing
 import os
 
 from docopt import docopt
+
+
+def plot_grid_tsv(args):
+    # Arguments
+    save_file = arguments["--save"]
+    coord_file = args["<coordinates-tsv-file>"]
+
+    print("Plotting", coord_file)
+
+    # Common file vars
+    vars = [
+        "iteration",
+        "time",
+        "patch",
+        "level",
+        "component",
+        "i",
+        "j",
+        "k",
+        "x",
+        "y",
+        "z",
+        "vcoordx",
+        "vcoordy",
+        "vcoordz"
+    ]
+
+    print("Reading data")
+    data = pd.read_csv(coord_file, delim_whitespace=True,
+                       names=vars, comment="#")
+
+    # Z slice data
+    print("Filtering data for the z = 0 slice")
+
+    sliced_data = data.loc[
+        (data["vcoordz"] == 0.0) &
+        (np.abs(data["x"]) <= 1.0) &
+        (np.abs(data["y"]) <= 1.0) &
+        (np.abs(data["z"]) <= 1.0)
+    ]
+
+    print("Creating data plot")
+
+    plt.close("all")
+
+    # Plot patches with different colors and markers
+    markers = [".", "x", "1", "s", "d", "v"]
+
+    for i in range(data["patch"].iloc[-1] + 1):
+        patch_sliced_data = data.loc[data["patch"] == i]
+        plt.scatter(
+            patch_sliced_data["vcoordx"],
+            patch_sliced_data["vcoordy"],
+            marker=markers[i],
+            label="Patch {}".format(i)
+        )
+
+    plt.tight_layout()
+    plt.xlabel(r"$x$")
+    plt.ylabel(r"$y$")
+    plt.legend()
+
+    if not save_file:
+        plt.show()
+    else:
+        plt.savefig("grid.pdf")
+
+    plt.close("all")
 
 
 def augment_tsv(state_file, coord_file):
@@ -394,6 +463,8 @@ def main(args):
         plot_tsv(args)
     elif args["plot-openpmd"]:
         plot_openpmd(args)
+    elif args["plot-grid-tsv"]:
+        plot_grid_tsv(args)
 
 
 # Required in order to keep subprocesses from launching recursivelly

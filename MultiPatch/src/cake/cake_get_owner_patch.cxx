@@ -12,11 +12,8 @@
 CCTK_DEVICE CCTK_HOST MultiPatch::Cake::patch_piece
 MultiPatch::Cake::get_owner_patch(const PatchTransformations &pt,
                                   const svec &global_vars) {
-  using MultiPatchTests::at_boundary;
-  using MultiPatchTests::isapprox;
   using MultiPatchTests::within;
   using std::abs;
-  using std::sqrt;
 
   const auto x = global_vars(0);
   const auto y = global_vars(1);

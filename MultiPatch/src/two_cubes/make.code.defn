@@ -1,0 +1,4 @@
+# make.code.defn file for the Two Cubes patch system definition and tests
+
+# Source files in this directory
+SRCS = two_cubes.cxx

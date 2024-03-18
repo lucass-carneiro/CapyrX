@@ -102,6 +102,48 @@ PatchTransformations::PatchTransformations()
       cake_radial_cells([] {
         DECLARE_CCTK_PARAMETERS;
         return cake_radial_cells;
+      }()),
+
+      // Two Cubes
+      two_cubes_xmin([] {
+        DECLARE_CCTK_PARAMETERS;
+        return two_cubes_xmin;
+      }()),
+      two_cubes_xmax([] {
+        DECLARE_CCTK_PARAMETERS;
+        return two_cubes_xmax;
+      }()),
+      two_cubes_ymin([] {
+        DECLARE_CCTK_PARAMETERS;
+        return two_cubes_ymin;
+      }()),
+      two_cubes_ymax([] {
+        DECLARE_CCTK_PARAMETERS;
+        return two_cubes_ymax;
+      }()),
+      two_cubes_zmin([] {
+        DECLARE_CCTK_PARAMETERS;
+        return two_cubes_zmin;
+      }()),
+      two_cubes_zmax([] {
+        DECLARE_CCTK_PARAMETERS;
+        return two_cubes_zmax;
+      }()),
+      two_cubes_ncells_left([] {
+        DECLARE_CCTK_PARAMETERS;
+        return two_cubes_ncells_left;
+      }()),
+      two_cubes_ncells_right([] {
+        DECLARE_CCTK_PARAMETERS;
+        return two_cubes_ncells_right;
+      }()),
+      two_cubes_ncells_y([] {
+        DECLARE_CCTK_PARAMETERS;
+        return two_cubes_ncells_y;
+      }()),
+      two_cubes_ncells_z([] {
+        DECLARE_CCTK_PARAMETERS;
+        return two_cubes_ncells_z;
       }()) {}
 
 std::unique_ptr<PatchSystem> the_patch_system;
@@ -207,6 +249,8 @@ extern "C" int MultiPatch_Setup() {
     the_patch_system = std::make_unique<PatchSystem>(SetupSwirl());
   else if (CCTK_EQUALS(patch_system, "Cake"))
     the_patch_system = std::make_unique<PatchSystem>(SetupCake());
+  else if (CCTK_EQUALS(patch_system, "Two Cubes"))
+    the_patch_system = std::make_unique<PatchSystem>(SetupTwoCubes());
   else
     CCTK_VERROR("Unknown patch system \"%s\"", patch_system);
 

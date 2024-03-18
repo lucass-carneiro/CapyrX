@@ -414,6 +414,56 @@ struct PatchTransformations {
    * patches.
    */
   int cake_radial_cells;
+
+  /**
+   * Two Cubes %Patch: The starting x value of the coordinate system.
+   */
+  CCTK_REAL two_cubes_xmin;
+
+  /**
+   * Two Cubes %Patch: The final x value of the coordinate system.
+   */
+  CCTK_REAL two_cubes_xmax;
+
+  /**
+   * Two Cubes %Patch: The starting y value of the coordinate system.
+   */
+  CCTK_REAL two_cubes_ymin;
+
+  /**
+   * Two Cubes %Patch: The final y value of the coordinate system.
+   */
+  CCTK_REAL two_cubes_ymax;
+
+  /**
+   * Two Cubes %Patch: The starting z value of the coordinate system.
+   */
+  CCTK_REAL two_cubes_zmin;
+
+  /**
+   * Two Cubes %Patch: The final z value of the coordinate system.
+   */
+  CCTK_REAL two_cubes_zmax;
+
+  /**
+   * Two Cubes %Patch: Number of cells in the left cube.
+   */
+  int two_cubes_ncells_left;
+
+  /**
+   * Two Cubes %Patch: Number of cells in the right cube.
+   */
+  int two_cubes_ncells_right;
+
+  /**
+   * Two Cubes %Patch: Number of cells in the y direction.
+   */
+  int two_cubes_ncells_y;
+
+  /**
+   * Two Cubes %Patch: Number of cells in the z direction.
+   */
+  int two_cubes_ncells_z;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -501,6 +551,14 @@ PatchSystem SetupSwirl();
  * A PatchSystem object with Cake coordinates.
  */
 PatchSystem SetupCake();
+
+/**
+ * @brief Creates a Two Cubes patch system
+ *
+ * @par Returns:
+ * A PatchSystem object with Two Cubes coordinates.
+ */
+PatchSystem SetupTwoCubes();
 
 /**
  * Pointer to the global PatchSystem objct use during a simulation

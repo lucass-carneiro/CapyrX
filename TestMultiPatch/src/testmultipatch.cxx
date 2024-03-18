@@ -19,9 +19,8 @@ static constexpr void standing_wave(const T A, const T kx, const T ky,
   using std::cos;
   using std::sqrt;
 
-  // u = A * cos(2 * M_PI * kx * x) * cos(2 * M_PI * ky * y) * cos(2 * M_PI * kz
-  // * z);
-  u = 1138;
+  u = A * cos(2 * M_PI * kx * x) * cos(2 * M_PI * ky * y) *
+      cos(2 * M_PI * kz * z);
 }
 
 extern "C" void TestMultiPatch_TestSync(CCTK_ARGUMENTS) {

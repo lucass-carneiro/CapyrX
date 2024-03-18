@@ -61,7 +61,7 @@ def plot_grid_tsv(args):
     ]
 
     print("Reading data")
-    data = pd.read_csv(coord_file, delim_whitespace=True,
+    data = pd.read_csv(coord_file, sep="\s+",
                        names=vars, comment="#")
 
     # Z slice data
@@ -196,11 +196,11 @@ def plot_tsv(arguments):
     if rhs:
         vars = vars1 + ["u_rhs", "rho_rhs"] + vars2
     else:
-        vars = vars1 + ["u", "rho"] + vars2
+        vars = vars1 + [var] + vars2
 
     print("Reading data")
     data = pd.read_csv(augmented_state_data,
-                       delim_whitespace=True, names=vars, comment="#")
+                       sep="\s+", names=vars, comment="#")
 
     # Z slice data
     print("Filtering data for the z = 0 slice")

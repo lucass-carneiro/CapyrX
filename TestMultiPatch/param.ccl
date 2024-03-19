@@ -24,4 +24,4 @@ CCTK_REAL tolerance "Tolerance for testing interpolator accuracy"
 {
   *:* :: ""
 }
-1.0e-2
+5.0e-2

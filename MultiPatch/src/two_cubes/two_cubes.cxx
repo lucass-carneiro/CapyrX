@@ -1,4 +1,11 @@
 #include "multipatch.hxx"
+#include "tests.hxx"
+
+#include <cctk_Arguments.h>
+#include <cctk_Parameters.h>
+
+#include <string>
+#include <sstream>
 
 namespace MultiPatch {
 namespace TwoCubes {
@@ -276,7 +283,7 @@ dlocal_dglobal(const PatchTransformations &pt, int patch,
 }
 
 /**
- * @brief Creates a cake patch piece
+ * @brief Creates a Two Cubes patch piece
  *
  * @tparam p The piece of the patch to make.
  * @param pt The patch transformation object with patch data.
@@ -335,4 +342,81 @@ PatchSystem SetupTwoCubes() {
   return PatchSystem("Two Cubes", std::move(patches), std::move(pt));
 }
 
+namespace TwoCubesTests {
+
+/**
+ * Tests the get_owner_patch function.
+ *
+ * @param pt The patch transformations structure
+ * @param x A global point to test.
+ * @param expected The expected result of the get_owner_patch execution.
+ * @return A string indicating the test status.
+ */
+std::string patch_owner_test(const PatchTransformations &pt,
+                             const TwoCubes::svec &x,
+                             TwoCubes::patch_piece expected) {
+
+  using namespace MultiPatch::TwoCubes;
+  using namespace MultiPatchTests;
+
+  std::ostringstream msg;
+  msg << "has ";
+
+  const auto owner_patch = get_owner_patch(pt, x);
+
+  if (owner_patch == expected) {
+    msg << MultiPatchTests::PASSED;
+  } else {
+    msg << MultiPatchTests::FAILED << ". Reason: Expected to get patch "
+        << piece_name(expected) << " and got " << piece_name(owner_patch);
+  }
+
+  msg << ".";
+  return msg.str();
+}
+
+} // namespace TwoCubesTests
 } // namespace MultiPatch
+
+extern "C" void MultiPatch_run_two_cubes_tests(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTS;
+  DECLARE_CCTK_PARAMETERS;
+
+  using MultiPatch::SetupTwoCubes;
+  using MultiPatch::TwoCubes::patch_piece;
+  using MultiPatch::TwoCubes::svec;
+  using MultiPatch::TwoCubesTests::patch_owner_test;
+
+  const auto ps{SetupTwoCubes()};
+  const auto &pt{ps.transformations};
+
+  const auto xmin{pt.two_cubes_xmin};
+  const auto xmax{pt.two_cubes_xmax};
+  const auto xmid{xmin + (xmax - xmin) / 2.0};
+
+  const auto ymin{pt.two_cubes_ymin};
+  const auto ymax{pt.two_cubes_ymax};
+  const auto ymid{ymin + (ymax - ymin) / 2};
+
+  const auto zmin{pt.two_cubes_zmin};
+  const auto zmax{pt.two_cubes_zmax};
+  const auto zmid{zmin + (zmax - zmin) / 2};
+
+  CCTK_INFO("Running Two Cubes patch tests:");
+
+  /*
+   * Fixed point tests
+   */
+  const std::array<std::pair<svec, patch_piece>, 2> owner_test_data = {
+      std::make_pair(svec{xmin + xmid / 2.0, ymid, zmid},
+                     patch_piece::left_cube),
+      std::make_pair(svec{xmax - xmid / 2.0, ymid, zmid},
+                     patch_piece::right_cube)};
+
+  // Tests if the patch owner is correct.
+  for (const auto &data : owner_test_data) {
+    CCTK_VINFO("  Patch owner test at point (%f, %f, %f) %s", data.first(0),
+               data.first(1), data.first(2),
+               patch_owner_test(pt, data.first, data.second).c_str());
+  }
+}

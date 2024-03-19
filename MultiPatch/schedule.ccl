@@ -42,4 +42,12 @@ if (run_tests) {
       OPTIONS: meta
     } "Perform Cake patch system tests"
   }
+
+  if (CCTK_EQUALS(patch_system, "Two Cubes")) {
+    SCHEDULE MultiPatch_run_two_cubes_tests AT wragh
+    {
+      LANG: C
+      OPTIONS: meta
+    } "Perform Two Cubes patch system tests"
+  }
 }

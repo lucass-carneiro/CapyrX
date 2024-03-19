@@ -52,15 +52,19 @@ extern "C" void TestMultiPatch_TestGhostInterp(CCTK_ARGUMENTS) {
         CCTK_REAL expected_gf{0};
         standing_wave(A, kx, ky, kz, x, y, z, expected_gf);
 
+        // If the actual value does not match the expected and it is not 1138
+        // (the boundary value), the test is a failure.
         if (!(abs(expected_gf - actual_gf) < tolerance)) {
-          CCTK_VINFO("Test FAILED:\n"
-                     "  Local coords: (%.16f, %.16f, %.16f).\n"
-                     "  Patch index: %i.\n"
-                     "  Grid index (%i, %i, %i).\n"
-                     "  Expected: %.16f.\n"
-                     "  Obtained %.16f",
-                     x, y, z, p.patch, p.I[0], p.I[1], p.I[2], expected_gf,
-                     actual_gf);
+          if (!(abs(actual_gf - 1138.0) < tolerance)) {
+            CCTK_VINFO("\033[31;1mFAILED\033[0m:\n"
+                       "  Local coords: (%.16f, %.16f, %.16f).\n"
+                       "  Patch index: %i.\n"
+                       "  Grid index (%i, %i, %i).\n"
+                       "  Expected: %.16f.\n"
+                       "  Obtained %.16f",
+                       x, y, z, p.patch, p.I[0], p.I[1], p.I[2], expected_gf,
+                       actual_gf);
+          }
         }
       });
 }

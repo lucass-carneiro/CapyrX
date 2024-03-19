@@ -20,7 +20,12 @@ void FUNCTION MultiPatch_LocalToGlobal2(
   CCTK_REAL ARRAY OUT globalsz)
 REQUIRES FUNCTION MultiPatch_LocalToGlobal2
 
-CCTK_REAL multipatch_test_gfs TYPE=gf CENTERING={vvv} TAGS='checkpoint="no" dirichlet_values={0.0}'
+# We write 1138 to the outer boundaries for two reasons:
+# 1. Because we are not detecting if a point in the grid loop is a boundary point, we need to accept the boundary
+# value along with the other expected grid function values. This value needs to be distinct from the possible
+# test grid function values (a standing wave ranges from -1 to 1)
+# 2. George Lucas's first movie, from 1971, is called THX 1138
+CCTK_REAL multipatch_test_gfs TYPE=gf CENTERING={vvv} TAGS='checkpoint="no" dirichlet_values={1138.0}'
 {
     test_gf
 } "The test grid functions to be loaded with initial data"

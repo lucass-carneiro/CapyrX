@@ -4,7 +4,7 @@ Usage:
   mpx augment-tsv <data-file> <coord-file>
   mpx plot-tsv <augmented-data> <var> [--rhs] [--save] [--diverging]
   mpx plot-grid-tsv <coordinates-tsv-file> [--save]
-  mpx plot-openpmd <data-file> <thorn-name> <group-name> <var-name> <iteration> [--refinement-level=<level>] [--z-slice=<zval>] [--openpmd-format=<format>] [--save] [--diverging] [--verbose]
+  mpx plot-openpmd <data-file> <thorn-name> <group-name> <var-name> <iteration> <num-patches> [--refinement-level=<level>] [--z-slice=<zval>] [--openpmd-format=<format>] [--save] [--diverging] [--verbose]
   mpx (-h | --help)
   mpx --version
 
@@ -388,8 +388,9 @@ def plot_openpmd(args):
     thorn_name = args["<thorn-name>"]
     group_name = args["<group-name>"]
     var_name = args["<var-name>"]
+    num_patches = int(args["<num-patches>"])
 
-    patches = ["00", "01", "02", "03", "04"]
+    patches = ["{:02d}".format(i) for i in range(num_patches)]
 
     level = args["--refinement-level"].zfill(2)
     iteration_index = int(args["<iteration>"])

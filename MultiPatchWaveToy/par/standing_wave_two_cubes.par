@@ -8,7 +8,7 @@ ActiveThorns = "
     MultiPatchWaveToy
 "
  
-Cactus::presync_mode = "mixed-error"
+Cactus::presync_mode = "presync-only"
 Cactus::cctk_show_schedule = yes
 
 CarpetX::verbose = yes
@@ -24,17 +24,17 @@ ODESolvers::method = "RK4"
 
 MultiPatch::patch_system = "Two Cubes"
                                                                         
-MultiPatch::two_cubes_xmin = -10.0
-MultiPatch::two_cubes_xmax = +10.0
-MultiPatch::two_cubes_ymin = -10.0
-MultiPatch::two_cubes_ymax = +10.0
-MultiPatch::two_cubes_zmin = -10.0
-MultiPatch::two_cubes_zmax = +10.0
+MultiPatch::two_cubes_xmin = -1.0
+MultiPatch::two_cubes_xmax = +1.0
+MultiPatch::two_cubes_ymin = -1.0
+MultiPatch::two_cubes_ymax = +1.0
+MultiPatch::two_cubes_zmin = -1.0
+MultiPatch::two_cubes_zmax = +1.0
 
-MultiPatch::two_cubes_ncells_left  = 80
-MultiPatch::two_cubes_ncells_right = 20
-MultiPatch::two_cubes_ncells_y     = 80
-MultiPatch::two_cubes_ncells_z     = 80
+MultiPatch::two_cubes_ncells_left  = 5
+MultiPatch::two_cubes_ncells_right = 5
+MultiPatch::two_cubes_ncells_y     = 5
+MultiPatch::two_cubes_ncells_z     = 5
 
 MultiPatchWaveToy::initial_condition  = "standing wave"
 
@@ -64,7 +64,21 @@ TimerReport::out_filename = "TimerReport"
 TimerReport::output_schedule_timers = no
 TimerReport::n_top_timers = 100
 
-Cactus::terminate        = "iteration"
+Cactus::terminate   = "iteration"
+Cactus::cctk_itlast = 100
+Cactus::max_runtime = 660.0
+CarpetX::dtfac      = 0.25
 
-Cactus::cctk_itlast      = 1
-CarpetX::dtfac          = 0.25
+# The type of checkpoint and recovery files that should be used 
+CarpetX::checkpoint_method = "openpmd" 
+CarpetX::recover_method    = "openpmd" 
+ 
+# Configure IO to produce checkpoint files before terminating 
+IO::checkpoint_ID           = no 
+IO::recover                 = "autoprobe" 
+IO::out_proc_every          = 2 
+IO::checkpoint_on_terminate = yes 
+IO::checkpoint_dir          = "../checkpoints" 
+IO::recover_dir             = "../checkpoints" 
+IO::abort_on_io_errors      = yes
+

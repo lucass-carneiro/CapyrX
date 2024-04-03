@@ -1,3 +1,7 @@
+# Standing wave ID
+# Two cubes patch
+# OpenPMD output
+
 ActiveThorns = "
     CarpetX
     IOUtil
@@ -8,7 +12,7 @@ ActiveThorns = "
     MultiPatchWaveToy
 "
  
-Cactus::presync_mode = "presync-only"
+Cactus::presync_mode = "mixed-error"
 Cactus::cctk_show_schedule = yes
 
 CarpetX::verbose = yes
@@ -48,14 +52,13 @@ CarpetX::boundary_upper_z = "dirichlet"
 IO::out_dir = $parfile
 IO::out_every = 1
 
-CarpetX::out_tsv      = no
+CarpetX::out_tsv = no
 CarpetX::out_tsv_vars = ""
 
 CarpetX::out_openpmd_vars = "
     CoordinatesX::vertex_coords
     MultiPatchWaveToy::state
     MultiPatchWaveToy::rhs
-    MultiPatchWaveToy::energy
     MultiPatchWaveToy::error
 "
 
@@ -65,20 +68,7 @@ TimerReport::output_schedule_timers = no
 TimerReport::n_top_timers = 100
 
 Cactus::terminate   = "iteration"
-Cactus::cctk_itlast = 100
-Cactus::max_runtime = 660.0
+Cactus::cctk_itlast = 1
 CarpetX::dtfac      = 0.25
 
-# The type of checkpoint and recovery files that should be used 
-CarpetX::checkpoint_method = "openpmd" 
-CarpetX::recover_method    = "openpmd" 
- 
-# Configure IO to produce checkpoint files before terminating 
-IO::checkpoint_ID           = no 
-IO::recover                 = "autoprobe" 
-IO::out_proc_every          = 2 
-IO::checkpoint_on_terminate = yes 
-IO::checkpoint_dir          = "../checkpoints" 
-IO::recover_dir             = "../checkpoints" 
-IO::abort_on_io_errors      = yes
 

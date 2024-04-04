@@ -4,7 +4,7 @@ Usage:
   mpx augment-tsv <data-file> <coord-file>
   mpx plot-tsv <augmented-data> <var> [--rhs] [--save] [--diverging]
   mpx plot-grid-tsv <coordinates-tsv-file> [--save]
-  mpx plot-openpmd <data-file> <thorn-name> <group-name> <var-name> <iteration> <num-patches> [--refinement-level=<level>] [--z-slice=<zval>] [--openpmd-format=<format>] [--save] [--diverging] [--verbose]
+  mpx plot-openpmd <data-file> <thorn-name> <group-name> <var-name> <iteration> <num-patches> [--refinement-level=<level>] [--z-slice=<zval>] [--openpmd-format=<format>] [--save] [--diverging] [--varmin=<min>] [--varmax=<max>] [--autorange] [--verbose]
   mpx (-h | --help)
   mpx --version
 
@@ -15,6 +15,9 @@ Options:
   --save                      Save plot to file.
   --verbose                   Show OpenPMD file information.
   --diverging                 Use a diverging color map.
+  --varmin=<min>              Minimun value of the colorbar. Requires --diverging. [default: -1.0].
+  --varmax=<max>              Maximum value of the colorbar. Requires --diverging. [default: 1.0].
+  --autorange                 Computes the colorbar range automatically. Requires --diverging. Ignores --varmin and --varmax.
   --refinement-level=<level>  The refinement level to plot [default: 0].
   --z-slice=<zval>            The (global) Z coordinate slice to plot [default: 0.0]
   --openpmd-format=<format>   The underlying format of OpenPMD files [default: .bp5].
@@ -397,7 +400,11 @@ def plot_openpmd(args):
     iteration_index_pad = args["<iteration>"].zfill(8)
 
     save_file = bool(args["--save"])
+
     diverging = bool(args["--diverging"])
+    varmin = float(args["--varmin"])
+    varmax = float(args["--varmax"])
+    autorange = bool(args["--autorange"])
 
     gf_name = f"{thorn_name}_{var_name}"
 
@@ -427,12 +434,19 @@ def plot_openpmd(args):
             df = result.get()
 
             if diverging == True:
+                lvls = None
+
+                if autorange:
+                    lvls = 100
+                else:
+                    lvls = np.linspace(varmin, varmax, 101)
+
                 plt.tricontourf(
                     df["coordinatesx_vcoordx"],
                     df["coordinatesx_vcoordy"],
                     df[gf_name],
                     cmap="seismic",
-                    levels=np.linspace(-1, 1, 101)
+                    levels=lvls
                 )
             else:
                 plt.tricontourf(

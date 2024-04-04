@@ -35,10 +35,10 @@ MultiPatch::two_cubes_ymax = +1.0
 MultiPatch::two_cubes_zmin = -1.0
 MultiPatch::two_cubes_zmax = +1.0
 
-MultiPatch::two_cubes_ncells_left  = 5
-MultiPatch::two_cubes_ncells_right = 5
-MultiPatch::two_cubes_ncells_y     = 5
-MultiPatch::two_cubes_ncells_z     = 5
+MultiPatch::two_cubes_ncells_left  = 20
+MultiPatch::two_cubes_ncells_right = 20
+MultiPatch::two_cubes_ncells_y     = 20
+MultiPatch::two_cubes_ncells_z     = 20
 
 MultiPatchWaveToy::initial_condition  = "standing wave"
 
@@ -68,7 +68,6 @@ TimerReport::output_schedule_timers = no
 TimerReport::n_top_timers = 100
 
 Cactus::terminate   = "iteration"
-Cactus::cctk_itlast = 1
+Cactus::cctk_itlast = 10
 CarpetX::dtfac      = 0.25
-
 

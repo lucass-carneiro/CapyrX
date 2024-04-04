@@ -22,7 +22,7 @@ SCHEDULE MultiPatchWaveToy_RHS IN ODESolvers_RHS
 SCHEDULE MultiPatchWaveToy_Error IN ODESolvers_PostStep
 {
   LANG: C
-  READS: state(interior)
+  READS: state(interior) CoordinatesX::vertex_coords(interior)
   WRITES: error(interior)
   SYNC: error
 } "Calculate error in scalar wave state"

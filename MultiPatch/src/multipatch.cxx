@@ -129,6 +129,10 @@ PatchTransformations::PatchTransformations()
         DECLARE_CCTK_PARAMETERS;
         return two_cubes_zmax;
       }()),
+      two_cubes_delta_y([] {
+        DECLARE_CCTK_PARAMETERS;
+        return two_cubes_delta_y;
+      }()),
       two_cubes_ncells_left([] {
         DECLARE_CCTK_PARAMETERS;
         return two_cubes_ncells_left;
@@ -333,7 +337,7 @@ extern "C" void MultiPatch_Coordinates_Setup(CCTK_ARGUMENTS) {
  * TODO: Fill with more parameter checks, if appropriate
  */
 extern "C" void MultiPatch_Check_Parameters(CCTK_ARGUMENTS) {
-  DECLARE_CCTK_ARGUMENTS_MultiPatch_Coordinates_Setup;
+  DECLARE_CCTK_ARGUMENTSX_MultiPatch_Check_Parameters;
   DECLARE_CCTK_PARAMETERS;
 
   if (!(cake_outer_boundary_radius > 4 * cake_inner_boundary_radius))

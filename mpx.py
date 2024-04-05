@@ -1,4 +1,4 @@
-"""mpx: MultiPatchX plot and validation utility.
+"""mpx: CapyrX plot and validation utility.
 
 Usage:
   mpx augment-tsv <data-file> <coord-file>

@@ -153,6 +153,11 @@ REAL two_cubes_zmax "Two cubes zmax"
   *:* :: ""
 } +1.0
 
+REAL two_cubes_delta_y "Two cubes y displacement"
+{
+  *:* :: ""
+} 0.0
+
 INT two_cubes_ncells_left "Number of cells in left cube" 
 {
   0:* :: "Positive"

@@ -34,6 +34,8 @@ MultiPatch::two_cubes_ymax = +1.0
 MultiPatch::two_cubes_zmin = -1.0
 MultiPatch::two_cubes_zmax = +1.0
 
+MultiPatch::two_cubes_delta_y = 0.5
+
 MultiPatch::two_cubes_ncells_left  = 32
 MultiPatch::two_cubes_ncells_right = 4
 MultiPatch::two_cubes_ncells_y     = 16

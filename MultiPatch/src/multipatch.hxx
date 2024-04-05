@@ -446,6 +446,11 @@ struct PatchTransformations {
   CCTK_REAL two_cubes_zmax;
 
   /**
+   * Two Cubes %Patch:The shift of the patch interface in the y axis.
+   */
+  CCTK_REAL two_cubes_delta_y;
+
+  /**
    * Two Cubes %Patch: Number of cells in the left cube.
    */
   int two_cubes_ncells_left;

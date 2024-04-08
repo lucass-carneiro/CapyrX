@@ -36,10 +36,10 @@ MultiPatch::two_cubes_zmax = +1.0
 
 MultiPatch::two_cubes_delta_y = 0.5
 
-MultiPatch::two_cubes_ncells_left  = 32
-MultiPatch::two_cubes_ncells_right = 4
-MultiPatch::two_cubes_ncells_y     = 16
-MultiPatch::two_cubes_ncells_z     = 16
+MultiPatch::two_cubes_ncells_left  = 10
+MultiPatch::two_cubes_ncells_right = 10
+MultiPatch::two_cubes_ncells_y     = 10
+MultiPatch::two_cubes_ncells_z     = 10
 
 CarpetX::boundary_x = "dirichlet"
 CarpetX::boundary_y = "dirichlet"

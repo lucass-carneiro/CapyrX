@@ -57,15 +57,17 @@ CCTK_DEVICE CCTK_HOST svec local2global(const PatchTransformations &pt,
 
   switch (patch) {
   case static_cast<int>(patch_piece::left_cube):
-    global_vars = {0.25 * (1.0 + a) * (xmax - xmin) + xmin,
-                   0.5 * ((1.0 + b) * ymax + (1.0 - b) * ymin + (1 + a) * dy),
-                   0.5 * ((1.0 + c) * zmax + (1.0 - c) * zmin)};
+    global_vars = {((1 + a) * (xmax - xmin)) / 4. + xmin,
+                   ymax - ((-1 + b) * (dy + a * dy - 2 * ymax + 2 * ymin)) / 4.,
+                   (zmax + c * zmax + zmin - c * zmin) / 2.};
     break;
 
   case static_cast<int>(patch_piece::right_cube):
-    global_vars = {0.25 * ((3.0 + a) * xmax + (1.0 - a) * xmin),
-                   0.5 * ((1.0 + b) * ymax + (1.0 - b) * ymin + (1 - a) * dy),
-                   0.5 * ((1.0 + c) * zmax + (1.0 - c) * zmin)};
+    global_vars = {
+        ((3 + a) * xmax + xmin - a * xmin) / 4.,
+        ((-1 + a) * (-1 + b) * dy + 2 * (ymax + b * ymax + ymin - b * ymin)) /
+            4.,
+        (zmax + c * zmax + zmin - c * zmin) / 2.};
     break;
 
   default:
@@ -142,17 +144,17 @@ global2local(const PatchTransformations &pt, const svec &global_vars) {
 
   switch (static_cast<int>(piece)) {
   case static_cast<int>(patch_piece::left_cube):
-    a = 3.0 + (4 * (x - xmax)) / (xmax - xmin);
-    b = -(-2 * y + ymax + ymin + (4 * (x - xmin) * dy) / (xmax - xmin)) /
-        (ymax - ymin);
-    c = -(-2 * z + zmax + zmin) / (zmax - zmin);
+    a = 3 + (4 * (x - xmax)) / (xmax - xmin);
+    b = 1 + (2 * (xmax - xmin) * (y - ymax)) /
+                (2 * dy * (-x + xmin) + (xmax - xmin) * (ymax - ymin));
+    c = (-2 * z + zmax + zmin) / (-zmax + zmin);
     break;
 
   case static_cast<int>(patch_piece::right_cube):
-    a = 1.0 + (4 * (x - xmax)) / (xmax - xmin);
-    b = ((xmax - xmin) * (2 * y - ymax - ymin) + 4 * (x - xmax) * dy) /
-        ((xmax - xmin) * (ymax - ymin));
-    c = -(-2 * z + zmax + zmin) / (zmax - zmin);
+    a = 1 + (4 * (x - xmax)) / (xmax - xmin);
+    b = 1 + (2 * (xmax - xmin) * (y - ymax)) /
+                (2 * dy * (x - xmax) + (xmax - xmin) * (ymax - ymin));
+    c = (-2 * z + zmax + zmin) / (-zmax + zmin);
     break;
 
   default:
@@ -199,6 +201,9 @@ two_cubes_jacs(const PatchTransformations &pt, int patch,
 
   const auto dy{pt.two_cubes_delta_y};
 
+  const auto x{global_vars(0)};
+  const auto y{global_vars(1)};
+
   if (patch != static_cast<int>(patch_piece::left_cube) &&
       patch != static_cast<int>(patch_piece::right_cube)) {
 #ifndef __CUDACC__
@@ -209,51 +214,96 @@ two_cubes_jacs(const PatchTransformations &pt, int patch,
 #endif
   }
 
-  const auto J_10_abs{(4.0 * dy) / ((xmax - xmin) * (ymax - ymin))};
-
   if (patch == static_cast<int>(patch_piece::left_cube)) {
-    J(1)(0) = -J_10_abs;
-  } else {
-    J(1)(0) = J_10_abs;
+    J(0)(0) = 4 / (xmax - xmin);
+    J(0)(1) = 0;
+    J(0)(2) = 0;
+    J(1)
+    (0) = (4 * dy * (xmax - xmin) * (y - ymax)) /
+          pow(2 * dy * (-x + xmin) + (xmax - xmin) * (ymax - ymin), 2);
+    J(1)
+    (1) = (2 * (xmax - xmin)) /
+          (2 * dy * (-x + xmin) + (xmax - xmin) * (ymax - ymin));
+    J(1)(2) = 0;
+    J(2)(0) = 0;
+    J(2)(1) = 0;
+    J(2)(2) = 2 / (zmax - zmin);
+    dJ(0)(0, 0) = 0;
+    dJ(0)(0, 1) = 0;
+    dJ(0)(0, 2) = 0;
+    dJ(0)(1, 0) = 0;
+    dJ(0)(1, 1) = 0;
+    dJ(0)(1, 2) = 0;
+    dJ(0)(2, 0) = 0;
+    dJ(0)(2, 1) = 0;
+    dJ(0)(2, 2) = 0;
+    dJ(1)(0, 0) = (16 * pow(dy, 2) * (xmax - xmin) * (y - ymax)) /
+                  pow(2 * dy * (-x + xmin) + (xmax - xmin) * (ymax - ymin), 3);
+    dJ(1)(0, 1) = (4 * dy * (xmax - xmin)) /
+                  pow(2 * dy * (-x + xmin) + (xmax - xmin) * (ymax - ymin), 2);
+    dJ(1)(0, 2) = 0;
+    dJ(1)(1, 0) = (4 * dy * (xmax - xmin)) /
+                  pow(2 * dy * (-x + xmin) + (xmax - xmin) * (ymax - ymin), 2);
+    dJ(1)(1, 1) = 0;
+    dJ(1)(1, 2) = 0;
+    dJ(1)(2, 0) = 0;
+    dJ(1)(2, 1) = 0;
+    dJ(1)(2, 2) = 0;
+    dJ(2)(0, 0) = 0;
+    dJ(2)(0, 1) = 0;
+    dJ(2)(0, 2) = 0;
+    dJ(2)(1, 0) = 0;
+    dJ(2)(1, 1) = 0;
+    dJ(2)(1, 2) = 0;
+    dJ(2)(2, 0) = 0;
+    dJ(2)(2, 1) = 0;
+    dJ(2)(2, 2) = 0;
+
+  } else if (patch == static_cast<int>(patch_piece::right_cube)) {
+    J(0)(0) = 4 / (xmax - xmin);
+    J(0)(1) = 0;
+    J(0)(2) = 0;
+    J(1)
+    (0) = (-4 * dy * (xmax - xmin) * (y - ymax)) /
+          pow(2 * dy * (x - xmax) + (xmax - xmin) * (ymax - ymin), 2);
+    J(1)
+    (1) = (2 * (xmax - xmin)) /
+          (2 * dy * (x - xmax) + (xmax - xmin) * (ymax - ymin));
+    J(1)(2) = 0;
+    J(2)(0) = 0;
+    J(2)(1) = 0;
+    J(2)(2) = 2 / (zmax - zmin);
+    dJ(0)(0, 0) = 0;
+    dJ(0)(0, 1) = 0;
+    dJ(0)(0, 2) = 0;
+    dJ(0)(1, 0) = 0;
+    dJ(0)(1, 1) = 0;
+    dJ(0)(1, 2) = 0;
+    dJ(0)(2, 0) = 0;
+    dJ(0)(2, 1) = 0;
+    dJ(0)(2, 2) = 0;
+    dJ(1)(0, 0) = (16 * pow(dy, 2) * (xmax - xmin) * (y - ymax)) /
+                  pow(2 * dy * (x - xmax) + (xmax - xmin) * (ymax - ymin), 3);
+    dJ(1)(0, 1) = (4 * dy * (-xmax + xmin)) /
+                  pow(2 * dy * (x - xmax) + (xmax - xmin) * (ymax - ymin), 2);
+    dJ(1)(0, 2) = 0;
+    dJ(1)(1, 0) = (4 * dy * (-xmax + xmin)) /
+                  pow(2 * dy * (x - xmax) + (xmax - xmin) * (ymax - ymin), 2);
+    dJ(1)(1, 1) = 0;
+    dJ(1)(1, 2) = 0;
+    dJ(1)(2, 0) = 0;
+    dJ(1)(2, 1) = 0;
+    dJ(1)(2, 2) = 0;
+    dJ(2)(0, 0) = 0;
+    dJ(2)(0, 1) = 0;
+    dJ(2)(0, 2) = 0;
+    dJ(2)(1, 0) = 0;
+    dJ(2)(1, 1) = 0;
+    dJ(2)(1, 2) = 0;
+    dJ(2)(2, 0) = 0;
+    dJ(2)(2, 1) = 0;
+    dJ(2)(2, 2) = 0;
   }
-
-  J(0)(0) = 4.0 / (xmax - xmin);
-  J(0)(1) = 0.0;
-  J(0)(2) = 0.0;
-  // J(1)(0) = Already set
-  J(1)(1) = 2.0 / (ymax - ymin);
-  J(1)(2) = 0.0;
-  J(2)(0) = 0.0;
-  J(2)(1) = 0.0;
-  J(2)(2) = 2.0 / (zmax - zmin);
-
-  dJ(0)(0, 0) = 0;
-  dJ(0)(0, 1) = 0;
-  dJ(0)(0, 2) = 0;
-  dJ(0)(1, 0) = 0;
-  dJ(0)(1, 1) = 0;
-  dJ(0)(1, 2) = 0;
-  dJ(0)(2, 0) = 0;
-  dJ(0)(2, 1) = 0;
-  dJ(0)(2, 2) = 0;
-  dJ(1)(0, 0) = 0;
-  dJ(1)(0, 1) = 0;
-  dJ(1)(0, 2) = 0;
-  dJ(1)(1, 0) = 0;
-  dJ(1)(1, 1) = 0;
-  dJ(1)(1, 2) = 0;
-  dJ(1)(2, 0) = 0;
-  dJ(1)(2, 1) = 0;
-  dJ(1)(2, 2) = 0;
-  dJ(2)(0, 0) = 0;
-  dJ(2)(0, 1) = 0;
-  dJ(2)(0, 2) = 0;
-  dJ(2)(1, 0) = 0;
-  dJ(2)(1, 1) = 0;
-  dJ(2)(1, 2) = 0;
-  dJ(2)(2, 0) = 0;
-  dJ(2)(2, 1) = 0;
-  dJ(2)(2, 2) = 0;
 
   return std_make_tuple(J, dJ);
 }

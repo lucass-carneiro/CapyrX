@@ -702,8 +702,5 @@ extern "C" void MultiPatch_run_two_cubes_tests(CCTK_ARGUMENTS) {
                local_identity_test(pt, patch, local_point).c_str());
   }
 
-  // Since jacobians ar trivial for this patch (they don't change from point to
-  // point), we skip testing them. Finite difference approximations for this
-  // case yield wrong results and comparisons from set vs FD computed values are
-  // rendererd useless in this case anyway
+  // TODO: Implement jacobian tests
 }

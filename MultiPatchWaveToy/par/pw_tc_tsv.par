@@ -1,0 +1,74 @@
+# Plane wave ID
+# Two cubes patch
+# TSV output
+
+ActiveThorns = "
+    CarpetX
+    IOUtil
+    TimerReport
+    ODESolvers
+    CoordinatesX
+    MultiPatch
+    MultiPatchWaveToy
+"
+ 
+Cactus::presync_mode = "mixed-error"
+Cactus::cctk_show_schedule = yes
+
+CarpetX::verbose = yes
+CarpetX::poison_undefined_values = yes
+
+CarpetX::blocking_factor_x = 1
+CarpetX::blocking_factor_y = 1
+CarpetX::blocking_factor_z = 1
+
+CarpetX::max_num_levels = 1
+
+ODESolvers::method = "RK4"
+
+MultiPatch::patch_system = "Two Cubes"
+                                                                        
+MultiPatch::two_cubes_xmin = -1.0
+MultiPatch::two_cubes_xmax = +1.0
+MultiPatch::two_cubes_ymin = -1.0
+MultiPatch::two_cubes_ymax = +1.0
+MultiPatch::two_cubes_zmin = -1.0
+MultiPatch::two_cubes_zmax = +1.0
+
+MultiPatch::two_cubes_delta_y = 0.5
+
+MultiPatch::two_cubes_ncells_left  = 20
+MultiPatch::two_cubes_ncells_right = 20
+MultiPatch::two_cubes_ncells_y     = 20
+MultiPatch::two_cubes_ncells_z     = 20
+
+MultiPatchWaveToy::initial_condition  = "plane wave"
+
+CarpetX::boundary_x = "dirichlet"
+CarpetX::boundary_y = "dirichlet"
+CarpetX::boundary_z = "dirichlet"
+CarpetX::boundary_upper_x = "dirichlet"
+CarpetX::boundary_upper_y = "dirichlet"
+CarpetX::boundary_upper_z = "dirichlet"
+
+IO::out_dir = $parfile
+IO::out_every = 1
+
+CarpetX::out_tsv = yes
+CarpetX::out_tsv_vars = "
+    CoordinatesX::vertex_coords
+    MultiPatchWaveToy::state
+    MultiPatchWaveToy::rhs
+    MultiPatchWaveToy::error
+"
+
+TimerReport::out_every = 1
+TimerReport::out_filename = "TimerReport"
+TimerReport::output_schedule_timers = no
+TimerReport::n_top_timers = 100
+
+Cactus::terminate   = "iteration"
+Cactus::cctk_itlast = 1
+CarpetX::dtfac      = 0.25
+
+

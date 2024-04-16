@@ -41,6 +41,22 @@ void gaussian(const CCTK_REAL A, const CCTK_REAL W, const CCTK_REAL t,
   }
 }
 
+void plane_wave(const CCTK_REAL A, const CCTK_REAL w, const CCTK_REAL nx,
+                const CCTK_REAL ny, const CCTK_REAL nz, const CCTK_REAL t,
+                const CCTK_REAL x, const CCTK_REAL y, const CCTK_REAL z,
+                CCTK_REAL &u, CCTK_REAL &rho) noexcept {
+  using std::cos, std::sin, std::sqrt;
+
+  const auto num{nx * x + ny * y + nz * z};
+  const auto den{sqrt(nx * nx + ny * ny + nz * nz)};
+
+  const auto p1{cos(w * (t - num / den))};
+  const auto p2{sin(w * (t - num / den))};
+
+  u = A * p1;
+  rho = A * num * w * p2 / den;
+}
+
 extern "C" void MultiPatchWaveToy_Initial(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTSX_MultiPatchWaveToy_Initial;
   DECLARE_CCTK_PARAMETERS;
@@ -60,6 +76,15 @@ extern "C" void MultiPatchWaveToy_Initial(CCTK_ARGUMENTS) {
         [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
           gaussian(amplitude, gaussian_width, cctk_time, vcoordx(p.I),
                    vcoordy(p.I), vcoordz(p.I), u(p.I), rho(p.I));
+        });
+
+  } else if (CCTK_EQUALS(initial_condition, "plane wave")) {
+    grid.loop_int_device<0, 0, 0>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+          plane_wave(amplitude, plane_wave_frequency, plane_wave_nx,
+                     plane_wave_ny, plane_wave_nz, cctk_time, vcoordx(p.I),
+                     vcoordy(p.I), vcoordz(p.I), u(p.I), rho(p.I));
         });
 
   } else {

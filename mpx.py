@@ -67,16 +67,6 @@ def plot_grid_tsv(args):
     data = pd.read_csv(coord_file, sep="\s+",
                        names=vars, comment="#")
 
-    # Z slice data
-    print("Filtering data for the z = 0 slice")
-
-    sliced_data = data.loc[
-        (data["vcoordz"] == 0.0) &
-        (np.abs(data["x"]) <= 1.0) &
-        (np.abs(data["y"]) <= 1.0) &
-        (np.abs(data["z"]) <= 1.0)
-    ]
-
     print("Creating data plot")
 
     plt.close("all")
@@ -85,7 +75,8 @@ def plot_grid_tsv(args):
     markers = [".", "x", "1", "s", "d", "v"]
 
     for i in range(data["patch"].iloc[-1] + 1):
-        patch_sliced_data = data.loc[data["patch"] == i]
+        patch_sliced_data = data.loc[(
+            data["vcoordz"] == 0.0) & (data["patch"] == i)]
         plt.scatter(
             patch_sliced_data["vcoordx"],
             patch_sliced_data["vcoordy"],

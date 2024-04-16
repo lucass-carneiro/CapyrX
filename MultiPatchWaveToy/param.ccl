@@ -4,6 +4,7 @@ KEYWORD initial_condition "Initial condition"
 {
   "standing wave" :: "Standing wave"
   "Gaussian" :: "Gaussian"
+  "plane wave" :: "Plane Wave"
 } "standing wave"
 
 CCTK_REAL amplitude "Initial amplitude"
@@ -16,12 +17,12 @@ CCTK_REAL standing_wave_kx "kx for standing wave"
   *:* :: ""
 } 0.5
 
-CCTK_REAL standing_wave_ky "kz for standing wave"
+CCTK_REAL standing_wave_ky "ky for standing wave"
 {
   *:* :: ""
 } 0.5
 
-CCTK_REAL standing_wave_kz "ky for standing wave"
+CCTK_REAL standing_wave_kz "kz for standing wave"
 {
   *:* :: ""
 } 0.5
@@ -30,3 +31,23 @@ CCTK_REAL gaussian_width "width of Gaussian"
 {
   (0:* :: ""
 } 1.0
+
+CCTK_REAL plane_wave_frequency "Plane wave frequency"
+{
+  0:* :: ""
+} 6.283185307179586
+
+CCTK_REAL plane_wave_nx "Plane wave nx"
+{
+  *:* :: ""
+} 0.5
+
+CCTK_REAL plane_wave_ny "Plane wave ny"
+{
+  *:* :: ""
+} 0.5
+
+CCTK_REAL plane_wave_nz "Plane wave nz"
+{
+  *:* :: ""
+} 0.5

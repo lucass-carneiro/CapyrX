@@ -1,29 +1,26 @@
 #ifndef MULTIPATCH_CAKE_JACOBIANS_HXX
 #define MULTIPATCH_CAKE_JACOBIANS_HXX
 
+#include "multipatch.hxx"
+#include "cake.hxx"
+
 namespace MultiPatch {
 namespace Cake {
 
-/**
- * @brief Computes the jacobians and Jacobian derivatives of the Cake patch
- * 
- * @param pt The patch transformation structures for the patch
- * @param patch The index of the patch to find the Jacobians for
- * @param global_vars The global point to evaluate the jacobian in.
- * @return The jacobian and jacobian derivative data arrays
-*/
 CCTK_DEVICE CCTK_HOST inline std_tuple<jac_t, djac_t>
-cake_jacs(const PatchTransformations &pt, int patch,
-          const svec &global_vars) {
+cake_jacs(const PatchTransformations &pt, int patch, const svec &global_vars) {
   using std::pow;
   using std::sqrt;
 
   jac_t J{};
   djac_t dJ{};
 
-  const auto x = global_vars(0);
-  const auto y = global_vars(1);
-  const auto z = global_vars(2);
+  const auto r0{pt.cake_inner_boundary_radius};
+  const auto r1{pt.cake_outer_boundary_radius};
+
+  const auto x{global_vars(0)};
+  const auto y{global_vars(1)};
+  const auto z{global_vars(2)};
 
   switch (patch) {
 
@@ -75,12 +72,28 @@ cake_jacs(const PatchTransformations &pt, int patch,
     J(1)(1) = 1 / x;
     J(1)(2) = 0;
     J(2)
-    (0) = d_global_to_local_cake_core_dvar(pt, z / x, y / x, x) -
-          (y * d_global_to_local_cake_core_db(pt, z / x, y / x, x) +
-           z * d_global_to_local_cake_core_da(pt, z / x, y / x, x)) /
-              pow(x, 2);
-    J(2)(1) = d_global_to_local_cake_core_db(pt, z / x, y / x, x) / x;
-    J(2)(2) = d_global_to_local_cake_core_da(pt, z / x, y / x, x) / x;
+    (0) = (4 * x) /
+          sqrt(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+               4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+               4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)));
+    J(2)
+    (1) =
+        (2 * y *
+         (1 +
+          (2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2)) /
+              sqrt(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                   4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                   4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2))))) /
+        pow(r0 - r1, 2);
+    J(2)
+    (2) =
+        (2 * z *
+         (1 +
+          (2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2)) /
+              sqrt(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                   4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                   4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2))))) /
+        pow(r0 - r1, 2);
 
     dJ(0)(0, 0) = (2 * z) / pow(x, 3);
     dJ(0)(0, 1) = 0;
@@ -101,49 +114,72 @@ cake_jacs(const PatchTransformations &pt, int patch,
     dJ(1)(2, 1) = 0;
     dJ(1)(2, 2) = 0;
     dJ(2)(0, 0) =
-        (pow(x, 4) * d2_global_to_local_cake_core_dvar2(pt, z / x, y / x, x) +
-         2 * x * y * d_global_to_local_cake_core_db(pt, z / x, y / x, x) -
-         2 * pow(x, 2) * y *
-             d2_global_to_local_cake_core_dbdvar(pt, z / x, y / x, x) +
-         pow(y, 2) * d2_global_to_local_cake_core_db2(pt, z / x, y / x, x) +
-         2 * x * z * d_global_to_local_cake_core_da(pt, z / x, y / x, x) -
-         2 * pow(x, 2) * z *
-             d2_global_to_local_cake_core_dadvar(pt, z / x, y / x, x) +
-         2 * y * z * d2_global_to_local_cake_core_dadb(pt, z / x, y / x, x) +
-         pow(z, 2) * d2_global_to_local_cake_core_da2(pt, z / x, y / x, x)) /
-        pow(x, 4);
+        (4 * (pow(y, 2) + pow(z, 2)) *
+         (4 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2))) /
+        pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
+            1.5);
     dJ(2)(0, 1) =
-        -((x * (d_global_to_local_cake_core_db(pt, z / x, y / x, x) -
-                x * d2_global_to_local_cake_core_dbdvar(pt, z / x, y / x, x)) +
-           y * d2_global_to_local_cake_core_db2(pt, z / x, y / x, x) +
-           z * d2_global_to_local_cake_core_dadb(pt, z / x, y / x, x)) /
-          pow(x, 3));
+        (-8 * x * y * (2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2))) /
+        pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
+            1.5);
     dJ(2)(0, 2) =
-        -((x * (d_global_to_local_cake_core_da(pt, z / x, y / x, x) -
-                x * d2_global_to_local_cake_core_dadvar(pt, z / x, y / x, x)) +
-           y * d2_global_to_local_cake_core_dadb(pt, z / x, y / x, x) +
-           z * d2_global_to_local_cake_core_da2(pt, z / x, y / x, x)) /
-          pow(x, 3));
+        (-8 * x * z * (2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2))) /
+        pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
+            1.5);
     dJ(2)(1, 0) =
-        -((x * (d_global_to_local_cake_core_db(pt, z / x, y / x, x) -
-                x * d2_global_to_local_cake_core_dbdvar(pt, z / x, y / x, x)) +
-           y * d2_global_to_local_cake_core_db2(pt, z / x, y / x, x) +
-           z * d2_global_to_local_cake_core_dadb(pt, z / x, y / x, x)) /
-          pow(x, 3));
+        (-8 * x * y * (2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2))) /
+        pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
+            1.5);
     dJ(2)(1, 1) =
-        d2_global_to_local_cake_core_db2(pt, z / x, y / x, x) / pow(x, 2);
+        (2 -
+         (4 * pow(y, 2) * pow(2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2), 2)) /
+             pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                     4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                     4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
+                 1.5) +
+         (2 * (2 * r0 * (r0 - r1) + 3 * pow(y, 2) + pow(z, 2))) /
+             sqrt(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                  4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                  4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)))) /
+        pow(r0 - r1, 2);
     dJ(2)(1, 2) =
-        d2_global_to_local_cake_core_dadb(pt, z / x, y / x, x) / pow(x, 2);
+        (16 * (-pow(r0, 2) + pow(x, 2)) * y * z) /
+        pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
+            1.5);
     dJ(2)(2, 0) =
-        -((x * (d_global_to_local_cake_core_da(pt, z / x, y / x, x) -
-                x * d2_global_to_local_cake_core_dadvar(pt, z / x, y / x, x)) +
-           y * d2_global_to_local_cake_core_dadb(pt, z / x, y / x, x) +
-           z * d2_global_to_local_cake_core_da2(pt, z / x, y / x, x)) /
-          pow(x, 3));
+        (-8 * x * z * (2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2))) /
+        pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
+            1.5);
     dJ(2)(2, 1) =
-        d2_global_to_local_cake_core_dadb(pt, z / x, y / x, x) / pow(x, 2);
+        (16 * (-pow(r0, 2) + pow(x, 2)) * y * z) /
+        pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
+            1.5);
     dJ(2)(2, 2) =
-        d2_global_to_local_cake_core_da2(pt, z / x, y / x, x) / pow(x, 2);
+        (2 -
+         (4 * pow(z, 2) * pow(2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2), 2)) /
+             pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                     4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                     4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
+                 1.5) +
+         (2 * (2 * r0 * (r0 - r1) + pow(y, 2) + 3 * pow(z, 2))) /
+             sqrt(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                  4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                  4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)))) /
+        pow(r0 - r1, 2);
     break;
 
   case static_cast<int>(patch_piece::minus_x):
@@ -154,12 +190,28 @@ cake_jacs(const PatchTransformations &pt, int patch,
     J(1)(1) = 1 / x;
     J(1)(2) = 0;
     J(2)
-    (0) = d_global_to_local_cake_core_dvar(pt, -(z / x), y / x, x) +
-          (-(y * d_global_to_local_cake_core_db(pt, -(z / x), y / x, x)) +
-           z * d_global_to_local_cake_core_da(pt, -(z / x), y / x, x)) /
-              pow(x, 2);
-    J(2)(1) = d_global_to_local_cake_core_db(pt, -(z / x), y / x, x) / x;
-    J(2)(2) = -(d_global_to_local_cake_core_da(pt, -(z / x), y / x, x) / x);
+    (0) = (4 * x) /
+          sqrt(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+               4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+               4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)));
+    J(2)
+    (1) =
+        (2 * y *
+         (1 +
+          (2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2)) /
+              sqrt(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                   4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                   4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2))))) /
+        pow(r0 - r1, 2);
+    J(2)
+    (2) =
+        (2 * z *
+         (1 +
+          (2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2)) /
+              sqrt(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                   4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                   4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2))))) /
+        pow(r0 - r1, 2);
 
     dJ(0)(0, 0) = (-2 * z) / pow(x, 3);
     dJ(0)(0, 1) = 0;
@@ -180,52 +232,72 @@ cake_jacs(const PatchTransformations &pt, int patch,
     dJ(1)(2, 1) = 0;
     dJ(1)(2, 2) = 0;
     dJ(2)(0, 0) =
-        (pow(x, 4) *
-             d2_global_to_local_cake_core_dvar2(pt, -(z / x), y / x, x) +
-         2 * x * y * d_global_to_local_cake_core_db(pt, -(z / x), y / x, x) -
-         2 * pow(x, 2) * y *
-             d2_global_to_local_cake_core_dbdvar(pt, -(z / x), y / x, x) +
-         pow(y, 2) * d2_global_to_local_cake_core_db2(pt, -(z / x), y / x, x) -
-         2 * x * z * d_global_to_local_cake_core_da(pt, -(z / x), y / x, x) +
-         2 * pow(x, 2) * z *
-             d2_global_to_local_cake_core_dadvar(pt, -(z / x), y / x, x) -
-         2 * y * z * d2_global_to_local_cake_core_dadb(pt, -(z / x), y / x, x) +
-         pow(z, 2) * d2_global_to_local_cake_core_da2(pt, -(z / x), y / x, x)) /
-        pow(x, 4);
+        (4 * (pow(y, 2) + pow(z, 2)) *
+         (4 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2))) /
+        pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
+            1.5);
     dJ(2)(0, 1) =
-        (-(x * d_global_to_local_cake_core_db(pt, -(z / x), y / x, x)) +
-         pow(x, 2) *
-             d2_global_to_local_cake_core_dbdvar(pt, -(z / x), y / x, x) -
-         y * d2_global_to_local_cake_core_db2(pt, -(z / x), y / x, x) +
-         z * d2_global_to_local_cake_core_dadb(pt, -(z / x), y / x, x)) /
-        pow(x, 3);
+        (-8 * x * y * (2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2))) /
+        pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
+            1.5);
     dJ(2)(0, 2) =
-        (x * (d_global_to_local_cake_core_da(pt, -(z / x), y / x, x) -
-              x * d2_global_to_local_cake_core_dadvar(pt, -(z / x), y / x, x)) +
-         y * d2_global_to_local_cake_core_dadb(pt, -(z / x), y / x, x) -
-         z * d2_global_to_local_cake_core_da2(pt, -(z / x), y / x, x)) /
-        pow(x, 3);
+        (-8 * x * z * (2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2))) /
+        pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
+            1.5);
     dJ(2)(1, 0) =
-        (-(x * d_global_to_local_cake_core_db(pt, -(z / x), y / x, x)) +
-         pow(x, 2) *
-             d2_global_to_local_cake_core_dbdvar(pt, -(z / x), y / x, x) -
-         y * d2_global_to_local_cake_core_db2(pt, -(z / x), y / x, x) +
-         z * d2_global_to_local_cake_core_dadb(pt, -(z / x), y / x, x)) /
-        pow(x, 3);
+        (-8 * x * y * (2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2))) /
+        pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
+            1.5);
     dJ(2)(1, 1) =
-        d2_global_to_local_cake_core_db2(pt, -(z / x), y / x, x) / pow(x, 2);
-    dJ(2)(1, 2) = -(d2_global_to_local_cake_core_dadb(pt, -(z / x), y / x, x) /
-                    pow(x, 2));
+        (2 -
+         (4 * pow(y, 2) * pow(2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2), 2)) /
+             pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                     4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                     4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
+                 1.5) +
+         (2 * (2 * r0 * (r0 - r1) + 3 * pow(y, 2) + pow(z, 2))) /
+             sqrt(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                  4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                  4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)))) /
+        pow(r0 - r1, 2);
+    dJ(2)(1, 2) =
+        (16 * (-pow(r0, 2) + pow(x, 2)) * y * z) /
+        pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
+            1.5);
     dJ(2)(2, 0) =
-        (x * (d_global_to_local_cake_core_da(pt, -(z / x), y / x, x) -
-              x * d2_global_to_local_cake_core_dadvar(pt, -(z / x), y / x, x)) +
-         y * d2_global_to_local_cake_core_dadb(pt, -(z / x), y / x, x) -
-         z * d2_global_to_local_cake_core_da2(pt, -(z / x), y / x, x)) /
-        pow(x, 3);
-    dJ(2)(2, 1) = -(d2_global_to_local_cake_core_dadb(pt, -(z / x), y / x, x) /
-                    pow(x, 2));
+        (-8 * x * z * (2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2))) /
+        pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
+            1.5);
+    dJ(2)(2, 1) =
+        (16 * (-pow(r0, 2) + pow(x, 2)) * y * z) /
+        pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
+            1.5);
     dJ(2)(2, 2) =
-        d2_global_to_local_cake_core_da2(pt, -(z / x), y / x, x) / pow(x, 2);
+        (2 -
+         (4 * pow(z, 2) * pow(2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2), 2)) /
+             pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                     4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                     4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
+                 1.5) +
+         (2 * (2 * r0 * (r0 - r1) + pow(y, 2) + 3 * pow(z, 2))) /
+             sqrt(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                  4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                  4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)))) /
+        pow(r0 - r1, 2);
     break;
 
   case static_cast<int>(patch_piece::plus_y):
@@ -235,13 +307,29 @@ cake_jacs(const PatchTransformations &pt, int patch,
     J(1)(0) = -(1 / y);
     J(1)(1) = x / pow(y, 2);
     J(1)(2) = 0;
-    J(2)(0) = -(d_global_to_local_cake_core_db(pt, z / y, -(x / y), y) / y);
     J(2)
-    (1) = d_global_to_local_cake_core_dvar(pt, z / y, -(x / y), y) +
-          (x * d_global_to_local_cake_core_db(pt, z / y, -(x / y), y) -
-           z * d_global_to_local_cake_core_da(pt, z / y, -(x / y), y)) /
-              pow(y, 2);
-    J(2)(2) = d_global_to_local_cake_core_da(pt, z / y, -(x / y), y) / y;
+    (0) =
+        (2 * x *
+         (1 +
+          (2 * r0 * (r0 - r1) + pow(x, 2) + pow(z, 2)) /
+              sqrt(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
+                   4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                   4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2))))) /
+        pow(r0 - r1, 2);
+    J(2)
+    (1) = (4 * y) /
+          sqrt(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
+               4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+               4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2)));
+    J(2)
+    (2) =
+        (2 * z *
+         (1 +
+          (2 * r0 * (r0 - r1) + pow(x, 2) + pow(z, 2)) /
+              sqrt(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
+                   4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                   4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2))))) /
+        pow(r0 - r1, 2);
 
     dJ(0)(0, 0) = 0;
     dJ(0)(0, 1) = 0;
@@ -262,52 +350,72 @@ cake_jacs(const PatchTransformations &pt, int patch,
     dJ(1)(2, 1) = 0;
     dJ(1)(2, 2) = 0;
     dJ(2)(0, 0) =
-        d2_global_to_local_cake_core_db2(pt, z / y, -(x / y), y) / pow(y, 2);
+        (2 -
+         (4 * pow(x, 2) * pow(2 * r0 * (r0 - r1) + pow(x, 2) + pow(z, 2), 2)) /
+             pow(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
+                     4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                     4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2)),
+                 1.5) +
+         (2 * (2 * r0 * (r0 - r1) + 3 * pow(x, 2) + pow(z, 2))) /
+             sqrt(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
+                  4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                  4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2)))) /
+        pow(r0 - r1, 2);
     dJ(2)(0, 1) =
-        (y * (d_global_to_local_cake_core_db(pt, z / y, -(x / y), y) -
-              y * d2_global_to_local_cake_core_dbdvar(pt, z / y, -(x / y), y)) -
-         x * d2_global_to_local_cake_core_db2(pt, z / y, -(x / y), y) +
-         z * d2_global_to_local_cake_core_dadb(pt, z / y, -(x / y), y)) /
-        pow(y, 3);
-    dJ(2)(0, 2) = -(d2_global_to_local_cake_core_dadb(pt, z / y, -(x / y), y) /
-                    pow(y, 2));
+        (-8 * x * y * (2 * r0 * (r0 - r1) + pow(x, 2) + pow(z, 2))) /
+        pow(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2)),
+            1.5);
+    dJ(2)(0, 2) =
+        (16 * x * (-pow(r0, 2) + pow(y, 2)) * z) /
+        pow(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2)),
+            1.5);
     dJ(2)(1, 0) =
-        (y * (d_global_to_local_cake_core_db(pt, z / y, -(x / y), y) -
-              y * d2_global_to_local_cake_core_dbdvar(pt, z / y, -(x / y), y)) -
-         x * d2_global_to_local_cake_core_db2(pt, z / y, -(x / y), y) +
-         z * d2_global_to_local_cake_core_dadb(pt, z / y, -(x / y), y)) /
-        pow(y, 3);
+        (-8 * x * y * (2 * r0 * (r0 - r1) + pow(x, 2) + pow(z, 2))) /
+        pow(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2)),
+            1.5);
     dJ(2)(1, 1) =
-        (pow(y, 4) *
-             d2_global_to_local_cake_core_dvar2(pt, z / y, -(x / y), y) -
-         2 * x * y * d_global_to_local_cake_core_db(pt, z / y, -(x / y), y) +
-         2 * x * pow(y, 2) *
-             d2_global_to_local_cake_core_dbdvar(pt, z / y, -(x / y), y) +
-         pow(x, 2) * d2_global_to_local_cake_core_db2(pt, z / y, -(x / y), y) +
-         2 * y * z * d_global_to_local_cake_core_da(pt, z / y, -(x / y), y) -
-         2 * pow(y, 2) * z *
-             d2_global_to_local_cake_core_dadvar(pt, z / y, -(x / y), y) -
-         2 * x * z * d2_global_to_local_cake_core_dadb(pt, z / y, -(x / y), y) +
-         pow(z, 2) * d2_global_to_local_cake_core_da2(pt, z / y, -(x / y), y)) /
-        pow(y, 4);
+        (4 * (pow(x, 2) + pow(z, 2)) *
+         (4 * r0 * (r0 - r1) + pow(x, 2) + pow(z, 2))) /
+        pow(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2)),
+            1.5);
     dJ(2)(1, 2) =
-        (-(y * d_global_to_local_cake_core_da(pt, z / y, -(x / y), y)) +
-         pow(y, 2) *
-             d2_global_to_local_cake_core_dadvar(pt, z / y, -(x / y), y) +
-         x * d2_global_to_local_cake_core_dadb(pt, z / y, -(x / y), y) -
-         z * d2_global_to_local_cake_core_da2(pt, z / y, -(x / y), y)) /
-        pow(y, 3);
-    dJ(2)(2, 0) = -(d2_global_to_local_cake_core_dadb(pt, z / y, -(x / y), y) /
-                    pow(y, 2));
+        (-8 * y * z * (2 * r0 * (r0 - r1) + pow(x, 2) + pow(z, 2))) /
+        pow(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2)),
+            1.5);
+    dJ(2)(2, 0) =
+        (16 * x * (-pow(r0, 2) + pow(y, 2)) * z) /
+        pow(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2)),
+            1.5);
     dJ(2)(2, 1) =
-        (-(y * d_global_to_local_cake_core_da(pt, z / y, -(x / y), y)) +
-         pow(y, 2) *
-             d2_global_to_local_cake_core_dadvar(pt, z / y, -(x / y), y) +
-         x * d2_global_to_local_cake_core_dadb(pt, z / y, -(x / y), y) -
-         z * d2_global_to_local_cake_core_da2(pt, z / y, -(x / y), y)) /
-        pow(y, 3);
+        (-8 * y * z * (2 * r0 * (r0 - r1) + pow(x, 2) + pow(z, 2))) /
+        pow(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2)),
+            1.5);
     dJ(2)(2, 2) =
-        d2_global_to_local_cake_core_da2(pt, z / y, -(x / y), y) / pow(y, 2);
+        (2 -
+         (4 * pow(z, 2) * pow(2 * r0 * (r0 - r1) + pow(x, 2) + pow(z, 2), 2)) /
+             pow(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
+                     4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                     4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2)),
+                 1.5) +
+         (2 * (2 * r0 * (r0 - r1) + pow(x, 2) + 3 * pow(z, 2))) /
+             sqrt(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
+                  4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                  4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2)))) /
+        pow(r0 - r1, 2);
     break;
 
   case static_cast<int>(patch_piece::minus_y):
@@ -317,13 +425,29 @@ cake_jacs(const PatchTransformations &pt, int patch,
     J(1)(0) = -(1 / y);
     J(1)(1) = x / pow(y, 2);
     J(1)(2) = 0;
-    J(2)(0) = -(d_global_to_local_cake_core_db(pt, -(z / y), -(x / y), y) / y);
     J(2)
-    (1) = d_global_to_local_cake_core_dvar(pt, -(z / y), -(x / y), y) +
-          (x * d_global_to_local_cake_core_db(pt, -(z / y), -(x / y), y) +
-           z * d_global_to_local_cake_core_da(pt, -(z / y), -(x / y), y)) /
-              pow(y, 2);
-    J(2)(2) = -(d_global_to_local_cake_core_da(pt, -(z / y), -(x / y), y) / y);
+    (0) =
+        (2 * x *
+         (1 +
+          (2 * r0 * (r0 - r1) + pow(x, 2) + pow(z, 2)) /
+              sqrt(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
+                   4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                   4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2))))) /
+        pow(r0 - r1, 2);
+    J(2)
+    (1) = (4 * y) /
+          sqrt(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
+               4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+               4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2)));
+    J(2)
+    (2) =
+        (2 * z *
+         (1 +
+          (2 * r0 * (r0 - r1) + pow(x, 2) + pow(z, 2)) /
+              sqrt(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
+                   4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                   4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2))))) /
+        pow(r0 - r1, 2);
 
     dJ(0)(0, 0) = 0;
     dJ(0)(0, 1) = 0;
@@ -344,57 +468,72 @@ cake_jacs(const PatchTransformations &pt, int patch,
     dJ(1)(2, 1) = 0;
     dJ(1)(2, 2) = 0;
     dJ(2)(0, 0) =
-        d2_global_to_local_cake_core_db2(pt, -(z / y), -(x / y), y) / pow(y, 2);
+        (2 -
+         (4 * pow(x, 2) * pow(2 * r0 * (r0 - r1) + pow(x, 2) + pow(z, 2), 2)) /
+             pow(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
+                     4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                     4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2)),
+                 1.5) +
+         (2 * (2 * r0 * (r0 - r1) + 3 * pow(x, 2) + pow(z, 2))) /
+             sqrt(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
+                  4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                  4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2)))) /
+        pow(r0 - r1, 2);
     dJ(2)(0, 1) =
-        -((-(y * d_global_to_local_cake_core_db(pt, -(z / y), -(x / y), y)) +
-           pow(y, 2) *
-               d2_global_to_local_cake_core_dbdvar(pt, -(z / y), -(x / y), y) +
-           x * d2_global_to_local_cake_core_db2(pt, -(z / y), -(x / y), y) +
-           z * d2_global_to_local_cake_core_dadb(pt, -(z / y), -(x / y), y)) /
-          pow(y, 3));
-    dJ(2)(0, 2) = d2_global_to_local_cake_core_dadb(pt, -(z / y), -(x / y), y) /
-                  pow(y, 2);
+        (-8 * x * y * (2 * r0 * (r0 - r1) + pow(x, 2) + pow(z, 2))) /
+        pow(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2)),
+            1.5);
+    dJ(2)(0, 2) =
+        (16 * x * (-pow(r0, 2) + pow(y, 2)) * z) /
+        pow(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2)),
+            1.5);
     dJ(2)(1, 0) =
-        -((-(y * d_global_to_local_cake_core_db(pt, -(z / y), -(x / y), y)) +
-           pow(y, 2) *
-               d2_global_to_local_cake_core_dbdvar(pt, -(z / y), -(x / y), y) +
-           x * d2_global_to_local_cake_core_db2(pt, -(z / y), -(x / y), y) +
-           z * d2_global_to_local_cake_core_dadb(pt, -(z / y), -(x / y), y)) /
-          pow(y, 3));
+        (-8 * x * y * (2 * r0 * (r0 - r1) + pow(x, 2) + pow(z, 2))) /
+        pow(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2)),
+            1.5);
     dJ(2)(1, 1) =
-        (pow(y, 4) *
-             d2_global_to_local_cake_core_dvar2(pt, -(z / y), -(x / y), y) -
-         2 * x * y * d_global_to_local_cake_core_db(pt, -(z / y), -(x / y), y) +
-         2 * x * pow(y, 2) *
-             d2_global_to_local_cake_core_dbdvar(pt, -(z / y), -(x / y), y) +
-         pow(x, 2) *
-             d2_global_to_local_cake_core_db2(pt, -(z / y), -(x / y), y) -
-         2 * y * z * d_global_to_local_cake_core_da(pt, -(z / y), -(x / y), y) +
-         2 * pow(y, 2) * z *
-             d2_global_to_local_cake_core_dadvar(pt, -(z / y), -(x / y), y) +
-         2 * x * z *
-             d2_global_to_local_cake_core_dadb(pt, -(z / y), -(x / y), y) +
-         pow(z, 2) *
-             d2_global_to_local_cake_core_da2(pt, -(z / y), -(x / y), y)) /
-        pow(y, 4);
+        (4 * (pow(x, 2) + pow(z, 2)) *
+         (4 * r0 * (r0 - r1) + pow(x, 2) + pow(z, 2))) /
+        pow(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2)),
+            1.5);
     dJ(2)(1, 2) =
-        -((-(y * d_global_to_local_cake_core_da(pt, -(z / y), -(x / y), y)) +
-           pow(y, 2) *
-               d2_global_to_local_cake_core_dadvar(pt, -(z / y), -(x / y), y) +
-           x * d2_global_to_local_cake_core_dadb(pt, -(z / y), -(x / y), y) +
-           z * d2_global_to_local_cake_core_da2(pt, -(z / y), -(x / y), y)) /
-          pow(y, 3));
-    dJ(2)(2, 0) = d2_global_to_local_cake_core_dadb(pt, -(z / y), -(x / y), y) /
-                  pow(y, 2);
+        (-8 * y * z * (2 * r0 * (r0 - r1) + pow(x, 2) + pow(z, 2))) /
+        pow(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2)),
+            1.5);
+    dJ(2)(2, 0) =
+        (16 * x * (-pow(r0, 2) + pow(y, 2)) * z) /
+        pow(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2)),
+            1.5);
     dJ(2)(2, 1) =
-        -((-(y * d_global_to_local_cake_core_da(pt, -(z / y), -(x / y), y)) +
-           pow(y, 2) *
-               d2_global_to_local_cake_core_dadvar(pt, -(z / y), -(x / y), y) +
-           x * d2_global_to_local_cake_core_dadb(pt, -(z / y), -(x / y), y) +
-           z * d2_global_to_local_cake_core_da2(pt, -(z / y), -(x / y), y)) /
-          pow(y, 3));
+        (-8 * y * z * (2 * r0 * (r0 - r1) + pow(x, 2) + pow(z, 2))) /
+        pow(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2)),
+            1.5);
     dJ(2)(2, 2) =
-        d2_global_to_local_cake_core_da2(pt, -(z / y), -(x / y), y) / pow(y, 2);
+        (2 -
+         (4 * pow(z, 2) * pow(2 * r0 * (r0 - r1) + pow(x, 2) + pow(z, 2), 2)) /
+             pow(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
+                     4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                     4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2)),
+                 1.5) +
+         (2 * (2 * r0 * (r0 - r1) + pow(x, 2) + 3 * pow(z, 2))) /
+             sqrt(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
+                  4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                  4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2)))) /
+        pow(r0 - r1, 2);
     break;
 
   case static_cast<int>(patch_piece::plus_z):
@@ -404,13 +543,24 @@ cake_jacs(const PatchTransformations &pt, int patch,
     J(1)(0) = 0;
     J(1)(1) = 1 / z;
     J(1)(2) = -(y / pow(z, 2));
-    J(2)(0) = -(d_global_to_local_cake_core_da(pt, -(x / z), y / z, z) / z);
-    J(2)(1) = d_global_to_local_cake_core_db(pt, -(x / z), y / z, z) / z;
     J(2)
-    (2) = d_global_to_local_cake_core_dvar(pt, -(x / z), y / z, z) +
-          (-(y * d_global_to_local_cake_core_db(pt, -(x / z), y / z, z)) +
-           x * d_global_to_local_cake_core_da(pt, -(x / z), y / z, z)) /
-              pow(z, 2);
+    (0) = (2 * x *
+           (1 + (2 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) /
+                    sqrt((pow(x, 2) + pow(y, 2)) *
+                             (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                         4 * pow(r0 - r1, 2) * pow(z, 2)))) /
+          pow(r0 - r1, 2);
+    J(2)
+    (1) = (2 * y *
+           (1 + (2 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) /
+                    sqrt((pow(x, 2) + pow(y, 2)) *
+                             (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                         4 * pow(r0 - r1, 2) * pow(z, 2)))) /
+          pow(r0 - r1, 2);
+    J(2)
+    (2) = (4 * z) / sqrt((pow(x, 2) + pow(y, 2)) *
+                             (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                         4 * pow(r0 - r1, 2) * pow(z, 2));
 
     dJ(0)(0, 0) = 0;
     dJ(0)(0, 1) = 0;
@@ -431,52 +581,65 @@ cake_jacs(const PatchTransformations &pt, int patch,
     dJ(1)(2, 1) = -pow(z, -2);
     dJ(1)(2, 2) = (2 * y) / pow(z, 3);
     dJ(2)(0, 0) =
-        d2_global_to_local_cake_core_da2(pt, -(x / z), y / z, z) / pow(z, 2);
-    dJ(2)(0, 1) = -(d2_global_to_local_cake_core_dadb(pt, -(x / z), y / z, z) /
-                    pow(z, 2));
-    dJ(2)(0, 2) =
-        (z * (d_global_to_local_cake_core_da(pt, -(x / z), y / z, z) -
-              z * d2_global_to_local_cake_core_dadvar(pt, -(x / z), y / z, z)) +
-         y * d2_global_to_local_cake_core_dadb(pt, -(x / z), y / z, z) -
-         x * d2_global_to_local_cake_core_da2(pt, -(x / z), y / z, z)) /
-        pow(z, 3);
-    dJ(2)(1, 0) = -(d2_global_to_local_cake_core_dadb(pt, -(x / z), y / z, z) /
-                    pow(z, 2));
+        (2 -
+         (4 * pow(x, 2) * pow(2 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2), 2)) /
+             pow((pow(x, 2) + pow(y, 2)) *
+                         (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                     4 * pow(r0 - r1, 2) * pow(z, 2),
+                 1.5) +
+         (2 * (2 * r0 * (r0 - r1) + 3 * pow(x, 2) + pow(y, 2))) /
+             sqrt((pow(x, 2) + pow(y, 2)) *
+                      (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                  4 * pow(r0 - r1, 2) * pow(z, 2))) /
+        pow(r0 - r1, 2);
+    dJ(2)(0, 1) = (16 * x * y * (-pow(r0, 2) + pow(z, 2))) /
+                  pow((pow(x, 2) + pow(y, 2)) *
+                              (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                          4 * pow(r0 - r1, 2) * pow(z, 2),
+                      1.5);
+    dJ(2)(0, 2) = (-8 * x * (2 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) * z) /
+                  pow((pow(x, 2) + pow(y, 2)) *
+                              (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                          4 * pow(r0 - r1, 2) * pow(z, 2),
+                      1.5);
+    dJ(2)(1, 0) = (16 * x * y * (-pow(r0, 2) + pow(z, 2))) /
+                  pow((pow(x, 2) + pow(y, 2)) *
+                              (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                          4 * pow(r0 - r1, 2) * pow(z, 2),
+                      1.5);
     dJ(2)(1, 1) =
-        d2_global_to_local_cake_core_db2(pt, -(x / z), y / z, z) / pow(z, 2);
-    dJ(2)(1, 2) =
-        (-(z * d_global_to_local_cake_core_db(pt, -(x / z), y / z, z)) +
-         pow(z, 2) *
-             d2_global_to_local_cake_core_dbdvar(pt, -(x / z), y / z, z) -
-         y * d2_global_to_local_cake_core_db2(pt, -(x / z), y / z, z) +
-         x * d2_global_to_local_cake_core_dadb(pt, -(x / z), y / z, z)) /
-        pow(z, 3);
-    dJ(2)(2, 0) =
-        (z * (d_global_to_local_cake_core_da(pt, -(x / z), y / z, z) -
-              z * d2_global_to_local_cake_core_dadvar(pt, -(x / z), y / z, z)) +
-         y * d2_global_to_local_cake_core_dadb(pt, -(x / z), y / z, z) -
-         x * d2_global_to_local_cake_core_da2(pt, -(x / z), y / z, z)) /
-        pow(z, 3);
-    dJ(2)(2, 1) =
-        (-(z * d_global_to_local_cake_core_db(pt, -(x / z), y / z, z)) +
-         pow(z, 2) *
-             d2_global_to_local_cake_core_dbdvar(pt, -(x / z), y / z, z) -
-         y * d2_global_to_local_cake_core_db2(pt, -(x / z), y / z, z) +
-         x * d2_global_to_local_cake_core_dadb(pt, -(x / z), y / z, z)) /
-        pow(z, 3);
-    dJ(2)(2, 2) =
-        (pow(z, 4) *
-             d2_global_to_local_cake_core_dvar2(pt, -(x / z), y / z, z) +
-         2 * y * z * d_global_to_local_cake_core_db(pt, -(x / z), y / z, z) -
-         2 * y * pow(z, 2) *
-             d2_global_to_local_cake_core_dbdvar(pt, -(x / z), y / z, z) +
-         pow(y, 2) * d2_global_to_local_cake_core_db2(pt, -(x / z), y / z, z) -
-         2 * x * z * d_global_to_local_cake_core_da(pt, -(x / z), y / z, z) +
-         2 * x * pow(z, 2) *
-             d2_global_to_local_cake_core_dadvar(pt, -(x / z), y / z, z) -
-         2 * x * y * d2_global_to_local_cake_core_dadb(pt, -(x / z), y / z, z) +
-         pow(x, 2) * d2_global_to_local_cake_core_da2(pt, -(x / z), y / z, z)) /
-        pow(z, 4);
+        (2 -
+         (4 * pow(y, 2) * pow(2 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2), 2)) /
+             pow((pow(x, 2) + pow(y, 2)) *
+                         (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                     4 * pow(r0 - r1, 2) * pow(z, 2),
+                 1.5) +
+         (2 * (2 * r0 * (r0 - r1) + pow(x, 2) + 3 * pow(y, 2))) /
+             sqrt((pow(x, 2) + pow(y, 2)) *
+                      (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                  4 * pow(r0 - r1, 2) * pow(z, 2))) /
+        pow(r0 - r1, 2);
+    dJ(2)(1, 2) = (-8 * y * (2 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) * z) /
+                  pow((pow(x, 2) + pow(y, 2)) *
+                              (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                          4 * pow(r0 - r1, 2) * pow(z, 2),
+                      1.5);
+    dJ(2)(2, 0) = (-8 * x * (2 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) * z) /
+                  pow((pow(x, 2) + pow(y, 2)) *
+                              (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                          4 * pow(r0 - r1, 2) * pow(z, 2),
+                      1.5);
+    dJ(2)(2, 1) = (-8 * y * (2 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) * z) /
+                  pow((pow(x, 2) + pow(y, 2)) *
+                              (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                          4 * pow(r0 - r1, 2) * pow(z, 2),
+                      1.5);
+    dJ(2)(2, 2) = (4 * (pow(x, 2) + pow(y, 2)) *
+                   (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2))) /
+                  pow((pow(x, 2) + pow(y, 2)) *
+                              (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                          4 * pow(r0 - r1, 2) * pow(z, 2),
+                      1.5);
     break;
 
   case static_cast<int>(patch_piece::minus_z):
@@ -486,13 +649,24 @@ cake_jacs(const PatchTransformations &pt, int patch,
     J(1)(0) = 0;
     J(1)(1) = -(1 / z);
     J(1)(2) = y / pow(z, 2);
-    J(2)(0) = -(d_global_to_local_cake_core_da(pt, -(x / z), -(y / z), z) / z);
-    J(2)(1) = -(d_global_to_local_cake_core_db(pt, -(x / z), -(y / z), z) / z);
     J(2)
-    (2) = d_global_to_local_cake_core_dvar(pt, -(x / z), -(y / z), z) +
-          (y * d_global_to_local_cake_core_db(pt, -(x / z), -(y / z), z) +
-           x * d_global_to_local_cake_core_da(pt, -(x / z), -(y / z), z)) /
-              pow(z, 2);
+    (0) = (2 * x *
+           (1 + (2 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) /
+                    sqrt((pow(x, 2) + pow(y, 2)) *
+                             (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                         4 * pow(r0 - r1, 2) * pow(z, 2)))) /
+          pow(r0 - r1, 2);
+    J(2)
+    (1) = (2 * y *
+           (1 + (2 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) /
+                    sqrt((pow(x, 2) + pow(y, 2)) *
+                             (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                         4 * pow(r0 - r1, 2) * pow(z, 2)))) /
+          pow(r0 - r1, 2);
+    J(2)
+    (2) = (4 * z) / sqrt((pow(x, 2) + pow(y, 2)) *
+                             (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                         4 * pow(r0 - r1, 2) * pow(z, 2));
 
     dJ(0)(0, 0) = 0;
     dJ(0)(0, 1) = 0;
@@ -513,57 +687,65 @@ cake_jacs(const PatchTransformations &pt, int patch,
     dJ(1)(2, 1) = pow(z, -2);
     dJ(1)(2, 2) = (-2 * y) / pow(z, 3);
     dJ(2)(0, 0) =
-        d2_global_to_local_cake_core_da2(pt, -(x / z), -(y / z), z) / pow(z, 2);
-    dJ(2)(0, 1) = d2_global_to_local_cake_core_dadb(pt, -(x / z), -(y / z), z) /
-                  pow(z, 2);
-    dJ(2)(0, 2) =
-        -((-(z * d_global_to_local_cake_core_da(pt, -(x / z), -(y / z), z)) +
-           pow(z, 2) *
-               d2_global_to_local_cake_core_dadvar(pt, -(x / z), -(y / z), z) +
-           y * d2_global_to_local_cake_core_dadb(pt, -(x / z), -(y / z), z) +
-           x * d2_global_to_local_cake_core_da2(pt, -(x / z), -(y / z), z)) /
-          pow(z, 3));
-    dJ(2)(1, 0) = d2_global_to_local_cake_core_dadb(pt, -(x / z), -(y / z), z) /
-                  pow(z, 2);
+        (2 -
+         (4 * pow(x, 2) * pow(2 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2), 2)) /
+             pow((pow(x, 2) + pow(y, 2)) *
+                         (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                     4 * pow(r0 - r1, 2) * pow(z, 2),
+                 1.5) +
+         (2 * (2 * r0 * (r0 - r1) + 3 * pow(x, 2) + pow(y, 2))) /
+             sqrt((pow(x, 2) + pow(y, 2)) *
+                      (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                  4 * pow(r0 - r1, 2) * pow(z, 2))) /
+        pow(r0 - r1, 2);
+    dJ(2)(0, 1) = (16 * x * y * (-pow(r0, 2) + pow(z, 2))) /
+                  pow((pow(x, 2) + pow(y, 2)) *
+                              (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                          4 * pow(r0 - r1, 2) * pow(z, 2),
+                      1.5);
+    dJ(2)(0, 2) = (-8 * x * (2 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) * z) /
+                  pow((pow(x, 2) + pow(y, 2)) *
+                              (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                          4 * pow(r0 - r1, 2) * pow(z, 2),
+                      1.5);
+    dJ(2)(1, 0) = (16 * x * y * (-pow(r0, 2) + pow(z, 2))) /
+                  pow((pow(x, 2) + pow(y, 2)) *
+                              (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                          4 * pow(r0 - r1, 2) * pow(z, 2),
+                      1.5);
     dJ(2)(1, 1) =
-        d2_global_to_local_cake_core_db2(pt, -(x / z), -(y / z), z) / pow(z, 2);
-    dJ(2)(1, 2) =
-        -((-(z * d_global_to_local_cake_core_db(pt, -(x / z), -(y / z), z)) +
-           pow(z, 2) *
-               d2_global_to_local_cake_core_dbdvar(pt, -(x / z), -(y / z), z) +
-           y * d2_global_to_local_cake_core_db2(pt, -(x / z), -(y / z), z) +
-           x * d2_global_to_local_cake_core_dadb(pt, -(x / z), -(y / z), z)) /
-          pow(z, 3));
-    dJ(2)(2, 0) =
-        -((-(z * d_global_to_local_cake_core_da(pt, -(x / z), -(y / z), z)) +
-           pow(z, 2) *
-               d2_global_to_local_cake_core_dadvar(pt, -(x / z), -(y / z), z) +
-           y * d2_global_to_local_cake_core_dadb(pt, -(x / z), -(y / z), z) +
-           x * d2_global_to_local_cake_core_da2(pt, -(x / z), -(y / z), z)) /
-          pow(z, 3));
-    dJ(2)(2, 1) =
-        -((-(z * d_global_to_local_cake_core_db(pt, -(x / z), -(y / z), z)) +
-           pow(z, 2) *
-               d2_global_to_local_cake_core_dbdvar(pt, -(x / z), -(y / z), z) +
-           y * d2_global_to_local_cake_core_db2(pt, -(x / z), -(y / z), z) +
-           x * d2_global_to_local_cake_core_dadb(pt, -(x / z), -(y / z), z)) /
-          pow(z, 3));
-    dJ(2)(2, 2) =
-        (pow(z, 4) *
-             d2_global_to_local_cake_core_dvar2(pt, -(x / z), -(y / z), z) -
-         2 * y * z * d_global_to_local_cake_core_db(pt, -(x / z), -(y / z), z) +
-         2 * y * pow(z, 2) *
-             d2_global_to_local_cake_core_dbdvar(pt, -(x / z), -(y / z), z) +
-         pow(y, 2) *
-             d2_global_to_local_cake_core_db2(pt, -(x / z), -(y / z), z) -
-         2 * x * z * d_global_to_local_cake_core_da(pt, -(x / z), -(y / z), z) +
-         2 * x * pow(z, 2) *
-             d2_global_to_local_cake_core_dadvar(pt, -(x / z), -(y / z), z) +
-         2 * x * y *
-             d2_global_to_local_cake_core_dadb(pt, -(x / z), -(y / z), z) +
-         pow(x, 2) *
-             d2_global_to_local_cake_core_da2(pt, -(x / z), -(y / z), z)) /
-        pow(z, 4);
+        (2 -
+         (4 * pow(y, 2) * pow(2 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2), 2)) /
+             pow((pow(x, 2) + pow(y, 2)) *
+                         (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                     4 * pow(r0 - r1, 2) * pow(z, 2),
+                 1.5) +
+         (2 * (2 * r0 * (r0 - r1) + pow(x, 2) + 3 * pow(y, 2))) /
+             sqrt((pow(x, 2) + pow(y, 2)) *
+                      (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                  4 * pow(r0 - r1, 2) * pow(z, 2))) /
+        pow(r0 - r1, 2);
+    dJ(2)(1, 2) = (-8 * y * (2 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) * z) /
+                  pow((pow(x, 2) + pow(y, 2)) *
+                              (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                          4 * pow(r0 - r1, 2) * pow(z, 2),
+                      1.5);
+    dJ(2)(2, 0) = (-8 * x * (2 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) * z) /
+                  pow((pow(x, 2) + pow(y, 2)) *
+                              (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                          4 * pow(r0 - r1, 2) * pow(z, 2),
+                      1.5);
+    dJ(2)(2, 1) = (-8 * y * (2 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) * z) /
+                  pow((pow(x, 2) + pow(y, 2)) *
+                              (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                          4 * pow(r0 - r1, 2) * pow(z, 2),
+                      1.5);
+    dJ(2)(2, 2) = (4 * (pow(x, 2) + pow(y, 2)) *
+                   (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2))) /
+                  pow((pow(x, 2) + pow(y, 2)) *
+                              (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                          4 * pow(r0 - r1, 2) * pow(z, 2),
+                      1.5);
     break;
 
   default:

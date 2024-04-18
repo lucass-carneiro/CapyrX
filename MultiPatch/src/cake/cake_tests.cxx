@@ -36,7 +36,7 @@ std::string patch_owner_test(const PatchTransformations &pt,
   if (owner_patch == expected) {
     msg << MultiPatchTests::PASSED;
   } else {
-    msg << MultiPatchTests::FAILED << ". Reason: Expected to get patch "
+    msg << MultiPatchTests::FAILED << ".\n  Reason: Expected to get patch "
         << piece_name(expected) << " and got " << piece_name(owner_patch);
   }
 
@@ -75,7 +75,7 @@ std::string global_identity_test(const PatchTransformations &pt,
   if (test1 && test2 && test3) {
     msg << MultiPatchTests::PASSED;
   } else {
-    msg << MultiPatchTests::FAILED << ". Reason: ";
+    msg << MultiPatchTests::FAILED << ".\n  Reason: ";
 
     if (!test1) {
       msg << l2g(0) << " =/= " << global_vars(0) << ". ";
@@ -127,7 +127,7 @@ std::string local_identity_test(const PatchTransformations &pt, int patch,
   if (test1 && test2 && test3 && test4) {
     msg << MultiPatchTests::PASSED;
   } else {
-    msg << MultiPatchTests::FAILED << ". Reason: ";
+    msg << MultiPatchTests::FAILED << ".\n  Reason: ";
 
     if (!test1) {
       msg << "the computed patch is "
@@ -219,7 +219,7 @@ std::string jacobian_test(const PatchTransformations &pt, int patch,
   if (all_tests) {
     msg << MultiPatchTests::PASSED;
   } else {
-    msg << MultiPatchTests::FAILED << ". Reason: ";
+    msg << MultiPatchTests::FAILED << ".\n  Reason: ";
 
     if (!test1) {
       msg << "computed J(0)(0) value is " << (J(0)(0))
@@ -348,95 +348,95 @@ std::string djacobian_test(const PatchTransformations &pt, int patch,
   if (all_tests) {
     msg << MultiPatchTests::PASSED;
   } else {
-    msg << MultiPatchTests::FAILED << ". Reason: ";
+    msg << MultiPatchTests::FAILED << ".\n  Reason:";
 
     if (!test1) {
-      msg << "computed dJ(0)(0, 0) value is " << (dJ(0)(0, 0))
+      msg << "\n  computed dJ(0)(0, 0) value is " << (dJ(0)(0, 0))
           << " and the expected value is " << expected_dxdx(0) << ". ";
     }
 
     if (!test2) {
-      msg << "computed dJ(1)(0, 0) value is " << (dJ(1)(0, 0))
+      msg << "\n  computed dJ(1)(0, 0) value is " << (dJ(1)(0, 0))
           << " and the expected value is " << expected_dxdx(1) << ". ";
     }
 
     if (!test3) {
-      msg << "computed dJ(2)(0, 0) value is " << (dJ(2)(0, 0))
+      msg << "\n  computed dJ(2)(0, 0) value is " << (dJ(2)(0, 0))
           << " and the expected value is " << expected_dxdx(2) << ". ";
     }
 
     if (!test4) {
-      msg << "computed dJ(0)(0, 1) value is " << (dJ(0)(0, 1))
+      msg << "\n  computed dJ(0)(0, 1) value is " << (dJ(0)(0, 1))
           << " and the expected value is " << expected_dxdy(0) << ". ";
     }
 
     if (!test5) {
-      msg << "computed dJ(1)(0, 1) value is " << (dJ(1)(0, 1))
+      msg << "\n  computed dJ(1)(0, 1) value is " << (dJ(1)(0, 1))
           << " and the expected value is " << expected_dxdy(1) << ". ";
     }
 
     if (!test6) {
-      msg << "computed dJ(2)(0, 1) value is " << (dJ(2)(0, 1))
+      msg << "\n  computed dJ(2)(0, 1) value is " << (dJ(2)(0, 1))
           << " and the expected value is " << expected_dxdy(2) << ". ";
     }
 
     if (!test7) {
-      msg << "computed dJ(0)(0, 2) value is " << (dJ(0)(0, 2))
+      msg << "\n  computed dJ(0)(0, 2) value is " << (dJ(0)(0, 2))
           << " and the expected value is " << expected_dxdz(0) << ". ";
     }
 
     if (!test8) {
-      msg << "computed dJ(1)(0, 2) value is " << (dJ(1)(0, 2))
+      msg << "\n  computed dJ(1)(0, 2) value is " << (dJ(1)(0, 2))
           << " and the expected value is " << expected_dxdz(1) << ". ";
     }
 
     if (!test9) {
-      msg << "computed dJ(2)(0, 2) value is " << (dJ(2)(0, 2))
+      msg << "\n  computed dJ(2)(0, 2) value is " << (dJ(2)(0, 2))
           << " and the expected value is " << expected_dxdz(2) << ". ";
     }
 
     if (!test10) {
-      msg << "computed dJ(0)(1, 1) value is " << (dJ(0)(1, 1))
+      msg << "\n  computed dJ(0)(1, 1) value is " << (dJ(0)(1, 1))
           << " and the expected value is " << expected_dydy(0) << ". ";
     }
 
     if (!test11) {
-      msg << "computed dJ(1)(1, 1) value is " << (dJ(1)(1, 1))
+      msg << "\n  computed dJ(1)(1, 1) value is " << (dJ(1)(1, 1))
           << " and the expected value is " << expected_dydy(1) << ". ";
     }
 
     if (!test12) {
-      msg << "computed dJ(2)(1, 1) value is " << (dJ(2)(1, 1))
+      msg << "\n  computed dJ(2)(1, 1) value is " << (dJ(2)(1, 1))
           << " and the expected value is " << expected_dydy(2) << ". ";
     }
 
     if (!test13) {
-      msg << "computed dJ(0)(1, 2) value is " << (dJ(0)(1, 2))
+      msg << "\n  computed dJ(0)(1, 2) value is " << (dJ(0)(1, 2))
           << " and the expected value is " << expected_dydz(0) << ". ";
     }
 
     if (!test14) {
-      msg << "computed dJ(1)(1, 2) value is " << (dJ(1)(1, 2))
+      msg << "\n  computed dJ(1)(1, 2) value is " << (dJ(1)(1, 2))
           << " and the expected value is " << expected_dydz(1) << ". ";
     }
 
     if (!test15) {
-      msg << "computed dJ(2)(1, 2) value is " << (dJ(2)(1, 2))
+      msg << "\n  computed dJ(2)(1, 2) value is " << (dJ(2)(1, 2))
           << " and the expected value is " << expected_dydz(2) << ". ";
     }
 
     if (!test16) {
-      msg << "computed dJ(0)(2, 2) value is " << (dJ(0)(2, 2))
+      msg << "\n  computed dJ(0)(2, 2) value is " << (dJ(0)(2, 2))
           << " and the expected value is " << expected_dzdz(0) << ". ";
     }
 
     if (!test17) {
-      msg << "computed dJ(1)(2, 2) value is " << (dJ(1)(2, 2))
+      msg << "\n  computed dJ(1)(2, 2) value is " << (dJ(1)(2, 2))
           << " and the expected value is " << expected_dzdz(1) << ". ";
     }
 
     if (!test18) {
-      msg << "computed dJ(2)(2, 2) value is " << (dJ(2)(2, 2))
+      msg << "\n  computed dJ(2)(2, 2) value is " << (dJ(2)(2, 2))
           << " and the expected value is " << expected_dzdz(2) << ". ";
     }
   }

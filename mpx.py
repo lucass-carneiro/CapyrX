@@ -72,11 +72,14 @@ def plot_grid_tsv(args):
     plt.close("all")
 
     # Plot patches with different colors and markers
-    markers = [".", "x", "1", "s", "d", "v"]
+    markers = [".", "x", "1", "s", "d", "v", "o"]
 
-    for i in range(data["patch"].iloc[-1] + 1):
-        patch_sliced_data = data.loc[(
-            data["vcoordz"] == 0.0) & (data["patch"] == i)]
+    for i in range(0, data["patch"].iloc[-1] + 1):
+        patch_sliced_data = data.loc[
+            (data["vcoordz"] - 0.0 < 1.0e-14) &
+            (data["patch"] == i)
+        ]
+
         plt.scatter(
             patch_sliced_data["vcoordx"],
             patch_sliced_data["vcoordy"],

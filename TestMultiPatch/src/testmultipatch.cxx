@@ -8,9 +8,6 @@
 
 namespace TestMultiPatch {
 
-/*
- * u(t,x,y,z) = A cos(2 pi omega t) sin(2 pi kx x) sin(2 pi ky y) sin(2 pi kz z)
- */
 template <typename T>
 static constexpr void standing_wave(const T A, const T kx, const T ky,
                                     const T kz, const T x, const T y, const T z,

@@ -24,7 +24,7 @@ ODESolvers::method = "RK4"
 
 MultiPatch::patch_system = "Cake"
                                                                         
-MultiPatch::cake_outer_boundary_radius = 11.0
+MultiPatch::cake_outer_boundary_radius = 5.0
 MultiPatch::cake_inner_boundary_radius = 1.0
 
 MultiPatch::cake_cartesian_ncells_i    = 80
@@ -46,8 +46,10 @@ CarpetX::boundary_upper_z = "dirichlet"
 IO::out_dir = $parfile
 IO::out_every = 1
 
-CarpetX::out_tsv = yes
-CarpetX::out_tsv_vars = "
+CarpetX::out_tsv = no
+CarpetX::out_tsv_vars = ""
+
+CarpetX::out_openpmd_vars = "
     CoordinatesX::vertex_coords
     MultiPatchWaveToy::state
     MultiPatchWaveToy::rhs
@@ -60,7 +62,6 @@ TimerReport::out_filename = "TimerReport"
 TimerReport::output_schedule_timers = no
 TimerReport::n_top_timers = 100
 
-Cactus::terminate        = "iteration"
-
-Cactus::cctk_itlast      = 1
-CarpetX::dtfac          = 0.25
+Cactus::terminate   = "iteration"
+Cactus::cctk_itlast = 1
+CarpetX::dtfac      = 0.25

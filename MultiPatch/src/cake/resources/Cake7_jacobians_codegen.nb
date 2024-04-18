@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       158,          7]
-NotebookDataLength[     24748,        565]
-NotebookOptionsPosition[     23376,        533]
-NotebookOutlinePosition[     24028,        554]
-CellTagsIndexPosition[     23985,        551]
+NotebookDataLength[     17534,        386]
+NotebookOptionsPosition[     16230,        355]
+NotebookOutlinePosition[     16823,        375]
+CellTagsIndexPosition[     16780,        372]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -30,149 +30,31 @@ Cell["Piece of Cake coordinates Jacobian code generation", "Title",
 
 Cell[CellGroupData[{
 
-Cell["Patch system skeleton", "Section",
+Cell["Patch system ", "Section",
  CellChangeTimes->{{3.8448108646711617`*^9, 3.844810871321*^9}, {
   3.845641104146451*^9, 3.845641105656435*^9}, {3.8456414906301517`*^9, 
-  3.845641495240016*^9}, {3.845641576798369*^9, 
-  3.845641578368043*^9}},ExpressionUUID->"4433c9f4-e92e-44f9-a920-\
+  3.845641495240016*^9}, {3.845641576798369*^9, 3.845641578368043*^9}, {
+  3.922450748171774*^9, 
+  3.922450748500943*^9}},ExpressionUUID->"4433c9f4-e92e-44f9-a920-\
 9fcf114e462f"],
 
-Cell[BoxData[{
+Cell[BoxData[
  RowBox[{
-  RowBox[{"ClearAll", "[", 
-   RowBox[{"InverseCakePlusX", ",", "InverseCakeMinusX"}], "]"}], 
-  ";"}], "\[IndentingNewLine]", 
- RowBox[{
-  RowBox[{"InverseCakePlusX", "=", 
-   RowBox[{"{", 
-    RowBox[{
-     FractionBox["z", "x"], ",", 
-     FractionBox["y", "x"], ",", 
-     RowBox[{"inverseCore", "[", 
-      RowBox[{
-       FractionBox["z", "x"], ",", 
-       FractionBox["y", "x"], ",", "x"}], "]"}]}], "}"}]}], 
-  ";"}], "\[IndentingNewLine]", 
- RowBox[{
-  RowBox[{
-   RowBox[{"InverseCakeMinusX", "=", 
-    RowBox[{"{", 
-     RowBox[{
-      RowBox[{"-", 
-       FractionBox["z", "x"]}], ",", 
-      FractionBox["y", "x"], ",", 
-      RowBox[{"inverseCore", "[", 
-       RowBox[{
-        RowBox[{"-", 
-         FractionBox["z", "x"]}], ",", 
-        FractionBox["y", "x"], ",", "x"}], "]"}]}], "}"}]}], ";"}], 
-  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
- RowBox[{
-  RowBox[{"ClearAll", "[", 
-   RowBox[{"InverseCakePlusY", ",", "InverseCakeMinusY"}], "]"}], 
-  ";"}], "\[IndentingNewLine]", 
- RowBox[{
-  RowBox[{"InverseCakePlusY", "=", 
-   RowBox[{"{", 
-    RowBox[{
-     FractionBox["z", "y"], ",", 
-     RowBox[{"-", 
-      FractionBox["x", "y"]}], ",", 
-     RowBox[{"inverseCore", "[", 
-      RowBox[{
-       FractionBox["z", "y"], ",", 
-       RowBox[{"-", 
-        FractionBox["x", "y"]}], ",", "y"}], "]"}]}], "}"}]}], 
-  ";"}], "\[IndentingNewLine]", 
- RowBox[{
-  RowBox[{
-   RowBox[{"InverseCakeMinusY", "=", 
-    RowBox[{"{", 
-     RowBox[{
-      RowBox[{"-", 
-       FractionBox["z", "y"]}], ",", 
-      RowBox[{"-", 
-       FractionBox["x", "y"]}], ",", 
-      RowBox[{"inverseCore", "[", 
-       RowBox[{
-        RowBox[{"-", 
-         FractionBox["z", "y"]}], ",", 
-        RowBox[{"-", 
-         FractionBox["x", "y"]}], ",", "y"}], "]"}]}], "}"}]}], ";"}], 
-  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
- RowBox[{
-  RowBox[{"ClearAll", "[", 
-   RowBox[{"InverseCakePlusZ", ",", "InverseCakeMinusZ"}], "]"}], 
-  ";"}], "\[IndentingNewLine]", 
- RowBox[{
-  RowBox[{"InverseCakePlusZ", "=", 
-   RowBox[{"{", 
-    RowBox[{
-     RowBox[{"-", 
-      FractionBox["x", "z"]}], ",", 
-     FractionBox["y", "z"], ",", 
-     RowBox[{"inverseCore", "[", 
-      RowBox[{
-       RowBox[{"-", 
-        FractionBox["x", "z"]}], ",", 
-       FractionBox["y", "z"], ",", "z"}], "]"}]}], "}"}]}], 
-  ";"}], "\[IndentingNewLine]", 
- RowBox[{
-  RowBox[{"InverseCakeMinusZ", "=", 
-   RowBox[{"{", 
-    RowBox[{
-     RowBox[{"-", 
-      FractionBox["x", "z"]}], ",", 
-     RowBox[{"-", 
-      FractionBox["y", "z"]}], ",", 
-     RowBox[{"inverseCore", "[", 
-      RowBox[{
-       RowBox[{"-", 
-        FractionBox["x", "z"]}], ",", 
-       RowBox[{"-", 
-        FractionBox["y", "z"]}], ",", "z"}], "]"}]}], "}"}]}], 
-  ";"}]}], "Input",
- CellChangeTimes->{{3.844432718702897*^9, 3.844432723490147*^9}, {
-   3.844433003156488*^9, 3.844433027865608*^9}, {3.8444330937849827`*^9, 
-   3.8444331069452744`*^9}, {3.8444332271426497`*^9, 
-   3.8444333036133537`*^9}, {3.844433367962267*^9, 3.84443338179132*^9}, {
-   3.844434003260775*^9, 3.844434030999547*^9}, {3.8444349425299797`*^9, 
-   3.844434947688848*^9}, {3.844437113018725*^9, 3.844437116197493*^9}, {
-   3.844437180747018*^9, 3.844437206146435*^9}, {3.844437684536944*^9, 
-   3.844437764755073*^9}, {3.844438089981491*^9, 3.844438101659445*^9}, {
-   3.844443350154336*^9, 3.844443354553878*^9}, 3.84444579101473*^9, 
-   3.84444590438314*^9, {3.844446058899844*^9, 3.8444461060191927`*^9}, {
-   3.844457535066834*^9, 3.844457591975732*^9}, {3.8444579741957607`*^9, 
-   3.844458003434993*^9}, 3.844458249267202*^9, 3.844458294072276*^9, 
-   3.844458367908342*^9, {3.844458398437764*^9, 3.8444584334594316`*^9}, {
-   3.844458470739402*^9, 3.8444584733883657`*^9}, {3.844458596140977*^9, 
-   3.844458600392589*^9}, {3.844458751570125*^9, 3.84445882387059*^9}, {
-   3.8444594706433973`*^9, 3.844459474363484*^9}, {3.844810146956689*^9, 
-   3.8448101877093067`*^9}, {3.84481045029561*^9, 3.844810493598917*^9}, {
-   3.844810608559704*^9, 3.8448106316768827`*^9}, {3.844811023159759*^9, 
-   3.844811023409419*^9}, {3.8456409139815474`*^9, 3.845640917190625*^9}, {
-   3.845641109157414*^9, 3.8456411174383307`*^9}, {3.845641377892755*^9, 
-   3.845641447331727*^9}, {3.845641505021315*^9, 3.845641567398898*^9}, {
-   3.855784326894327*^9, 3.8557843272308807`*^9}, {3.855784406268498*^9, 
-   3.8557844867461443`*^9}, {3.8557846396915703`*^9, 3.855784656878216*^9}, {
-   3.856989776211707*^9, 3.856989778690833*^9}, {3.8569902072950363`*^9, 
-   3.856990209882496*^9}, {3.857056977283764*^9, 3.8570569787419567`*^9}, {
-   3.8691427661458673`*^9, 3.869142779474473*^9}, {3.869142812923567*^9, 
-   3.8691429367547693`*^9}, {3.869142968670945*^9, 3.869142991879855*^9}, {
-   3.8691431675781517`*^9, 3.869143191607959*^9}, 3.869231923569524*^9, {
-   3.869233901223832*^9, 3.8692339050229797`*^9}, {3.869233972412163*^9, 
-   3.869233973452284*^9}, {3.8692340208512497`*^9, 3.869234088550104*^9}, {
-   3.869234134119227*^9, 3.8692341457972517`*^9}, {3.8695799377511473`*^9, 
-   3.869579938519718*^9}, {3.869580048797024*^9, 3.8695800506668167`*^9}},
- CellLabel->"In[1]:=",ExpressionUUID->"1b9ac426-afd8-4657-a4aa-0e2ea49fc9c5"]
-}, Closed]],
+  RowBox[{"Import", "[", 
+   RowBox[{
+    RowBox[{"NotebookDirectory", "[", "]"}], "<>", 
+    "\"\<cake_coord_transforms.mx\>\""}], "]"}], ";"}]], "Input",
+ CellChangeTimes->{{3.922450751043352*^9, 3.922450774200289*^9}},
+ CellLabel->"In[1]:=",ExpressionUUID->"e02718e7-d42d-49ab-aad7-206b2a63f45a"]
+}, Open  ]],
 
 Cell[CellGroupData[{
 
-Cell["Jacobian file generation", "Section",
+Cell["Jacobians and Jacobian Derivatives", "Section",
  CellChangeTimes->{{3.85807029256612*^9, 3.85807030329497*^9}, 
-   3.869242415762504*^9, {3.869242688777238*^9, 
-   3.8692426889874*^9}},ExpressionUUID->"d9a6ec80-94ff-4010-a85e-\
+   3.869242415762504*^9, {3.869242688777238*^9, 3.8692426889874*^9}, {
+   3.922450895732071*^9, 
+   3.922450903911428*^9}},ExpressionUUID->"d9a6ec80-94ff-4010-a85e-\
 5a76d9141abd"],
 
 Cell[TextData[{
@@ -199,20 +81,19 @@ Cell[TextData[{
        SuperscriptBox["dx", "j"]], ")"}]}]}], TraditionalForm]}],
   ExpressionUUID->"e916b45b-0691-43bb-b104-b99c3792f970"],
  "\n\nThat is, we must evaluate the derivatives of all local to global \
-coordinate transformations (here defined in the \
-\[OpenCurlyDoubleQuote]Inverse patch system\[CloseCurlyDoubleQuote] section).\
-\nTo eliminate typing errors, the Jacobian components and \
-it\[CloseCurlyQuote]s derivatives are calculated and a C++ source file is \
-automatically generated for each patch piece. The function bellow generates a \
-Jacobian file based taking a patch name and it\[CloseCurlyQuote]s string \
-conversion as input"
+coordinate transformations.\[LineSeparator]To eliminate typing errors, the \
+Jacobian components and it\[CloseCurlyQuote]s derivatives are calculated and \
+a C++ source file is automatically generated for each patch piece. The \
+function bellow generates a Jacobian file based taking a patch name and it\
+\[CloseCurlyQuote]s string conversion as input"
 }], "Text",
  CellChangeTimes->{{3.8460843424597054`*^9, 3.846084494466394*^9}, {
   3.857120063429269*^9, 3.857120086484022*^9}, {3.857132591638426*^9, 
   3.857132592022197*^9}, {3.8580687165349627`*^9, 3.858068867341958*^9}, {
   3.858069271864131*^9, 3.858069323613624*^9}, {3.858069425391279*^9, 
-  3.85806947653013*^9}, {3.8580702263171883`*^9, 
-  3.858070287806102*^9}},ExpressionUUID->"a1dc3eef-aba1-46f5-8810-\
+  3.85806947653013*^9}, {3.8580702263171883`*^9, 3.858070287806102*^9}, {
+  3.9224508684843073`*^9, 3.922450890707775*^9}, {3.922451119536634*^9, 
+  3.922451120040235*^9}},ExpressionUUID->"a1dc3eef-aba1-46f5-8810-\
 b875ef843746"],
 
 Cell[BoxData[
@@ -301,11 +182,12 @@ Cell[BoxData[
      RowBox[{"Return", "[", "outputStr", "]"}]}]}], "\[IndentingNewLine]", 
    "]"}]}]], "Input",
  CellChangeTimes->{{3.869239711715683*^9, 3.869239807725449*^9}, {
-  3.869239921072564*^9, 3.869239927713436*^9}, {3.869239987391498*^9, 
-  3.869240073240534*^9}, {3.869240250315014*^9, 3.869240278973666*^9}, {
-  3.8692403569332542`*^9, 3.86924035729281*^9}, {3.869242234598077*^9, 
-  3.8692422355678596`*^9}},
- CellLabel->"In[10]:=",ExpressionUUID->"24dd430f-c257-4863-b47f-f7d4a552d3d2"],
+   3.869239921072564*^9, 3.869239927713436*^9}, {3.869239987391498*^9, 
+   3.869240073240534*^9}, {3.869240250315014*^9, 3.869240278973666*^9}, {
+   3.8692403569332542`*^9, 3.86924035729281*^9}, {3.869242234598077*^9, 
+   3.8692422355678596`*^9}, {3.922451257377924*^9, 3.922451275276483*^9}, 
+   3.9224513066676083`*^9, {3.9224515986778097`*^9, 3.922451599067176*^9}},
+ CellLabel->"In[2]:=",ExpressionUUID->"24dd430f-c257-4863-b47f-f7d4a552d3d2"],
 
 Cell[BoxData[
  RowBox[{
@@ -318,13 +200,15 @@ Cell[BoxData[
       RowBox[{
       "srcFile", "=", 
        "\"\<#ifndef MULTIPATCH_CAKE_JACOBIANS_HXX\n#define \
-MULTIPATCH_CAKE_JACOBIANS_HXX\n\nnamespace MultiPatch {\nnamespace Cake {\n\n\
-CCTK_DEVICE CCTK_HOST inline std_tuple<jac_t, djac_t> cake_jacs(const \
-PatchTransformations &pt, int patch, const svec_u &global_vars) {\n  using \
+MULTIPATCH_CAKE_JACOBIANS_HXX\n\n#include \\\"multipatch.hxx\\\"\n#include \\\
+\"cake.hxx\\\"\n\nnamespace MultiPatch {\nnamespace Cake {\n\nCCTK_DEVICE \
+CCTK_HOST inline std_tuple<jac_t, djac_t> cake_jacs(const \
+PatchTransformations &pt, int patch, const svec &global_vars) {\n  using \
 std::pow;\n  using std::sqrt;\n\n  jac_t J{};\n  djac_t dJ{};\n\n  const auto \
-x = global_vars(0);\n  const auto y = global_vars(1);\n  const auto z = \
-global_vars(2);\n\n  switch (patch) {\n\n  case \
-static_cast<int>(patch_piece::cartesian):\n\>\""}], ";", 
+r0{pt.cake_inner_boundary_radius};\n  const auto \
+r1{pt.cake_outer_boundary_radius};\n\n  const auto x{global_vars(0)};\n  \
+const auto y{global_vars(1)};\n  const auto z{global_vars(2)};\n\n  switch \
+(patch) {\n\n  case static_cast<int>(patch_piece::cartesian):\n\>\""}], ";", 
       "\[IndentingNewLine]", 
       RowBox[{"(*", " ", "Cartesian", " ", "*)"}], "\[IndentingNewLine]", 
       RowBox[{"srcFile", "=", 
@@ -412,75 +296,9 @@ MULTIPATCH_CAKE_JACOBIANS_HXX\>\""}]}], ";", "\[IndentingNewLine]",
         RowBox[{"srcFile", ",", 
          RowBox[{"{", 
           RowBox[{
-           RowBox[{
-           "\"\<inverseCore\>\"", "\[Rule]", 
-            "\"\<global_to_local_cake_core\>\""}], ",", 
            RowBox[{"\"\<Power\>\"", "\[Rule]", "\"\<pow\>\""}], ",", 
            RowBox[{"\"\<Sqrt\>\"", "\[Rule]", "\"\<sqrt\>\""}]}], "}"}]}], 
         "]"}]}], ";", "\[IndentingNewLine]", "\[IndentingNewLine]", 
-      RowBox[{"srcFile", "=", 
-       RowBox[{"StringReplace", "[", 
-        RowBox[{"srcFile", ",", 
-         RowBox[{
-         "\"\<Derivative(1,0,0)(global_to_local_cake_core)(\>\"", "\[Rule]", 
-          "\"\<d_global_to_local_cake_core_da(pt,\>\""}]}], "]"}]}], ";", 
-      "\[IndentingNewLine]", 
-      RowBox[{"srcFile", "=", 
-       RowBox[{"StringReplace", "[", 
-        RowBox[{"srcFile", ",", 
-         RowBox[{
-         "\"\<Derivative(0,1,0)(global_to_local_cake_core)(\>\"", "\[Rule]", 
-          "\"\<d_global_to_local_cake_core_db(pt,\>\""}]}], "]"}]}], ";", 
-      "\[IndentingNewLine]", 
-      RowBox[{"srcFile", "=", 
-       RowBox[{"StringReplace", "[", 
-        RowBox[{"srcFile", ",", 
-         RowBox[{
-         "\"\<Derivative(0,0,1)(global_to_local_cake_core)(\>\"", "\[Rule]", 
-          "\"\<d_global_to_local_cake_core_dvar(pt,\>\""}]}], "]"}]}], ";", 
-      "\[IndentingNewLine]", "\[IndentingNewLine]", 
-      RowBox[{"srcFile", "=", 
-       RowBox[{"StringReplace", "[", 
-        RowBox[{"srcFile", ",", 
-         RowBox[{
-         "\"\<Derivative(2,0,0)(global_to_local_cake_core)(\>\"", "\[Rule]", 
-          "\"\<d2_global_to_local_cake_core_da2(pt,\>\""}]}], "]"}]}], ";", 
-      "\[IndentingNewLine]", 
-      RowBox[{"srcFile", "=", 
-       RowBox[{"StringReplace", "[", 
-        RowBox[{"srcFile", ",", 
-         RowBox[{
-         "\"\<Derivative(1,1,0)(global_to_local_cake_core)(\>\"", "\[Rule]", 
-          "\"\<d2_global_to_local_cake_core_dadb(pt,\>\""}]}], "]"}]}], ";", 
-      "\[IndentingNewLine]", 
-      RowBox[{"srcFile", "=", 
-       RowBox[{"StringReplace", "[", 
-        RowBox[{"srcFile", ",", 
-         RowBox[{
-         "\"\<Derivative(1,0,1)(global_to_local_cake_core)(\>\"", "\[Rule]", 
-          "\"\<d2_global_to_local_cake_core_dadvar(pt,\>\""}]}], "]"}]}], ";",
-       "\[IndentingNewLine]", 
-      RowBox[{"srcFile", "=", 
-       RowBox[{"StringReplace", "[", 
-        RowBox[{"srcFile", ",", 
-         RowBox[{
-         "\"\<Derivative(0,2,0)(global_to_local_cake_core)(\>\"", "\[Rule]", 
-          "\"\<d2_global_to_local_cake_core_db2(pt,\>\""}]}], "]"}]}], ";", 
-      "\[IndentingNewLine]", 
-      RowBox[{"srcFile", "=", 
-       RowBox[{"StringReplace", "[", 
-        RowBox[{"srcFile", ",", 
-         RowBox[{
-         "\"\<Derivative(0,1,1)(global_to_local_cake_core)(\>\"", "\[Rule]", 
-          "\"\<d2_global_to_local_cake_core_dbdvar(pt,\>\""}]}], "]"}]}], ";",
-       "\[IndentingNewLine]", 
-      RowBox[{"srcFile", "=", 
-       RowBox[{"StringReplace", "[", 
-        RowBox[{"srcFile", ",", 
-         RowBox[{
-         "\"\<Derivative(0,0,2)(global_to_local_cake_core)(\>\"", "\[Rule]", 
-          "\"\<d2_global_to_local_cake_core_dvar2(pt,\>\""}]}], "]"}]}], ";", 
-      "\[IndentingNewLine]", "\[IndentingNewLine]", 
       RowBox[{"Export", "[", 
        RowBox[{
        "\"\<cake_jacobians.hxx\>\"", ",", "srcFile", ",", "\"\<Text\>\""}], 
@@ -522,18 +340,21 @@ MULTIPATCH_CAKE_JACOBIANS_HXX\>\""}]}], ";", "\[IndentingNewLine]",
    3.869581136558146*^9}, {3.869584522925926*^9, 3.869584524135091*^9}, {
    3.8695852032152243`*^9, 3.869585208394876*^9}, {3.869585261414699*^9, 
    3.869585283947176*^9}, 3.8695892860905647`*^9, {3.869589448727989*^9, 
-   3.86958944904696*^9}},ExpressionUUID->"91b56626-d4f4-413c-9e73-\
+   3.86958944904696*^9}, {3.922451716198936*^9, 3.9224517329375687`*^9}, {
+   3.9224518965364428`*^9, 3.9224518975855207`*^9}, {3.922453049918334*^9, 
+   3.9224530669656076`*^9}, {3.922453116803192*^9, 3.922453138622252*^9}, {
+   3.9224531828193007`*^9, 
+   3.922453185198546*^9}},ExpressionUUID->"91b56626-d4f4-413c-9e73-\
 f5cc2632a663"],
 
 Cell[BoxData[
  RowBox[{"generateJacobianFile", "[", "]"}]], "Input",
- CellLabel->"In[12]:=",ExpressionUUID->"2c2637fd-e17c-41d2-8000-b6116f040e5d"]
+ CellLabel->"In[4]:=",ExpressionUUID->"2c2637fd-e17c-41d2-8000-b6116f040e5d"]
 }, Open  ]]
 }, Open  ]]
 },
-WindowSize->{1502.608695652174, 788.0869565217392},
-WindowMargins->{{1502.608695652174, Automatic}, {
-  Automatic, 22.945054945054945`}},
+WindowSize->{1920, 1008},
+WindowMargins->{{1920, Automatic}, {Automatic, 28}},
 TaggingRules->{
  "WelcomeScreenSettings" -> {"FEStarting" -> False}, "TryRealOnly" -> False},
 DefaultNaturalLanguage->Language,
@@ -554,17 +375,17 @@ CellTagsIndex->{}
 (*NotebookFileOutline
 Notebook[{
 Cell[CellGroupData[{
-Cell[580, 22, 437, 6, 103, "Title",ExpressionUUID->"06cf51ac-2049-45e5-befb-5e7a3ea14fb4"],
+Cell[580, 22, 437, 6, 104, "Title",ExpressionUUID->"06cf51ac-2049-45e5-befb-5e7a3ea14fb4"],
 Cell[CellGroupData[{
-Cell[1042, 32, 311, 5, 73, "Section",ExpressionUUID->"4433c9f4-e92e-44f9-a920-9fcf114e462f"],
-Cell[1356, 39, 5201, 127, 337, "Input",ExpressionUUID->"1b9ac426-afd8-4657-a4aa-0e2ea49fc9c5"]
-}, Closed]],
+Cell[1042, 32, 352, 6, 74, "Section",ExpressionUUID->"4433c9f4-e92e-44f9-a920-9fcf114e462f"],
+Cell[1397, 40, 323, 7, 41, "Input",ExpressionUUID->"e02718e7-d42d-49ab-aad7-206b2a63f45a"]
+}, Open  ]],
 Cell[CellGroupData[{
-Cell[6594, 171, 238, 4, 59, "Section",ExpressionUUID->"d9a6ec80-94ff-4010-a85e-5a76d9141abd"],
-Cell[6835, 177, 1617, 38, 224, "Text",ExpressionUUID->"a1dc3eef-aba1-46f5-8810-b875ef843746"],
-Cell[8455, 217, 4058, 90, 493, "Input",ExpressionUUID->"24dd430f-c257-4863-b47f-f7d4a552d3d2"],
-Cell[12516, 309, 10682, 216, 1746, "Input",ExpressionUUID->"91b56626-d4f4-413c-9e73-f5cc2632a663"],
-Cell[23201, 527, 147, 2, 40, "Input",ExpressionUUID->"2c2637fd-e17c-41d2-8000-b6116f040e5d"]
+Cell[1757, 52, 298, 5, 74, "Section",ExpressionUUID->"d9a6ec80-94ff-4010-a85e-5a76d9141abd"],
+Cell[2058, 59, 1626, 37, 199, "Text",ExpressionUUID->"a1dc3eef-aba1-46f5-8810-b875ef843746"],
+Cell[3687, 98, 4183, 91, 526, "Input",ExpressionUUID->"24dd430f-c257-4863-b47f-f7d4a552d3d2"],
+Cell[7873, 191, 8180, 156, 1758, "Input",ExpressionUUID->"91b56626-d4f4-413c-9e73-f5cc2632a663"],
+Cell[16056, 349, 146, 2, 41, "Input",ExpressionUUID->"2c2637fd-e17c-41d2-8000-b6116f040e5d"]
 }, Open  ]]
 }, Open  ]]
 }

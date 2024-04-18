@@ -13,7 +13,6 @@ Cactus::cctk_itlast = 0
 CarpetX::verbose = yes
 CarpetX::poison_undefined_values = yes
 
-# TODO: Blocking factors != 1 throw "domain size not divisible by blocking_factor"
 CarpetX::blocking_factor_x = 1
 CarpetX::blocking_factor_y = 1
 CarpetX::blocking_factor_z = 1
@@ -23,19 +22,22 @@ CarpetX::max_num_levels = 1
 CarpetX::dtfac = 0.5
 
 MultiPatch::run_tests        = yes
-MultiPatch::test_repetitions = 30
+MultiPatch::test_repetitions = 50
 
 MultiPatch::patch_system = "Cake"
                                                                         
 MultiPatch::cake_outer_boundary_radius = 5.0
 MultiPatch::cake_inner_boundary_radius = 1.0
 
-MultiPatch::cake_cartesian_ncells_i    = 5
-MultiPatch::cake_cartesian_ncells_j    = 5
-MultiPatch::cake_cartesian_ncells_k    = 5
+MultiPatch::cake_cartesian_ncells_i    = 40
+MultiPatch::cake_cartesian_ncells_j    = 40
+MultiPatch::cake_cartesian_ncells_k    = 40
 
-MultiPatch::cake_angular_cells         = 5
-MultiPatch::cake_radial_cells          = 5
+MultiPatch::cake_angular_cells         = 40
+MultiPatch::cake_radial_cells          = 40
+
+# The error tolerance should be in the order of the largest grid spacing
+TestMultiPatch::tolerance  = 2.0 / MultiPatch::cake_cartesian_ncells_i
 
 CarpetX::boundary_x = "dirichlet"
 CarpetX::boundary_y = "dirichlet"

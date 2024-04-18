@@ -12,7 +12,6 @@ Cactus::cctk_itlast = 0
 
 CarpetX::verbose = yes
 
-# TODO: Blocking factors != 1 throw "domain size not divisible by blocking_factor"
 CarpetX::blocking_factor_x = 1
 CarpetX::blocking_factor_y = 1
 CarpetX::blocking_factor_z = 1

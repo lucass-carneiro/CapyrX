@@ -486,7 +486,7 @@ extern "C" void MultiPatch_run_cake_tests(CCTK_ARGUMENTS) {
   /*
    * Fixed point tests
    */
-  const std::array<std::pair<svec, patch_piece>, 29> owner_test_data = {
+  const std::array<std::pair<svec, patch_piece>, 36> owner_test_data = {
       // Cartesian cube interior
       std::make_pair(svec{cube_midpoint, cube_midpoint, cube_midpoint},
                      patch_piece::cartesian),
@@ -498,45 +498,53 @@ extern "C" void MultiPatch_run_cake_tests(CCTK_ARGUMENTS) {
                      patch_piece::cartesian),
 
       // Cartesian cube corners
-      std::make_pair(svec{r0, r0, r0}, patch_piece::cartesian),
-      std::make_pair(svec{-r0, r0, r0}, patch_piece::cartesian),
-      std::make_pair(svec{r0, -r0, r0}, patch_piece::cartesian),
-      std::make_pair(svec{r0, r0, -r0}, patch_piece::cartesian),
+      std::make_pair(svec{r0, r0, r0}, patch_piece::plus_x),
+      std::make_pair(svec{r0, -r0, r0}, patch_piece::plus_x),
+      std::make_pair(svec{-r0, -r0, r0}, patch_piece::minus_x),
+      std::make_pair(svec{-r0, r0, r0}, patch_piece::minus_x),
+
+      std::make_pair(svec{r0, r0, -r0}, patch_piece::plus_x),
+      std::make_pair(svec{r0, -r0, -r0}, patch_piece::plus_x),
+      std::make_pair(svec{-r0, -r0, -r0}, patch_piece::minus_x),
+      std::make_pair(svec{-r0, r0, -r0}, patch_piece::minus_x),
 
       // Middle of the +x patch
-      std::make_pair(svec{r0, 0, 0}, patch_piece::cartesian),
+      std::make_pair(svec{r0, 0, 0}, patch_piece::plus_x),
       std::make_pair(svec{patch_midpoint, 0, 0}, patch_piece::plus_x),
       std::make_pair(svec{r1, 0, 0}, patch_piece::plus_x),
 
       // Middle of the -x patch
-      std::make_pair(svec{-r0, 0, 0}, patch_piece::cartesian),
+      std::make_pair(svec{-r0, 0, 0}, patch_piece::minus_x),
       std::make_pair(svec{-patch_midpoint, 0, 0}, patch_piece::minus_x),
       std::make_pair(svec{-r1, 0, 0}, patch_piece::minus_x),
 
       // Middle of the +y patch
-      std::make_pair(svec{0, r0, 0}, patch_piece::cartesian),
+      std::make_pair(svec{0, r0, 0}, patch_piece::plus_y),
       std::make_pair(svec{0, patch_midpoint, 0}, patch_piece::plus_y),
       std::make_pair(svec{0, r1, 0}, patch_piece::plus_y),
 
       // Middle of the -y patch
-      std::make_pair(svec{0, -r0, 0}, patch_piece::cartesian),
+      std::make_pair(svec{0, -r0, 0}, patch_piece::minus_y),
       std::make_pair(svec{0, -patch_midpoint, 0}, patch_piece::minus_y),
       std::make_pair(svec{0, -r1, 0}, patch_piece::minus_y),
 
       // Middle of the +z patch
-      std::make_pair(svec{0, 0, r0}, patch_piece::cartesian),
+      std::make_pair(svec{0, 0, r0}, patch_piece::plus_z),
       std::make_pair(svec{0, 0, patch_midpoint}, patch_piece::plus_z),
       std::make_pair(svec{0, 0, r1}, patch_piece::plus_z),
 
       // Middle of the -z patch
-      std::make_pair(svec{0, 0, -r0}, patch_piece::cartesian),
+      std::make_pair(svec{0, 0, -r0}, patch_piece::minus_z),
       std::make_pair(svec{0, 0, -patch_midpoint}, patch_piece::minus_z),
       std::make_pair(svec{0, 0, -r1}, patch_piece::minus_z),
 
       // Exterior
       std::make_pair(svec{r1 + 1, 0, 0}, patch_piece::plus_x),
       std::make_pair(svec{0, r1 + 1, 0}, patch_piece::plus_y),
-      std::make_pair(svec{0, 0, r1 + 1}, patch_piece::plus_z)};
+      std::make_pair(svec{0, 0, r1 + 1}, patch_piece::plus_z),
+      std::make_pair(svec{-(r1 + 1), 0, 0}, patch_piece::minus_x),
+      std::make_pair(svec{0, -(r1 + 1), 0}, patch_piece::minus_y),
+      std::make_pair(svec{0, 0, -(r1 + 1)}, patch_piece::minus_z)};
 
   // Tests if the patch owner is correct.
   for (const auto &data : owner_test_data) {

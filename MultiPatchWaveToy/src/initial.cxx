@@ -68,9 +68,9 @@ extern "C" void MultiPatchWaveToy_Initial(CCTK_ARGUMENTS) {
     grid.loop_int_device<0, 0, 0>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-          standing_wave(amplitude, standing_wave_kx, standing_wave_ky,
-                        standing_wave_kz, cctk_time, vcoordx(p.I), vcoordy(p.I),
-                        vcoordz(p.I), u(p.I), rho(p.I));
+          standing_wave(amplitude, wave_kx, wave_ky, wave_kz, cctk_time,
+                        vcoordx(p.I), vcoordy(p.I), vcoordz(p.I), u(p.I),
+                        rho(p.I));
         });
 
   } else if (CCTK_EQUALS(initial_condition, "Gaussian")) {
@@ -85,9 +85,9 @@ extern "C" void MultiPatchWaveToy_Initial(CCTK_ARGUMENTS) {
     grid.loop_int_device<0, 0, 0>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-          plane_wave(amplitude, plane_wave_frequency, plane_wave_nx,
-                     plane_wave_ny, plane_wave_nz, cctk_time, vcoordx(p.I),
-                     vcoordy(p.I), vcoordz(p.I), u(p.I), rho(p.I));
+          plane_wave(amplitude, wave_kx, wave_ky, wave_kz, cctk_time,
+                     vcoordx(p.I), vcoordy(p.I), vcoordz(p.I), u(p.I),
+                     rho(p.I));
         });
 
   } else {

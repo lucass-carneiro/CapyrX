@@ -14,9 +14,8 @@ extern "C" void MultiPatchWaveToy_Error(CCTK_ARGUMENTS) {
         grid.nghostzones,
         [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
           CCTK_REAL u0{0}, rho0{0};
-          standing_wave(amplitude, standing_wave_kx, standing_wave_ky,
-                        standing_wave_kz, cctk_time, vcoordx(p.I), vcoordy(p.I),
-                        vcoordz(p.I), u0, rho0);
+          standing_wave(amplitude, wave_kx, wave_ky, wave_kz, cctk_time,
+                        vcoordx(p.I), vcoordy(p.I), vcoordz(p.I), u0, rho0);
           u_err(p.I) = u(p.I) - u0;
           rho_err(p.I) = rho(p.I) - rho0;
         });
@@ -39,9 +38,8 @@ extern "C" void MultiPatchWaveToy_Error(CCTK_ARGUMENTS) {
         grid.nghostzones,
         [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
           CCTK_REAL u0{0}, rho0{0};
-          plane_wave(amplitude, plane_wave_frequency, plane_wave_nx,
-                     plane_wave_ny, plane_wave_nz, cctk_time, vcoordx(p.I),
-                     vcoordy(p.I), vcoordz(p.I), u0, rho0);
+          plane_wave(amplitude, wave_kx, wave_ky, wave_kz, cctk_time,
+                     vcoordx(p.I), vcoordy(p.I), vcoordz(p.I), u0, rho0);
           u_err(p.I) = u(p.I) - u0;
           rho_err(p.I) = rho(p.I) - rho0;
         });

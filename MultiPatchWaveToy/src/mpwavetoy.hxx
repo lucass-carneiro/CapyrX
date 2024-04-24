@@ -29,10 +29,7 @@ void standing_wave(const CCTK_REAL A, const CCTK_REAL kx, const CCTK_REAL ky, co
 void gaussian(const CCTK_REAL A, const CCTK_REAL W, const CCTK_REAL t, const CCTK_REAL x, const CCTK_REAL y,
                         const CCTK_REAL z, CCTK_REAL &u, CCTK_REAL &rho) noexcept;
 
-/*
- * u(t, x, y, z) = A * cos(omega * (t - (nx * x + ny * y + nz * z) / sqrt(nx * nx + ny * ny + nz * nz)))
- */
- void plane_wave(const CCTK_REAL A, const CCTK_REAL W, const CCTK_REAL nx, const CCTK_REAL ny, const CCTK_REAL nz, const CCTK_REAL t, const CCTK_REAL x, const CCTK_REAL y, const CCTK_REAL z, CCTK_REAL &u, CCTK_REAL &rho) noexcept;
+ void plane_wave(const CCTK_REAL A, const CCTK_REAL kx, const CCTK_REAL ky, const CCTK_REAL kz, const CCTK_REAL t, const CCTK_REAL x, const CCTK_REAL y, const CCTK_REAL z, CCTK_REAL &u, CCTK_REAL &rho) noexcept;
 
 extern "C" {
 

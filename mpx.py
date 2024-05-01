@@ -2,7 +2,7 @@
 
 Usage:
   mpx augment-tsv <data-file> <coord-file>
-  mpx plot-tsv <augmented-data> <var> [--rhs] [--save] [--diverging]
+  mpx plot-tsv <augmented-data> [--rhs] [--save] [--diverging]
   mpx plot-grid-tsv <coordinates-tsv-file> [--save]
   mpx plot-openpmd <data-file> <thorn-name> <group-name> <var-name> <iteration> <num-patches> [--refinement-level=<level>] [--z-slice=<zval>] [--openpmd-format=<format>] [--save] [--diverging] [--varmin=<min>] [--varmax=<max>] [--autorange] [--verbose]
   mpx (-h | --help)
@@ -64,7 +64,7 @@ def plot_grid_tsv(args):
     ]
 
     print("Reading data")
-    data = pd.read_csv(coord_file, sep="\s+",
+    data = pd.read_csv(coord_file, sep=r"\s+",
                        names=vars, comment="#")
 
     print("Creating data plot")
@@ -185,7 +185,6 @@ def plot_tsv(arguments):
     # Arguments
     rhs = arguments["--rhs"]
     augmented_state_data = arguments["<augmented-data>"]
-    var = arguments["<var>"]
     save_file = arguments["--save"]
     diverging = arguments["--diverging"]
 
@@ -193,17 +192,17 @@ def plot_tsv(arguments):
     if rhs:
         vars = vars1 + ["u_rhs", "rho_rhs"] + vars2
     else:
-        vars = vars1 + [var] + vars2
+        vars = vars1 + ["u", "rho"] + vars2
 
     print("Reading data")
     data = pd.read_csv(augmented_state_data,
-                       sep="\s+", names=vars, comment="#")
+                       sep=r"\s+", names=vars, comment="#")
 
     # Z slice data
     print("Filtering data for the z = 0 slice")
 
     sliced_data = data.loc[
-        (data["vcoordz"] == 0.0) &
+        np.isclose(data["vcoordz"], -0.1) &
         (np.abs(data["x"]) <= 1.0) &
         (np.abs(data["y"]) <= 1.0) &
         (np.abs(data["z"]) <= 1.0)
@@ -215,17 +214,17 @@ def plot_tsv(arguments):
 
         expected = -3.0 * np.pi**2 * np.cos(np.pi * sliced_data["vcoordx"]) * np.cos(
             np.pi * sliced_data["vcoordy"])
-        error = np.abs(expected - sliced_data[var])
+        error = np.abs(expected - sliced_data["u"])
 
         max_error = np.amax(error)
         error = error / max_error
 
         make_plot(sliced_data["vcoordx"], sliced_data["vcoordy"],
-                  error, var + "_err", save_file, diverging)
+                  error, "u" + "_err", save_file, diverging)
 
     print("Creating data plot")
     make_plot(sliced_data["vcoordx"], sliced_data["vcoordy"],
-              sliced_data[var], var, save_file, diverging)
+              sliced_data["u"], "u", save_file, diverging)
 
 
 def openpmd_to_dataframe(fname, verbose, iteration_index, mesh_name, gf_name):
@@ -266,7 +265,7 @@ def openpmd_to_dataframe(fname, verbose, iteration_index, mesh_name, gf_name):
     y0 = uu.grid_global_offset[y_index]
     z0 = uu.grid_global_offset[z_index]
 
-    chunk_dataframes = []
+    all_data = []
 
     for chunk in data_raw.available_chunks():
         chunk_i_0 = chunk.offset[x_index]
@@ -280,34 +279,31 @@ def openpmd_to_dataframe(fname, verbose, iteration_index, mesh_name, gf_name):
         chunck_i_range = range(chunk_i_0, chunk_i_0 + chunk_nx)
         chunck_j_range = range(chunk_j_0, chunk_j_0 + chunk_ny)
         chunck_k_range = range(chunk_k_0, chunk_k_0 + chunk_nz)
-
+        
         # Rearrange data for dataframe
-        chunk_data = []
-
         for k in chunck_k_range:
             for j in chunck_j_range:
                 for i in chunck_i_range:
-                    chunk_data.append([
+                    all_data.append([
                         i,
                         j,
                         k,
                         x0 + i * dx,
-                        y0 + j * dy,
                         z0 + k * dz,
+                        y0 + j * dy,
                         data[k, j, i]
                     ])
-
-        chunk_df = pd.DataFrame(
-            chunk_data,
-            columns=["i", "j", "k", "x", "y", "z", gf_name]
-        )
-        chunk_dataframes.append(chunk_df)
 
     if verbose:
         print("Merging dataframes")
 
-    merged_df = pd.concat(chunk_dataframes)
+    merged_df = pd.DataFrame(
+        all_data,
+        columns=["i", "j", "k", "x", "y", "z", gf_name]
+    )
 
+    merged_df = merged_df.sort_values(["i", "j", "k"]).reset_index(drop=True)
+    
     return merged_df
 
 
@@ -368,7 +364,13 @@ def merge_multipatch_dataframes(verbose, fname, iteration_index, patch, level, t
 
     if verbose:
         print("Filtering main data for z = ", z_slice_value)
-    filtered_df = merged_df[merged_df["coordinatesx_vcoordz"] == z_slice_value]
+    filtered_df = merged_df[np.isclose(merged_df["coordinatesx_vcoordz"], z_slice_value)]
+    
+    print(
+        merged_df[
+            np.isclose(merged_df["coordinatesx_vcoordz"], z_slice_value)
+        ]
+    )
 
     return filtered_df
 
@@ -387,7 +389,8 @@ def plot_openpmd(args):
     var_name = args["<var-name>"]
     num_patches = int(args["<num-patches>"])
 
-    patches = ["{:02d}".format(i) for i in range(num_patches)]
+    #patches = ["{:02d}".format(i) for i in range(num_patches)]
+    patches = ["01"]
 
     level = args["--refinement-level"].zfill(2)
     iteration_index = int(args["<iteration>"])

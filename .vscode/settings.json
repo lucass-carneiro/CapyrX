@@ -1,4 +1,9 @@
 {
-    "python.defaultInterpreterPath": "venv/",
     "editor.formatOnSave": true,
+    "python.defaultInterpreterPath": "${workspaceFolder}/venv/bin/python",
+    "python.languageServer": "Pylance",
+    "editor.defaultFormatter": "ms-python.autopep8",
+    "pylint.args": [
+        "\"pylint.args\": [\"--disable=C0114\", \"--disable=C0115\", \"--disable=C0116\"]"
+    ]
 }

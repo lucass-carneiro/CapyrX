@@ -4,7 +4,7 @@ Usage:
   mpx augment-tsv <data-file> <coord-file>
   mpx plot-tsv <augmented-data> [--rhs] [--save] [--diverging]
   mpx plot-grid-tsv <coordinates-tsv-file> [--save]
-  mpx plot-openpmd <data-file> <thorn-name> <group-name> <var-name> <iteration> <num-patches> [--refinement-level=<level>] [--z-slice=<zval>] [--openpmd-format=<format>] [--save] [--diverging] [--varmin=<min>] [--varmax=<max>] [--autorange] [--verbose]
+  mpx plot-openpmd <data-file> <thorn-name> <group-name> <var-name> <iteration> <patches-data> [--refinement-level=<level>] [--z-slice=<zval>] [--openpmd-format=<format>] [--save] [--diverging] [--varmin=<min>] [--varmax=<max>] [--autorange] [--verbose]
   mpx (-h | --help)
   mpx --version
 
@@ -316,7 +316,7 @@ def merge_multipatch_dataframes(verbose, fname, iteration_index, patch, level, t
         fname,
         verbose,
         iteration_index,
-        f"coordinatesx_vertex_coords_patch{patch}_lev{level}",
+        f"coordinatesx_vertex_coords_patch{patch[0]}_lev{level}",
         "coordinatesx_vcoordx"
     )
 
@@ -324,7 +324,7 @@ def merge_multipatch_dataframes(verbose, fname, iteration_index, patch, level, t
         fname,
         verbose,
         iteration_index,
-        f"coordinatesx_vertex_coords_patch{patch}_lev{level}",
+        f"coordinatesx_vertex_coords_patch{patch[0]}_lev{level}",
         "coordinatesx_vcoordy"
     )
 
@@ -332,7 +332,7 @@ def merge_multipatch_dataframes(verbose, fname, iteration_index, patch, level, t
         fname,
         verbose,
         iteration_index,
-        f"coordinatesx_vertex_coords_patch{patch}_lev{level}",
+        f"coordinatesx_vertex_coords_patch{patch[0]}_lev{level}",
         "coordinatesx_vcoordz"
     )
 
@@ -345,7 +345,7 @@ def merge_multipatch_dataframes(verbose, fname, iteration_index, patch, level, t
     coords_df = pd.merge(coords_df, vcoordz_df, on=merge_cols)
 
     # Main data
-    mesh_name = f"{thorn_name}_{group_name}_patch{patch}_lev{level}"
+    mesh_name = f"{thorn_name}_{group_name}_patch{patch[0]}_lev{level}"
 
     if verbose:
         print("Loading main data", mesh_name, "/", gf_name)
@@ -364,14 +364,17 @@ def merge_multipatch_dataframes(verbose, fname, iteration_index, patch, level, t
 
     if verbose:
         print("Filtering main data for z = ", z_slice_value)
-    filtered_df = merged_df[np.isclose(merged_df["coordinatesx_vcoordz"], z_slice_value)]
     
-    print(
-        merged_df[
-            np.isclose(merged_df["coordinatesx_vcoordz"], z_slice_value)
+    if(patch[1] == False):
+        filtered_df = merged_df[
+            (np.abs(merged_df["x"] < 1.0) | np.abs(np.isclose(merged_df["x"], 1.0))) &
+            (np.abs(merged_df["y"] < 1.0) | np.abs(np.isclose(merged_df["y"], 1.0))) &
+            (np.abs(merged_df["z"] < 1.0) | np.abs(np.isclose(merged_df["z"], 1.0))) &
+            np.isclose(merged_df["x"], z_slice_value)
         ]
-    )
-
+    else:
+        filtered_df = merged_df[np.isclose(merged_df["coordinatesx_vcoordz"], z_slice_value)]
+    
     return filtered_df
 
 
@@ -387,10 +390,8 @@ def plot_openpmd(args):
     thorn_name = args["<thorn-name>"]
     group_name = args["<group-name>"]
     var_name = args["<var-name>"]
-    num_patches = int(args["<num-patches>"])
-
-    #patches = ["{:02d}".format(i) for i in range(num_patches)]
-    patches = ["01"]
+    patches = eval(args["<patches-data>"].encode("unicode_escape"))
+    print(patches)
 
     level = args["--refinement-level"].zfill(2)
     iteration_index = int(args["<iteration>"])

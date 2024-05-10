@@ -31,8 +31,8 @@ MultiPatch::cake_cartesian_ncells_i    = 20
 MultiPatch::cake_cartesian_ncells_j    = 20
 MultiPatch::cake_cartesian_ncells_k    = 20
 
-MultiPatch::cake_angular_cells         = 40
-MultiPatch::cake_radial_cells          = 40
+MultiPatch::cake_angular_cells         = 20
+MultiPatch::cake_radial_cells          = 20
 
 MultiPatchWaveToy::initial_condition  = "standing wave"
 
@@ -61,5 +61,5 @@ TimerReport::output_schedule_timers = no
 TimerReport::n_top_timers = 100
 
 Cactus::terminate   = "iteration"
-Cactus::cctk_itlast = 1
+Cactus::cctk_itlast = 0
 CarpetX::dtfac      = 0.25

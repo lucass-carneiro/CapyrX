@@ -4,7 +4,7 @@ Usage:
   mpx augment-tsv <data-file> <coord-file>
   mpx plot-tsv <augmented-data> [--rhs] [--save] [--diverging]
   mpx plot-grid-tsv <coordinates-tsv-file> [--save]
-  mpx plot-openpmd <data-file> <thorn-name> <group-name> <var-name> <iteration> <patches-data> [--refinement-level=<level>] [--z-slice=<zval>] [--openpmd-format=<format>] [--save] [--diverging] [--varmin=<min>] [--varmax=<max>] [--autorange] [--verbose]
+  mpx plot-openpmd <data-file> <thorn-name> <group-name> <var-name> <iteration> <patches-data> [--refinement-level=<level>] [--slice=<coord>] [--slice-val=<val>] [--openpmd-format=<format>] [--save] [--diverging] [--varmin=<min>] [--varmax=<max>] [--autorange] [--verbose]
   mpx (-h | --help)
   mpx --version
 
@@ -19,7 +19,8 @@ Options:
   --varmax=<max>              Maximum value of the colorbar. Requires --diverging. [default: 1.0].
   --autorange                 Computes the colorbar range automatically. Requires --diverging. Ignores --varmin and --varmax.
   --refinement-level=<level>  The refinement level to plot [default: 0].
-  --z-slice=<zval>            The (global) Z coordinate slice to plot [default: 0.0]
+  --slice=<coord>             The coordinate direction to slice [default: "x"].
+  --slice-val=<val>           The (global) value of the coordinate slice to plot [default: 0.0]
   --openpmd-format=<format>   The underlying format of OpenPMD files [default: .bp5].
 """
 
@@ -307,7 +308,7 @@ def openpmd_to_dataframe(fname, verbose, iteration_index, mesh_name, gf_name):
     return merged_df
 
 
-def merge_multipatch_dataframes(verbose, fname, iteration_index, patch, level, thorn_name, group_name, gf_name, z_slice_value):
+def merge_multipatch_dataframes(verbose, fname, iteration_index, patch, level, thorn_name, group_name, gf_name, slice_coord, slice_val):
     # Coordiantes
     if verbose:
         print("Loading coordinate data")
@@ -363,23 +364,26 @@ def merge_multipatch_dataframes(verbose, fname, iteration_index, patch, level, t
     merged_df = pd.merge(coords_df, main_gf_df, on=merge_cols)
 
     if verbose:
-        print("Filtering main data for z = ", z_slice_value)
+        print(f"Filtering main data for {slice_coord} = {slice_val}")
+
+
     
     if(patch[1] == False):
         filtered_df = merged_df[
             (np.abs(merged_df["x"] < 1.0) | np.abs(np.isclose(merged_df["x"], 1.0))) &
             (np.abs(merged_df["y"] < 1.0) | np.abs(np.isclose(merged_df["y"], 1.0))) &
             (np.abs(merged_df["z"] < 1.0) | np.abs(np.isclose(merged_df["z"], 1.0))) &
-            np.isclose(merged_df["x"], z_slice_value)
+            np.isclose(merged_df["x"], slice_val)
         ]
     else:
-        filtered_df = merged_df[np.isclose(merged_df["coordinatesx_vcoordz"], z_slice_value)]
+        filtered_df = merged_df[np.isclose(merged_df["coordinatesx_vcoordz"], slice_val)]
     
     return filtered_df
 
 
 def plot_openpmd(args):
-    z_slice_value = float(args["--z-slice"])
+    slice_coord = args["--slice"]
+    slice_val = float(args["--slice-val"])
 
     verbose = bool(args["--verbose"])
     openpmd_format = (args["--openpmd-format"])
@@ -420,7 +424,8 @@ def plot_openpmd(args):
                     thorn_name,
                     group_name,
                     gf_name,
-                    z_slice_value
+                    slice_coord,
+                    slice_val
                 ],
             )
             for p in patches

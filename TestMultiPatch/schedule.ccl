@@ -1,6 +1,7 @@
 # Schedule definitions for thorn TestMultiPatch
 
 STORAGE: multipatch_test_gfs
+STORAGE: multipatch_test_coords
 
 SCHEDULE TestMultiPatch_TestSync AT initial
 {
@@ -10,8 +11,22 @@ SCHEDULE TestMultiPatch_TestSync AT initial
   SYNC: multipatch_test_gfs
 } "Fill test grid function with data"
 
+SCHEDULE TestMultiPatch_TestCoordsSync AT initial
+{
+  LANG: C
+  READS: CoordinatesX::vertex_coords(everywhere)
+  WRITES: multipatch_test_coords(interior)
+  SYNC: multipatch_test_coords
+} "Fill test grid function with coordinate data"
+
 SCHEDULE TestMultiPatch_TestGhostInterp AT postinitial
 {
   LANG: C
   READS: CoordinatesX::vertex_coords(everywhere) multipatch_test_gfs(everywhere)
 } "Checks if ghost zone values are correct"
+
+SCHEDULE TestMultiPatch_TestCoordsGhostInterp AT postinitial
+{
+  LANG: C
+  READS: CoordinatesX::vertex_coords(everywhere) multipatch_test_coords(everywhere)
+} "Checks if coordinates ghost zone values are correct"

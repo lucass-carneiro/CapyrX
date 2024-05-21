@@ -38,6 +38,7 @@ MultiPatch::cake_radial_cells          = 40
 
 # The error tolerance should be in the order of the largest grid spacing
 TestMultiPatch::tolerance  = 2.0 / MultiPatch::cake_cartesian_ncells_i
+TestMultiPatch::exact_tolerance = 1.0e-5
 
 CarpetX::boundary_x = "dirichlet"
 CarpetX::boundary_y = "dirichlet"

@@ -25,3 +25,9 @@ CCTK_REAL tolerance "Tolerance for testing interpolator accuracy"
   *:* :: ""
 }
 1.0e-3
+
+CCTK_REAL exact_tolerance "Tolerance for testing interpolator accuracy for results that should be exact"
+{
+  *:* :: ""
+}
+1.0e-5

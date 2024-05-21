@@ -85,8 +85,6 @@ extern "C" void TestMultiPatch_TestCoordsGhostInterp(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTSX_TestMultiPatch_TestCoordsGhostInterp;
   DECLARE_CCTK_PARAMETERS;
 
-  const auto exact_tolerance{1.0e-5};
-
   CCTK_VINFO("Testing interpolated coordinate values at ghost zones");
 
   grid.loop_all<0, 0, 0>(

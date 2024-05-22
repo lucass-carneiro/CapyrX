@@ -20,6 +20,10 @@ CCTK_REAL kz "ky for standing wave"
   *:* :: ""
 } 0.5
 
+CCTK_BOOLEAN run_sw_test "Run the standing wave grid function test"
+{
+} yes
+
 CCTK_REAL tolerance "Tolerance for testing interpolator accuracy"
 {
   *:* :: ""

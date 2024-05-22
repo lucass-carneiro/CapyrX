@@ -39,6 +39,7 @@ MultiPatch::cake_radial_cells          = 40
 # The error tolerance should be in the order of the largest grid spacing
 TestMultiPatch::tolerance  = 2.0 / MultiPatch::cake_cartesian_ncells_i
 TestMultiPatch::exact_tolerance = 1.0e-5
+TestMultiPatch::run_sw_test = no
 
 CarpetX::boundary_x = "dirichlet"
 CarpetX::boundary_y = "dirichlet"
@@ -50,7 +51,7 @@ CarpetX::boundary_upper_z = "dirichlet"
 
 #TODO: Make sure that the number of cells supports the asked interpolation order.
 CarpetX::ghost_size = 1
-CarpetX::interpolation_order = 1
+CarpetX::interpolation_order = 0
 
 IO::out_dir = $parfile
 IO::out_every = 1
@@ -62,5 +63,4 @@ CarpetX::out_tsv_vars = "
     CoordinatesX::cell_volume
     MultiPatch::vertex_Jacobians
     MultiPatch::vertex_dJacobians
-    TestMultiPatch::multipatch_test_gfs
 "

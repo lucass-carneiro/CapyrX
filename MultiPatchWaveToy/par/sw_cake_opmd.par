@@ -27,12 +27,12 @@ MultiPatch::patch_system = "Cake"
 MultiPatch::cake_outer_boundary_radius = 5.0
 MultiPatch::cake_inner_boundary_radius = 1.0
 
-MultiPatch::cake_cartesian_ncells_i    = 80
-MultiPatch::cake_cartesian_ncells_j    = 80
-MultiPatch::cake_cartesian_ncells_k    = 80
+MultiPatch::cake_cartesian_ncells_i    = 20
+MultiPatch::cake_cartesian_ncells_j    = 20
+MultiPatch::cake_cartesian_ncells_k    = 20
 
-MultiPatch::cake_angular_cells         = 80
-MultiPatch::cake_radial_cells          = 80
+MultiPatch::cake_angular_cells         = 20
+MultiPatch::cake_radial_cells          = 20
 
 MultiPatchWaveToy::initial_condition  = "standing wave"
 
@@ -63,5 +63,8 @@ TimerReport::output_schedule_timers = no
 TimerReport::n_top_timers = 100
 
 Cactus::terminate   = "iteration"
-Cactus::cctk_itlast = 10
 CarpetX::dtfac      = 0.25
+
+# This assumes that one wants to stop at t = 0.5, the domain ranges from -1 to 1
+# and the number of cells in all directions is the same
+Cactus::cctk_itlast = 0.5 / (CarpetX::dtfac * (2.0 / MultiPatch::cake_cartesian_ncells_i))

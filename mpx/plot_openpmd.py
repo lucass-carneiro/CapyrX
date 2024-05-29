@@ -80,7 +80,7 @@ def plot_openpmd_slice(args):
 
             # DEBUG
             #pd.options.display.precision = 16
-            print(df[np.isclose(df["coordinatesx_vcoordz"], 1.0)])
+            #print(df[np.isclose(df["coordinatesx_vcoordz"], 1.0)])
             #exit()
 
             if diverging == True:

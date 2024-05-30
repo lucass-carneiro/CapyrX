@@ -51,7 +51,7 @@ CarpetX::boundary_upper_z = "dirichlet"
 
 #TODO: Make sure that the number of cells supports the asked interpolation order.
 CarpetX::ghost_size = 1
-CarpetX::interpolation_order = 0
+CarpetX::interpolation_order = 1
 
 IO::out_dir = $parfile
 IO::out_every = 1

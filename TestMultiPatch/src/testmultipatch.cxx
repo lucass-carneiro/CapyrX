@@ -80,7 +80,7 @@ extern "C" void TestMultiPatch_TestCoordsSync(CCTK_ARGUMENTS) {
 }
 
 extern "C" void TestMultiPatch_TestCoordsGhostInterp(CCTK_ARGUMENTS) {
-  using std::abs;
+  using std::fabs;
 
   DECLARE_CCTK_ARGUMENTSX_TestMultiPatch_TestCoordsGhostInterp;
   DECLARE_CCTK_PARAMETERS;
@@ -97,16 +97,18 @@ extern "C" void TestMultiPatch_TestCoordsGhostInterp(CCTK_ARGUMENTS) {
         const auto obtained_y{test_y(p.I)};
         const auto obtained_z{test_z(p.I)};
 
-        if (!(abs(expected_x - obtained_x) < exact_tolerance)) {
-          if (!(abs(obtained_x - 1138.0) < exact_tolerance)) {
+        if (!(fabs(expected_x - obtained_x) < exact_tolerance)) {
+          if (!(fabs(obtained_x - 1138.0) < exact_tolerance)) {
             CCTK_VINFO("\033[31;1mFAILED\033[0m:\n"
                        "  Local coords: (%.16f, %.16f, %.16f).\n"
                        "  Patch index: %i.\n"
                        "  Grid index (%i, %i, %i).\n"
                        "  Expected x: %.16f.\n"
-                       "  Obtained x: %.16f",
+                       "  Obtained x: %.16f.\n"
+                       "  Error: %.16f\n",
                        expected_x, expected_y, expected_z, p.patch, p.I[0],
-                       p.I[1], p.I[2], expected_x, obtained_x);
+                       p.I[1], p.I[2], expected_x, obtained_x,
+                       expected_x - obtained_x);
           }
         }
 
@@ -117,9 +119,11 @@ extern "C" void TestMultiPatch_TestCoordsGhostInterp(CCTK_ARGUMENTS) {
                        "  Patch index: %i.\n"
                        "  Grid index (%i, %i, %i).\n"
                        "  Expected y: %.16f.\n"
-                       "  Obtained y: %.16f",
+                       "  Obtained y: %.16f"
+                       "  Error: %.16f\n",
                        expected_x, expected_y, expected_z, p.patch, p.I[0],
-                       p.I[1], p.I[2], expected_y, obtained_y);
+                       p.I[1], p.I[2], expected_y, obtained_y,
+                       expected_y - obtained_y);
           }
         }
 
@@ -130,9 +134,11 @@ extern "C" void TestMultiPatch_TestCoordsGhostInterp(CCTK_ARGUMENTS) {
                        "  Patch index: %i.\n"
                        "  Grid index (%i, %i, %i).\n"
                        "  Expected z: %.16f.\n"
-                       "  Obtained z: %.16f",
+                       "  Obtained z: %.16f"
+                       "  Error: %.16f\n",
                        expected_x, expected_y, expected_z, p.patch, p.I[0],
-                       p.I[1], p.I[2], expected_z, obtained_z);
+                       p.I[1], p.I[2], expected_z, obtained_z,
+                       expected_z - obtained_z);
           }
         }
       });

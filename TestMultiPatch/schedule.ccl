@@ -8,7 +8,7 @@ if(run_sw_test)
   SCHEDULE TestMultiPatch_TestSync AT initial
   {
     LANG: C
-    READS: CoordinatesX::vertex_coords(everywhere)
+    READS: CoordinatesX::vertex_coords(interior)
     WRITES: multipatch_test_gfs(interior)
     SYNC: multipatch_test_gfs
   } "Fill test grid function with data"
@@ -23,7 +23,7 @@ if(run_sw_test)
 SCHEDULE TestMultiPatch_TestCoordsSync AT initial
 {
   LANG: C
-  READS: CoordinatesX::vertex_coords(everywhere)
+  READS: CoordinatesX::vertex_coords(interior)
   WRITES: multipatch_test_coords(interior)
   SYNC: multipatch_test_coords
 } "Fill test grid function with coordinate data"

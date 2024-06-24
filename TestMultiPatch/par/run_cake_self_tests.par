@@ -29,12 +29,12 @@ MultiPatch::patch_system = "Cake"
 MultiPatch::cake_outer_boundary_radius = 5.0
 MultiPatch::cake_inner_boundary_radius = 1.0
 
-MultiPatch::cake_cartesian_ncells_i    = 40
-MultiPatch::cake_cartesian_ncells_j    = 40
-MultiPatch::cake_cartesian_ncells_k    = 40
+MultiPatch::cake_cartesian_ncells_i    = 12
+MultiPatch::cake_cartesian_ncells_j    = 12
+MultiPatch::cake_cartesian_ncells_k    = 12
 
-MultiPatch::cake_angular_cells         = 40
-MultiPatch::cake_radial_cells          = 40
+MultiPatch::cake_angular_cells         = 12
+MultiPatch::cake_radial_cells          = 12
 
 # The error tolerance should be in the order of the largest grid spacing
 TestMultiPatch::tolerance  = 2.0 / MultiPatch::cake_cartesian_ncells_i

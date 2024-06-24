@@ -25,15 +25,15 @@ cake_jacs(const PatchTransformations &pt, int patch, const svec &global_vars) {
   switch (patch) {
 
   case static_cast<int>(patch_piece::cartesian):
-    J(0)(0) = 1;
+    J(0)(0) = 1 / r0;
     J(0)(1) = 0;
     J(0)(2) = 0;
     J(1)(0) = 0;
-    J(1)(1) = 1;
+    J(1)(1) = 1 / r0;
     J(1)(2) = 0;
     J(2)(0) = 0;
     J(2)(1) = 0;
-    J(2)(2) = 1;
+    J(2)(2) = 1 / r0;
 
     dJ(0)(0, 0) = 0;
     dJ(0)(0, 1) = 0;

@@ -37,8 +37,6 @@ extern "C" void TestMultiPatch_TestGhostInterp(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTSX_TestMultiPatch_TestGhostInterp;
   DECLARE_CCTK_PARAMETERS;
 
-  CCTK_VINFO("Testing interpolated values at ghost zones");
-
   grid.loop_all<0, 0, 0>(
       grid.nghostzones, [=](const Loop::PointDesc &p) ARITH_INLINE {
         const auto x{vcoordx(p.I)};
@@ -85,63 +83,63 @@ extern "C" void TestMultiPatch_TestCoordsGhostInterp(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTSX_TestMultiPatch_TestCoordsGhostInterp;
   DECLARE_CCTK_PARAMETERS;
 
-  CCTK_VINFO("Testing interpolated coordinate values at ghost zones");
+  grid.loop_all<0, 0, 0>(grid.nghostzones, [=](const Loop::PointDesc
+                                                   &p) ARITH_INLINE {
+    const auto expected_x{vcoordx(p.I)};
+    const auto expected_y{vcoordy(p.I)};
+    const auto expected_z{vcoordz(p.I)};
 
-  grid.loop_all<0, 0, 0>(
-      grid.nghostzones, [=](const Loop::PointDesc &p) ARITH_INLINE {
-        const auto expected_x{vcoordx(p.I)};
-        const auto expected_y{vcoordy(p.I)};
-        const auto expected_z{vcoordz(p.I)};
+    const auto obtained_x{test_x(p.I)};
+    const auto obtained_y{test_y(p.I)};
+    const auto obtained_z{test_z(p.I)};
 
-        const auto obtained_x{test_x(p.I)};
-        const auto obtained_y{test_y(p.I)};
-        const auto obtained_z{test_z(p.I)};
+    const auto x_violation{!(fabs(expected_x - obtained_x) < exact_tolerance)};
+    const auto y_violation{!(fabs(expected_y - obtained_y) < exact_tolerance)};
+    const auto z_violation{!(fabs(expected_z - obtained_z) < exact_tolerance)};
 
-        if (!(fabs(expected_x - obtained_x) < exact_tolerance)) {
-          if (!(fabs(obtained_x - 1138.0) < exact_tolerance)) {
-            CCTK_VINFO("\033[31;1mFAILED\033[0m:\n"
-                       "  Local coords: (%.16f, %.16f, %.16f).\n"
-                       "  Patch index: %i.\n"
-                       "  Grid index (%i, %i, %i).\n"
-                       "  Expected x: %.16f.\n"
-                       "  Obtained x: %.16f.\n"
-                       "  Error: %.16f\n",
-                       expected_x, expected_y, expected_z, p.patch, p.I[0],
-                       p.I[1], p.I[2], expected_x, obtained_x,
-                       expected_x - obtained_x);
-          }
-        }
+    const auto x_bnd{(fabs(obtained_x - 1138.0) < exact_tolerance)};
+    const auto y_bnd{(fabs(obtained_y - 1138.0) < exact_tolerance)};
+    const auto z_bnd{(fabs(obtained_z - 1138.0) < exact_tolerance)};
 
-        if (!(abs(expected_y - obtained_y) < exact_tolerance)) {
-          if (!(abs(obtained_y - 1138.0) < exact_tolerance)) {
-            CCTK_VINFO("\033[31;1mFAILED\033[0m:\n"
-                       "  Local coords: (%.16f, %.16f, %.16f).\n"
-                       "  Patch index: %i.\n"
-                       "  Grid index (%i, %i, %i).\n"
-                       "  Expected y: %.16f.\n"
-                       "  Obtained y: %.16f"
-                       "  Error: %.16f\n",
-                       expected_x, expected_y, expected_z, p.patch, p.I[0],
-                       p.I[1], p.I[2], expected_y, obtained_y,
-                       expected_y - obtained_y);
-          }
-        }
+    if ((x_violation || y_violation || z_violation) &&
+        !(x_bnd || y_bnd || z_bnd)) {
+      auto file{fopen("out.txt", "a")};
+      fprintf(file, "%i %.16f %.16f %.16f %.16f %.16f %.16f\n", p.patch,
+              expected_x, expected_y, expected_z, obtained_x, obtained_y,
+              obtained_z);
+      fclose(file);
+    }
 
-        if (!(abs(expected_z - obtained_z) < exact_tolerance)) {
-          if (!(abs(obtained_z - 1138.0) < exact_tolerance)) {
-            CCTK_VINFO("\033[31;1mFAILED\033[0m:\n"
-                       "  Local coords: (%.16f, %.16f, %.16f).\n"
-                       "  Patch index: %i.\n"
-                       "  Grid index (%i, %i, %i).\n"
-                       "  Expected z: %.16f.\n"
-                       "  Obtained z: %.16f"
-                       "  Error: %.16f\n",
-                       expected_x, expected_y, expected_z, p.patch, p.I[0],
-                       p.I[1], p.I[2], expected_z, obtained_z,
-                       expected_z - obtained_z);
-          }
-        }
-      });
+    /*if (!(abs(expected_y - obtained_y) < exact_tolerance)) {
+      if (!(abs(obtained_y - 1138.0) < exact_tolerance)) {
+        CCTK_VINFO("\033[31;1mFAILED\033[0m:\n"
+                   "  Local coords: (%.16f, %.16f, %.16f).\n"
+                   "  Patch index: %i.\n"
+                   "  Grid index (%i, %i, %i).\n"
+                   "  Expected y: %.16f.\n"
+                   "  Obtained y: %.16f"
+                   "  Error: %.16f\n",
+                   expected_x, expected_y, expected_z, p.patch, p.I[0],
+                   p.I[1], p.I[2], expected_y, obtained_y,
+                   expected_y - obtained_y);
+      }
+    }
+
+    if (!(abs(expected_z - obtained_z) < exact_tolerance)) {
+      if (!(abs(obtained_z - 1138.0) < exact_tolerance)) {
+        CCTK_VINFO("\033[31;1mFAILED\033[0m:\n"
+                   "  Local coords: (%.16f, %.16f, %.16f).\n"
+                   "  Patch index: %i.\n"
+                   "  Grid index (%i, %i, %i).\n"
+                   "  Expected z: %.16f.\n"
+                   "  Obtained z: %.16f"
+                   "  Error: %.16f\n",
+                   expected_x, expected_y, expected_z, p.patch, p.I[0],
+                   p.I[1], p.I[2], expected_z, obtained_z,
+                   expected_z - obtained_z);
+      }
+    }*/
+  });
 }
 
 } // namespace TestMultiPatch

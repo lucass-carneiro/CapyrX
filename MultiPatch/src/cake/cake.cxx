@@ -35,8 +35,11 @@ CCTK_DEVICE CCTK_HOST svec local2global(const PatchTransformations &pt,
   svec global_vars = {0.0, 0.0, 0.0};
 
   switch (patch) {
+
   case static_cast<int>(patch_piece::cartesian):
-    global_vars = local_vars;
+    global_vars(0) = a * r0;
+    global_vars(1) = b * r0;
+    global_vars(2) = c * r0;
     break;
 
   case static_cast<int>(patch_piece::plus_x):
@@ -150,8 +153,11 @@ global2local(const PatchTransformations &pt, const svec &global_vars) {
   svec local_vars{0.0, 0.0, 0.0};
 
   switch (static_cast<int>(piece)) {
+
   case static_cast<int>(patch_piece::cartesian):
-    local_vars = global_vars;
+    local_vars(0) = x / r0;
+    local_vars(1) = y / r0;
+    local_vars(2) = z / r0;
     break;
 
   case static_cast<int>(patch_piece::plus_x):
@@ -314,13 +320,6 @@ template <patch_piece p> Patch make_patch(const PatchTransformations &pt) {
   if constexpr (p == patch_piece::cartesian) {
     patch.ncells = {pt.cake_cartesian_ncells_i, pt.cake_cartesian_ncells_j,
                     pt.cake_cartesian_ncells_k};
-
-    patch.xmin = {-pt.cake_inner_boundary_radius,
-                  -pt.cake_inner_boundary_radius,
-                  -pt.cake_inner_boundary_radius};
-
-    patch.xmax = {pt.cake_inner_boundary_radius, pt.cake_inner_boundary_radius,
-                  pt.cake_inner_boundary_radius};
 
     patch.is_cartesian = true;
 

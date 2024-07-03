@@ -5,10 +5,12 @@ import openpmd_utils as opmdu
 
 import multiprocessing
 
-import pandas as pd
+# DEBUG
+# import pandas as pd
 
 import logging
 logger = logging.getLogger(__name__)
+
 
 def plot_openpmd_slice(args):
     slice_coord = str(args["--slice-coord"])
@@ -79,9 +81,9 @@ def plot_openpmd_slice(args):
             df = result.get()
 
             # DEBUG
-            #pd.options.display.precision = 16
-            #print(df[np.isclose(df["coordinatesx_vcoordz"], 1.0)])
-            #exit()
+            # pd.options.display.precision = 16
+            # print(df[np.isclose(df["coordinatesx_vcoordz"], 1.0)])
+            # exit()
 
             if diverging == True:
                 lvls = None

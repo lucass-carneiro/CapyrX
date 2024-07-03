@@ -1,9 +1,8 @@
 """mpx: CapyrX plot and validation utility.
 
 Usage:
-  mpx plot-openpmd-slice <data-file> <thorn-name> <group-name> <var-name> <iteration> <patches-data>
-                         [--verbose] [--save] [--diverging] [--autorange] [--varmin=<min>] [--varmax=<max>]
-                         [--slice-coord=<coord>] [--slice-val=<val>] [--refinement-level=<level>] [--openpmd-format=<format>]
+  mpx plot-openpmd-slice [options] <data-file> <thorn-name> <group-name> <var-name> <iteration> <patches-data>
+  mpx plot-ascii-slice [options] <coords-file> <data-file>
                           
   mpx (-h | --help)
   mpx --version
@@ -24,21 +23,22 @@ Options:
 """
 
 
+import sys
 import matplotlib as mpl
 from docopt import docopt
 
 import plot_openpmd as plt_opmd
+import plot_ascii as plt_ascii
 
 import logging
 logger = logging.getLogger(__name__)
 
-import sys
 
 def main(args):
     logging.basicConfig(
         format="[%(asctime)s] [PID: %(process)d] %(levelname)s: %(message)s",
-        #filename="mpx.log",
-        #filemode="w",
+        # filename="mpx.log",
+        # filemode="w",
         stream=sys.stdout,
         level=logging.INFO,
     )
@@ -48,9 +48,10 @@ def main(args):
 
     if args["plot-openpmd-slice"]:
         plt_opmd.plot_openpmd_slice(args)
+    elif args["plot-ascii-slice"]:
+        plt_ascii.plot_ascii(args)
 
-
-# Required in order to keep subprocesses from launching recursivelly
+        # Required in order to keep subprocesses from launching recursivelly
 if __name__ == "__main__":
     arguments = docopt(__doc__, version="mpx 1.0")
     main(arguments)

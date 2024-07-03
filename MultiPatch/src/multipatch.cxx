@@ -272,7 +272,7 @@ extern "C" void MultiPatch_Coordinates_Setup(CCTK_ARGUMENTS) {
       [=] ARITH_DEVICE(const Loop::PointDesc &p) ARITH_INLINE {
         const vec<CCTK_REAL, dim> a = {p.x, p.y, p.z};
 
-        const auto d2J_tuple = pt.d2local_dglobal2(pt, cctk_patch, a);
+        const auto d2J_tuple = pt.d2local_dglobal2(pt, p.patch, a);
         const auto &x = std::get<0>(d2J_tuple);
         const auto &J = std::get<1>(d2J_tuple);
         const auto &dJ = std::get<2>(d2J_tuple);
@@ -316,7 +316,7 @@ extern "C" void MultiPatch_Coordinates_Setup(CCTK_ARGUMENTS) {
       [=] ARITH_DEVICE(const Loop::PointDesc &p) ARITH_INLINE {
         const vec<CCTK_REAL, dim> a = {p.x, p.y, p.z};
 
-        const auto x_dadx = pt.dlocal_dglobal(pt, cctk_patch, a);
+        const auto x_dadx = pt.dlocal_dglobal(pt, p.patch, a);
         const auto &x = std::get<0>(x_dadx);
         const auto &dadx = std::get<1>(x_dadx);
         const auto det_dadx = det(dadx);

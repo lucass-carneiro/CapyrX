@@ -101,13 +101,16 @@ extern "C" void TestMultiPatch_TestCoordsGhostInterp(CCTK_ARGUMENTS) {
     const auto y_bnd{(fabs(obtained_y - 1138.0) < exact_tolerance)};
     const auto z_bnd{(fabs(obtained_z - 1138.0) < exact_tolerance)};
 
-    if ((x_violation || y_violation || z_violation) &&
-        !(x_bnd || y_bnd || z_bnd)) {
-      auto file{fopen("out.txt", "a")};
-      fprintf(file, "%i %.16f %.16f %.16f %.16f %.16f %.16f\n", p.patch,
-              expected_x, expected_y, expected_z, obtained_x, obtained_y,
-              obtained_z);
-      fclose(file);
+#pragma omp critical
+    {
+      if ((x_violation || y_violation || z_violation) &&
+          !(x_bnd || y_bnd || z_bnd)) {
+        auto file{fopen("out.txt", "a")};
+        fprintf(file, "%i %.16f %.16f %.16f %.16f %.16f %.16f\n", p.patch,
+                expected_x, expected_y, expected_z, obtained_x, obtained_y,
+                obtained_z);
+        fclose(file);
+      }
     }
 
     /*if (!(abs(expected_y - obtained_y) < exact_tolerance)) {

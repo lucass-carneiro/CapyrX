@@ -30,30 +30,6 @@ using jac_t = vec<vec<CCTK_REAL, dim>, dim>;
  */
 using djac_t = vec<smat, dim>;
 
-
-/**
- * @brief Compatibility wrapper for replacing Mathematica's Power function.
- *
- * @param n The exponent.
- * @param x The base.
- * @return The n-th power of x
- */
-template <typename base_type, typename exponent_type>
-CCTK_DEVICE CCTK_HOST static inline auto Power(base_type x, exponent_type n) {
-  using std::pow;
-  return pow(x, n);
-}
-
-/**
- * @brief Compatibility wrapper for replacing Mathematica's Sqrt function.
- *
- * @param x The radicand.
- */
-template <typename T> CCTK_DEVICE CCTK_HOST static inline auto Sqrt(T x) {
-  using std::sqrt;
-  return sqrt(x);
-}
-
 /**
  * @brief Tags for each patch piece in the cake
  */

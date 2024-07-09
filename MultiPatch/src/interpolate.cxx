@@ -137,10 +137,15 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
 
   // Gather all coordinates
   std::array<std::vector<CCTK_REAL>, dim> coords;
-  for (const auto &[location, source_points] : source_mapping)
-    for (int d = 0; d < dim; ++d)
+  for (const auto &[location, source_points] : source_mapping) {
+    for (int d = 0; d < dim; ++d) {
       coords[d].insert(coords[d].end(), source_points[d].begin(),
                        source_points[d].end());
+    }
+  }
+
+  assert(coords[0].size() == coords[1].size() &&
+         coords[0].size() == coords[2].size());
 
   const std::size_t nvars = varinds.size();
   const std::size_t npoints = coords[0].size();
@@ -150,6 +155,10 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
   // Allocate memory for values
   std::vector<std::vector<CCTK_REAL> > results(nvars);
   std::vector<CCTK_REAL *> resultptrs(nvars);
+
+  results.reserve(nvars);
+  resultptrs.reserve(nvars);
+
   for (size_t n = 0; n < nvars; ++n) {
     results.at(n).resize(npoints);
     resultptrs.at(n) = results.at(n).data();
@@ -165,9 +174,10 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
     for (size_t i = 0; i < results.at(n).size(); ++i) {
       using std::isfinite;
       const auto x = results.at(n).at(i);
-      if (!isfinite(x))
+      if (!isfinite(x)) {
         CCTK_VINFO("var=%zu i=%zu coord=[%g,%g,%g] value=%g", n, i,
                    coords[0][i], coords[1][i], coords[2][i], x);
+      }
       assert(isfinite(x));
     }
   }
@@ -210,27 +220,22 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
           static_cast<CCTK_REAL *>(CCTK_VarDataPtrI(cctkGH, 0, varinds.at(n))));
 
       std::size_t pos = 0;
+
       // Note: This includes symmetry points
       grid.loop_bnd<0, 0, 0>(grid.nghostzones, [&](const Loop::PointDesc &p) {
         // Skip outer boundaries
-        // TODO: There is no reason to write arbotrary values (-4 and -5)
-        // to the outer boundary.
-        // This loop should not be required, but if it is not present,
-        // the assertion a few lines bellow will fail. Find a way to remove
-        // this dead code without disturbing the assert. For now, this is
-        // fine but it shoulde be fixed
         for (int d = 0; d < dim; ++d) {
           if (p.NI[d] < 0 && patch_faces[0][d].is_outer_boundary) {
-            // var(p.I) = -4;
             return;
           }
           if (p.NI[d] > 0 && patch_faces[1][d].is_outer_boundary) {
-            // var(p.I) = -5;
             return;
           }
         }
 
-        var(p.I) = result_values_n[pos++];
+        var(p.I) = result_values_n[pos];
+
+        pos++;
       });
       assert(pos == result_values.at(0).size());
     }

@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['multipatch_84',['MultiPatch',['../namespaceMultiPatch.html',1,'']]]
+  ['multipatch_86',['MultiPatch',['../namespaceMultiPatch.html',1,'']]]
 ];

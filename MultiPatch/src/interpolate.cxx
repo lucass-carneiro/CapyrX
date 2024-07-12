@@ -7,7 +7,7 @@
 
 struct coord_data {
   std::vector<CCTK_REAL> coords{};
-  std::vector<CCTK_INT> dims{};
+  std::vector<CCTK_INT> dim_idxs{};
 
   std::vector<CCTK_INT> i{};
   std::vector<CCTK_INT> j{};
@@ -155,7 +155,7 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
           return;
         } else {
           src_points.coords.push_back(var(p.I));
-          src_points.dims.push_back(d);
+          src_points.dim_idxs.push_back(d);
 
           src_points.i.push_back(p.i);
           src_points.j.push_back(p.j);
@@ -174,29 +174,38 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
     }
   });
 
+// This is debug code
 #pragma omp critical
   {
     using std::fopen, std::fclose, std::fprintf;
 
     CCTK_VINFO("Dumping source points data");
 
-    std::string out_file_name{"src_pts_iter_" +
-                              std::to_string(cctkGH->cctk_iteration) +
-                              std::string(".txt")};
+    for (const auto &varind : varinds) {
+      const auto var_name{std::string(CCTK_FullVarName(varind))};
+      const auto iter_idx{std::to_string(cctkGH->cctk_iteration)};
+      const auto out_file_name{var_name + "_src_pts_iter_" + iter_idx +
+                               std::string(".txt")};
 
-    auto src_pts_file{fopen(out_file_name.c_str(), "w")};
+      auto src_pts_file{fopen(out_file_name.c_str(), "w")};
 
-    fprintf(src_pts_file, "# 1:direction 2:patch 3:level 4:index 5:component "
-                          "6:i 7:j 8:k 9:x 10:y 11:z 12:coord\n");
+      fprintf(src_pts_file,
+              "#1:patch\t2:level\t3:component\t4:index\t5:direction index\t"
+              "6:i\t7:j\t8:k\t9:x\t10:y\t11:z\t12:coord\n");
 
-    for (std::size_t i = 0; i < src_points.coords.size(); i++) {
-      fprintf(src_pts_file, "%d %d %d %d %d %d %d %d %f %f %f %f\n",
-              src_points.dims[i], src_points.patches[i], src_points.levels[i],
-              src_points.idxs[i], src_points.components[i], src_points.i[i],
-              src_points.j[i], src_points.k[i], src_points.x[i],
-              src_points.y[i], src_points.z[i], src_points.coords[i]);
+      for (std::size_t i = 0; i < src_points.coords.size(); i++) {
+        fprintf(src_pts_file,
+                "%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t\n",
+                src_points.patches[i], src_points.levels[i],
+                src_points.components[i], src_points.idxs[i],
+                src_points.dim_idxs[i], src_points.i[i], src_points.j[i],
+                src_points.k[i], src_points.x[i], src_points.y[i],
+                src_points.z[i], src_points.coords[i]);
+      }
+
+      fclose(src_pts_file);
     }
-
-    fclose(src_pts_file);
   }
+
+  // Step 2:
 }

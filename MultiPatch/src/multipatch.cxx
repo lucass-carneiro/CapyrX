@@ -311,25 +311,29 @@ extern "C" void MultiPatch_Coordinates_Setup(CCTK_ARGUMENTS) {
         vdJ_d2c_dzdz(p.I) = dJ(2)(2, 2);
       });
 
+  // TODO: Currently, on Debug runs, this code fails to set the ccoord[xyz] and
+  // cvol variables correctly by calling the multipatch coordinate
+  // transformations
   grid.loop_all_device<1, 1, 1>(
       grid.nghostzones,
       [=] ARITH_DEVICE(const Loop::PointDesc &p) ARITH_INLINE {
         const vec<CCTK_REAL, dim> a = {p.x, p.y, p.z};
 
-        const auto x_dadx = pt.dlocal_dglobal(pt, p.patch, a);
-        const auto &x = std::get<0>(x_dadx);
-        const auto &dadx = std::get<1>(x_dadx);
-        const auto det_dadx = det(dadx);
+        const auto d2J_tuple = pt.d2local_dglobal2(pt, p.patch, a);
+        const auto &x = std::get<0>(d2J_tuple);
+        const auto &J = std::get<1>(d2J_tuple);
+        // const auto &dJ = std::get<2>(d2J_tuple);
+        const auto detJ = det(J);
 
-        // TODO: Is it det_dadx or sqrt(det_dadx)? As far as we
-        // know no sqrt is necessary. Note that det_dadx is
+        // TODO: Is it detJ or sqrt(detJ)? As far as we
+        // know no sqrt is necessary. Note that detJ is
         // negative in the cake patch, so that causes NaNs
-        const auto vol = (p.dx * p.dy * p.dz) * det_dadx;
+        const auto vol = (p.dx * p.dy * p.dz) * detJ;
 
-        ccoordx(p.I) = x(0);
-        ccoordy(p.I) = x(1);
-        ccoordz(p.I) = x(2);
-        cvol(p.I) = vol;
+        ccoordx(p.I) = 0.0; // x(0);
+        ccoordy(p.I) = 0.0; // x(1);
+        ccoordz(p.I) = 0.0; // x(2);
+        cvol(p.I) = 0.0;
       });
 }
 

@@ -229,7 +229,12 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
           }
         });
 #pragma omp critical
-        { source_mapping[location] = std::move(source_points); }
+        {
+          source_mapping[location] = std::move(source_points);
+#ifdef CCTK_DEBUG
+          source_mapping_debug_data[location] = std::move(source_points_debug);
+#endif
+        }
       });
 
   // Debug step: Dump source points

@@ -31,19 +31,17 @@ struct Location {
 
 #ifdef CCTK_DEBUG
 
-struct PointData {
+struct PointDebugData {
   CCTK_REAL coord{};
   std::array<PatchFace, 2> patch_faces{};
   Loop::PointDesc p;
 };
 
-using PointList = std::array<std::vector<PointData>, dim>;
-
-#else
-
-using PointList = std::array<std::vector<CCTK_REAL>, dim>;
+using PointListDebugData = std::array<std::vector<PointDebugData>, dim>;
 
 #endif
+
+using PointList = std::array<std::vector<CCTK_REAL>, dim>;
 
 } // namespace MultiPatch
 
@@ -174,7 +172,11 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
 
   // Step 1: Find coordinates where we need to interpolate
 
-  std::map<Location, PointList> source_mapping;
+  std::map<Location, PointList> source_mapping{};
+
+#ifdef CCTK_DEBUG
+  std::map<Location, PointListDebugData> source_mapping_debug_data{};
+#endif
 
   CarpetX::active_levels_t().loop_parallel(
       [&](int patch, int level, int index, int component, const cGH *cctkGH) {
@@ -199,6 +201,11 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
                             cctkGH, 0, "CoordinatesX::vcoordz")))};
 
         PointList source_points;
+
+#ifdef CCTK_DEBUG
+        PointListDebugData source_points_debug{};
+#endif
+
         // Note: This includes symmetry points
         grid.loop_bnd<0, 0, 0>(grid.nghostzones, [&](const Loop::PointDesc &p) {
           // Skip outer boundaries
@@ -213,12 +220,11 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
           }
 
           for (int d = 0; d < dim; ++d) {
-#ifdef CCTK_DEBUG
-            PointData pd{
-                vcoords[d](p.I), {patch_faces[0][d], patch_faces[1][d]}, p};
-            source_points[d].push_back(pd);
-#else
             source_points[d].push_back(vcoords[d](p.I));
+#ifdef CCTK_DEBUG
+            PointDebugData pd{
+                vcoords[d](p.I), {patch_faces[0][d], patch_faces[1][d]}, p};
+            source_points_debug[d].push_back(pd);
 #endif
           }
         });
@@ -260,7 +266,7 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
                             "16:z\t"
                             "17:coord\n");
 
-      for (const auto &[location, point_list] : source_mapping) {
+      for (const auto &[location, point_list] : source_mapping_debug_data) {
         for (int d = 0; d < dim; ++d) {
           for (const auto &point_data : point_list[d]) {
             fprintf(src_pts_file,
@@ -292,7 +298,6 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
           }
         }
       }
-
       fclose(src_pts_file);
     }
   }

@@ -15,12 +15,7 @@ using smat = smat<CCTK_REAL, dim>;
 using jac_t = vec<vec<CCTK_REAL, dim>, dim>;
 using djac_t = vec<smat, dim>;
 
-enum class patch_piece : int {
-  left_cube = 0,
-  right_cube = 1,
-  exterior = 2,
-  unknown = 3
-};
+enum class patch_piece : int { left_cube = 0, right_cube = 1, unknown = 2 };
 
 inline const char *piece_name(const patch_piece &p) {
   switch (static_cast<int>(p)) {
@@ -28,8 +23,6 @@ inline const char *piece_name(const patch_piece &p) {
     return "left cube";
   case static_cast<int>(patch_piece::right_cube):
     return "right cube";
-  case static_cast<int>(patch_piece::exterior):
-    return "exterior";
   default:
     return "unknown";
   }
@@ -373,7 +366,7 @@ template <patch_piece p> Patch make_patch(const PatchTransformations &pt) {
   patch.xmax = {1.0, 1.0, 1.0};
   patch.is_cartesian = false;
 
-  PatchFace ex{true, static_cast<int>(patch_piece::exterior)};
+  PatchFace ob{true, -1};
   PatchFace lc{false, static_cast<int>(patch_piece::left_cube)};
   PatchFace rc{false, static_cast<int>(patch_piece::right_cube)};
 
@@ -381,13 +374,13 @@ template <patch_piece p> Patch make_patch(const PatchTransformations &pt) {
     patch.ncells = {pt.two_cubes_ncells_left, pt.two_cubes_ncells_y,
                     pt.two_cubes_ncells_z};
 
-    patch.faces = {{ex, ex, ex}, {rc, ex, ex}};
+    patch.faces = {{ob, ob, ob}, {rc, ob, ob}};
 
   } else if constexpr (p == patch_piece::right_cube) {
     patch.ncells = {pt.two_cubes_ncells_right, pt.two_cubes_ncells_y,
                     pt.two_cubes_ncells_z};
 
-    patch.faces = {{lc, ex, ex}, {ex, ex, ex}};
+    patch.faces = {{lc, ob, ob}, {ob, ob, ob}};
   }
 
   return patch;

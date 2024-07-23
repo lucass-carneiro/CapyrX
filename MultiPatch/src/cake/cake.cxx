@@ -308,8 +308,8 @@ template <patch_piece p> Patch make_patch(const PatchTransformations &pt) {
 
   patch.is_cartesian = false;
 
+  PatchFace ob{true, -1};
   PatchFace co{false, static_cast<int>(patch_piece::cartesian)};
-  PatchFace ex{true, static_cast<int>(patch_piece::exterior)};
   PatchFace px{false, static_cast<int>(patch_piece::plus_x)};
   PatchFace mx{false, static_cast<int>(patch_piece::minus_x)};
   PatchFace py{false, static_cast<int>(patch_piece::plus_y)};
@@ -326,22 +326,22 @@ template <patch_piece p> Patch make_patch(const PatchTransformations &pt) {
     patch.faces = {{mx, my, mz}, {px, py, pz}};
 
   } else if constexpr (p == patch_piece::plus_x) {
-    patch.faces = {{mz, my, co}, {pz, py, ex}};
+    patch.faces = {{mz, my, co}, {pz, py, ob}};
 
   } else if constexpr (p == patch_piece::minus_x) {
-    patch.faces = {{mz, py, co}, {pz, my, ex}};
+    patch.faces = {{mz, py, co}, {pz, my, ob}};
 
   } else if constexpr (p == patch_piece::plus_y) {
-    patch.faces = {{mz, px, co}, {pz, mx, ex}};
+    patch.faces = {{mz, px, co}, {pz, mx, ob}};
 
   } else if constexpr (p == patch_piece::minus_y) {
-    patch.faces = {{mz, mx, co}, {pz, px, ex}};
+    patch.faces = {{mz, mx, co}, {pz, px, ob}};
 
   } else if constexpr (p == patch_piece::plus_z) {
-    patch.faces = {{px, my, co}, {mx, py, ex}};
+    patch.faces = {{px, my, co}, {mx, py, ob}};
 
   } else if constexpr (p == patch_piece::minus_z) {
-    patch.faces = {{mx, my, co}, {px, py, ex}};
+    patch.faces = {{mx, my, co}, {px, py, ob}};
   }
 
   return patch;

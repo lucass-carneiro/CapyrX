@@ -45,9 +45,7 @@ enum class patch_piece : int {
   plus_z = 5,
   minus_z = 6,
 
-  exterior = 7,
-
-  unknown = 8
+  unknown = 7
 };
 
 /**
@@ -72,8 +70,6 @@ inline const std::string piece_name(const patch_piece &p) {
     return "plus z";
   case static_cast<int>(patch_piece::minus_z):
     return "minus z";
-  case static_cast<int>(patch_piece::exterior):
-    return "exterior";
   default:
     return "unknown";
   }

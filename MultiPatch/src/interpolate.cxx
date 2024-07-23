@@ -5,23 +5,63 @@
 #include <cstdio>
 #include <string>
 
-struct coord_data {
-  std::vector<CCTK_REAL> coords{};
-  std::vector<CCTK_INT> dim_idxs{};
+namespace {
+// <https://stackoverflow.com/questions/2590677/how-do-i-combine-hash-values-in-c0x>
+constexpr inline std::size_t hash_combine(std::size_t h1, std::size_t h2) {
+  return h1 ^ (h2 + 0x9e3779b9 + (h1 << 6) + (h1 >> 2));
+}
+} // namespace
 
-  std::vector<CCTK_INT> i{};
-  std::vector<CCTK_INT> j{};
-  std::vector<CCTK_INT> k{};
+namespace MultiPatch {
 
-  std::vector<CCTK_REAL> x{};
-  std::vector<CCTK_REAL> y{};
-  std::vector<CCTK_REAL> z{};
-
-  std::vector<CCTK_INT> patches{};
-  std::vector<CCTK_INT> levels{};
-  std::vector<CCTK_INT> idxs{};
-  std::vector<CCTK_INT> components{};
+struct Location {
+  int patch;
+  int level;
+  int index;
+  int component;
 };
+
+struct PointData {
+  CCTK_REAL coord{};
+  Loop::PointDesc p;
+};
+
+using PointList = std::array<std::vector<PointData>, dim>;
+
+} // namespace MultiPatch
+
+namespace std {
+
+template <> struct equal_to<MultiPatch::Location> {
+  bool operator()(const MultiPatch::Location &x,
+                  const MultiPatch::Location &y) const {
+    return std::equal_to<std::array<int, 4> >()(
+        std::array<int, 4>{x.patch, x.level, x.index, x.component},
+        std::array<int, 4>{y.patch, y.level, y.index, y.component});
+  }
+};
+
+template <> struct less<MultiPatch::Location> {
+  bool operator()(const MultiPatch::Location &x,
+                  const MultiPatch::Location &y) const {
+    return std::less<std::array<int, 4> >()(
+        std::array<int, 4>{x.patch, x.level, x.index, x.component},
+        std::array<int, 4>{y.patch, y.level, y.index, y.component});
+  }
+};
+
+template <> struct hash<MultiPatch::Location> {
+  std::size_t operator()(const MultiPatch::Location &x) const {
+    return hash_combine(hash_combine(hash_combine(std::hash<int>()(x.patch),
+                                                  std::hash<int>()(x.level)),
+                                     std::hash<int>()(x.index)),
+                        std::hash<int>()(x.component));
+  }
+};
+
+} // namespace std
+
+namespace MultiPatch {
 
 extern "C" void
 MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
@@ -122,59 +162,54 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
     // TODO: Check centerings table
   }
 
-  // Step 1: Gather target coodinates
-  coord_data src_points{};
+  // Step 1: gather source points
+  std::map<Location, PointList> source_mapping{};
 
-  CarpetX::active_levels_t().loop_parallel([&](int patch, int level, int index,
-                                               int component,
-                                               const cGH *cctkGH) {
-    const Loop::GridDescBase grid(cctkGH);
-    const std::array<int, dim> centering{0, 0, 0};
-    const Loop::GF3D2layout layout(cctkGH, centering);
+  CarpetX::active_levels_t().loop_parallel(
+      [&](int patch, int level, int index, int component, const cGH *cctkGH) {
+        const Loop::GridDescBase grid(cctkGH);
+        const std::array<int, dim> centering{0, 0, 0};
+        const Loop::GF3D2layout layout(cctkGH, centering);
 
-    const auto &current_patch{the_patch_system->patches.at(patch)};
-    const auto &patch_faces{current_patch.faces};
+        const auto &current_patch{the_patch_system->patches.at(patch)};
+        const auto &patch_faces{current_patch.faces};
 
-    const std::array<const char *, dim> coord_var_names{
-        "CoordinatesX::vcoordx", "CoordinatesX::vcoordy",
-        "CoordinatesX::vcoordz"};
+        const Location location{patch, level, index, component};
 
-    for (auto d = 0; d < dim; d++) {
-      auto var_data_ptr{static_cast<const CCTK_REAL *>(
-          CCTK_VarDataPtr(cctkGH, 0, coord_var_names[d]))};
-      Loop::GF3D2<const CCTK_REAL> var{layout, var_data_ptr};
+        const std::array<Loop::GF3D2<const CCTK_REAL>, dim> vcoords{
+            Loop::GF3D2<const CCTK_REAL>(
+                layout, static_cast<const CCTK_REAL *>(CCTK_VarDataPtr(
+                            cctkGH, 0, "CoordinatesX::vcoordx"))),
+            Loop::GF3D2<const CCTK_REAL>(
+                layout, static_cast<const CCTK_REAL *>(CCTK_VarDataPtr(
+                            cctkGH, 0, "CoordinatesX::vcoordy"))),
+            Loop::GF3D2<const CCTK_REAL>(
+                layout, static_cast<const CCTK_REAL *>(CCTK_VarDataPtr(
+                            cctkGH, 0, "CoordinatesX::vcoordz")))};
 
-      // Note: This includes symmetry points
-      grid.loop_bnd<0, 0, 0>(grid.nghostzones, [&](const Loop::PointDesc &p) {
-        const auto is_outer_boundary{
-            (p.NI[d] < 0 && patch_faces[0][d].is_outer_boundary) ||
-            (p.NI[d] > 0 && patch_faces[1][d].is_outer_boundary)};
+        PointList source_points;
 
-        // Skip outer boundaries
-        if (is_outer_boundary) {
-          return;
-        } else {
-          src_points.coords.push_back(var(p.I));
-          src_points.dim_idxs.push_back(d);
+        // Note: This includes symmetry points
+        grid.loop_bnd<0, 0, 0>(grid.nghostzones, [&](const Loop::PointDesc &p) {
+          for (int d = 0; d < dim; ++d) {
+            // Skip outer boundaries
+            const auto is_outer_boundary{
+                (p.NI[d] < 0 && patch_faces[0][d].is_outer_boundary) ||
+                (p.NI[d] > 0 && patch_faces[1][d].is_outer_boundary)};
 
-          src_points.i.push_back(p.i);
-          src_points.j.push_back(p.j);
-          src_points.k.push_back(p.k);
-
-          src_points.x.push_back(p.x);
-          src_points.y.push_back(p.y);
-          src_points.z.push_back(p.z);
-
-          src_points.patches.push_back(patch);
-          src_points.levels.push_back(level);
-          src_points.idxs.push_back(index);
-          src_points.components.push_back(component);
-        }
+            if (is_outer_boundary) {
+              return;
+            } else {
+              PointData pd{vcoords[d](p.I), p};
+              source_points[d].push_back(pd);
+            }
+          }
+        });
+#pragma omp critical
+        { source_mapping[location] = std::move(source_points); }
       });
-    }
-  });
 
-// This is debug code
+// Debug step: Dump source points
 #pragma omp critical
   {
     using std::fopen, std::fclose, std::fprintf;
@@ -189,18 +224,41 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
 
       auto src_pts_file{fopen(out_file_name.c_str(), "w")};
 
-      fprintf(src_pts_file,
-              "#1:patch\t2:level\t3:component\t4:index\t5:direction index\t"
-              "6:i\t7:j\t8:k\t9:x\t10:y\t11:z\t12:coord\n");
+      fprintf(src_pts_file, "#1:patch\t"
+                            "2:level\t"
+                            "3:index\t"
+                            "4:component\t"
+                            "5:dim\t"
+                            "6:i\t"
+                            "7:j\t"
+                            "8:k\t"
+                            "9:x\t"
+                            "10:y\t"
+                            "11:z\t"
+                            "12:coord\n");
 
-      for (std::size_t i = 0; i < src_points.coords.size(); i++) {
-        fprintf(src_pts_file,
-                "%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t\n",
-                src_points.patches[i], src_points.levels[i],
-                src_points.components[i], src_points.idxs[i],
-                src_points.dim_idxs[i], src_points.i[i], src_points.j[i],
-                src_points.k[i], src_points.x[i], src_points.y[i],
-                src_points.z[i], src_points.coords[i]);
+      for (const auto &[location, point_list] : source_mapping) {
+        for (int d = 0; d < dim; ++d) {
+          for (const auto &poit_data : point_list[d]) {
+            fprintf(src_pts_file,
+                    "%i\t"
+                    "%i\t"
+                    "%i\t"
+                    "%i\t"
+                    "%i\t"
+                    "%i\t"
+                    "%i\t"
+                    "%i\t"
+                    "%.16f\t"
+                    "%.16f\t"
+                    "%.16f\t"
+                    "%.16f\n",
+                    location.patch, location.level, location.index,
+                    location.component, d, poit_data.p.i, poit_data.p.j,
+                    poit_data.p.k, poit_data.p.x, poit_data.p.y, poit_data.p.z,
+                    poit_data.coord);
+          }
+        }
       }
 
       fclose(src_pts_file);
@@ -209,3 +267,5 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
 
   // Step 2:
 }
+
+} // namespace MultiPatch

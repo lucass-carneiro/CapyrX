@@ -16,7 +16,6 @@ var searchData=
   ['cartesian_5fymin_13',['cartesian_ymin',['../structMultiPatch_1_1PatchTransformations.html#aa673c61466c9bd9c78113b8a19b96bc5',1,'MultiPatch::PatchTransformations']]],
   ['cartesian_5fzmax_14',['cartesian_zmax',['../structMultiPatch_1_1PatchTransformations.html#a94ff3493dc89e36d3ef49a0b86b6cf0d',1,'MultiPatch::PatchTransformations']]],
   ['cartesian_5fzmin_15',['cartesian_zmin',['../structMultiPatch_1_1PatchTransformations.html#a49719c24d99d1dbaafec5723d0f3d87a',1,'MultiPatch::PatchTransformations']]],
-  ['coord_5fdata_16',['coord_data',['../structcoord__data.html',1,'']]],
-  ['cubed_5fsphere_5frmax_17',['cubed_sphere_rmax',['../structMultiPatch_1_1PatchTransformations.html#aac6e4eee6ae6af34eb2a5640e1693ba7',1,'MultiPatch::PatchTransformations']]],
-  ['cubed_5fsphere_5frmin_18',['cubed_sphere_rmin',['../structMultiPatch_1_1PatchTransformations.html#a609b8d957d8cf196dd61198daf8deb32',1,'MultiPatch::PatchTransformations']]]
+  ['cubed_5fsphere_5frmax_16',['cubed_sphere_rmax',['../structMultiPatch_1_1PatchTransformations.html#aac6e4eee6ae6af34eb2a5640e1693ba7',1,'MultiPatch::PatchTransformations']]],
+  ['cubed_5fsphere_5frmin_17',['cubed_sphere_rmin',['../structMultiPatch_1_1PatchTransformations.html#a609b8d957d8cf196dd61198daf8deb32',1,'MultiPatch::PatchTransformations']]]
 ];

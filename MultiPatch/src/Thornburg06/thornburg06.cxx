@@ -526,7 +526,7 @@ template <patch_piece p> Patch make_patch(const PatchTransformations &pt) {
                   pt.thornburg06_radial_cells};
 
   patch.xmin = {-1.0, -1.0, -1.0};
-  patch.xmax = {-1.0, -1.0, -1.0};
+  patch.xmax = {1.0, 1.0, 1.0};
 
   patch.is_cartesian = false;
 

@@ -1,17 +1,15 @@
-THEME=serif
+THEME=dracula
 
 all: presentation.html
 
-presentation.html: presentation.md
+presentation.html: presentation.md slides.css
 	pandoc \
 	--slide-level 2 \
 	-t revealjs \
 	-s \
 	-o presentation.html \
 	presentation.md \
-	-V revealjs-url=https://unpkg.com/reveal.js \
-	--include-in-header=slides.css \
-	-V theme=$(THEME)
+	--include-in-header=slides.css
 
 clean:
 	rm -f *.html

@@ -1,16 +1,20 @@
 var searchData=
 [
-  ['the_5fpatch_5fsystem_61',['the_patch_system',['../namespaceMultiPatch.html#a9a10c3d5cbb05263c4753c32644e373c',1,'MultiPatch']]],
-  ['transformations_62',['transformations',['../structMultiPatch_1_1PatchSystem.html#a93baa23b4fcfb2e9bab0408a6f30348f',1,'MultiPatch::PatchSystem']]],
-  ['two_5fcubes_5fdelta_5fy_63',['two_cubes_delta_y',['../structMultiPatch_1_1PatchTransformations.html#adfa02f390c61c0717ddcf8fe21c202fc',1,'MultiPatch::PatchTransformations']]],
-  ['two_5fcubes_5fncells_5fleft_64',['two_cubes_ncells_left',['../structMultiPatch_1_1PatchTransformations.html#a4f758d3d65ebb484fcb613aadec62b16',1,'MultiPatch::PatchTransformations']]],
-  ['two_5fcubes_5fncells_5fright_65',['two_cubes_ncells_right',['../structMultiPatch_1_1PatchTransformations.html#a087840c597a325211201d0cc9433e63d',1,'MultiPatch::PatchTransformations']]],
-  ['two_5fcubes_5fncells_5fy_66',['two_cubes_ncells_y',['../structMultiPatch_1_1PatchTransformations.html#a2b95293a6be817abfa06c02cc5380569',1,'MultiPatch::PatchTransformations']]],
-  ['two_5fcubes_5fncells_5fz_67',['two_cubes_ncells_z',['../structMultiPatch_1_1PatchTransformations.html#a9cae68a673e2ecbf8aeaa28ff6d68e04',1,'MultiPatch::PatchTransformations']]],
-  ['two_5fcubes_5fxmax_68',['two_cubes_xmax',['../structMultiPatch_1_1PatchTransformations.html#a8586898333e4ae1938920591df5cbf56',1,'MultiPatch::PatchTransformations']]],
-  ['two_5fcubes_5fxmin_69',['two_cubes_xmin',['../structMultiPatch_1_1PatchTransformations.html#aa4b8ab03644aa6d8c4e82a2b1a773bcb',1,'MultiPatch::PatchTransformations']]],
-  ['two_5fcubes_5fymax_70',['two_cubes_ymax',['../structMultiPatch_1_1PatchTransformations.html#a8f3c046a3e506ea23b62f1a76beafaef',1,'MultiPatch::PatchTransformations']]],
-  ['two_5fcubes_5fymin_71',['two_cubes_ymin',['../structMultiPatch_1_1PatchTransformations.html#af75562daa766f2591414a293fa64c029',1,'MultiPatch::PatchTransformations']]],
-  ['two_5fcubes_5fzmax_72',['two_cubes_zmax',['../structMultiPatch_1_1PatchTransformations.html#a4437fb3de4b034052e33fb1e886f2c6a',1,'MultiPatch::PatchTransformations']]],
-  ['two_5fcubes_5fzmin_73',['two_cubes_zmin',['../structMultiPatch_1_1PatchTransformations.html#aae72405b744023728feeb7b686c7df06',1,'MultiPatch::PatchTransformations']]]
+  ['the_5fpatch_5fsystem_62',['the_patch_system',['../namespaceMultiPatch.html#a9a10c3d5cbb05263c4753c32644e373c',1,'MultiPatch']]],
+  ['thornburg06_5fangular_5fcells_63',['thornburg06_angular_cells',['../structMultiPatch_1_1PatchTransformations.html#a1231809086134343582fbd1028e4ac00',1,'MultiPatch::PatchTransformations']]],
+  ['thornburg06_5finner_5fboundary_5fradius_64',['thornburg06_inner_boundary_radius',['../structMultiPatch_1_1PatchTransformations.html#a1aa68444a511e15f435bc668d2c818b2',1,'MultiPatch::PatchTransformations']]],
+  ['thornburg06_5fouter_5fboundary_5fradius_65',['thornburg06_outer_boundary_radius',['../structMultiPatch_1_1PatchTransformations.html#abaef38c4460d9080600646854f93b804',1,'MultiPatch::PatchTransformations']]],
+  ['thornburg06_5fradial_5fcells_66',['thornburg06_radial_cells',['../structMultiPatch_1_1PatchTransformations.html#aa4b7f7680b765fd93827467157c89e67',1,'MultiPatch::PatchTransformations']]],
+  ['transformations_67',['transformations',['../structMultiPatch_1_1PatchSystem.html#a93baa23b4fcfb2e9bab0408a6f30348f',1,'MultiPatch::PatchSystem']]],
+  ['two_5fcubes_5fdelta_5fy_68',['two_cubes_delta_y',['../structMultiPatch_1_1PatchTransformations.html#adfa02f390c61c0717ddcf8fe21c202fc',1,'MultiPatch::PatchTransformations']]],
+  ['two_5fcubes_5fncells_5fleft_69',['two_cubes_ncells_left',['../structMultiPatch_1_1PatchTransformations.html#a63576e02610fb70faca244926ee66145',1,'MultiPatch::PatchTransformations']]],
+  ['two_5fcubes_5fncells_5fright_70',['two_cubes_ncells_right',['../structMultiPatch_1_1PatchTransformations.html#a3831ae7688e84609b7882377d1720be8',1,'MultiPatch::PatchTransformations']]],
+  ['two_5fcubes_5fncells_5fy_71',['two_cubes_ncells_y',['../structMultiPatch_1_1PatchTransformations.html#a531f77e3e7abb4f313578b0e1610f05b',1,'MultiPatch::PatchTransformations']]],
+  ['two_5fcubes_5fncells_5fz_72',['two_cubes_ncells_z',['../structMultiPatch_1_1PatchTransformations.html#a6de691c97b61a01a4b443ab91312bcfd',1,'MultiPatch::PatchTransformations']]],
+  ['two_5fcubes_5fxmax_73',['two_cubes_xmax',['../structMultiPatch_1_1PatchTransformations.html#a8586898333e4ae1938920591df5cbf56',1,'MultiPatch::PatchTransformations']]],
+  ['two_5fcubes_5fxmin_74',['two_cubes_xmin',['../structMultiPatch_1_1PatchTransformations.html#aa4b8ab03644aa6d8c4e82a2b1a773bcb',1,'MultiPatch::PatchTransformations']]],
+  ['two_5fcubes_5fymax_75',['two_cubes_ymax',['../structMultiPatch_1_1PatchTransformations.html#a8f3c046a3e506ea23b62f1a76beafaef',1,'MultiPatch::PatchTransformations']]],
+  ['two_5fcubes_5fymin_76',['two_cubes_ymin',['../structMultiPatch_1_1PatchTransformations.html#af75562daa766f2591414a293fa64c029',1,'MultiPatch::PatchTransformations']]],
+  ['two_5fcubes_5fzmax_77',['two_cubes_zmax',['../structMultiPatch_1_1PatchTransformations.html#a4437fb3de4b034052e33fb1e886f2c6a',1,'MultiPatch::PatchTransformations']]],
+  ['two_5fcubes_5fzmin_78',['two_cubes_zmin',['../structMultiPatch_1_1PatchTransformations.html#aae72405b744023728feeb7b686c7df06',1,'MultiPatch::PatchTransformations']]]
 ];

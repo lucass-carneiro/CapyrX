@@ -1,0 +1,634 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 12.1' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[     28535,        626]
+NotebookOptionsPosition[     26901,        586]
+NotebookOutlinePosition[     27524,        607]
+CellTagsIndexPosition[     27481,        604]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["\<\
+Thornburg06 Code Generation part 1 - Transformation functions\
+\>", "Title",
+ CellChangeTimes->{{3.842480859572761*^9, 3.8424808734034557`*^9}, {
+  3.842742869283586*^9, 3.842742878013317*^9}, {3.843003248017685*^9, 
+  3.843003253996933*^9}, {3.843838607912539*^9, 3.8438386131860456`*^9}, {
+  3.869231126308075*^9, 3.869231127827835*^9}, {3.931097862432275*^9, 
+  3.931097864738543*^9}, {3.931099843750948*^9, 
+  3.931099856160595*^9}},ExpressionUUID->"06cf51ac-2049-45e5-befb-\
+5e7a3ea14fb4"],
+
+Cell["\<\
+In this file, we will generate code for coordinate transformation functions\
+\>", "Text",
+ CellChangeTimes->{{3.931099893009499*^9, 3.931099900399386*^9}, {
+  3.931099940829722*^9, 
+  3.931099946148506*^9}},ExpressionUUID->"1a13232a-f510-410d-b5d9-\
+5b44e16e9d35"],
+
+Cell[CellGroupData[{
+
+Cell["Importing the coordinate transformations", "Section",
+ CellChangeTimes->{{3.931099951998664*^9, 
+  3.9310999602785673`*^9}},ExpressionUUID->"790b5a4f-0eb7-41f6-b44c-\
+05fe54fc2dea"],
+
+Cell[BoxData[
+ RowBox[{"Import", "[", 
+  RowBox[{
+   RowBox[{"NotebookDirectory", "[", "]"}], "<>", 
+   "\"\<coord_transforms.mx\>\""}], "]"}]], "Input",
+ CellChangeTimes->{{3.931099961751178*^9, 3.931100026448421*^9}},
+ CellLabel->"In[1]:=",ExpressionUUID->"757df879-851b-4a41-8b22-17c49721d999"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Local2Global", "Section",
+ CellChangeTimes->{{3.9224559575251923`*^9, 
+  3.922455959454946*^9}},ExpressionUUID->"b22e696c-906e-4efb-a3ca-\
+cdaca4750297"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Block", "[", "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"local2globalsrc", ",", "replace"}], "}"}], ",", 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"replace", "=", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"\"\<Power\>\"", "\[Rule]", "\"\<pow\>\""}], ",", 
+       RowBox[{"\"\<Sqrt\>\"", "\[Rule]", "\"\<sqrt\>\""}]}], "}"}]}], ";", 
+    "\[IndentingNewLine]", "\[IndentingNewLine]", 
+    RowBox[{"local2globalsrc", "=", 
+     RowBox[{
+     "\"\<CCTK_DEVICE CCTK_HOST svec local2global(const PatchTransformations \
+&pt, int patch, const svec &local_vars) {\n  using std::pow;\n\n  const auto \
+r0{pt.thornburg06_inner_boundary_radius};\n  const auto \
+r1{pt.thornburg06_outer_boundary_radius};\n\n  const auto a{local_vars(0)};\n \
+ const auto b{local_vars(1)};\n  const auto c{local_vars(2)};\n\n  svec \
+global_vars = {0.0, 0.0, 0.0};\n\n  switch (patch) {\\n\\n\>\"", "<>", 
+      "\[IndentingNewLine]", 
+      "\"\<case patch_piece::plus_x:\n    global_vars(0) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "PlusX", "\[LeftDoubleBracket]", "1", "\[RightDoubleBracket]"}], 
+          ",", "CForm"}], "]"}], ",", "replace"}], "]"}], "<>", 
+      "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", 
+      "\"\<global_vars(1) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "PlusX", "\[LeftDoubleBracket]", "2", "\[RightDoubleBracket]"}], 
+          ",", "CForm"}], "]"}], ",", "replace"}], "]"}], "<>", 
+      "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", 
+      "\"\<global_vars(2) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "PlusX", "\[LeftDoubleBracket]", "3", "\[RightDoubleBracket]"}], 
+          ",", "CForm"}], "]"}], ",", "replace"}], "]"}], "<>", 
+      "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", "\"\<break;\\n\\n\>\"",
+       "<>", "\[IndentingNewLine]", "\[IndentingNewLine]", 
+      "\"\<case patch_piece::plus_y:\n    global_vars(0) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "PlusY", "\[LeftDoubleBracket]", "1", "\[RightDoubleBracket]"}], 
+          ",", "CForm"}], "]"}], ",", "replace"}], "]"}], "<>", 
+      "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", 
+      "\"\<global_vars(1) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "PlusY", "\[LeftDoubleBracket]", "2", "\[RightDoubleBracket]"}], 
+          ",", "CForm"}], "]"}], ",", "replace"}], "]"}], "<>", 
+      "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", 
+      "\"\<global_vars(2) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "PlusY", "\[LeftDoubleBracket]", "3", "\[RightDoubleBracket]"}], 
+          ",", "CForm"}], "]"}], ",", "replace"}], "]"}], "<>", 
+      "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", "\"\<break;\\n\\n\>\"",
+       "<>", "\[IndentingNewLine]", "\[IndentingNewLine]", 
+      "\"\<case patch_piece::minus_x:\n    global_vars(0) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "MinusX", "\[LeftDoubleBracket]", "1", "\[RightDoubleBracket]"}], 
+          ",", "CForm"}], "]"}], ",", "replace"}], "]"}], "<>", 
+      "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", 
+      "\"\<global_vars(1) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "MinusX", "\[LeftDoubleBracket]", "2", "\[RightDoubleBracket]"}], 
+          ",", "CForm"}], "]"}], ",", "replace"}], "]"}], "<>", 
+      "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", 
+      "\"\<global_vars(2) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "MinusX", "\[LeftDoubleBracket]", "3", "\[RightDoubleBracket]"}], 
+          ",", "CForm"}], "]"}], ",", "replace"}], "]"}], "<>", 
+      "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", "\"\<break;\\n\\n\>\"",
+       "<>", "\[IndentingNewLine]", "\[IndentingNewLine]", 
+      "\"\<case patch_piece::minus_y:\n    global_vars(0) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "MinusY", "\[LeftDoubleBracket]", "1", "\[RightDoubleBracket]"}], 
+          ",", "CForm"}], "]"}], ",", "replace"}], "]"}], "<>", 
+      "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", 
+      "\"\<global_vars(1) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "MinusY", "\[LeftDoubleBracket]", "2", "\[RightDoubleBracket]"}], 
+          ",", "CForm"}], "]"}], ",", "replace"}], "]"}], "<>", 
+      "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", 
+      "\"\<global_vars(2) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "MinusY", "\[LeftDoubleBracket]", "3", "\[RightDoubleBracket]"}], 
+          ",", "CForm"}], "]"}], ",", "replace"}], "]"}], "<>", 
+      "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", "\"\<break;\\n\\n\>\"",
+       "<>", "\[IndentingNewLine]", "\[IndentingNewLine]", 
+      "\"\<case patch_piece::plus_z:\n    global_vars(0) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "PlusZ", "\[LeftDoubleBracket]", "1", "\[RightDoubleBracket]"}], 
+          ",", "CForm"}], "]"}], ",", "replace"}], "]"}], "<>", 
+      "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", 
+      "\"\<global_vars(1) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "PlusZ", "\[LeftDoubleBracket]", "2", "\[RightDoubleBracket]"}], 
+          ",", "CForm"}], "]"}], ",", "replace"}], "]"}], "<>", 
+      "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", 
+      "\"\<global_vars(2) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "PlusZ", "\[LeftDoubleBracket]", "3", "\[RightDoubleBracket]"}], 
+          ",", "CForm"}], "]"}], ",", "replace"}], "]"}], "<>", 
+      "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", "\"\<break;\\n\\n\>\"",
+       "<>", "\[IndentingNewLine]", "\[IndentingNewLine]", 
+      "\"\<case patch_piece::minus_z:\n    global_vars(0) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "MinusZ", "\[LeftDoubleBracket]", "1", "\[RightDoubleBracket]"}], 
+          ",", "CForm"}], "]"}], ",", "replace"}], "]"}], "<>", 
+      "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", 
+      "\"\<global_vars(1) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "MinusZ", "\[LeftDoubleBracket]", "2", "\[RightDoubleBracket]"}], 
+          ",", "CForm"}], "]"}], ",", "replace"}], "]"}], "<>", 
+      "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", 
+      "\"\<global_vars(2) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "MinusZ", "\[LeftDoubleBracket]", "3", "\[RightDoubleBracket]"}], 
+          ",", "CForm"}], "]"}], ",", "replace"}], "]"}], "<>", 
+      "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", "\"\<break;\\n\\n\>\"",
+       "<>", "\[IndentingNewLine]", "\[IndentingNewLine]", 
+      "\"\<default:\n#ifndef __CUDACC__\n    CCTK_VERROR(\\\"No local -> \
+global transformations available for patch %s\\\", \
+piece_name(static_cast<patch_piece>(patch)).c_str());\n#else\n    assert(0);\n\
+#endif\n    break;\n  }\n  \n  return global_vars;\n}\>\""}]}], ";", 
+    "\[IndentingNewLine]", "\[IndentingNewLine]", 
+    RowBox[{"Print", "[", "local2globalsrc", "]"}]}]}], "\[IndentingNewLine]",
+   "]"}]], "Input",
+ CellChangeTimes->{{3.922456412291819*^9, 3.9224570721285973`*^9}, {
+   3.922457106497117*^9, 3.922457292894125*^9}, 3.922457454298662*^9, {
+   3.922457929364542*^9, 3.922457929603134*^9}, {3.922457963033298*^9, 
+   3.92245796432259*^9}, {3.928244584223844*^9, 3.928244584837091*^9}, {
+   3.928244625934115*^9, 3.9282446281721697`*^9}, {3.928244702741869*^9, 
+   3.9282447373209677`*^9}, {3.9282447700328493`*^9, 3.928244790435638*^9}, {
+   3.9282449659970703`*^9, 3.92824498686235*^9}, {3.9311061995281363`*^9, 
+   3.93110634030825*^9}},
+ CellLabel->"In[2]:=",ExpressionUUID->"14553298-d41d-4e37-a3ac-b23540199ae8"],
+
+Cell[BoxData["\<\"CCTK_DEVICE CCTK_HOST svec local2global(const \
+PatchTransformations &pt, int patch, const svec &local_vars) {\\n  using \
+std::pow;\\n\\n  const auto r0{pt.thornburg06_inner_boundary_radius};\\n  \
+const auto r1{pt.thornburg06_outer_boundary_radius};\\n\\n  const auto \
+a{local_vars(0)};\\n  const auto b{local_vars(1)};\\n  const auto \
+c{local_vars(2)};\\n\\n  svec global_vars = {0.0, 0.0, 0.0};\\n\\n  switch \
+(patch) {\\n\\ncase patch_piece::plus_x:\\n    global_vars(0) = (r0 - c*r0 + \
+r1 + c*r1)/(2.*(1 + pow(a,2) + pow(b,2)));\\n    global_vars(1) = (b*(r0 - \
+c*r0 + r1 + c*r1))/(2.*(1 + pow(a,2) + pow(b,2)));\\n    global_vars(2) = \
+(a*(r0 - c*r0 + r1 + c*r1))/(2.*(1 + pow(a,2) + pow(b,2)));\\n    \
+break;\\n\\ncase patch_piece::plus_y:\\n    global_vars(0) = -(b*(r0 - c*r0 + \
+r1 + c*r1))/(2.*(1 + pow(a,2) + pow(b,2)));\\n    global_vars(1) = (r0 - c*r0 \
++ r1 + c*r1)/(2.*(1 + pow(a,2) + pow(b,2)));\\n    global_vars(2) = (a*(r0 - \
+c*r0 + r1 + c*r1))/(2.*(1 + pow(a,2) + pow(b,2)));\\n    break;\\n\\ncase \
+patch_piece::minus_x:\\n    global_vars(0) = -(r0 - c*r0 + r1 + c*r1)/(2.*(1 \
++ pow(a,2) + pow(b,2)));\\n    global_vars(1) = -(b*(r0 - c*r0 + r1 + \
+c*r1))/(2.*(1 + pow(a,2) + pow(b,2)));\\n    global_vars(2) = (a*(r0 - c*r0 + \
+r1 + c*r1))/(2.*(1 + pow(a,2) + pow(b,2)));\\n    break;\\n\\ncase \
+patch_piece::minus_y:\\n    global_vars(0) = (b*(r0 - c*r0 + r1 + \
+c*r1))/(2.*(1 + pow(a,2) + pow(b,2)));\\n    global_vars(1) = -(r0 - c*r0 + \
+r1 + c*r1)/(2.*(1 + pow(a,2) + pow(b,2)));\\n    global_vars(2) = (a*(r0 - \
+c*r0 + r1 + c*r1))/(2.*(1 + pow(a,2) + pow(b,2)));\\n    break;\\n\\ncase \
+patch_piece::plus_z:\\n    global_vars(0) = -(a*(r0 - c*r0 + r1 + \
+c*r1))/(2.*(1 + pow(a,2) + pow(b,2)));\\n    global_vars(1) = (b*(r0 - c*r0 + \
+r1 + c*r1))/(2.*(1 + pow(a,2) + pow(b,2)));\\n    global_vars(2) = (r0 - c*r0 \
++ r1 + c*r1)/(2.*(1 + pow(a,2) + pow(b,2)));\\n    break;\\n\\ncase \
+patch_piece::minus_z:\\n    global_vars(0) = (a*(r0 - c*r0 + r1 + \
+c*r1))/(2.*(1 + pow(a,2) + pow(b,2)));\\n    global_vars(1) = (b*(r0 - c*r0 + \
+r1 + c*r1))/(2.*(1 + pow(a,2) + pow(b,2)));\\n    global_vars(2) = -(r0 - \
+c*r0 + r1 + c*r1)/(2.*(1 + pow(a,2) + pow(b,2)));\\n    \
+break;\\n\\ndefault:\\n#ifndef __CUDACC__\\n    CCTK_VERROR(\\\"No local -> \
+global transformations available for patch %s\\\", \
+piece_name(static_cast<patch_piece>(patch)).c_str());\\n#else\\n    \
+assert(0);\\n#endif\\n    break;\\n  }\\n  \\n  return \
+global_vars;\\n}\"\>"], "Print",
+ CellChangeTimes->{{3.922456801779255*^9, 3.922456865409276*^9}, 
+   3.922456898144498*^9, 3.922456950305455*^9, {3.922456988763619*^9, 
+   3.922456998070517*^9}, 3.922457042925543*^9, 3.922457073047708*^9, 
+   3.9224571094018803`*^9, {3.922457140193808*^9, 3.922457157011392*^9}, {
+   3.922457204462431*^9, 3.922457240851007*^9}, 3.9224572953669*^9, 
+   3.922457467560863*^9, 3.922457790181815*^9, 3.922457935486308*^9, 
+   3.922457980276454*^9, 3.9224592223502827`*^9, 3.922886633469185*^9, 
+   3.928244629380869*^9, 3.9282447391463013`*^9, {3.928244970616539*^9, 
+   3.928244988760401*^9}, 3.931099721332098*^9, 3.931106355024008*^9, 
+   3.931108465144017*^9, 3.931108724582337*^9},
+ CellLabel->
+  "During evaluation of \
+In[2]:=",ExpressionUUID->"8cac0d20-9b38-483f-9835-78f9cf55e41d"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Global2Local", "Section",
+ CellChangeTimes->{{3.922455965355077*^9, 
+  3.922455967145062*^9}},ExpressionUUID->"e032802a-c9e5-4708-ae4a-\
+6e8531ca6ab2"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Block", "[", "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"local2globalsrc", ",", "replace"}], "}"}], ",", 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"replace", "=", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"\"\<Power\>\"", "\[Rule]", "\"\<pow\>\""}], ",", 
+       RowBox[{"\"\<Sqrt\>\"", "\[Rule]", "\"\<sqrt\>\""}]}], "}"}]}], ";", 
+    "\[IndentingNewLine]", "\[IndentingNewLine]", 
+    RowBox[{"local2globalsrc", "=", 
+     RowBox[{
+     "\"\<CCTK_DEVICE CCTK_HOST std_tuple<int, svec> global2local(const \
+PatchTransformations &pt, const svec &global_vars) {\n  using std::pow;\n\n  \
+const auto r0{pt.thornburg06_inner_boundary_radius};\n  const auto \
+r1{pt.thornburg06_outer_boundary_radius};\n\n  const auto x{global_vars(0)};\n\
+  const auto y{global_vars(1)};\n  const auto z{global_vars(2)};\n\n  const \
+auto patch{get_owner_patch(pt, global_vars)};\n\n  svec local_vars{0.0, 0.0, \
+0.0};\n\n  switch (patch) {\\n\\n\>\"", "<>", "\[IndentingNewLine]", 
+      "\"\<case patch_piece::plus_x:\n    local_vars(0) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "InversePlusX", "\[LeftDoubleBracket]", "1", 
+           "\[RightDoubleBracket]"}], ",", "CForm"}], "]"}], ",", "replace"}],
+        "]"}], "<>", "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", 
+      "\"\<local_vars(1) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "InversePlusX", "\[LeftDoubleBracket]", "2", 
+           "\[RightDoubleBracket]"}], ",", "CForm"}], "]"}], ",", "replace"}],
+        "]"}], "<>", "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", 
+      "\"\<local_vars(2) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "InversePlusX", "\[LeftDoubleBracket]", "3", 
+           "\[RightDoubleBracket]"}], ",", "CForm"}], "]"}], ",", "replace"}],
+        "]"}], "<>", "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", 
+      "\"\<break;\\n\\n\>\"", "<>", "\[IndentingNewLine]", 
+      "\[IndentingNewLine]", 
+      "\"\<case patch_piece::plus_y:\n    local_vars(0) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "InversePlusY", "\[LeftDoubleBracket]", "1", 
+           "\[RightDoubleBracket]"}], ",", "CForm"}], "]"}], ",", "replace"}],
+        "]"}], "<>", "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", 
+      "\"\<local_vars(1) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "InversePlusY", "\[LeftDoubleBracket]", "2", 
+           "\[RightDoubleBracket]"}], ",", "CForm"}], "]"}], ",", "replace"}],
+        "]"}], "<>", "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", 
+      "\"\<local_vars(2) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "InversePlusY", "\[LeftDoubleBracket]", "3", 
+           "\[RightDoubleBracket]"}], ",", "CForm"}], "]"}], ",", "replace"}],
+        "]"}], "<>", "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", 
+      "\"\<break;\\n\\n\>\"", "<>", "\[IndentingNewLine]", 
+      "\[IndentingNewLine]", 
+      "\"\<case patch_piece::minus_x:\n    local_vars(0) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "InverseMinusX", "\[LeftDoubleBracket]", "1", 
+           "\[RightDoubleBracket]"}], ",", "CForm"}], "]"}], ",", "replace"}],
+        "]"}], "<>", "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", 
+      "\"\<local_vars(1) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "InverseMinusX", "\[LeftDoubleBracket]", "2", 
+           "\[RightDoubleBracket]"}], ",", "CForm"}], "]"}], ",", "replace"}],
+        "]"}], "<>", "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", 
+      "\"\<local_vars(2) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "InverseMinusX", "\[LeftDoubleBracket]", "3", 
+           "\[RightDoubleBracket]"}], ",", "CForm"}], "]"}], ",", "replace"}],
+        "]"}], "<>", "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", 
+      "\"\<break;\\n\\n\>\"", "<>", "\[IndentingNewLine]", 
+      "\[IndentingNewLine]", 
+      "\"\<case patch_piece::minus_y:\n    local_vars(0) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "InverseMinusY", "\[LeftDoubleBracket]", "1", 
+           "\[RightDoubleBracket]"}], ",", "CForm"}], "]"}], ",", "replace"}],
+        "]"}], "<>", "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", 
+      "\"\<local_vars(1) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "InverseMinusY", "\[LeftDoubleBracket]", "2", 
+           "\[RightDoubleBracket]"}], ",", "CForm"}], "]"}], ",", "replace"}],
+        "]"}], "<>", "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", 
+      "\"\<local_vars(2) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "InverseMinusY", "\[LeftDoubleBracket]", "3", 
+           "\[RightDoubleBracket]"}], ",", "CForm"}], "]"}], ",", "replace"}],
+        "]"}], "<>", "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", 
+      "\"\<break;\\n\\n\>\"", "<>", "\[IndentingNewLine]", 
+      "\[IndentingNewLine]", 
+      "\"\<case patch_piece::plus_z:\n    local_vars(0) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "InversePlusZ", "\[LeftDoubleBracket]", "1", 
+           "\[RightDoubleBracket]"}], ",", "CForm"}], "]"}], ",", "replace"}],
+        "]"}], "<>", "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", 
+      "\"\<local_vars(1) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "InversePlusZ", "\[LeftDoubleBracket]", "2", 
+           "\[RightDoubleBracket]"}], ",", "CForm"}], "]"}], ",", "replace"}],
+        "]"}], "<>", "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", 
+      "\"\<local_vars(2) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "InversePlusZ", "\[LeftDoubleBracket]", "3", 
+           "\[RightDoubleBracket]"}], ",", "CForm"}], "]"}], ",", "replace"}],
+        "]"}], "<>", "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", 
+      "\"\<break;\\n\\n\>\"", "<>", "\[IndentingNewLine]", 
+      "\[IndentingNewLine]", 
+      "\"\<case patch_piece::minus_z:\n    local_vars(0) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "InverseMinusZ", "\[LeftDoubleBracket]", "1", 
+           "\[RightDoubleBracket]"}], ",", "CForm"}], "]"}], ",", "replace"}],
+        "]"}], "<>", "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", 
+      "\"\<local_vars(1) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "InverseMinusZ", "\[LeftDoubleBracket]", "2", 
+           "\[RightDoubleBracket]"}], ",", "CForm"}], "]"}], ",", "replace"}],
+        "]"}], "<>", "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", 
+      "\"\<local_vars(2) = \>\"", "<>", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{
+        RowBox[{"ToString", "[", 
+         RowBox[{
+          RowBox[{
+          "InverseMinusZ", "\[LeftDoubleBracket]", "3", 
+           "\[RightDoubleBracket]"}], ",", "CForm"}], "]"}], ",", "replace"}],
+        "]"}], "<>", "\"\<;\\n    \>\"", "<>", "\[IndentingNewLine]", 
+      "\"\<break;\\n\\n\>\"", "<>", "\[IndentingNewLine]", 
+      "\[IndentingNewLine]", 
+      "\"\<default:\n#ifndef __CUDACC__\n    CCTK_VERROR(\\\"At point (%f, \
+%f, %f): No global -> local transformations available for patch %s.\\\", x, \
+y, z, piece_name(patch).c_str());\n#else\n    assert(0);\n#endif\n    break;\n\
+  }\n  \n  return std_make_tuple(static_cast<int>(patch), local_vars);\n\
+}\>\""}]}], ";", "\[IndentingNewLine]", "\[IndentingNewLine]", 
+    RowBox[{"Print", "[", "local2globalsrc", "]"}]}]}], "\[IndentingNewLine]",
+   "]"}]], "Input",
+ CellChangeTimes->{{3.9224574068044777`*^9, 3.9224574471178427`*^9}, {
+   3.922457515929439*^9, 3.9224577176889343`*^9}, 3.922457765958826*^9, {
+   3.9224579417542257`*^9, 3.922457952503189*^9}, {3.9224580322947073`*^9, 
+   3.9224580354119167`*^9}, {3.922459161182416*^9, 3.922459162160891*^9}, {
+   3.928245946119027*^9, 3.92824601055127*^9}, {3.931108127719095*^9, 
+   3.931108283224821*^9}, {3.931108331874476*^9, 3.931108339053618*^9}, {
+   3.931108392955121*^9, 3.9311084341457253`*^9}, 3.931108708731071*^9},
+ CellLabel->"In[3]:=",ExpressionUUID->"9f6cfe23-f42e-4c65-ae3f-2a89a2c07ea0"],
+
+Cell[BoxData["\<\"CCTK_DEVICE CCTK_HOST std_tuple<int, svec> \
+global2local(const PatchTransformations &pt, const svec &global_vars) {\\n  \
+using std::pow;\\n\\n  const auto \
+r0{pt.thornburg06_inner_boundary_radius};\\n  const auto \
+r1{pt.thornburg06_outer_boundary_radius};\\n\\n  const auto \
+x{global_vars(0)};\\n  const auto y{global_vars(1)};\\n  const auto \
+z{global_vars(2)};\\n\\n  const auto patch{get_owner_patch(pt, global_vars)};\
+\\n\\n  svec local_vars{0.0, 0.0, 0.0};\\n\\n  switch (patch) {\\n\\ncase \
+patch_piece::plus_x:\\n    local_vars(0) = z/x;\\n    local_vars(1) = y/x;\\n \
+   local_vars(2) = (r0*x + r1*x - 2*(pow(x,2) + pow(y,2) + pow(z,2)))/((r0 - \
+r1)*x);\\n    break;\\n\\ncase patch_piece::plus_y:\\n    local_vars(0) = \
+z/y;\\n    local_vars(1) = -(x/y);\\n    local_vars(2) = (-2*pow(x,2) + (r0 + \
+r1 - 2*y)*y - 2*pow(z,2))/((r0 - r1)*y);\\n    break;\\n\\ncase \
+patch_piece::minus_x:\\n    local_vars(0) = -(z/x);\\n    local_vars(1) = \
+y/x;\\n    local_vars(2) = (x*(r0 + r1 + 2*x) + 2*(pow(y,2) + pow(z,2)))/((r0 \
+- r1)*x);\\n    break;\\n\\ncase patch_piece::minus_y:\\n    local_vars(0) = \
+-(z/y);\\n    local_vars(1) = -(x/y);\\n    local_vars(2) = (2*pow(x,2) + \
+y*(r0 + r1 + 2*y) + 2*pow(z,2))/((r0 - r1)*y);\\n    break;\\n\\ncase \
+patch_piece::plus_z:\\n    local_vars(0) = -(x/z);\\n    local_vars(1) = y/z;\
+\\n    local_vars(2) = (-2*pow(x,2) - 2*pow(y,2) + (r0 + r1 - 2*z)*z)/((r0 - \
+r1)*z);\\n    break;\\n\\ncase patch_piece::minus_z:\\n    local_vars(0) = \
+-(x/z);\\n    local_vars(1) = y/z;\\n    local_vars(2) = (-2*pow(x,2) - \
+2*pow(y,2) + (r0 + r1 - 2*z)*z)/((r0 - r1)*z);\\n    \
+break;\\n\\ndefault:\\n#ifndef __CUDACC__\\n    CCTK_VERROR(\\\"At point (%f, \
+%f, %f): No global -> local transformations available for patch %s.\\\", x, \
+y, z, piece_name(patch).c_str());\\n#else\\n    assert(0);\\n#endif\\n    \
+break;\\n  }\\n  \\n  return std_make_tuple(static_cast<int>(patch), \
+local_vars);\\n}\"\>"], "Print",
+ CellChangeTimes->{
+  3.9224576065765676`*^9, {3.922457695274129*^9, 3.922457723831044*^9}, 
+   3.922457767968688*^9, {3.9224579423379908`*^9, 3.922457980292248*^9}, 
+   3.922458036273975*^9, 3.92245916562999*^9, 3.922459249227417*^9, 
+   3.922886633489176*^9, 3.928246015916312*^9, 3.931099721384061*^9, 
+   3.931108351582576*^9, 3.9311084651822243`*^9, 3.931108724607012*^9},
+ CellLabel->
+  "During evaluation of \
+In[3]:=",ExpressionUUID->"e9ea08db-85ba-489b-af56-9d9a5bc2bdc4"]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{1920, 1008},
+WindowMargins->{{1920, Automatic}, {Automatic, 28}},
+TaggingRules->{
+ "WelcomeScreenSettings" -> {"FEStarting" -> False}, "TryRealOnly" -> False},
+DefaultNaturalLanguage->Language,
+Magnification:>1.5 Inherited,
+FrontEndVersion->"12.1 for Linux x86 (64-bit) (June 19, 2020)",
+StyleDefinitions->FrontEnd`FileName[{"Report"}, "StandardReport.nb", 
+  CharacterEncoding -> "UTF-8"],
+ExpressionUUID->"97f47cf2-88c7-43d1-beae-90ed9da64b4c"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[580, 22, 504, 9, 154, "Title",ExpressionUUID->"06cf51ac-2049-45e5-befb-5e7a3ea14fb4"],
+Cell[1087, 33, 274, 6, 54, "Text",ExpressionUUID->"1a13232a-f510-410d-b5d9-5b44e16e9d35"],
+Cell[CellGroupData[{
+Cell[1386, 43, 187, 3, 111, "Section",ExpressionUUID->"790b5a4f-0eb7-41f6-b44c-05fe54fc2dea"],
+Cell[1576, 48, 297, 6, 62, "Input",ExpressionUUID->"757df879-851b-4a41-8b22-17c49721d999"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[1910, 59, 159, 3, 111, "Section",ExpressionUUID->"b22e696c-906e-4efb-a3ca-cdaca4750297"],
+Cell[CellGroupData[{
+Cell[2094, 66, 9244, 205, 2175, "Input",ExpressionUUID->"14553298-d41d-4e37-a3ac-b23540199ae8"],
+Cell[11341, 273, 3309, 47, 1776, "Print",ExpressionUUID->"8cac0d20-9b38-483f-9835-78f9cf55e41d"]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[14699, 326, 157, 3, 111, "Section",ExpressionUUID->"e032802a-c9e5-4708-ae4a-6e8531ca6ab2"],
+Cell[CellGroupData[{
+Cell[14881, 333, 9507, 210, 2239, "Input",ExpressionUUID->"9f6cfe23-f42e-4c65-ae3f-2a89a2c07ea0"],
+Cell[24391, 545, 2470, 36, 1834, "Print",ExpressionUUID->"e9ea08db-85ba-489b-af56-9d9a5bc2bdc4"]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+

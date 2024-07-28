@@ -264,7 +264,7 @@ d2local_dglobal2(const PatchTransformations &pt, int patch,
 
   return std_make_tuple(local_to_global_result, std::get<0>(jacobian_results),
                         std::get<1>(jacobian_results));
-} // namespace Cake
+}
 
 /**
  * @brief This function computes the local to global coordinate transformation

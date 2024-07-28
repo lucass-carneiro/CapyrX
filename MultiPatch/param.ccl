@@ -8,6 +8,7 @@ KEYWORD patch_system "Patch system"
   "Swirl" :: ""
   "Cake" :: "6 Thornburg-like spherical patches perfectly matched with a central cartesian cube patch. For details, see https://arxiv.org/abs/gr-qc/0512001 or the included Mathematica notebooks."
   "Two Cubes" :: "Two cartesian cubes that touch, sharing a face in the x direcion. Used for debugging."
+  "Thornburg06"
 } "none"
 
 # Cartesian patch system
@@ -174,6 +175,28 @@ INT two_cubes_ncells_y "Number of cells in the y direction"
 } 10
 
 INT two_cubes_ncells_z "Number of cells in the z direction" 
+{
+  0:* :: "Positive"
+} 10
+
+# Thornburg06 patch system
+
+REAL thornburg06_outer_boundary_radius "Radius where the outer boundary will be placed."
+{
+  0:* :: "Positive"
+} 10.0
+
+REAL thornburg06_inner_boundary_radius  "Radius where the inner boundary will be placed."
+{
+  0:* :: "Positive"
+} 1.0
+
+INT thornburg06_angular_cells "Number of cells in the angular direction"
+{
+  0:* :: "Positive"
+} 10
+
+INT thornburg06_radial_cells "Number of cells in the radial direction" 
 {
   0:* :: "Positive"
 } 10

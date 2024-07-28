@@ -1,0 +1,489 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 12.1' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[     24984,        481]
+NotebookOptionsPosition[     23610,        447]
+NotebookOutlinePosition[     24233,        468]
+CellTagsIndexPosition[     24190,        465]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["Thornburg06 coordinates Jacobian code generation", "Title",
+ CellChangeTimes->{{3.842480859572761*^9, 3.8424808734034557`*^9}, {
+  3.842742869283586*^9, 3.842742878013317*^9}, {3.843003248017685*^9, 
+  3.843003253996933*^9}, {3.843838607912539*^9, 3.8438386131860456`*^9}, {
+  3.8692317274362097`*^9, 3.86923173082513*^9}, {3.869232009919592*^9, 
+  3.869232010579658*^9}, {3.931108502388686*^9, 
+  3.931108504297929*^9}},ExpressionUUID->"06cf51ac-2049-45e5-befb-\
+5e7a3ea14fb4"],
+
+Cell[CellGroupData[{
+
+Cell["Patch system ", "Section",
+ CellChangeTimes->{{3.8448108646711617`*^9, 3.844810871321*^9}, {
+  3.845641104146451*^9, 3.845641105656435*^9}, {3.8456414906301517`*^9, 
+  3.845641495240016*^9}, {3.845641576798369*^9, 3.845641578368043*^9}, {
+  3.922450748171774*^9, 
+  3.922450748500943*^9}},ExpressionUUID->"4433c9f4-e92e-44f9-a920-\
+9fcf114e462f"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Import", "[", 
+   RowBox[{
+    RowBox[{"NotebookDirectory", "[", "]"}], "<>", 
+    "\"\<coord_transforms.mx\>\""}], "]"}], ";"}]], "Input",
+ CellChangeTimes->{{3.922450751043352*^9, 3.922450774200289*^9}, {
+  3.931108516361533*^9, 3.9311085166650887`*^9}},
+ CellLabel->"In[1]:=",ExpressionUUID->"e02718e7-d42d-49ab-aad7-206b2a63f45a"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Jacobians and Jacobian Derivatives", "Section",
+ CellChangeTimes->{{3.85807029256612*^9, 3.85807030329497*^9}, 
+   3.869242415762504*^9, {3.869242688777238*^9, 3.8692426889874*^9}, {
+   3.922450895732071*^9, 
+   3.922450903911428*^9}},ExpressionUUID->"d9a6ec80-94ff-4010-a85e-\
+5a76d9141abd"],
+
+Cell[TextData[{
+ "CarpetX defines\n\n",
+ Cell[BoxData[{
+  FormBox[
+   RowBox[{
+    RowBox[{
+     RowBox[{"J", "[", "i", "]"}], "[", "j", "]"}], "=", 
+    FractionBox[
+     SuperscriptBox["da", "i"], 
+     SuperscriptBox["dx", "j"]]}], TraditionalForm], "\[IndentingNewLine]", 
+  FormBox[
+   RowBox[{
+    RowBox[{
+     RowBox[{
+      RowBox[{"dJ", "[", "i", "]"}], "[", "j", "]"}], "[", "k", "]"}], "=", 
+    RowBox[{
+     FractionBox["d", 
+      SuperscriptBox["dx", "k"]], 
+     RowBox[{"(", 
+      FractionBox[
+       SuperscriptBox["da", "i"], 
+       SuperscriptBox["dx", "j"]], ")"}]}]}], TraditionalForm]}],
+  ExpressionUUID->"e916b45b-0691-43bb-b104-b99c3792f970"]
+}], "Text",
+ CellChangeTimes->{{3.8460843424597054`*^9, 3.846084494466394*^9}, {
+  3.857120063429269*^9, 3.857120086484022*^9}, {3.857132591638426*^9, 
+  3.857132592022197*^9}, {3.8580687165349627`*^9, 3.858068867341958*^9}, {
+  3.858069271864131*^9, 3.858069323613624*^9}, {3.858069425391279*^9, 
+  3.85806947653013*^9}, {3.8580702263171883`*^9, 3.858070287806102*^9}, {
+  3.9224508684843073`*^9, 3.922450890707775*^9}, {3.922451119536634*^9, 
+  3.922451120040235*^9}, {3.931108548847199*^9, 
+  3.931108549357153*^9}},ExpressionUUID->"a1dc3eef-aba1-46f5-8810-\
+b875ef843746"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"generateJacobians", "[", 
+   RowBox[{"inputStr_", ",", "patchName_"}], "]"}], ":=", 
+  RowBox[{"Module", "[", "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"{", "outputStr", "}"}], ",", "\[IndentingNewLine]", 
+    RowBox[{
+     RowBox[{"outputStr", "=", "inputStr"}], ";", "\[IndentingNewLine]", 
+     "\[IndentingNewLine]", 
+     RowBox[{"Do", "[", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"outputStr", "=", 
+        RowBox[{"outputStr", "<>", "\[IndentingNewLine]", "\"\<    J(\>\"", "<>", 
+         RowBox[{"ToString", "[", 
+          RowBox[{"i", "-", "1"}], "]"}], "<>", "\"\<)(\>\"", "<>", 
+         RowBox[{"ToString", "[", 
+          RowBox[{"j", "-", "1"}], "]"}], "<>", "\"\<) = \>\"", "<>", 
+         "\[IndentingNewLine]", 
+         RowBox[{"ToString", "[", 
+          RowBox[{
+           RowBox[{"FullSimplify", "[", 
+            RowBox[{"D", "[", 
+             RowBox[{
+              RowBox[{
+              "patchName", "\[LeftDoubleBracket]", "i", 
+               "\[RightDoubleBracket]"}], ",", 
+              RowBox[{
+               RowBox[{"{", 
+                RowBox[{"x", ",", "y", ",", "z"}], "}"}], 
+               "\[LeftDoubleBracket]", "j", "\[RightDoubleBracket]"}]}], 
+             "]"}], "]"}], ",", "CForm"}], "]"}], "<>", "\"\<;\\n\>\""}]}], 
+       ",", "\[IndentingNewLine]", 
+       RowBox[{"{", 
+        RowBox[{"i", ",", "1", ",", "3"}], "}"}], ",", 
+       RowBox[{"{", 
+        RowBox[{"j", ",", "1", ",", "3"}], "}"}]}], "\[IndentingNewLine]", 
+      "]"}], ";", "\[IndentingNewLine]", "\[IndentingNewLine]", 
+     RowBox[{"outputStr", "=", 
+      RowBox[{"outputStr", "<>", "\"\<\\n\>\""}]}], ";", 
+     "\[IndentingNewLine]", "\[IndentingNewLine]", 
+     RowBox[{"Do", "[", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"outputStr", "=", 
+        RowBox[{"outputStr", "<>", "\[IndentingNewLine]", "\"\<    dJ(\>\"", "<>", 
+         RowBox[{"ToString", "[", 
+          RowBox[{"i", "-", "1"}], "]"}], "<>", "\"\<)(\>\"", "<>", 
+         RowBox[{"ToString", "[", 
+          RowBox[{"j", "-", "1"}], "]"}], "<>", "\"\<,\>\"", "<>", 
+         RowBox[{"ToString", "[", 
+          RowBox[{"k", "-", "1"}], "]"}], "<>", "\"\<) = \>\"", "<>", 
+         "\[IndentingNewLine]", 
+         RowBox[{"ToString", "[", 
+          RowBox[{
+           RowBox[{"FullSimplify", "[", 
+            RowBox[{"D", "[", 
+             RowBox[{
+              RowBox[{"D", "[", 
+               RowBox[{
+                RowBox[{
+                "patchName", "\[LeftDoubleBracket]", "i", 
+                 "\[RightDoubleBracket]"}], ",", 
+                RowBox[{
+                 RowBox[{"{", 
+                  RowBox[{"x", ",", "y", ",", "z"}], "}"}], 
+                 "\[LeftDoubleBracket]", "j", "\[RightDoubleBracket]"}]}], 
+               "]"}], ",", 
+              RowBox[{
+               RowBox[{"{", 
+                RowBox[{"x", ",", "y", ",", "z"}], "}"}], 
+               "\[LeftDoubleBracket]", "k", "\[RightDoubleBracket]"}]}], 
+             "]"}], "]"}], ",", "CForm"}], "]"}], "<>", "\"\<;\\n\>\""}]}], 
+       ",", "\[IndentingNewLine]", 
+       RowBox[{"{", 
+        RowBox[{"i", ",", "1", ",", "3"}], "}"}], ",", 
+       RowBox[{"{", 
+        RowBox[{"j", ",", "1", ",", "3"}], "}"}], ",", 
+       RowBox[{"{", 
+        RowBox[{"k", ",", "1", ",", "3"}], "}"}]}], "\[IndentingNewLine]", 
+      "]"}], ";", "\[IndentingNewLine]", 
+     RowBox[{"outputStr", "=", 
+      RowBox[{"outputStr", "<>", "\"\<    break;\\n\>\""}]}], ";", 
+     "\[IndentingNewLine]", "\[IndentingNewLine]", 
+     RowBox[{"Return", "[", "outputStr", "]"}]}]}], "\[IndentingNewLine]", 
+   "]"}]}]], "Input",
+ CellChangeTimes->{{3.869239711715683*^9, 3.869239807725449*^9}, {
+   3.869239921072564*^9, 3.869239927713436*^9}, {3.869239987391498*^9, 
+   3.869240073240534*^9}, {3.869240250315014*^9, 3.869240278973666*^9}, {
+   3.8692403569332542`*^9, 3.86924035729281*^9}, {3.869242234598077*^9, 
+   3.8692422355678596`*^9}, {3.922451257377924*^9, 3.922451275276483*^9}, 
+   3.9224513066676083`*^9, {3.9224515986778097`*^9, 3.922451599067176*^9}},
+ CellLabel->"In[2]:=",ExpressionUUID->"24dd430f-c257-4863-b47f-f7d4a552d3d2"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Block", "[", "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"{", "srcFile", "}"}], ",", "\[IndentingNewLine]", 
+    RowBox[{
+     RowBox[{
+     "srcFile", "=", 
+      "\"\<CCTK_DEVICE CCTK_HOST std_tuple<svec, jac_t, djac_t> \
+d2local_dglobal2(const PatchTransformations &pt, int patch, const svec \
+&local_vars) {\n  using std::pow;\n\n  jac_t J{};\n  djac_t dJ{};\n\n  const \
+auto global_vars{local2global(pt, patch, local_vars)};\n\n  const auto \
+r0{pt.thornburg06_inner_boundary_radius};\n  const auto \
+r1{pt.thornburg06_outer_boundary_radius};\n\n  const auto x{global_vars(0)};\n\
+  const auto y{global_vars(1)};\n  const auto z{global_vars(2)};\n\n  // \
+clang-format off\n  switch (patch) {\n\>\""}], ";", "\[IndentingNewLine]", 
+     RowBox[{"(*", " ", 
+      RowBox[{"Plus", " ", "X"}], " ", "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"srcFile", "=", 
+      RowBox[{"srcFile", "<>", "\"\<  case patch_piece::plus_x:\\n\>\""}]}], 
+     ";", "\[IndentingNewLine]", 
+     RowBox[{"srcFile", "=", 
+      RowBox[{"generateJacobians", "[", 
+       RowBox[{"srcFile", ",", "InversePlusX"}], "]"}]}], ";", 
+     "\[IndentingNewLine]", "\[IndentingNewLine]", 
+     RowBox[{"(*", " ", 
+      RowBox[{"Plus", " ", "Y"}], " ", "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"srcFile", "=", 
+      RowBox[{
+      "srcFile", "<>", "\"\<\\n  case patch_piece::plus_y:\\n\>\""}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"srcFile", "=", 
+      RowBox[{"generateJacobians", "[", 
+       RowBox[{"srcFile", ",", "InversePlusY"}], "]"}]}], ";", 
+     "\[IndentingNewLine]", "\[IndentingNewLine]", 
+     RowBox[{"(*", " ", 
+      RowBox[{"Minus", " ", "X"}], " ", "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"srcFile", "=", 
+      RowBox[{
+      "srcFile", "<>", "\"\<\\n  case patch_piece::minus_x:\\n\>\""}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"srcFile", "=", 
+      RowBox[{"generateJacobians", "[", 
+       RowBox[{"srcFile", ",", "InverseMinusX"}], "]"}]}], ";", 
+     "\[IndentingNewLine]", "\[IndentingNewLine]", 
+     RowBox[{"(*", " ", 
+      RowBox[{"Minus", " ", "Y"}], " ", "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"srcFile", "=", 
+      RowBox[{
+      "srcFile", "<>", "\"\<\\n  case patch_piece::minus_y:\\n\>\""}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"srcFile", "=", 
+      RowBox[{"generateJacobians", "[", 
+       RowBox[{"srcFile", ",", "InverseMinusY"}], "]"}]}], ";", 
+     "\[IndentingNewLine]", "\[IndentingNewLine]", 
+     RowBox[{"(*", " ", 
+      RowBox[{"Plus", " ", "Z"}], " ", "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"srcFile", "=", 
+      RowBox[{
+      "srcFile", "<>", "\"\<\\n  case patch_piece::plus_z:\\n\>\""}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"srcFile", "=", 
+      RowBox[{"generateJacobians", "[", 
+       RowBox[{"srcFile", ",", "InversePlusZ"}], "]"}]}], ";", 
+     "\[IndentingNewLine]", "\[IndentingNewLine]", 
+     RowBox[{"(*", " ", "MinusZ", " ", "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"srcFile", "=", 
+      RowBox[{
+      "srcFile", "<>", "\"\<\\n  case patch_piece::minus_z:\\n\>\""}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"srcFile", "=", 
+      RowBox[{"generateJacobians", "[", 
+       RowBox[{"srcFile", ",", "InverseMinusZ"}], "]"}]}], ";", 
+     "\[IndentingNewLine]", "\[IndentingNewLine]", 
+     RowBox[{"srcFile", "=", 
+      RowBox[{
+      "srcFile", "<>", 
+       "\"\<\\n  default:\n#ifndef __CUDACC__\n    CCTK_VERROR(\\\"No \
+jacobians available for patch %s\\\", \
+piece_name(static_cast<patch_piece>(patch)).c_str());\n#else\n    assert(0);\n\
+#endif\n    break;\n  }\n  // clang-format on\n\n  return \
+std_make_tuple(global_vars, J, dJ);\n}\>\""}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"srcFile", "=", 
+      RowBox[{"StringReplace", "[", 
+       RowBox[{"srcFile", ",", 
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{"\"\<Power\>\"", "\[Rule]", "\"\<pow\>\""}], ",", 
+          RowBox[{"\"\<Sqrt\>\"", "\[Rule]", "\"\<sqrt\>\""}]}], "}"}]}], 
+       "]"}]}], ";", "\[IndentingNewLine]", "\[IndentingNewLine]", 
+     RowBox[{"Print", "[", "srcFile", "]"}], ";"}]}], "\[IndentingNewLine]", 
+   "]"}], ";"}]], "Input",
+ CellChangeTimes->{{3.869234797385166*^9, 3.86923480726467*^9}, {
+   3.869234840303356*^9, 3.869234864493286*^9}, {3.869234927291984*^9, 
+   3.869234951661181*^9}, {3.869235072099189*^9, 3.869235221686398*^9}, {
+   3.869235293875229*^9, 3.869235523301999*^9}, {3.86923574565753*^9, 
+   3.869235746858432*^9}, {3.869236564047283*^9, 3.869236586047759*^9}, {
+   3.869236633447248*^9, 3.8692367771232986`*^9}, {3.869236939000773*^9, 
+   3.8692371168465233`*^9}, {3.86923720488303*^9, 3.8692372292473917`*^9}, {
+   3.869237555477296*^9, 3.8692375686471*^9}, {3.869237694923934*^9, 
+   3.869237701823824*^9}, {3.869237784702607*^9, 3.869237873632436*^9}, {
+   3.869237913680784*^9, 3.869237920410486*^9}, {3.869237961529859*^9, 
+   3.869238059697053*^9}, {3.8692380953673353`*^9, 3.8692381385968018`*^9}, {
+   3.8692391790264387`*^9, 3.8692392000757093`*^9}, {3.869239370472707*^9, 
+   3.8692393839221888`*^9}, {3.869239433891803*^9, 3.869239493246479*^9}, {
+   3.86923960842239*^9, 3.8692396111026506`*^9}, {3.869239650289331*^9, 
+   3.869239667948015*^9}, {3.869239721758232*^9, 3.8692397228464518`*^9}, {
+   3.8692398253975286`*^9, 3.86923986686705*^9}, {3.869239897492515*^9, 
+   3.8692398989614897`*^9}, {3.869240128066827*^9, 3.86924013001616*^9}, {
+   3.869240222375145*^9, 3.8692402238640003`*^9}, {3.869240383201541*^9, 
+   3.8692404328203983`*^9}, {3.869240661277239*^9, 3.869240672598349*^9}, {
+   3.869240732955813*^9, 3.869240746475909*^9}, {3.869240857946594*^9, 
+   3.86924091007308*^9}, {3.869241107519951*^9, 3.8692411637782803`*^9}, 
+   3.869241309246283*^9, {3.8692413663350554`*^9, 3.869241370324709*^9}, {
+   3.869241458103149*^9, 3.869241754038538*^9}, {3.869241789860816*^9, 
+   3.8692418129404984`*^9}, {3.869241933685297*^9, 3.86924194605368*^9}, {
+   3.869242008473575*^9, 3.8692421364503593`*^9}, {3.8692421856207533`*^9, 
+   3.869242186610132*^9}, {3.869242221539941*^9, 3.869242223028735*^9}, {
+   3.869242306366078*^9, 3.8692423073379*^9}, 3.869242387055204*^9, {
+   3.86924244141494*^9, 3.869242498293481*^9}, {3.869242626624042*^9, 
+   3.869242640221303*^9}, {3.869577947718602*^9, 3.869577983272213*^9}, {
+   3.869581025820735*^9, 3.869581046849091*^9}, {3.869581091298018*^9, 
+   3.869581136558146*^9}, {3.869584522925926*^9, 3.869584524135091*^9}, {
+   3.8695852032152243`*^9, 3.869585208394876*^9}, {3.869585261414699*^9, 
+   3.869585283947176*^9}, 3.8695892860905647`*^9, {3.869589448727989*^9, 
+   3.86958944904696*^9}, {3.922451716198936*^9, 3.9224517329375687`*^9}, {
+   3.9224518965364428`*^9, 3.9224518975855207`*^9}, {3.922453049918334*^9, 
+   3.9224530669656076`*^9}, {3.922453116803192*^9, 3.922453138622252*^9}, {
+   3.9224531828193007`*^9, 3.922453185198546*^9}, {3.9282461802145777`*^9, 
+   3.928246189363954*^9}, {3.931108585048601*^9, 3.931108589388599*^9}, {
+   3.931108636558445*^9, 3.9311086490175*^9}, 3.931108750558831*^9, {
+   3.931108794795169*^9, 3.9311088579566517`*^9}, {3.931108899683086*^9, 
+   3.931108933383174*^9}, {3.931108982183937*^9, 3.9311090168997173`*^9}, {
+   3.9311090732905083`*^9, 3.9311090789990187`*^9}, {3.9311092584568987`*^9, 
+   3.931109368093605*^9}, {3.931109424364243*^9, 3.931109425282564*^9}, {
+   3.931109514022155*^9, 3.931109514406063*^9}},
+ CellLabel->"In[8]:=",ExpressionUUID->"91b56626-d4f4-413c-9e73-f5cc2632a663"],
+
+Cell[BoxData["\<\"CCTK_DEVICE CCTK_HOST std_tuple<svec, jac_t, djac_t> \
+d2local_dglobal2(const PatchTransformations &pt, int patch, const svec \
+&local_vars) {\\n  using std::pow;\\n\\n  jac_t J{};\\n  djac_t dJ{};\\n\\n  \
+const auto global_vars{local2global(pt, patch, local_vars)};\\n\\n  const \
+auto r0{pt.thornburg06_inner_boundary_radius};\\n  const auto \
+r1{pt.thornburg06_outer_boundary_radius};\\n\\n  const auto \
+x{global_vars(0)};\\n  const auto y{global_vars(1)};\\n  const auto \
+z{global_vars(2)};\\n\\n  // clang-format off\\n  switch (patch) {\\n  case \
+patch_piece::plus_x:\\n    J(0)(0) = -(z/pow(x,2));\\n    J(0)(1) = 0;\\n    \
+J(0)(2) = 1/x;\\n    J(1)(0) = -(y/pow(x,2));\\n    J(1)(1) = 1/x;\\n    \
+J(1)(2) = 0;\\n    J(2)(0) = (2*(-pow(x,2) + pow(y,2) + pow(z,2)))/((r0 - \
+r1)*pow(x,2));\\n    J(2)(1) = (-4*y)/(r0*x - r1*x);\\n    J(2)(2) = \
+(-4*z)/(r0*x - r1*x);\\n\\n    dJ(0)(0,0) = (2*z)/pow(x,3);\\n    dJ(0)(0,1) \
+= 0;\\n    dJ(0)(0,2) = -pow(x,-2);\\n    dJ(0)(1,0) = 0;\\n    dJ(0)(1,1) = \
+0;\\n    dJ(0)(1,2) = 0;\\n    dJ(0)(2,0) = -pow(x,-2);\\n    dJ(0)(2,1) = 0;\
+\\n    dJ(0)(2,2) = 0;\\n    dJ(1)(0,0) = (2*y)/pow(x,3);\\n    dJ(1)(0,1) = \
+-pow(x,-2);\\n    dJ(1)(0,2) = 0;\\n    dJ(1)(1,0) = -pow(x,-2);\\n    \
+dJ(1)(1,1) = 0;\\n    dJ(1)(1,2) = 0;\\n    dJ(1)(2,0) = 0;\\n    dJ(1)(2,1) \
+= 0;\\n    dJ(1)(2,2) = 0;\\n    dJ(2)(0,0) = (-4*(pow(y,2) + pow(z,2)))/((r0 \
+- r1)*pow(x,3));\\n    dJ(2)(0,1) = (4*y)/((r0 - r1)*pow(x,2));\\n    \
+dJ(2)(0,2) = (4*z)/((r0 - r1)*pow(x,2));\\n    dJ(2)(1,0) = (4*y)/((r0 - \
+r1)*pow(x,2));\\n    dJ(2)(1,1) = -4/(r0*x - r1*x);\\n    dJ(2)(1,2) = 0;\\n  \
+  dJ(2)(2,0) = (4*z)/((r0 - r1)*pow(x,2));\\n    dJ(2)(2,1) = 0;\\n    \
+dJ(2)(2,2) = -4/(r0*x - r1*x);\\n    break;\\n\\n  case \
+patch_piece::plus_y:\\n    J(0)(0) = 0;\\n    J(0)(1) = -(z/pow(y,2));\\n    \
+J(0)(2) = 1/y;\\n    J(1)(0) = -(1/y);\\n    J(1)(1) = x/pow(y,2);\\n    \
+J(1)(2) = 0;\\n    J(2)(0) = (-4*x)/(r0*y - r1*y);\\n    J(2)(1) = \
+(2*(pow(x,2) - pow(y,2) + pow(z,2)))/((r0 - r1)*pow(y,2));\\n    J(2)(2) = \
+(-4*z)/(r0*y - r1*y);\\n\\n    dJ(0)(0,0) = 0;\\n    dJ(0)(0,1) = 0;\\n    \
+dJ(0)(0,2) = 0;\\n    dJ(0)(1,0) = 0;\\n    dJ(0)(1,1) = (2*z)/pow(y,3);\\n   \
+ dJ(0)(1,2) = -pow(y,-2);\\n    dJ(0)(2,0) = 0;\\n    dJ(0)(2,1) = \
+-pow(y,-2);\\n    dJ(0)(2,2) = 0;\\n    dJ(1)(0,0) = 0;\\n    dJ(1)(0,1) = \
+pow(y,-2);\\n    dJ(1)(0,2) = 0;\\n    dJ(1)(1,0) = pow(y,-2);\\n    \
+dJ(1)(1,1) = (-2*x)/pow(y,3);\\n    dJ(1)(1,2) = 0;\\n    dJ(1)(2,0) = 0;\\n  \
+  dJ(1)(2,1) = 0;\\n    dJ(1)(2,2) = 0;\\n    dJ(2)(0,0) = -4/(r0*y - \
+r1*y);\\n    dJ(2)(0,1) = (4*x)/((r0 - r1)*pow(y,2));\\n    dJ(2)(0,2) = \
+0;\\n    dJ(2)(1,0) = (4*x)/((r0 - r1)*pow(y,2));\\n    dJ(2)(1,1) = \
+(-4*(pow(x,2) + pow(z,2)))/((r0 - r1)*pow(y,3));\\n    dJ(2)(1,2) = \
+(4*z)/((r0 - r1)*pow(y,2));\\n    dJ(2)(2,0) = 0;\\n    dJ(2)(2,1) = \
+(4*z)/((r0 - r1)*pow(y,2));\\n    dJ(2)(2,2) = -4/(r0*y - r1*y);\\n    break;\
+\\n\\n  case patch_piece::minus_x:\\n    J(0)(0) = z/pow(x,2);\\n    J(0)(1) \
+= 0;\\n    J(0)(2) = -(1/x);\\n    J(1)(0) = -(y/pow(x,2));\\n    J(1)(1) = \
+1/x;\\n    J(1)(2) = 0;\\n    J(2)(0) = (2*(pow(x,2) - pow(y,2) - \
+pow(z,2)))/((r0 - r1)*pow(x,2));\\n    J(2)(1) = (4*y)/(r0*x - r1*x);\\n    \
+J(2)(2) = (4*z)/(r0*x - r1*x);\\n\\n    dJ(0)(0,0) = (-2*z)/pow(x,3);\\n    \
+dJ(0)(0,1) = 0;\\n    dJ(0)(0,2) = pow(x,-2);\\n    dJ(0)(1,0) = 0;\\n    \
+dJ(0)(1,1) = 0;\\n    dJ(0)(1,2) = 0;\\n    dJ(0)(2,0) = pow(x,-2);\\n    \
+dJ(0)(2,1) = 0;\\n    dJ(0)(2,2) = 0;\\n    dJ(1)(0,0) = (2*y)/pow(x,3);\\n   \
+ dJ(1)(0,1) = -pow(x,-2);\\n    dJ(1)(0,2) = 0;\\n    dJ(1)(1,0) = \
+-pow(x,-2);\\n    dJ(1)(1,1) = 0;\\n    dJ(1)(1,2) = 0;\\n    dJ(1)(2,0) = 0;\
+\\n    dJ(1)(2,1) = 0;\\n    dJ(1)(2,2) = 0;\\n    dJ(2)(0,0) = (4*(pow(y,2) \
++ pow(z,2)))/((r0 - r1)*pow(x,3));\\n    dJ(2)(0,1) = (-4*y)/((r0 - \
+r1)*pow(x,2));\\n    dJ(2)(0,2) = (-4*z)/((r0 - r1)*pow(x,2));\\n    \
+dJ(2)(1,0) = (-4*y)/((r0 - r1)*pow(x,2));\\n    dJ(2)(1,1) = 4/(r0*x - r1*x);\
+\\n    dJ(2)(1,2) = 0;\\n    dJ(2)(2,0) = (-4*z)/((r0 - r1)*pow(x,2));\\n    \
+dJ(2)(2,1) = 0;\\n    dJ(2)(2,2) = 4/(r0*x - r1*x);\\n    break;\\n\\n  case \
+patch_piece::minus_y:\\n    J(0)(0) = 0;\\n    J(0)(1) = z/pow(y,2);\\n    \
+J(0)(2) = -(1/y);\\n    J(1)(0) = -(1/y);\\n    J(1)(1) = x/pow(y,2);\\n    \
+J(1)(2) = 0;\\n    J(2)(0) = (4*x)/(r0*y - r1*y);\\n    J(2)(1) = \
+(-2*(pow(x,2) - pow(y,2) + pow(z,2)))/((r0 - r1)*pow(y,2));\\n    J(2)(2) = \
+(4*z)/(r0*y - r1*y);\\n\\n    dJ(0)(0,0) = 0;\\n    dJ(0)(0,1) = 0;\\n    \
+dJ(0)(0,2) = 0;\\n    dJ(0)(1,0) = 0;\\n    dJ(0)(1,1) = (-2*z)/pow(y,3);\\n  \
+  dJ(0)(1,2) = pow(y,-2);\\n    dJ(0)(2,0) = 0;\\n    dJ(0)(2,1) = pow(y,-2);\
+\\n    dJ(0)(2,2) = 0;\\n    dJ(1)(0,0) = 0;\\n    dJ(1)(0,1) = pow(y,-2);\\n \
+   dJ(1)(0,2) = 0;\\n    dJ(1)(1,0) = pow(y,-2);\\n    dJ(1)(1,1) = \
+(-2*x)/pow(y,3);\\n    dJ(1)(1,2) = 0;\\n    dJ(1)(2,0) = 0;\\n    dJ(1)(2,1) \
+= 0;\\n    dJ(1)(2,2) = 0;\\n    dJ(2)(0,0) = 4/(r0*y - r1*y);\\n    \
+dJ(2)(0,1) = (-4*x)/((r0 - r1)*pow(y,2));\\n    dJ(2)(0,2) = 0;\\n    \
+dJ(2)(1,0) = (-4*x)/((r0 - r1)*pow(y,2));\\n    dJ(2)(1,1) = (4*(pow(x,2) + \
+pow(z,2)))/((r0 - r1)*pow(y,3));\\n    dJ(2)(1,2) = (-4*z)/((r0 - \
+r1)*pow(y,2));\\n    dJ(2)(2,0) = 0;\\n    dJ(2)(2,1) = (-4*z)/((r0 - \
+r1)*pow(y,2));\\n    dJ(2)(2,2) = 4/(r0*y - r1*y);\\n    break;\\n\\n  case \
+patch_piece::plus_z:\\n    J(0)(0) = -(1/z);\\n    J(0)(1) = 0;\\n    J(0)(2) \
+= x/pow(z,2);\\n    J(1)(0) = 0;\\n    J(1)(1) = 1/z;\\n    J(1)(2) = \
+-(y/pow(z,2));\\n    J(2)(0) = (-4*x)/(r0*z - r1*z);\\n    J(2)(1) = \
+(-4*y)/(r0*z - r1*z);\\n    J(2)(2) = (2*(pow(x,2) + pow(y,2) - \
+pow(z,2)))/((r0 - r1)*pow(z,2));\\n\\n    dJ(0)(0,0) = 0;\\n    dJ(0)(0,1) = \
+0;\\n    dJ(0)(0,2) = pow(z,-2);\\n    dJ(0)(1,0) = 0;\\n    dJ(0)(1,1) = \
+0;\\n    dJ(0)(1,2) = 0;\\n    dJ(0)(2,0) = pow(z,-2);\\n    dJ(0)(2,1) = \
+0;\\n    dJ(0)(2,2) = (-2*x)/pow(z,3);\\n    dJ(1)(0,0) = 0;\\n    dJ(1)(0,1) \
+= 0;\\n    dJ(1)(0,2) = 0;\\n    dJ(1)(1,0) = 0;\\n    dJ(1)(1,1) = 0;\\n    \
+dJ(1)(1,2) = -pow(z,-2);\\n    dJ(1)(2,0) = 0;\\n    dJ(1)(2,1) = -pow(z,-2);\
+\\n    dJ(1)(2,2) = (2*y)/pow(z,3);\\n    dJ(2)(0,0) = -4/(r0*z - r1*z);\\n   \
+ dJ(2)(0,1) = 0;\\n    dJ(2)(0,2) = (4*x)/((r0 - r1)*pow(z,2));\\n    \
+dJ(2)(1,0) = 0;\\n    dJ(2)(1,1) = -4/(r0*z - r1*z);\\n    dJ(2)(1,2) = \
+(4*y)/((r0 - r1)*pow(z,2));\\n    dJ(2)(2,0) = (4*x)/((r0 - r1)*pow(z,2));\\n \
+   dJ(2)(2,1) = (4*y)/((r0 - r1)*pow(z,2));\\n    dJ(2)(2,2) = (-4*(pow(x,2) \
++ pow(y,2)))/((r0 - r1)*pow(z,3));\\n    break;\\n\\n  case \
+patch_piece::minus_z:\\n    J(0)(0) = -(1/z);\\n    J(0)(1) = 0;\\n    \
+J(0)(2) = x/pow(z,2);\\n    J(1)(0) = 0;\\n    J(1)(1) = 1/z;\\n    J(1)(2) = \
+-(y/pow(z,2));\\n    J(2)(0) = (-4*x)/(r0*z - r1*z);\\n    J(2)(1) = \
+(-4*y)/(r0*z - r1*z);\\n    J(2)(2) = (2*(pow(x,2) + pow(y,2) - \
+pow(z,2)))/((r0 - r1)*pow(z,2));\\n\\n    dJ(0)(0,0) = 0;\\n    dJ(0)(0,1) = \
+0;\\n    dJ(0)(0,2) = pow(z,-2);\\n    dJ(0)(1,0) = 0;\\n    dJ(0)(1,1) = \
+0;\\n    dJ(0)(1,2) = 0;\\n    dJ(0)(2,0) = pow(z,-2);\\n    dJ(0)(2,1) = \
+0;\\n    dJ(0)(2,2) = (-2*x)/pow(z,3);\\n    dJ(1)(0,0) = 0;\\n    dJ(1)(0,1) \
+= 0;\\n    dJ(1)(0,2) = 0;\\n    dJ(1)(1,0) = 0;\\n    dJ(1)(1,1) = 0;\\n    \
+dJ(1)(1,2) = -pow(z,-2);\\n    dJ(1)(2,0) = 0;\\n    dJ(1)(2,1) = -pow(z,-2);\
+\\n    dJ(1)(2,2) = (2*y)/pow(z,3);\\n    dJ(2)(0,0) = -4/(r0*z - r1*z);\\n   \
+ dJ(2)(0,1) = 0;\\n    dJ(2)(0,2) = (4*x)/((r0 - r1)*pow(z,2));\\n    \
+dJ(2)(1,0) = 0;\\n    dJ(2)(1,1) = -4/(r0*z - r1*z);\\n    dJ(2)(1,2) = \
+(4*y)/((r0 - r1)*pow(z,2));\\n    dJ(2)(2,0) = (4*x)/((r0 - r1)*pow(z,2));\\n \
+   dJ(2)(2,1) = (4*y)/((r0 - r1)*pow(z,2));\\n    dJ(2)(2,2) = (-4*(pow(x,2) \
++ pow(y,2)))/((r0 - r1)*pow(z,3));\\n    break;\\n\\n  default:\\n#ifndef \
+__CUDACC__\\n    CCTK_VERROR(\\\"No jacobians available for patch %s\\\", \
+piece_name(static_cast<patch_piece>(patch)).c_str());\\n#else\\n    \
+assert(0);\\n#endif\\n    break;\\n  }\\n  // clang-format on\\n\\n  return \
+std_make_tuple(global_vars, J, dJ);\\n}\"\>"], "Print",
+ CellChangeTimes->{{3.931108931792441*^9, 3.931108934136101*^9}, 
+   3.931109004466782*^9, 3.931109102963723*^9, 3.931109305592656*^9, {
+   3.931109352951832*^9, 3.931109368686479*^9}, 3.931109426206606*^9, 
+   3.931109523825231*^9},
+ CellLabel->
+  "During evaluation of \
+In[8]:=",ExpressionUUID->"4a717648-7ec3-4df0-be69-f4baa08cffc0"]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{1920, 1008},
+WindowMargins->{{1920, Automatic}, {Automatic, 28}},
+TaggingRules->{
+ "WelcomeScreenSettings" -> {"FEStarting" -> False}, "TryRealOnly" -> False},
+DefaultNaturalLanguage->Language,
+Magnification:>1.5 Inherited,
+FrontEndVersion->"12.1 for Linux x86 (64-bit) (June 19, 2020)",
+StyleDefinitions->FrontEnd`FileName[{"Report"}, "StandardReport.nb", 
+  CharacterEncoding -> "UTF-8"],
+ExpressionUUID->"c7c54479-860f-4a9a-bc66-0ea79160d210"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[580, 22, 484, 7, 154, "Title",ExpressionUUID->"06cf51ac-2049-45e5-befb-5e7a3ea14fb4"],
+Cell[CellGroupData[{
+Cell[1089, 33, 352, 6, 111, "Section",ExpressionUUID->"4433c9f4-e92e-44f9-a920-9fcf114e462f"],
+Cell[1444, 41, 369, 8, 62, "Input",ExpressionUUID->"e02718e7-d42d-49ab-aad7-206b2a63f45a"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[1850, 54, 298, 5, 111, "Section",ExpressionUUID->"d9a6ec80-94ff-4010-a85e-5a76d9141abd"],
+Cell[2151, 61, 1248, 32, 181, "Text",ExpressionUUID->"a1dc3eef-aba1-46f5-8810-b875ef843746"],
+Cell[3402, 95, 4183, 91, 767, "Input",ExpressionUUID->"24dd430f-c257-4863-b47f-f7d4a552d3d2"],
+Cell[CellGroupData[{
+Cell[7610, 190, 7518, 136, 1951, "Input",ExpressionUUID->"91b56626-d4f4-413c-9e73-f5cc2632a663"],
+Cell[15131, 328, 8439, 114, 7808, "Print",ExpressionUUID->"4a717648-7ec3-4df0-be69-f4baa08cffc0"]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+

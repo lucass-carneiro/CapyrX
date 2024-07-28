@@ -1,0 +1,4 @@
+# make.code.defn file for the Thornburg06 patch system definition and tests
+
+# Source files in this directory
+SRCS = thornburg06.cxx tests.cxx

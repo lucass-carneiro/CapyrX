@@ -52,7 +52,7 @@ struct PatchFace {
  */
 struct Patch {
   /**
-   * String repreentation of the name of the patch.
+   * String representation of the name of the patch.
    */
   std::string name;
 
@@ -337,17 +337,17 @@ struct PatchTransformations {
   /**
    * Cartesian %Patch: Number of cells in the x direction
    */
-  int cartesian_ncells_i;
+  CCTK_INT cartesian_ncells_i;
 
   /**
    * Cartesian %Patch: Number of cells in the y direction
    */
-  int cartesian_ncells_j;
+  CCTK_INT cartesian_ncells_j;
 
   /**
    * Cartesian %Patch: Number of cells in the z direction
    */
-  int cartesian_ncells_k;
+  CCTK_INT cartesian_ncells_k;
 
   /**
    * Cubed Sphere %Patch: Inner radius
@@ -362,17 +362,17 @@ struct PatchTransformations {
   /**
    * Swirl %Patch: Number of cells in the x direction
    */
-  int swirl_ncells_i;
+  CCTK_INT swirl_ncells_i;
 
   /**
    * Swirl %Patch: Number of cells in the y direction
    */
-  int swirl_ncells_j;
+  CCTK_INT swirl_ncells_j;
 
   /**
    * Swirl %Patch: Number of cells in the z direction
    */
-  int swirl_ncells_k;
+  CCTK_INT swirl_ncells_k;
 
   /**
    * Cake %Patch: Radius of the outer boundary
@@ -389,31 +389,31 @@ struct PatchTransformations {
    * Cake %Patch: The number of cells in the x direction of the central
    * cartesian cube.
    */
-  int cake_cartesian_ncells_i;
+  CCTK_INT cake_cartesian_ncells_i;
 
   /**
    * Cake %Patch: The number of cells in the y direction of the central
    * cartesian cube.
    */
-  int cake_cartesian_ncells_j;
+  CCTK_INT cake_cartesian_ncells_j;
 
   /**
    * Cake %Patch: The number of cells in the z direction of the central
    * cartesian cube.
    */
-  int cake_cartesian_ncells_k;
+  CCTK_INT cake_cartesian_ncells_k;
 
   /**
    * Cake %Patch: The number of cells in the angular direction of spherical
    * patches.
    */
-  int cake_angular_cells;
+  CCTK_INT cake_angular_cells;
 
   /**
    * Cake %Patch: The number of cells in the radial direction of spherical
    * patches.
    */
-  int cake_radial_cells;
+  CCTK_INT cake_radial_cells;
 
   /**
    * Two Cubes %Patch: The starting x value of the coordinate system.
@@ -453,22 +453,42 @@ struct PatchTransformations {
   /**
    * Two Cubes %Patch: Number of cells in the left cube.
    */
-  int two_cubes_ncells_left;
+  CCTK_INT two_cubes_ncells_left;
 
   /**
    * Two Cubes %Patch: Number of cells in the right cube.
    */
-  int two_cubes_ncells_right;
+  CCTK_INT two_cubes_ncells_right;
 
   /**
    * Two Cubes %Patch: Number of cells in the y direction.
    */
-  int two_cubes_ncells_y;
+  CCTK_INT two_cubes_ncells_y;
 
   /**
    * Two Cubes %Patch: Number of cells in the z direction.
    */
-  int two_cubes_ncells_z;
+  CCTK_INT two_cubes_ncells_z;
+
+  /**
+   * Thornburg06 patch outer boundary radius.
+   */
+  CCTK_REAL thornburg06_outer_boundary_radius;
+
+  /**
+   * Thornburg06 patch inner boundary radius.
+   */
+  CCTK_REAL thornburg06_inner_boundary_radius;
+
+  /**
+   * Thornburg06 patch angular cells.
+   */
+  CCTK_INT thornburg06_angular_cells;
+
+  /**
+   * Thornburg06 patch radial cells.
+   */
+  CCTK_INT thornburg06_radial_cells;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -564,6 +584,14 @@ PatchSystem SetupCake();
  * A PatchSystem object with Two Cubes coordinates.
  */
 PatchSystem SetupTwoCubes();
+
+/**
+ * @brief Creates a Thornburg06 patch system
+ *
+ * @par Returns:
+ * A PatchSystem object with Thornburg06 coordinates.
+ */
+PatchSystem SetupThornburg06();
 
 /**
  * Pointer to the global PatchSystem objct use during a simulation

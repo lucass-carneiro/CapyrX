@@ -1,4 +1,5 @@
 #include "multipatch.hxx"
+#include "CParameters.h"
 
 #include <loop_device.hxx>
 
@@ -148,6 +149,24 @@ PatchTransformations::PatchTransformations()
       two_cubes_ncells_z([] {
         DECLARE_CCTK_PARAMETERS;
         return two_cubes_ncells_z;
+      }()),
+
+      // Thornburg06 Patch
+      thornburg06_outer_boundary_radius([] {
+        DECLARE_CCTK_PARAMETERS;
+        return thornburg06_outer_boundary_radius;
+      }()),
+      thornburg06_inner_boundary_radius([] {
+        DECLARE_CCTK_PARAMETERS;
+        return thornburg06_inner_boundary_radius;
+      }()),
+      thornburg06_angular_cells([] {
+        DECLARE_CCTK_PARAMETERS;
+        return thornburg06_angular_cells;
+      }()),
+      thornburg06_radial_cells([] {
+        DECLARE_CCTK_PARAMETERS;
+        return thornburg06_radial_cells;
       }()) {}
 
 std::unique_ptr<PatchSystem> the_patch_system;
@@ -255,6 +274,8 @@ extern "C" int MultiPatch_Setup() {
     the_patch_system = std::make_unique<PatchSystem>(SetupCake());
   else if (CCTK_EQUALS(patch_system, "Two Cubes"))
     the_patch_system = std::make_unique<PatchSystem>(SetupTwoCubes());
+  else if (CCTK_EQUALS(patch_system, "Thornburg06"))
+    the_patch_system = std::make_unique<PatchSystem>(SetupThornburg06());
   else
     CCTK_VERROR("Unknown patch system \"%s\"", patch_system);
 

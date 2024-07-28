@@ -85,7 +85,7 @@ def plot_ascii(args):
         filter_patch(data, 1),
         filter_patch(data, 2),
         filter_patch(data, 3),
-        filter_patch(data, 4)
+        # filter_patch(data, 4)
     ]
 
     if diverging == True:

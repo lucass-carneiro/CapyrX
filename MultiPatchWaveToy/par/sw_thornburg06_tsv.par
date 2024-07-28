@@ -24,11 +24,11 @@ ODESolvers::method = "RK4"
 
 MultiPatch::patch_system = "Thornburg06"
                                                                         
-MultiPatch::cake_outer_boundary_radius = 5.0
-MultiPatch::cake_inner_boundary_radius = 1.0
+MultiPatch::Thornburg06_outer_boundary_radius = 5.0
+MultiPatch::Thornburg06_inner_boundary_radius = 1.0
 
-MultiPatch::cake_angular_cells         = 20
-MultiPatch::cake_radial_cells          = 20
+MultiPatch::Thornburg06_angular_cells = 40
+MultiPatch::Thornburg06_radial_cells  = 40
 
 MultiPatchWaveToy::initial_condition  = "standing wave"
 

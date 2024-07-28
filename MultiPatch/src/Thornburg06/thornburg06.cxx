@@ -85,6 +85,7 @@ get_owner_patch(const PatchTransformations &pt, const svec &global_vars) {
 CCTK_DEVICE CCTK_HOST svec local2global(const PatchTransformations &pt,
                                         int patch, const svec &local_vars) {
   using std::pow;
+  using std::sqrt;
 
   const auto r0{pt.thornburg06_inner_boundary_radius};
   const auto r1{pt.thornburg06_outer_boundary_radius};
@@ -99,56 +100,56 @@ CCTK_DEVICE CCTK_HOST svec local2global(const PatchTransformations &pt,
 
   case patch_piece::plus_x:
     global_vars(0) =
-        (r0 - c * r0 + r1 + c * r1) / (2. * (1 + pow(a, 2) + pow(b, 2)));
-    global_vars(1) =
-        (b * (r0 - c * r0 + r1 + c * r1)) / (2. * (1 + pow(a, 2) + pow(b, 2)));
-    global_vars(2) =
-        (a * (r0 - c * r0 + r1 + c * r1)) / (2. * (1 + pow(a, 2) + pow(b, 2)));
+        (r0 - c * r0 + r1 + c * r1) / (2. * sqrt(1 + pow(a, 2) + pow(b, 2)));
+    global_vars(1) = (b * (r0 - c * r0 + r1 + c * r1)) /
+                     (2. * sqrt(1 + pow(a, 2) + pow(b, 2)));
+    global_vars(2) = (a * (r0 - c * r0 + r1 + c * r1)) /
+                     (2. * sqrt(1 + pow(a, 2) + pow(b, 2)));
     break;
 
   case patch_piece::plus_y:
-    global_vars(0) =
-        -(b * (r0 - c * r0 + r1 + c * r1)) / (2. * (1 + pow(a, 2) + pow(b, 2)));
+    global_vars(0) = -(b * (r0 - c * r0 + r1 + c * r1)) /
+                     (2. * sqrt(1 + pow(a, 2) + pow(b, 2)));
     global_vars(1) =
-        (r0 - c * r0 + r1 + c * r1) / (2. * (1 + pow(a, 2) + pow(b, 2)));
-    global_vars(2) =
-        (a * (r0 - c * r0 + r1 + c * r1)) / (2. * (1 + pow(a, 2) + pow(b, 2)));
+        (r0 - c * r0 + r1 + c * r1) / (2. * sqrt(1 + pow(a, 2) + pow(b, 2)));
+    global_vars(2) = (a * (r0 - c * r0 + r1 + c * r1)) /
+                     (2. * sqrt(1 + pow(a, 2) + pow(b, 2)));
     break;
 
   case patch_piece::minus_x:
     global_vars(0) =
-        -(r0 - c * r0 + r1 + c * r1) / (2. * (1 + pow(a, 2) + pow(b, 2)));
-    global_vars(1) =
-        -(b * (r0 - c * r0 + r1 + c * r1)) / (2. * (1 + pow(a, 2) + pow(b, 2)));
-    global_vars(2) =
-        (a * (r0 - c * r0 + r1 + c * r1)) / (2. * (1 + pow(a, 2) + pow(b, 2)));
+        -(r0 - c * r0 + r1 + c * r1) / (2. * sqrt(1 + pow(a, 2) + pow(b, 2)));
+    global_vars(1) = -(b * (r0 - c * r0 + r1 + c * r1)) /
+                     (2. * sqrt(1 + pow(a, 2) + pow(b, 2)));
+    global_vars(2) = (a * (r0 - c * r0 + r1 + c * r1)) /
+                     (2. * sqrt(1 + pow(a, 2) + pow(b, 2)));
     break;
 
   case patch_piece::minus_y:
-    global_vars(0) =
-        (b * (r0 - c * r0 + r1 + c * r1)) / (2. * (1 + pow(a, 2) + pow(b, 2)));
+    global_vars(0) = (b * (r0 - c * r0 + r1 + c * r1)) /
+                     (2. * sqrt(1 + pow(a, 2) + pow(b, 2)));
     global_vars(1) =
-        -(r0 - c * r0 + r1 + c * r1) / (2. * (1 + pow(a, 2) + pow(b, 2)));
-    global_vars(2) =
-        (a * (r0 - c * r0 + r1 + c * r1)) / (2. * (1 + pow(a, 2) + pow(b, 2)));
+        -(r0 - c * r0 + r1 + c * r1) / (2. * sqrt(1 + pow(a, 2) + pow(b, 2)));
+    global_vars(2) = (a * (r0 - c * r0 + r1 + c * r1)) /
+                     (2. * sqrt(1 + pow(a, 2) + pow(b, 2)));
     break;
 
   case patch_piece::plus_z:
-    global_vars(0) =
-        -(a * (r0 - c * r0 + r1 + c * r1)) / (2. * (1 + pow(a, 2) + pow(b, 2)));
-    global_vars(1) =
-        (b * (r0 - c * r0 + r1 + c * r1)) / (2. * (1 + pow(a, 2) + pow(b, 2)));
+    global_vars(0) = -(a * (r0 - c * r0 + r1 + c * r1)) /
+                     (2. * sqrt(1 + pow(a, 2) + pow(b, 2)));
+    global_vars(1) = (b * (r0 - c * r0 + r1 + c * r1)) /
+                     (2. * sqrt(1 + pow(a, 2) + pow(b, 2)));
     global_vars(2) =
-        (r0 - c * r0 + r1 + c * r1) / (2. * (1 + pow(a, 2) + pow(b, 2)));
+        (r0 - c * r0 + r1 + c * r1) / (2. * sqrt(1 + pow(a, 2) + pow(b, 2)));
     break;
 
   case patch_piece::minus_z:
-    global_vars(0) =
-        (a * (r0 - c * r0 + r1 + c * r1)) / (2. * (1 + pow(a, 2) + pow(b, 2)));
-    global_vars(1) =
-        (b * (r0 - c * r0 + r1 + c * r1)) / (2. * (1 + pow(a, 2) + pow(b, 2)));
+    global_vars(0) = (a * (r0 - c * r0 + r1 + c * r1)) /
+                     (2. * sqrt(1 + pow(a, 2) + pow(b, 2)));
+    global_vars(1) = (b * (r0 - c * r0 + r1 + c * r1)) /
+                     (2. * sqrt(1 + pow(a, 2) + pow(b, 2)));
     global_vars(2) =
-        -(r0 - c * r0 + r1 + c * r1) / (2. * (1 + pow(a, 2) + pow(b, 2)));
+        -(r0 - c * r0 + r1 + c * r1) / (2. * sqrt(1 + pow(a, 2) + pow(b, 2)));
     break;
 
   default:
@@ -167,6 +168,7 @@ CCTK_DEVICE CCTK_HOST svec local2global(const PatchTransformations &pt,
 CCTK_DEVICE CCTK_HOST std_tuple<int, svec>
 global2local(const PatchTransformations &pt, const svec &global_vars) {
   using std::pow;
+  using std::sqrt;
 
   const auto r0{pt.thornburg06_inner_boundary_radius};
   const auto r1{pt.thornburg06_outer_boundary_radius};
@@ -185,43 +187,42 @@ global2local(const PatchTransformations &pt, const svec &global_vars) {
     local_vars(0) = z / x;
     local_vars(1) = y / x;
     local_vars(2) =
-        (r0 * x + r1 * x - 2 * (pow(x, 2) + pow(y, 2) + pow(z, 2))) /
-        ((r0 - r1) * x);
+        (r0 + r1 - 2 * sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2))) / (r0 - r1);
     break;
 
   case patch_piece::plus_y:
     local_vars(0) = z / y;
     local_vars(1) = -(x / y);
-    local_vars(2) = (-2 * pow(x, 2) + (r0 + r1 - 2 * y) * y - 2 * pow(z, 2)) /
-                    ((r0 - r1) * y);
+    local_vars(2) =
+        (r0 + r1 - 2 * sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2))) / (r0 - r1);
     break;
 
   case patch_piece::minus_x:
     local_vars(0) = -(z / x);
     local_vars(1) = y / x;
     local_vars(2) =
-        (x * (r0 + r1 + 2 * x) + 2 * (pow(y, 2) + pow(z, 2))) / ((r0 - r1) * x);
+        (r0 + r1 - 2 * sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2))) / (r0 - r1);
     break;
 
   case patch_piece::minus_y:
     local_vars(0) = -(z / y);
     local_vars(1) = -(x / y);
-    local_vars(2) = (2 * pow(x, 2) + y * (r0 + r1 + 2 * y) + 2 * pow(z, 2)) /
-                    ((r0 - r1) * y);
+    local_vars(2) =
+        (r0 + r1 - 2 * sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2))) / (r0 - r1);
     break;
 
   case patch_piece::plus_z:
     local_vars(0) = -(x / z);
     local_vars(1) = y / z;
-    local_vars(2) = (-2 * pow(x, 2) - 2 * pow(y, 2) + (r0 + r1 - 2 * z) * z) /
-                    ((r0 - r1) * z);
+    local_vars(2) =
+        (r0 + r1 - 2 * sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2))) / (r0 - r1);
     break;
 
   case patch_piece::minus_z:
     local_vars(0) = -(x / z);
-    local_vars(1) = y / z;
-    local_vars(2) = (-2 * pow(x, 2) - 2 * pow(y, 2) + (r0 + r1 - 2 * z) * z) /
-                    ((r0 - r1) * z);
+    local_vars(1) = -(y / z);
+    local_vars(2) =
+        (r0 + r1 - 2 * sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2))) / (r0 - r1);
     break;
 
   default:
@@ -264,9 +265,9 @@ d2local_dglobal2(const PatchTransformations &pt, int patch,
     J(1)(0) = -(y/pow(x,2));
     J(1)(1) = 1/x;
     J(1)(2) = 0;
-    J(2)(0) = (2*(-pow(x,2) + pow(y,2) + pow(z,2)))/((r0 - r1)*pow(x,2));
-    J(2)(1) = (-4*y)/(r0*x - r1*x);
-    J(2)(2) = (-4*z)/(r0*x - r1*x);
+    J(2)(0) = (-2*x)/((r0 - r1)*sqrt(pow(x,2) + pow(y,2) + pow(z,2)));
+    J(2)(1) = (-2*y)/((r0 - r1)*sqrt(pow(x,2) + pow(y,2) + pow(z,2)));
+    J(2)(2) = (-2*z)/((r0 - r1)*sqrt(pow(x,2) + pow(y,2) + pow(z,2)));
 
     dJ(0)(0,0) = (2*z)/pow(x,3);
     dJ(0)(0,1) = 0;
@@ -286,15 +287,15 @@ d2local_dglobal2(const PatchTransformations &pt, int patch,
     dJ(1)(2,0) = 0;
     dJ(1)(2,1) = 0;
     dJ(1)(2,2) = 0;
-    dJ(2)(0,0) = (-4*(pow(y,2) + pow(z,2)))/((r0 - r1)*pow(x,3));
-    dJ(2)(0,1) = (4*y)/((r0 - r1)*pow(x,2));
-    dJ(2)(0,2) = (4*z)/((r0 - r1)*pow(x,2));
-    dJ(2)(1,0) = (4*y)/((r0 - r1)*pow(x,2));
-    dJ(2)(1,1) = -4/(r0*x - r1*x);
-    dJ(2)(1,2) = 0;
-    dJ(2)(2,0) = (4*z)/((r0 - r1)*pow(x,2));
-    dJ(2)(2,1) = 0;
-    dJ(2)(2,2) = -4/(r0*x - r1*x);
+    dJ(2)(0,0) = (-2*(pow(y,2) + pow(z,2)))/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(0,1) = (2*x*y)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(0,2) = (2*x*z)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(1,0) = (2*x*y)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(1,1) = (-2*(pow(x,2) + pow(z,2)))/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(1,2) = (2*y*z)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(2,0) = (2*x*z)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(2,1) = (2*y*z)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(2,2) = (-2*(pow(x,2) + pow(y,2)))/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
     break;
 
   case patch_piece::plus_y:
@@ -304,9 +305,9 @@ d2local_dglobal2(const PatchTransformations &pt, int patch,
     J(1)(0) = -(1/y);
     J(1)(1) = x/pow(y,2);
     J(1)(2) = 0;
-    J(2)(0) = (-4*x)/(r0*y - r1*y);
-    J(2)(1) = (2*(pow(x,2) - pow(y,2) + pow(z,2)))/((r0 - r1)*pow(y,2));
-    J(2)(2) = (-4*z)/(r0*y - r1*y);
+    J(2)(0) = (-2*x)/((r0 - r1)*sqrt(pow(x,2) + pow(y,2) + pow(z,2)));
+    J(2)(1) = (-2*y)/((r0 - r1)*sqrt(pow(x,2) + pow(y,2) + pow(z,2)));
+    J(2)(2) = (-2*z)/((r0 - r1)*sqrt(pow(x,2) + pow(y,2) + pow(z,2)));
 
     dJ(0)(0,0) = 0;
     dJ(0)(0,1) = 0;
@@ -326,15 +327,15 @@ d2local_dglobal2(const PatchTransformations &pt, int patch,
     dJ(1)(2,0) = 0;
     dJ(1)(2,1) = 0;
     dJ(1)(2,2) = 0;
-    dJ(2)(0,0) = -4/(r0*y - r1*y);
-    dJ(2)(0,1) = (4*x)/((r0 - r1)*pow(y,2));
-    dJ(2)(0,2) = 0;
-    dJ(2)(1,0) = (4*x)/((r0 - r1)*pow(y,2));
-    dJ(2)(1,1) = (-4*(pow(x,2) + pow(z,2)))/((r0 - r1)*pow(y,3));
-    dJ(2)(1,2) = (4*z)/((r0 - r1)*pow(y,2));
-    dJ(2)(2,0) = 0;
-    dJ(2)(2,1) = (4*z)/((r0 - r1)*pow(y,2));
-    dJ(2)(2,2) = -4/(r0*y - r1*y);
+    dJ(2)(0,0) = (-2*(pow(y,2) + pow(z,2)))/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(0,1) = (2*x*y)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(0,2) = (2*x*z)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(1,0) = (2*x*y)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(1,1) = (-2*(pow(x,2) + pow(z,2)))/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(1,2) = (2*y*z)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(2,0) = (2*x*z)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(2,1) = (2*y*z)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(2,2) = (-2*(pow(x,2) + pow(y,2)))/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
     break;
 
   case patch_piece::minus_x:
@@ -344,9 +345,9 @@ d2local_dglobal2(const PatchTransformations &pt, int patch,
     J(1)(0) = -(y/pow(x,2));
     J(1)(1) = 1/x;
     J(1)(2) = 0;
-    J(2)(0) = (2*(pow(x,2) - pow(y,2) - pow(z,2)))/((r0 - r1)*pow(x,2));
-    J(2)(1) = (4*y)/(r0*x - r1*x);
-    J(2)(2) = (4*z)/(r0*x - r1*x);
+    J(2)(0) = (-2*x)/((r0 - r1)*sqrt(pow(x,2) + pow(y,2) + pow(z,2)));
+    J(2)(1) = (-2*y)/((r0 - r1)*sqrt(pow(x,2) + pow(y,2) + pow(z,2)));
+    J(2)(2) = (-2*z)/((r0 - r1)*sqrt(pow(x,2) + pow(y,2) + pow(z,2)));
 
     dJ(0)(0,0) = (-2*z)/pow(x,3);
     dJ(0)(0,1) = 0;
@@ -366,15 +367,15 @@ d2local_dglobal2(const PatchTransformations &pt, int patch,
     dJ(1)(2,0) = 0;
     dJ(1)(2,1) = 0;
     dJ(1)(2,2) = 0;
-    dJ(2)(0,0) = (4*(pow(y,2) + pow(z,2)))/((r0 - r1)*pow(x,3));
-    dJ(2)(0,1) = (-4*y)/((r0 - r1)*pow(x,2));
-    dJ(2)(0,2) = (-4*z)/((r0 - r1)*pow(x,2));
-    dJ(2)(1,0) = (-4*y)/((r0 - r1)*pow(x,2));
-    dJ(2)(1,1) = 4/(r0*x - r1*x);
-    dJ(2)(1,2) = 0;
-    dJ(2)(2,0) = (-4*z)/((r0 - r1)*pow(x,2));
-    dJ(2)(2,1) = 0;
-    dJ(2)(2,2) = 4/(r0*x - r1*x);
+    dJ(2)(0,0) = (-2*(pow(y,2) + pow(z,2)))/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(0,1) = (2*x*y)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(0,2) = (2*x*z)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(1,0) = (2*x*y)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(1,1) = (-2*(pow(x,2) + pow(z,2)))/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(1,2) = (2*y*z)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(2,0) = (2*x*z)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(2,1) = (2*y*z)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(2,2) = (-2*(pow(x,2) + pow(y,2)))/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
     break;
 
   case patch_piece::minus_y:
@@ -384,9 +385,9 @@ d2local_dglobal2(const PatchTransformations &pt, int patch,
     J(1)(0) = -(1/y);
     J(1)(1) = x/pow(y,2);
     J(1)(2) = 0;
-    J(2)(0) = (4*x)/(r0*y - r1*y);
-    J(2)(1) = (-2*(pow(x,2) - pow(y,2) + pow(z,2)))/((r0 - r1)*pow(y,2));
-    J(2)(2) = (4*z)/(r0*y - r1*y);
+    J(2)(0) = (-2*x)/((r0 - r1)*sqrt(pow(x,2) + pow(y,2) + pow(z,2)));
+    J(2)(1) = (-2*y)/((r0 - r1)*sqrt(pow(x,2) + pow(y,2) + pow(z,2)));
+    J(2)(2) = (-2*z)/((r0 - r1)*sqrt(pow(x,2) + pow(y,2) + pow(z,2)));
 
     dJ(0)(0,0) = 0;
     dJ(0)(0,1) = 0;
@@ -406,15 +407,15 @@ d2local_dglobal2(const PatchTransformations &pt, int patch,
     dJ(1)(2,0) = 0;
     dJ(1)(2,1) = 0;
     dJ(1)(2,2) = 0;
-    dJ(2)(0,0) = 4/(r0*y - r1*y);
-    dJ(2)(0,1) = (-4*x)/((r0 - r1)*pow(y,2));
-    dJ(2)(0,2) = 0;
-    dJ(2)(1,0) = (-4*x)/((r0 - r1)*pow(y,2));
-    dJ(2)(1,1) = (4*(pow(x,2) + pow(z,2)))/((r0 - r1)*pow(y,3));
-    dJ(2)(1,2) = (-4*z)/((r0 - r1)*pow(y,2));
-    dJ(2)(2,0) = 0;
-    dJ(2)(2,1) = (-4*z)/((r0 - r1)*pow(y,2));
-    dJ(2)(2,2) = 4/(r0*y - r1*y);
+    dJ(2)(0,0) = (-2*(pow(y,2) + pow(z,2)))/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(0,1) = (2*x*y)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(0,2) = (2*x*z)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(1,0) = (2*x*y)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(1,1) = (-2*(pow(x,2) + pow(z,2)))/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(1,2) = (2*y*z)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(2,0) = (2*x*z)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(2,1) = (2*y*z)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(2,2) = (-2*(pow(x,2) + pow(y,2)))/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
     break;
 
   case patch_piece::plus_z:
@@ -424,9 +425,9 @@ d2local_dglobal2(const PatchTransformations &pt, int patch,
     J(1)(0) = 0;
     J(1)(1) = 1/z;
     J(1)(2) = -(y/pow(z,2));
-    J(2)(0) = (-4*x)/(r0*z - r1*z);
-    J(2)(1) = (-4*y)/(r0*z - r1*z);
-    J(2)(2) = (2*(pow(x,2) + pow(y,2) - pow(z,2)))/((r0 - r1)*pow(z,2));
+    J(2)(0) = (-2*x)/((r0 - r1)*sqrt(pow(x,2) + pow(y,2) + pow(z,2)));
+    J(2)(1) = (-2*y)/((r0 - r1)*sqrt(pow(x,2) + pow(y,2) + pow(z,2)));
+    J(2)(2) = (-2*z)/((r0 - r1)*sqrt(pow(x,2) + pow(y,2) + pow(z,2)));
 
     dJ(0)(0,0) = 0;
     dJ(0)(0,1) = 0;
@@ -446,15 +447,15 @@ d2local_dglobal2(const PatchTransformations &pt, int patch,
     dJ(1)(2,0) = 0;
     dJ(1)(2,1) = -pow(z,-2);
     dJ(1)(2,2) = (2*y)/pow(z,3);
-    dJ(2)(0,0) = -4/(r0*z - r1*z);
-    dJ(2)(0,1) = 0;
-    dJ(2)(0,2) = (4*x)/((r0 - r1)*pow(z,2));
-    dJ(2)(1,0) = 0;
-    dJ(2)(1,1) = -4/(r0*z - r1*z);
-    dJ(2)(1,2) = (4*y)/((r0 - r1)*pow(z,2));
-    dJ(2)(2,0) = (4*x)/((r0 - r1)*pow(z,2));
-    dJ(2)(2,1) = (4*y)/((r0 - r1)*pow(z,2));
-    dJ(2)(2,2) = (-4*(pow(x,2) + pow(y,2)))/((r0 - r1)*pow(z,3));
+    dJ(2)(0,0) = (-2*(pow(y,2) + pow(z,2)))/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(0,1) = (2*x*y)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(0,2) = (2*x*z)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(1,0) = (2*x*y)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(1,1) = (-2*(pow(x,2) + pow(z,2)))/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(1,2) = (2*y*z)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(2,0) = (2*x*z)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(2,1) = (2*y*z)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(2,2) = (-2*(pow(x,2) + pow(y,2)))/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
     break;
 
   case patch_piece::minus_z:
@@ -462,11 +463,11 @@ d2local_dglobal2(const PatchTransformations &pt, int patch,
     J(0)(1) = 0;
     J(0)(2) = x/pow(z,2);
     J(1)(0) = 0;
-    J(1)(1) = 1/z;
-    J(1)(2) = -(y/pow(z,2));
-    J(2)(0) = (-4*x)/(r0*z - r1*z);
-    J(2)(1) = (-4*y)/(r0*z - r1*z);
-    J(2)(2) = (2*(pow(x,2) + pow(y,2) - pow(z,2)))/((r0 - r1)*pow(z,2));
+    J(1)(1) = -(1/z);
+    J(1)(2) = y/pow(z,2);
+    J(2)(0) = (-2*x)/((r0 - r1)*sqrt(pow(x,2) + pow(y,2) + pow(z,2)));
+    J(2)(1) = (-2*y)/((r0 - r1)*sqrt(pow(x,2) + pow(y,2) + pow(z,2)));
+    J(2)(2) = (-2*z)/((r0 - r1)*sqrt(pow(x,2) + pow(y,2) + pow(z,2)));
 
     dJ(0)(0,0) = 0;
     dJ(0)(0,1) = 0;
@@ -482,19 +483,19 @@ d2local_dglobal2(const PatchTransformations &pt, int patch,
     dJ(1)(0,2) = 0;
     dJ(1)(1,0) = 0;
     dJ(1)(1,1) = 0;
-    dJ(1)(1,2) = -pow(z,-2);
+    dJ(1)(1,2) = pow(z,-2);
     dJ(1)(2,0) = 0;
-    dJ(1)(2,1) = -pow(z,-2);
-    dJ(1)(2,2) = (2*y)/pow(z,3);
-    dJ(2)(0,0) = -4/(r0*z - r1*z);
-    dJ(2)(0,1) = 0;
-    dJ(2)(0,2) = (4*x)/((r0 - r1)*pow(z,2));
-    dJ(2)(1,0) = 0;
-    dJ(2)(1,1) = -4/(r0*z - r1*z);
-    dJ(2)(1,2) = (4*y)/((r0 - r1)*pow(z,2));
-    dJ(2)(2,0) = (4*x)/((r0 - r1)*pow(z,2));
-    dJ(2)(2,1) = (4*y)/((r0 - r1)*pow(z,2));
-    dJ(2)(2,2) = (-4*(pow(x,2) + pow(y,2)))/((r0 - r1)*pow(z,3));
+    dJ(1)(2,1) = pow(z,-2);
+    dJ(1)(2,2) = (-2*y)/pow(z,3);
+    dJ(2)(0,0) = (-2*(pow(y,2) + pow(z,2)))/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(0,1) = (2*x*y)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(0,2) = (2*x*z)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(1,0) = (2*x*y)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(1,1) = (-2*(pow(x,2) + pow(z,2)))/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(1,2) = (2*y*z)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(2,0) = (2*x*z)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(2,1) = (2*y*z)/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
+    dJ(2)(2,2) = (-2*(pow(x,2) + pow(y,2)))/((r0 - r1)*pow(pow(x,2) + pow(y,2) + pow(z,2),1.5));
     break;
 
   default:
@@ -529,36 +530,26 @@ template <patch_piece p> Patch make_patch(const PatchTransformations &pt) {
 
   patch.is_cartesian = false;
 
+  const PatchFace px{false, patch_piece::plus_x};
+  const PatchFace py{false, patch_piece::plus_y};
+  const PatchFace mx{false, patch_piece::minus_x};
+  const PatchFace my{false, patch_piece::minus_y};
+  const PatchFace pz{false, patch_piece::plus_z};
+  const PatchFace mz{false, patch_piece::minus_z};
+  const PatchFace ob{true, -1};
+
   if constexpr (p == patch_piece::plus_x) {
-    // clang-format off
-    patch.faces = {
-      {
-        {false, patch_piece::minus_z},
-        {false, patch_piece::minus_y},
-        {true, -1}
-      },
-      {
-        {false, patch_piece::plus_z},
-        {false, patch_piece::plus_y},        
-        {true, -1},
-      }
-    };
-    // clang-format on
-  } else if constexpr (p == patch_piece::plus_x) {
-    // clang-format off
-    patch.faces = {
-      {
-        {false, patch_piece::minus_z},
-        {false, patch_piece::minus_y},
-        {true, -1}
-      },
-      {
-        {false, patch_piece::plus_z},
-        {false, patch_piece::plus_y},        
-        {true, -1},
-      }
-    };
-    // clang-format on
+    patch.faces = {{mz, my, ob}, {pz, py, ob}};
+  } else if constexpr (p == patch_piece::plus_y) {
+    patch.faces = {{mz, px, ob}, {pz, mx, ob}};
+  } else if constexpr (p == patch_piece::minus_x) {
+    patch.faces = {{mz, py, ob}, {pz, my, ob}};
+  } else if constexpr (p == patch_piece::minus_y) {
+    patch.faces = {{mz, mx, ob}, {pz, px, ob}};
+  } else if constexpr (p == patch_piece::plus_z) {
+    patch.faces = {{px, my, ob}, {mx, py, ob}};
+  } else if constexpr (p == patch_piece::minus_z) {
+    patch.faces = {{mx, my, ob}, {px, py, ob}};
   }
 
   return patch;
@@ -567,24 +558,23 @@ template <patch_piece p> Patch make_patch(const PatchTransformations &pt) {
 } // namespace Thornburg06
 
 PatchSystem SetupThornburg06() {
-  using namespace Thornburg06;
-
   PatchTransformations pt;
-  pt.global2local = &global2local;
-  pt.local2global = &local2global;
-  pt.dlocal_dglobal = &dlocal_dglobal;
-  pt.d2local_dglobal2 = &d2local_dglobal2;
-  pt.global2local_device = &global2local;
-  pt.local2global_device = &local2global;
-  pt.dlocal_dglobal_device = &dlocal_dglobal;
-  pt.d2local_dglobal2_device = &d2local_dglobal2;
+  pt.global2local = &Thornburg06::global2local;
+  pt.local2global = &Thornburg06::local2global;
+  pt.dlocal_dglobal = &Thornburg06::dlocal_dglobal;
+  pt.d2local_dglobal2 = &Thornburg06::d2local_dglobal2;
+  pt.global2local_device = &Thornburg06::global2local;
+  pt.local2global_device = &Thornburg06::local2global;
+  pt.dlocal_dglobal_device = &Thornburg06::dlocal_dglobal;
+  pt.d2local_dglobal2_device = &Thornburg06::d2local_dglobal2;
 
-  const auto patches = std::vector<Patch>{make_patch<patch_piece::minus_x>(pt),
-                                          make_patch<patch_piece::plus_x>(pt),
-                                          make_patch<patch_piece::minus_y>(pt),
-                                          make_patch<patch_piece::plus_y>(pt),
-                                          make_patch<patch_piece::minus_z>(pt),
-                                          make_patch<patch_piece::plus_z>(pt)};
+  const auto patches = std::vector<Patch>{
+      Thornburg06::make_patch<Thornburg06::patch_piece::plus_x>(pt),
+      Thornburg06::make_patch<Thornburg06::patch_piece::plus_y>(pt),
+      Thornburg06::make_patch<Thornburg06::patch_piece::minus_x>(pt),
+      Thornburg06::make_patch<Thornburg06::patch_piece::minus_y>(pt),
+      Thornburg06::make_patch<Thornburg06::patch_piece::plus_z>(pt),
+      Thornburg06::make_patch<Thornburg06::patch_piece::minus_z>(pt)};
 
   return PatchSystem("Thornburg06", std::move(patches), std::move(pt));
 }

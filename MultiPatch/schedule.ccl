@@ -50,4 +50,12 @@ if (run_tests) {
       OPTIONS: meta
     } "Perform Two Cubes patch system tests"
   }
+
+  if (CCTK_EQUALS(patch_system, "Thornburg06")) {
+    SCHEDULE MultiPatch_run_thornburg06_tests AT wragh
+    {
+      LANG: C
+      OPTIONS: meta
+    } "Perform Thornburg06 patch system tests"
+  }
 }

@@ -49,7 +49,8 @@ I will assume that you already did, if you plan on following along
 
 1. We will be using `Mathematica`.
 2. Go to `Capyrx/MultiPatch/src` and create a folder called `Thornburg06`
-3. Lets create a subfolder called `resources` to keep our `Mathematica` files. The firs file we will be looking at is `Thornburg06_deductions`
+3. Lets create a subfolder called `resources` to keep our `Mathematica` files.
+4. We will be looking at is `Thornburg06_deductions.nb` and `Thornburg06_visualize.nb`
 
 # Matheamtica time!
 
@@ -121,3 +122,8 @@ The `Thornburg06` coordinates will need the following parameters:
 * Let us look at:
   1. `Thornburg06_transforms_codegen.nb`
   2. `Thornburg06_jacobians_codegen.nb`
+* With these we can implement the patch system.
+
+# Unit tests
+
+# Wave Toy

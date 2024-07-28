@@ -106,7 +106,7 @@ dlocal_dglobal(const PatchTransformations &pt, int patch,
                const svec &local_vars);
 
 /**
- * @brief Creates patch piece
+ * @brief Creates a Thornburg06 patch piece
  *
  * @tparam p The piece of the patch to make.
  * @param pt The patch transformation object with patch data.

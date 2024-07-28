@@ -275,7 +275,7 @@ extern "C" int MultiPatch_Setup() {
   else if (CCTK_EQUALS(patch_system, "Two Cubes"))
     the_patch_system = std::make_unique<PatchSystem>(SetupTwoCubes());
   else if (CCTK_EQUALS(patch_system, "Thornburg06"))
-    the_patch_system = std::make_unique<PatchSystem>(SetupTwoCubes());
+    the_patch_system = std::make_unique<PatchSystem>(SetupThornburg06());
   else
     CCTK_VERROR("Unknown patch system \"%s\"", patch_system);
 

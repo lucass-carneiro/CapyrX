@@ -1,5 +1,5 @@
 ---
-author: Lucas Timotheo Sanches
+author: Lucas Timotheo Sanches and Erik Schnetter
 title: CapyrX
 subtitle: Implementing the `Thornburg06` coordinate system
 date: July 29, 2024

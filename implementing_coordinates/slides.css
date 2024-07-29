@@ -1,10 +1,13 @@
 <style>
+
 .slides {
     font-size: 0.75em;
 }
+
 .reveal ul {
     display: block;
 }
+
 .reveal ol {
     display: block;
 }

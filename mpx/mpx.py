@@ -20,6 +20,8 @@ Options:
   --slice-val=<val>           The (global) value of the coordinate slice to plot [default: 0.0]
   --refinement-level=<level>  The refinement level to plot [default: 0].
   --openpmd-format=<format>   The underlying format of OpenPMD files [default: .bp5].
+  --plot-tri                  Plots the underlying triangulation used by matplotlib.
+  --mask-radius=<radius>      Masks a radius from the origin. Zero radius means no mask. Usefull in Thornburg06 [default: 0.0].
 """
 
 

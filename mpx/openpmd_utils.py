@@ -5,6 +5,7 @@ import openpmd_api as io
 import logging
 logger = logging.getLogger(__name__)
 
+
 def openpmd_to_dataframe(fname, verbose, iteration_index, mesh_name, gf_name):
     # Based on
     # https://gist.github.com/stevenrbrandt/ef3718d52680d8a4e6accbad198a0b42
@@ -58,7 +59,7 @@ def openpmd_to_dataframe(fname, verbose, iteration_index, mesh_name, gf_name):
         chunck_i_range = range(chunk_i_0, chunk_i_0 + chunk_nx)
         chunck_j_range = range(chunk_j_0, chunk_j_0 + chunk_ny)
         chunck_k_range = range(chunk_k_0, chunk_k_0 + chunk_nz)
-        
+
         # Rearrange data for dataframe
         for k in chunck_k_range:
             for j in chunck_j_range:
@@ -75,7 +76,8 @@ def openpmd_to_dataframe(fname, verbose, iteration_index, mesh_name, gf_name):
 
     if verbose:
         logger.info(
-            f"Merging dataframes:\n  File: {fname}\n  Iteration: {iteration_index}\n  Mesh: {mesh_name}\n  Grid function: {gf_name}"
+            f"Merging dataframes:\n  File: {fname}\n  Iteration: {
+                iteration_index}\n  Mesh: {mesh_name}\n  Grid function: {gf_name}"
         )
 
     merged_df = pd.DataFrame(
@@ -84,14 +86,14 @@ def openpmd_to_dataframe(fname, verbose, iteration_index, mesh_name, gf_name):
     )
 
     merged_df = merged_df.sort_values(["i", "j", "k"]).reset_index(drop=True)
-    
     return merged_df
+
 
 def filter_multipatch_dataframes(verbose, patch, merged_df, slice_coord, slice_val):
     if verbose:
         logger.info(f"Filtering main data for {slice_coord} = {slice_val}")
 
-    if(patch[1] == False):
+    if (patch[1] == False):
         if slice_coord == "z":
             filtered_df = merged_df[np.isclose(merged_df["x"], slice_val)]
         elif slice_coord == "y":
@@ -103,16 +105,20 @@ def filter_multipatch_dataframes(verbose, patch, merged_df, slice_coord, slice_v
             raise RuntimeError(f"Unrecognized slice coordinate {slice_coord}")
     else:
         if slice_coord == "z":
-            filtered_df = merged_df[np.isclose(merged_df["coordinatesx_vcoordz"], slice_val)]
+            filtered_df = merged_df[np.isclose(
+                merged_df["coordinatesx_vcoordz"], slice_val)]
         elif slice_coord == "y":
-            filtered_df = merged_df[np.isclose(merged_df["coordinatesx_vcoordy"], slice_val)]
+            filtered_df = merged_df[np.isclose(
+                merged_df["coordinatesx_vcoordy"], slice_val)]
         elif slice_coord == "x":
-            filtered_df = merged_df[np.isclose(merged_df["coordinatesx_vcoordx"], slice_val)]
+            filtered_df = merged_df[np.isclose(
+                merged_df["coordinatesx_vcoordx"], slice_val)]
         else:
             logger.error(f"Unrecognized slice coordinate {slice_coord}")
             raise RuntimeError(f"Unrecognized slice coordinate {slice_coord}")
-    
+
     return filtered_df
+
 
 def merge_multipatch_dataframes(verbose, fname, iteration_index, patch, level, thorn_name, group_name, gf_name, slice_coord, slice_val):
     # Coordiantes
@@ -167,13 +173,21 @@ def merge_multipatch_dataframes(verbose, fname, iteration_index, patch, level, t
 
     if verbose:
         logger.info("Merging main data with coordinates")
-    
+
     merged_df = pd.merge(coords_df, main_gf_df, on=merge_cols)
 
+    if verbose:
+        logger.info("Filtering ghost zones")
+
     merged_df = merged_df[
-        (np.abs(merged_df["x"] < 1.0) | np.abs(np.isclose(merged_df["x"], 1.0))) &
-        (np.abs(merged_df["y"] < 1.0) | np.abs(np.isclose(merged_df["y"], 1.0))) &
-        (np.abs(merged_df["z"] < 1.0) | np.abs(np.isclose(merged_df["z"], 1.0)))
+        ((merged_df["x"] > -1.0) | np.isclose(merged_df["x"], -1.0)) &
+        ((merged_df["x"] < 1.0) | np.isclose(merged_df["x"], 1.0)) &
+
+        ((merged_df["y"] > -1.0) | np.isclose(merged_df["y"], -1.0)) &
+        ((merged_df["y"] < 1.0) | np.isclose(merged_df["y"], 1.0)) &
+
+        ((merged_df["z"] > -1.0) | np.isclose(merged_df["z"], -1.0)) &
+        ((merged_df["z"] < 1.0) | np.isclose(merged_df["z"], 1.0))
     ]
 
     return filter_multipatch_dataframes(verbose, patch, merged_df, slice_coord, slice_val)

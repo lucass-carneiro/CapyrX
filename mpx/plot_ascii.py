@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.tri as tri
 
 import logging
 logger = logging.getLogger(__name__)
@@ -83,8 +84,8 @@ def plot_ascii(args):
     data_list = [
         filter_patch(data, 0),
         filter_patch(data, 1),
-        filter_patch(data, 2),
-        filter_patch(data, 3),
+        # filter_patch(data, 2),
+        # filter_patch(data, 3),
         # filter_patch(data, 4)
     ]
 
@@ -96,10 +97,17 @@ def plot_ascii(args):
         else:
             lvls = np.linspace(varmin, varmax, 101)
             for df in data_list:
+                x = df["vcoordx"].to_numpy()
+                y = df["vcoordy"].to_numpy()
+                z = df["u"].to_numpy()
+
+                triang = tri.Triangulation(x, y)
+                # triang.set_mask(np.hypot(x[triang.triangles].mean(axis=1), y[triang.triangles].mean(axis=1)) < 1.0)
+
+                plt.triplot(triang)
                 plt.tricontourf(
-                    df["vcoordx"],
-                    df["vcoordy"],
-                    df["u"],
+                    triang,
+                    z,
                     cmap="seismic",
                     levels=lvls
                 )
@@ -115,8 +123,8 @@ def plot_ascii(args):
     plt.xlabel("x")
     plt.ylabel("y")
 
-    cb = plt.colorbar()
-    cb.ax.set_ylabel("u")
+    # cb = plt.colorbar()
+    # cb.ax.set_ylabel("u")
 
     plt.tight_layout()
 

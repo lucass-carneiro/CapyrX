@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.tri as tri
 
 import openpmd_utils as opmdu
 
@@ -39,6 +40,9 @@ def plot_openpmd_slice(args):
     autorange = bool(args["--autorange"])
 
     gf_name = f"{thorn_name}_{var_name}"
+
+    plot_tri = bool(args["--plot-tri"])
+    mask_radius = float(args["--mask-radius"])
 
     # Get the name of the global coordinate GFs used for the plots
     if slice_coord == "z":
@@ -85,6 +89,19 @@ def plot_openpmd_slice(args):
             # print(df[np.isclose(df["coordinatesx_vcoordz"], 1.0)])
             # exit()
 
+            x = df[global_x].to_numpy()
+            y = df[global_y].to_numpy()
+            gf = df[gf_name].to_numpy()
+
+            triang = tri.Triangulation(x, y)
+            if (mask_radius > 0.0 and not np.isclose(mask_radius, 0.0)):
+                triang.set_mask(
+                    np.hypot(
+                        x[triang.triangles].mean(axis=1),
+                        y[triang.triangles].mean(axis=1)
+                    ) < mask_radius
+                )
+
             if diverging == True:
                 lvls = None
 
@@ -93,9 +110,8 @@ def plot_openpmd_slice(args):
                 else:
                     lvls = np.linspace(varmin, varmax, 101)
                 plt.tricontourf(
-                    df[global_x],
-                    df[global_y],
-                    df[gf_name],
+                    triang,
+                    gf,
                     cmap="seismic",
                     levels=lvls
                 )
@@ -106,6 +122,9 @@ def plot_openpmd_slice(args):
                     df[gf_name],
                     levels=100,
                 )
+
+            if (plot_tri):
+                plt.triplot(triang)
 
         plt.xlabel(global_x)
         plt.ylabel(global_y)

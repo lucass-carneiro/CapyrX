@@ -1,8 +1,17 @@
 ---
-author: Lucas Timotheo Sanches
+author: Lucas Timotheo Sanches and Erik Schnetter
 title: CapyrX
 subtitle: Implementing the `Thornburg06` coordinate system
 date: July 29, 2024
+
+revealjs-url: "https://unpkg.com/reveal.js"
+theme: dracula
+controls: false
+progress: true
+slideNumber: true
+width: 960
+height: 700
+margin: 0.0
 ---
 
 # What's CapyrX ?
@@ -126,4 +135,81 @@ The `Thornburg06` coordinates will need the following parameters:
 
 # Unit tests
 
+* It is important to test the implementation of out coordinate system.
+* In order to do that, we implement unit tests for each patch system.
+* `CapyrX` has a set of common unit testing tools that can be found in the `MultiPatch/src/tests.hxx`
+
+---
+
+* Each coordinate further implements their unit tests in a `tests.cxx` folder. Users are responsible for implementing tests they think are relevant, but we have a few suggestions of useful tests that we have implemented in our patches
+
+1. Given a random global point, test if the `get_owner_patch` function returns the correct patch
+2. Given a random global point, test that `local2global(global2local(global)) == global`
+3. Given a random local point and patch, test that `global2local(local2global(local, patch)) == (local, patch)`
+4. Test that Jacobians and Jacobian derivatives obtained using finite differences are compatible with analytic implemented results.
+
+---
+
+* To schedule tests for running, we create a `C` linkage function called `MultiPatch_run_thornburg06_tests`
+* We schedule this function in the `shcedule.ccl` file if the `run_tests` parameter is true. This is similar in all implemented patch systems.
+* Since tests use random values, the parameter `test_repetitions` controls how many times to repeat each test, thus selecting new test values.
+* To ensure reproducibility of the random numbers generated, the random seed and random generating algorithm are chosen at compile time.
+
+---
+
+* To actually run unit tests, we recommend the usage of the parameter files located in the `TestMultiPatch` thorn.
+* While this is not strictly necessary, the `TestMultiPatch` thorn does additional testing of the system by performing interpolation and synchronization tests.
+* In principle, tough, unit tests can be run independently of this thorn in production runs by simply setting the parameter to true.
+
 # Wave Toy
+
+* Let's run a wave toy using our new coordinate
+* To do that, we have implemented the `MultiPatchWaveToy` thorn.
+* This thorn does all the boring projections on the finite difference derivatives that are required when using `MultiPatch`.
+
+---
+
+* This serves both as test and example implementation for future users.
+* We plan to eventually provide something akin to `GlobalDerivatives` to facilitate usage.
+* The projections were calculated with the help of `Mathematica` once again.
+* The code generation routines for derivative projections can be found in `MultiPatchWaveToy/resources/derivatives.nb`
+
+# Plots
+
+* Plotting `MultiPatch` simulation results can be painful.
+* `Llama` had `VisIt` support and recently `Kuibit` support. For `CapyrX` we have no such luck.
+* To ease the pain, `CapyrX` provides the `mpx` python script.
+* I highly recommend using this script instead of rolling your own. I also recommend using this with `openPMD` data files (the `ASCII` support is not as developed).
+
+---
+
+The first step is installing the script dependencies. Navigate to the `CapyrX` repository folder and type
+
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+---
+
+Let's dissect the common usage:
+
+```bash
+python3 mpx/mpx.py \
+  plot-openpmd-slice \
+  ~/simulations/mp/output-0000/sw_cake_opmd/sw_cake_opmd \
+  multipatchwavetoy \
+  state \
+  u \
+  0 \
+  "[['01', True], ['02', True], ['03', True], ['04', True], ['00', True]]" \
+  --verbose \
+  --diverging \
+  --varmin=-1.0 \
+  --varmax=1.0 \
+  --slice-coord=z \
+  --slice-val=0.0 \
+  --save
+```

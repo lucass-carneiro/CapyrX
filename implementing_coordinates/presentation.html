@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="generator" content="pandoc">
-  <meta name="author" content="Lucas Timotheo Sanches">
+  <meta name="author" content="Lucas Timotheo Sanches and Erik Schnetter">
   <meta name="dcterms.date" content="2024-07-29">
   <title>CapyrX</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -95,14 +95,17 @@
     code span.vs { color: #4070a0; } /* VerbatimString */
     code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
   </style>
-  <link rel="stylesheet" href="https://unpkg.com/reveal.js/dist/theme/serif.css" id="theme">
+  <link rel="stylesheet" href="https://unpkg.com/reveal.js/dist/theme/dracula.css" id="theme">
   <style>
+
   .slides {
       font-size: 0.75em;
   }
+
   .reveal ul {
       display: block;
   }
+
   .reveal ol {
       display: block;
   }
@@ -133,7 +136,7 @@
   <h1 class="title">CapyrX</h1>
   <p class="subtitle">Implementing the <code>Thornburg06</code>
 coordinate system</p>
-  <p class="author">Lucas Timotheo Sanches</p>
+  <p class="author">Lucas Timotheo Sanches and Erik Schnetter</p>
   <p class="date">July 29, 2024</p>
 </section>
 
@@ -319,15 +322,135 @@ declaration</li>
 </ul>
 </section>
 
+<section>
 <section id="unit-tests" class="title-slide slide level1">
 <h1>Unit tests</h1>
-
+<ul>
+<li>It is important to test the implementation of out coordinate
+system.</li>
+<li>In order to do that, we implement unit tests for each patch
+system.</li>
+<li><code>CapyrX</code> has a set of common unit testing tools that can
+be found in the <code>MultiPatch/src/tests.hxx</code></li>
+</ul>
 </section>
+<section class="slide level2">
 
+<ul>
+<li>Each coordinate further implements their unit tests in a
+<code>tests.cxx</code> folder. Users are responsible for implementing
+tests they think are relevant, but we have a few suggestions of useful
+tests that we have implemented in our patches</li>
+</ul>
+<ol type="1">
+<li>Given a random global point, test if the
+<code>get_owner_patch</code> function returns the correct patch</li>
+<li>Given a random global point, test that
+<code>local2global(global2local(global)) == global</code></li>
+<li>Given a random local point and patch, test that
+<code>global2local(local2global(local, patch)) == (local, patch)</code></li>
+<li>Test that Jacobians and Jacobian derivatives obtained using finite
+differences are compatible with analytic implemented results.</li>
+</ol>
+</section>
+<section class="slide level2">
+
+<ul>
+<li>To schedule tests for running, we create a <code>C</code> linkage
+function called <code>MultiPatch_run_thornburg06_tests</code></li>
+<li>We schedule this function in the <code>shcedule.ccl</code> file if
+the <code>run_tests</code> parameter is true. This is similar in all
+implemented patch systems.</li>
+<li>Since tests use random values, the parameter
+<code>test_repetitions</code> controls how many times to repeat each
+test, thus selecting new test values.</li>
+<li>To ensure reproducibility of the random numbers generated, the
+random seed and random generating algorithm are chosen at compile
+time.</li>
+</ul>
+</section>
+<section class="slide level2">
+
+<ul>
+<li>To actually run unit tests, we recommend the usage of the parameter
+files located in the <code>TestMultiPatch</code> thorn.</li>
+<li>While this is not strictly necessary, the
+<code>TestMultiPatch</code> thorn does additional testing of the system
+by performing interpolation and synchronization tests.</li>
+<li>In principle, tough, unit tests can be run independently of this
+thorn in production runs by simply setting the parameter to true.</li>
+</ul>
+</section></section>
+<section>
 <section id="wave-toy" class="title-slide slide level1">
 <h1>Wave Toy</h1>
-
+<ul>
+<li>Let’s run a wave toy using our new coordinate</li>
+<li>To do that, we have implemented the <code>MultiPatchWaveToy</code>
+thorn.</li>
+<li>This thorn does all the boring projections on the finite difference
+derivatives that are required when using <code>MultiPatch</code>.</li>
+</ul>
 </section>
+<section class="slide level2">
+
+<ul>
+<li>This serves both as test and example implementation for future
+users.</li>
+<li>We plan to eventually provide something akin to
+<code>GlobalDerivatives</code> to facilitate usage.</li>
+<li>The projections were calculated with the help of
+<code>Mathematica</code> once again.</li>
+<li>The code generation routines for derivative projections can be found
+in <code>MultiPatchWaveToy/resources/derivatives.nb</code></li>
+</ul>
+</section></section>
+<section>
+<section id="plots" class="title-slide slide level1">
+<h1>Plots</h1>
+<ul>
+<li>Plotting <code>MultiPatch</code> simulation results can be
+painful.</li>
+<li><code>Llama</code> had <code>VisIt</code> support and recently
+<code>Kuibit</code> support. For <code>CapyrX</code> we have no such
+luck.</li>
+<li>To ease the pain, <code>CapyrX</code> provides the <code>mpx</code>
+python script.</li>
+<li>I highly recommend using this script instead of rolling your own. I
+also recommend using this with <code>openPMD</code> data files (the
+<code>ASCII</code> support is not as developed).</li>
+</ul>
+</section>
+<section class="slide level2">
+
+<p>The first step is installing the script dependencies. Navigate to the
+<code>CapyrX</code> repository folder and type</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-m</span> venv venv</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> venv/bin/activate</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install <span class="at">--upgrade</span> pip</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install <span class="at">-r</span> requirements.txt</span></code></pre></div>
+</section>
+<section class="slide level2">
+
+<p>Let’s dissect the common usage:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> mpx/mpx.py <span class="dt">\</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  plot-openpmd-slice <span class="dt">\</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  ~/simulations/mp/output-0000/sw_cake_opmd/sw_cake_opmd <span class="dt">\</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  multipatchwavetoy <span class="dt">\</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  state <span class="dt">\</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  u <span class="dt">\</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  0 <span class="dt">\</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;[[&#39;01&#39;, True], [&#39;02&#39;, True], [&#39;03&#39;, True], [&#39;04&#39;, True], [&#39;00&#39;, True]]&quot;</span> <span class="dt">\</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--verbose</span> <span class="dt">\</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--diverging</span> <span class="dt">\</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--varmin</span><span class="op">=</span>-1.0 <span class="dt">\</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--varmax</span><span class="op">=</span>1.0 <span class="dt">\</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slice-coord</span><span class="op">=</span>z <span class="dt">\</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">--slice-val</span><span class="op">=</span>0.0 <span class="dt">\</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">--save</span></span></code></pre></div>
+</section></section>
     </div>
   </div>
 
@@ -344,7 +467,7 @@ declaration</li>
       // https://revealjs.com/config/
       Reveal.initialize({
         // Display controls in the bottom right corner
-        controls: true,
+        controls: false,
 
         // Help the user learn the controls by providing hints, for example by
         // bouncing the down arrow when they first encounter a vertical slide
@@ -361,7 +484,7 @@ declaration</li>
         progress: true,
 
         // Display the page number of the current slide
-        slideNumber: false,
+        slideNumber: true,
 
         // 'all', 'print', or 'speaker'
         showSlideNumber: 'all',
@@ -482,6 +605,16 @@ declaration</li>
         // devices. It is advisable to set this to a lower number than
         // viewDistance in order to save resources.
         mobileViewDistance: 2,
+
+        // The "normal" size of the presentation, aspect ratio will be preserved
+        // when the presentation is scaled to fit different resolutions. Can be
+        // specified using percentage units.
+        width: 960,
+
+        height: 700,
+
+        // Factor of the display size that should remain empty around the content
+        margin: 0,
 
         // reveal.js plugins
         plugins: [

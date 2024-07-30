@@ -38,6 +38,9 @@ struct PointDebugData {
 };
 
 using PointListDebugData = std::array<std::vector<PointDebugData>, dim>;
+using PointListDebugMap = std::map<Location, PointListDebugData>;
+using InterpResultDebugMap =
+    std::map<Location, std::vector<std::vector<CCTK_REAL> > >;
 
 #endif
 
@@ -73,6 +76,106 @@ template <> struct hash<MultiPatch::Location> {
 } // namespace std
 
 namespace MultiPatch {
+
+#ifdef CCTK_DEBUG
+
+static inline void
+dump_point_map(const std::vector<CCTK_INT> &varinds, const cGH *cctkGH,
+               const PointListDebugMap &source_mapping_debug_data) noexcept {
+  using std::fopen, std::fclose, std::fprintf;
+
+  CCTK_VINFO("Dumping source points data");
+
+  for (const auto &varind : varinds) {
+    const auto var_name{std::string(CCTK_FullVarName(varind))};
+    const auto iter_idx{std::to_string(cctkGH->cctk_iteration)};
+    const auto out_file_name{var_name + "_src_pts_iter_" + iter_idx +
+                             std::string(".txt")};
+
+    auto file{fopen(out_file_name.c_str(), "w")};
+
+    fprintf(file, "#1:patch\t"
+                  "2:level\t"
+                  "3:index\t"
+                  "4:component\t"
+                  "5:direction\t"
+                  "6:NI[direction]\t"
+                  "7:patch_faces[0].is_outer_boundary\t"
+                  "8:patch_faces[0].other_patch\t"
+                  "9:patch_faces[1].is_outer_boundary\t"
+                  "10:patch_faces[1].other_patch\t"
+                  "11:i\t"
+                  "12:j\t"
+                  "13:k\t"
+                  "14:x\t"
+                  "15:y\t"
+                  "16:z\t"
+                  "17:coord\n");
+
+    for (const auto &[location, point_list] : source_mapping_debug_data) {
+      for (int d = 0; d < dim; ++d) {
+        for (const auto &point_data : point_list[d]) {
+          fprintf(file,
+                  "%i\t"     // patch
+                  "%i\t"     // level
+                  "%i\t"     // index
+                  "%i\t"     // component
+                  "%i\t"     // direction
+                  "%i\t"     // NI[direction]
+                  "%c\t"     // patch_faces[0].is_outer_boundary
+                  "%i\t"     // patch_faces[0].other_patch
+                  "%c\t"     // patch_faces[1].is_outer_boundary
+                  "%i\t"     // patch_faces[1].other_patch
+                  "%i\t"     // i
+                  "%i\t"     // j
+                  "%i\t"     // k
+                  "%.16f\t"  // x
+                  "%.16f\t"  // y
+                  "%.16f\t"  // z
+                  "%.16f\n", // coord
+                  location.patch, location.level, location.index,
+                  location.component, d, point_data.p.NI[d],
+                  point_data.patch_faces[0].is_outer_boundary ? 'y' : 'n',
+                  point_data.patch_faces[0].other_patch,
+                  point_data.patch_faces[1].is_outer_boundary ? 'y' : 'n',
+                  point_data.patch_faces[1].other_patch, point_data.p.i,
+                  point_data.p.j, point_data.p.k, point_data.p.x,
+                  point_data.p.y, point_data.p.z, point_data.coord);
+        }
+      }
+    }
+    fclose(file);
+  }
+}
+
+static inline void
+dump_interp_result(const std::vector<CCTK_INT> &varinds, const cGH *cctkGH,
+                   const InterpResultDebugMap &interp_result_dbg_map) noexcept {
+  using std::fopen, std::fclose, std::fprintf;
+
+  CCTK_VINFO("Dumping interp results");
+
+  for (const auto &[location, results] : interp_result_dbg_map) {
+    for (std::size_t i = 0; i < results.size(); i++) {
+      const auto varind{varinds[i]};
+      const auto var_name{std::string(CCTK_FullVarName(varind))};
+      const auto iter_idx{std::to_string(cctkGH->cctk_iteration)};
+      const auto out_file_name{var_name + "_interp_result_iter_" + iter_idx +
+                               std::string(".txt")};
+
+      auto file{fopen(out_file_name.c_str(), "a")};
+
+      for (const auto &result : results[i]) {
+        fprintf(file, "%i\t%i\t%i\t%i\t%.16f\n", location.patch, location.level,
+                location.index, location.component, result);
+      }
+
+      fclose(file);
+    }
+  }
+}
+
+#endif
 
 extern "C" void
 MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
@@ -175,7 +278,7 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
   std::map<Location, PointList> source_mapping{};
 
 #ifdef CCTK_DEBUG
-  std::map<Location, PointListDebugData> source_mapping_debug_data{};
+  PointListDebugMap source_mapping_debug_data{};
 #endif
 
   CarpetX::active_levels_t().loop_parallel(
@@ -237,81 +340,15 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
         }
       });
 
-  // Debug step: Dump source points
 #ifdef CCTK_DEBUG
 #pragma omp critical
-  {
-    using std::fopen, std::fclose, std::fprintf;
-
-    CCTK_VINFO("Dumping source points data");
-
-    for (const auto &varind : varinds) {
-      const auto var_name{std::string(CCTK_FullVarName(varind))};
-      const auto iter_idx{std::to_string(cctkGH->cctk_iteration)};
-      const auto out_file_name{var_name + "_src_pts_iter_" + iter_idx +
-                               std::string(".txt")};
-
-      auto src_pts_file{fopen(out_file_name.c_str(), "w")};
-
-      fprintf(src_pts_file, "#1:patch\t"
-                            "2:level\t"
-                            "3:index\t"
-                            "4:component\t"
-                            "5:direction\t"
-                            "6:NI[direction]\t"
-                            "7:patch_faces[0].is_outer_boundary\t"
-                            "8:patch_faces[0].other_patch\t"
-                            "9:patch_faces[1].is_outer_boundary\t"
-                            "10:patch_faces[1].other_patch\t"
-                            "11:i\t"
-                            "12:j\t"
-                            "13:k\t"
-                            "14:x\t"
-                            "15:y\t"
-                            "16:z\t"
-                            "17:coord\n");
-
-      for (const auto &[location, point_list] : source_mapping_debug_data) {
-        for (int d = 0; d < dim; ++d) {
-          for (const auto &point_data : point_list[d]) {
-            fprintf(src_pts_file,
-                    "%i\t"     // patch
-                    "%i\t"     // level
-                    "%i\t"     // index
-                    "%i\t"     // component
-                    "%i\t"     // direction
-                    "%i\t"     // NI[direction]
-                    "%c\t"     // patch_faces[0].is_outer_boundary
-                    "%i\t"     // patch_faces[0].other_patch
-                    "%c\t"     // patch_faces[1].is_outer_boundary
-                    "%i\t"     // patch_faces[1].other_patch
-                    "%i\t"     // i
-                    "%i\t"     // j
-                    "%i\t"     // k
-                    "%.16f\t"  // x
-                    "%.16f\t"  // y
-                    "%.16f\t"  // z
-                    "%.16f\n", // coord
-                    location.patch, location.level, location.index,
-                    location.component, d, point_data.p.NI[d],
-                    point_data.patch_faces[0].is_outer_boundary ? 'y' : 'n',
-                    point_data.patch_faces[0].other_patch,
-                    point_data.patch_faces[1].is_outer_boundary ? 'y' : 'n',
-                    point_data.patch_faces[1].other_patch, point_data.p.i,
-                    point_data.p.j, point_data.p.k, point_data.p.x,
-                    point_data.p.y, point_data.p.z, point_data.coord);
-          }
-        }
-      }
-      fclose(src_pts_file);
-    }
-  }
+  { dump_point_map(varinds, cctkGH, source_mapping_debug_data); }
 #endif
 
   // Step 2: Interpolate to these coordinates
 
   // Gather all coordinates
-  std::array<std::vector<CCTK_REAL>, dim> coords;
+  PointList coords{};
   for (const auto &[location, point_list] : source_mapping) {
     for (int d = 0; d < dim; ++d) {
       coords[d].insert(coords[d].end(), point_list[d].begin(),
@@ -320,7 +357,8 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
   }
 
   assert(coords[0].size() == coords[1].size() &&
-         coords[0].size() == coords[2].size());
+         coords[0].size() == coords[2].size() &&
+         coords[1].size() == coords[2].size());
 
   const std::size_t nvars = varinds.size();
   const std::size_t npoints = coords[0].size();
@@ -341,24 +379,31 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
 
   // Interpolate
   const bool allow_boundaries = false;
-  Interpolate(cctkGH, coords[0].size(), coords[0].data(), coords[1].data(),
+  Interpolate(cctkGH, npoints, coords[0].data(), coords[1].data(),
               coords[2].data(), varinds.size(), varinds.data(),
               operations.data(), allow_boundaries, resultptrs.data());
 
+#ifdef CCTK_DEBUG
   for (size_t n = 0; n < nvars; ++n) {
     for (size_t i = 0; i < results.at(n).size(); ++i) {
       using std::isfinite;
       const auto x = results.at(n).at(i);
       if (!isfinite(x)) {
-        CCTK_VINFO("var=%zu i=%zu coord=[%g,%g,%g] value=%g", n, i,
-                   coords[0][i], coords[1][i], coords[2][i], x);
+        CCTK_VERROR("Non finite value encoutered: var=%zu i=%zu "
+                    "coord=[%g,%g,%g] value=%g",
+                    n, i, coords[0][i], coords[1][i], coords[2][i], x);
       }
-      assert(isfinite(x));
     }
   }
+#endif
 
   // Scatter interpolated values
   std::map<Location, std::vector<std::vector<CCTK_REAL> > > result_mapping;
+
+#ifdef CCTK_DEBUG
+  InterpResultDebugMap interp_result_dbg_map{};
+#endif
+
   std::size_t pos = 0;
   for (const auto &[location, source_points] : source_mapping) {
     const std::size_t length = source_points[0].size();
@@ -368,9 +413,23 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
                                  results.at(n).data() + pos,
                                  results.at(n).data() + pos + length);
     pos += length;
-    result_mapping[location] = std::move(result_values);
+
+#pragma omp critical
+    {
+#ifdef CCTK_DEBUG
+      result_mapping[location] = result_values;
+      interp_result_dbg_map[location] = result_values;
+#else
+      result_mapping[location] = std::move(result_values);
+#endif
+    }
   }
   assert(pos == results.at(0).size());
+
+#ifdef CCTK_DEBUG
+#pragma omp critical
+  { dump_interp_result(varinds, cctkGH, interp_result_dbg_map); }
+#endif
 
   // Step 3: Write back results
   CarpetX::active_levels_t().loop_parallel([&](int patch, int level, int index,

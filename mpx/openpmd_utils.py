@@ -76,8 +76,9 @@ def openpmd_to_dataframe(fname, verbose, iteration_index, mesh_name, gf_name):
 
     if verbose:
         logger.info(
-            f"Merging dataframes:\n  File: {fname}\n  Iteration: {
-                iteration_index}\n  Mesh: {mesh_name}\n  Grid function: {gf_name}"
+            # fmt: off
+            f"Merging dataframes:\n  File: {fname}\n  Iteration: {iteration_index}\n  Mesh: {mesh_name}\n  Grid function: {gf_name}"
+            # fmt: on
         )
 
     merged_df = pd.DataFrame(

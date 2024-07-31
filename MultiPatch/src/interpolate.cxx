@@ -849,7 +849,7 @@ static inline void interpolate_single(const CCTK_POINTER_TO_CONST cctkGH_,
                          [&](const point_location &loc) {
                            return loc.patch == patch && loc.level == level &&
                                   loc.component == component && loc.i == p.i &&
-                                  loc.j == p.k && loc.k == p.k;
+                                  loc.j == p.j && loc.k == p.k;
                          })};
 
         if (srx_pt_iter == src_pts.locations.end()) {

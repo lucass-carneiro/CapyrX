@@ -3,6 +3,8 @@
 #include "../../../CarpetX/CarpetX/src/driver.hxx"
 #include "../../../CarpetX/CarpetX/src/schedule.hxx"
 
+#include <cstddef>
+#include <cstdio>
 #include <loop.hxx>
 
 #include <cctk.h>
@@ -35,6 +37,27 @@ struct PointDebugData {
   CCTK_REAL coord{};
   std::array<PatchFace, 2> patch_faces{};
   Loop::PointDesc p;
+};
+
+struct point_location {
+  int patch;
+  int level;
+  int component;
+  int i;
+  int j;
+  int k;
+};
+
+struct source_points {
+  std::vector<CCTK_REAL> global_xs{};
+  std::vector<CCTK_REAL> global_ys{};
+  std::vector<CCTK_REAL> global_zs{};
+
+  std::vector<CCTK_REAL> local_as{};
+  std::vector<CCTK_REAL> local_bs{};
+  std::vector<CCTK_REAL> local_cs{};
+
+  std::vector<point_location> locations{};
 };
 
 using PointListDebugData = std::array<std::vector<PointDebugData>, dim>;
@@ -78,6 +101,135 @@ template <> struct hash<MultiPatch::Location> {
 namespace MultiPatch {
 
 #ifdef CCTK_DEBUG
+
+static inline void dump_src_pts(const std::vector<CCTK_INT> &varinds,
+                                const cGH *cctkGH,
+                                const source_points &src_pts) {
+  using std::fopen, std::fclose;
+
+  for (const auto &varind : varinds) {
+    const auto var_name{std::string(CCTK_FullVarName(varind))};
+    const auto iter_idx{std::to_string(cctkGH->cctk_iteration)};
+    const auto out_file_name{var_name + "_src_pts_iter_" + iter_idx +
+                             std::string(".txt")};
+
+    auto file{fopen(out_file_name.c_str(), "w")};
+
+    fprintf(file, "#1:patch\t"
+                  "2:level\t"
+                  "3:component\t"
+                  "4:i\t"
+                  "5:j\t"
+                  "6:k\t"
+                  "7:a\t"
+                  "8:b\t"
+                  "9:c\t"
+                  "10:vcoordx\t"
+                  "11:vcoordy\t"
+                  "12:vcoordz\n");
+
+    for (std::size_t I = 0; I < src_pts.global_xs.size(); I++) {
+      const auto patch{src_pts.locations[I].patch};
+      const auto level{src_pts.locations[I].level};
+      const auto component{src_pts.locations[I].component};
+
+      const auto i{src_pts.locations[I].i};
+      const auto j{src_pts.locations[I].j};
+      const auto k{src_pts.locations[I].k};
+
+      const auto gx{src_pts.global_xs[I]};
+      const auto gy{src_pts.global_ys[I]};
+      const auto gz{src_pts.global_zs[I]};
+
+      const auto la{src_pts.local_as[I]};
+      const auto lb{src_pts.local_bs[I]};
+      const auto lc{src_pts.local_cs[I]};
+
+      fprintf(file,
+              "%i\t"     // patch
+              "%i\t"     // level
+              "%i\t"     // component
+              "%i\t"     // i
+              "%i\t"     // j
+              "%i\t"     // k
+              "%.16f\t"  // a
+              "%.16f\t"  // b
+              "%.16f\t"  // c
+              "%.16f\t"  // vcoordx
+              "%.16f\t"  // vcoordy
+              "%.16f\n", // vcoordz
+              patch, level, component, i, j, k, la, lb, lc, gx, gy, gz);
+    }
+
+    fclose(file);
+  }
+}
+
+static inline void
+dump_interp_results(int varind, const cGH *cctkGH, const source_points &src_pts,
+                    const std::vector<CCTK_REAL> &interp_results) {
+  using std::fopen, std::fclose;
+
+  const auto var_name{std::string(CCTK_FullVarName(varind))};
+  const auto iter_idx{std::to_string(cctkGH->cctk_iteration)};
+  const auto out_file_name{var_name + "_interp_result_iter_" + iter_idx +
+                           std::string(".txt")};
+
+  auto file{fopen(out_file_name.c_str(), "w")};
+
+  fprintf(file, "#1:patch\t"
+                "2:level\t"
+                "3:component\t"
+                "4:i\t"
+                "5:j\t"
+                "6:k\t"
+                "7:a\t"
+                "8:b\t"
+                "9:c\t"
+                "10:vcoordx\t"
+                "11:vcoordy\t"
+                "12:vcoordz\t"
+                "13:interp_result\n");
+
+  for (std::size_t I = 0; I < src_pts.global_xs.size(); I++) {
+    const auto patch{src_pts.locations[I].patch};
+    const auto level{src_pts.locations[I].level};
+    const auto component{src_pts.locations[I].component};
+
+    const auto i{src_pts.locations[I].i};
+    const auto j{src_pts.locations[I].j};
+    const auto k{src_pts.locations[I].k};
+
+    const auto gx{src_pts.global_xs[I]};
+    const auto gy{src_pts.global_ys[I]};
+    const auto gz{src_pts.global_zs[I]};
+
+    const auto la{src_pts.local_as[I]};
+    const auto lb{src_pts.local_bs[I]};
+    const auto lc{src_pts.local_cs[I]};
+
+    const auto interp_result{interp_results[I]};
+
+    fprintf(file,
+            "%i\t"     // patch
+            "%i\t"     // level
+            "%i\t"     // component
+            "%i\t"     // i
+            "%i\t"     // j
+            "%i\t"     // k
+            "%.16f\t"  // a
+            "%.16f\t"  // b
+            "%.16f\t"  // c
+            "%.16f\t"  // vcoordx
+            "%.16f\t"  // vcoordy
+            "%.16f\t"  // vcoordz
+            "%.16f\n", // interp result
+            patch, level, component, i, j, k, la, lb, lc, gx, gy, gz,
+            interp_result);
+  }
+
+  fclose(file);
+}
 
 static inline void
 dump_point_map(const std::vector<CCTK_INT> &varinds, const cGH *cctkGH,
@@ -177,10 +329,9 @@ dump_interp_result(const std::vector<CCTK_INT> &varinds, const cGH *cctkGH,
 
 #endif
 
-extern "C" void
-MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
-                        const CCTK_INT nvars_,
-                        const CCTK_INT *restrict const varinds_) {
+static inline void interpolate_batch(const CCTK_POINTER_TO_CONST cctkGH_,
+                                     const CCTK_INT nvars_,
+                                     const CCTK_INT *restrict const varinds_) {
   // Step 0: Check input
 
   // Function Input checking
@@ -475,6 +626,255 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
       assert(pos == result_values.at(0).size());
     }
   });
+}
+
+static inline void interpolate_single(const CCTK_POINTER_TO_CONST cctkGH_,
+                                      const CCTK_INT nvars_,
+                                      const CCTK_INT *restrict const varinds_) {
+  // Step 0: Check input
+
+  // Function Input checking
+  if (cctkGH_ == nullptr) {
+    CCTK_VERROR("The cctkGH_ pointer is null. Unable to continue");
+  }
+
+  if (nvars_ < 0) {
+    CCTK_VERROR("The nvars_ variable is negatie. Unable to continue");
+  }
+
+  if (varinds_ == nullptr) {
+    CCTK_VERROR("The varinds_ pointer is null. Unable to continue");
+  }
+
+  // Cast GH and wrap varinds
+  const auto cctkGH{static_cast<const cGH *>(cctkGH_)};
+  const std::vector<CCTK_INT> varinds(varinds_, varinds_ + nvars_);
+
+  // Check input varinds validity
+  for (const auto &varind : varinds) {
+    if (varind < 0) {
+      CCTK_VERROR("The varind %i is negative", varind);
+    }
+
+    const auto gi{CCTK_GroupIndexFromVarI(varind)};
+
+    if (gi < 0) {
+      CCTK_VERROR("The goup index %i for varind %i is negative", gi, varind);
+    }
+
+    const auto v0{CCTK_FirstVarIndexI(gi)};
+
+    if (gi < 0) {
+      CCTK_VERROR("The first var index %i for varind %i is negative", v0,
+                  varind);
+    }
+
+    const auto vi{varind - v0};
+
+    if (vi < 0) {
+      CCTK_VERROR("The index %i for varind %i is negative", vi, varind);
+    }
+
+    cGroup group_data{};
+    const auto result{CCTK_GroupData(gi, &group_data)};
+
+    switch (result) {
+    case -1:
+      CCTK_VERROR("Error while retrieving group data for group index %i in "
+                  "varind %i: The "
+                  "group index is invalid",
+                  gi, varind);
+      break;
+
+    case -2:
+      CCTK_VERROR("Error while retrieving group data for group index %i in "
+                  "varind %i: The group data buffer is null",
+                  gi, varind);
+      break;
+
+    default:
+      break;
+    }
+
+    if (group_data.grouptype != CCTK_GF) {
+      CCTK_VERROR("The group data member \"grouptype\" in group index %i in "
+                  "varinds %i is not of type \"CCTK_GF\"",
+                  gi, varind);
+    }
+
+    if (group_data.vartype != CCTK_VARIABLE_REAL) {
+      CCTK_VERROR("The group data member \"vartype\" in group index %i in "
+                  "varinds %i is not of type \"CCTK_VARIABLE_REAL\"",
+                  gi, varind);
+    }
+
+    if (group_data.disttype != CCTK_DISTRIB_DEFAULT) {
+      CCTK_VERROR("The group data member \"disttype\" in group index %i in "
+                  "varinds %i is not of type \"CCTK_DISTRIB_DEFAULT\"",
+                  gi, varind);
+    }
+
+    if (group_data.dim != dim) {
+      CCTK_VERROR("The group data member \"dim\" in group index %i in varinds "
+                  "%i is not %i",
+                  gi, varind, dim);
+    }
+
+    // TODO: Check centerings table
+  }
+
+  // 1: Gather source coordinates and their locations
+  source_points src_pts{};
+
+  CarpetX::active_levels_t().loop_parallel(
+      [&](int patch, int level, int index, int component, const cGH *cctkGH) {
+        const Loop::GridDescBase grid(cctkGH);
+        const std::array<int, dim> centering{0, 0, 0};
+        const Loop::GF3D2layout layout(cctkGH, centering);
+
+        const auto &current_patch{the_patch_system->patches.at(patch)};
+        const auto &patch_faces{current_patch.faces};
+
+        const std::array<Loop::GF3D2<const CCTK_REAL>, dim> vcoords{
+            Loop::GF3D2<const CCTK_REAL>(
+                layout, static_cast<const CCTK_REAL *>(CCTK_VarDataPtr(
+                            cctkGH, 0, "CoordinatesX::vcoordx"))),
+            Loop::GF3D2<const CCTK_REAL>(
+                layout, static_cast<const CCTK_REAL *>(CCTK_VarDataPtr(
+                            cctkGH, 0, "CoordinatesX::vcoordy"))),
+            Loop::GF3D2<const CCTK_REAL>(
+                layout, static_cast<const CCTK_REAL *>(CCTK_VarDataPtr(
+                            cctkGH, 0, "CoordinatesX::vcoordz")))};
+
+        // Note: This includes symmetry points
+        grid.loop_bnd<0, 0, 0>(grid.nghostzones, [&](const Loop::PointDesc &p) {
+          // Skip outer boundaries
+          for (int d = 0; d < dim; ++d) {
+            if (p.NI[d] < 0 && patch_faces[0][d].is_outer_boundary) {
+              return;
+            }
+
+            if (p.NI[d] > 0 && patch_faces[1][d].is_outer_boundary) {
+              return;
+            }
+          }
+
+          point_location loc{patch, level, component, p.i, p.j, p.k};
+
+#pragma omp single
+          {
+            src_pts.global_xs.push_back(vcoords[0](p.I));
+            src_pts.global_ys.push_back(vcoords[1](p.I));
+            src_pts.global_zs.push_back(vcoords[2](p.I));
+
+            src_pts.local_as.push_back(p.x);
+            src_pts.local_bs.push_back(p.y);
+            src_pts.local_cs.push_back(p.z);
+
+            src_pts.locations.push_back(loc);
+          }
+        });
+      });
+
+  assert(src_pts.global_xs.size() == src_pts.global_ys.size());
+  assert(src_pts.global_xs.size() == src_pts.global_zs.size());
+  assert(src_pts.global_ys.size() == src_pts.global_zs.size());
+
+  assert(src_pts.global_xs.size() == src_pts.local_as.size());
+  assert(src_pts.global_xs.size() == src_pts.local_bs.size());
+  assert(src_pts.global_xs.size() == src_pts.local_cs.size());
+
+  assert(src_pts.global_ys.size() == src_pts.local_as.size());
+  assert(src_pts.global_ys.size() == src_pts.local_bs.size());
+  assert(src_pts.global_ys.size() == src_pts.local_cs.size());
+
+  assert(src_pts.global_zs.size() == src_pts.local_as.size());
+  assert(src_pts.global_zs.size() == src_pts.local_bs.size());
+  assert(src_pts.global_zs.size() == src_pts.local_cs.size());
+
+  assert(src_pts.local_as.size() == src_pts.local_bs.size());
+  assert(src_pts.local_as.size() == src_pts.local_cs.size());
+  assert(src_pts.local_bs.size() == src_pts.local_cs.size());
+
+  const auto num_src_pts{src_pts.global_xs.size()};
+
+#ifdef CCTK_DEBUG
+#pragma omp critical
+  { dump_src_pts(varinds, cctkGH, src_pts); }
+#endif
+
+  // 2: Allocate The results of the interpolation
+  std::vector<CCTK_REAL> interp_results(num_src_pts);
+  std::vector<CCTK_REAL *> interp_results_ptrs(num_src_pts);
+
+  interp_results.reserve(src_pts.local_as.size());
+  interp_results_ptrs.reserve(src_pts.local_as.size());
+
+  std::fill(interp_results.begin(), interp_results.end(), 0.0);
+  std::fill(interp_results_ptrs.begin(), interp_results_ptrs.end(), nullptr);
+
+  for (std::size_t i = 0; i < num_src_pts; i++) {
+    interp_results_ptrs[i] = &(interp_results[i]);
+  }
+
+  // 3: For each function in the group, do
+  for (const auto &varind : varinds) {
+    // 3.1: Create a sing element array of var indices and operations
+    const int varind_array[1] = {varind};
+    const int operation_array[1] = {0};
+
+    // 3.2: Interpolate
+    Interpolate(cctkGH, num_src_pts, src_pts.global_xs.data(),
+                src_pts.global_ys.data(), src_pts.global_zs.data(), 1,
+                varind_array, operation_array, false,
+                interp_results_ptrs.data());
+
+    // 3.4 Loop over all locations
+    CarpetX::active_levels_t().loop_parallel([&](int patch, int level,
+                                                 int index, int component,
+                                                 const cGH *cctkGH) {
+      const Loop::GridDescBase grid(cctkGH);
+      const std::array<int, dim> centering{0, 0, 0};
+      const Loop::GF3D2layout layout(cctkGH, centering);
+
+      const Loop::GF3D2<CCTK_REAL> var(
+          layout,
+          static_cast<CCTK_REAL *>(CCTK_VarDataPtrI(cctkGH, 0, varind)));
+
+      grid.loop_bnd<0, 0, 0>(grid.nghostzones, [&](const Loop::PointDesc &p) {
+        // 3.5: If this location was stored in the source pointss list, write
+        // the interpolated result to the variable at this point
+        const auto srx_pt_iter{
+            std::find_if(src_pts.locations.begin(), src_pts.locations.end(),
+                         [&](const point_location &loc) {
+                           return loc.patch == patch && loc.level == level &&
+                                  loc.component == component && loc.i == p.i &&
+                                  loc.j == p.k && loc.k == p.k;
+                         })};
+
+        if (srx_pt_iter == src_pts.locations.end()) {
+          return;
+        }
+
+        const auto src_pt_idx{
+            std::distance(src_pts.locations.begin(), srx_pt_iter)};
+        var(p.I) = interp_results[src_pt_idx];
+      });
+    });
+
+#ifdef CCTK_DEBUG
+#pragma omp critical
+    { dump_interp_results(varind, cctkGH, src_pts, interp_results); }
+  }
+#endif
+}
+
+extern "C" void
+MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
+                        const CCTK_INT nvars_,
+                        const CCTK_INT *restrict const varinds_) {
+  interpolate_single(cctkGH_, nvars_, varinds_);
+  // interpolate_batch(cctkGH_, nvars_, varinds_);
 }
 
 } // namespace MultiPatch

@@ -39,6 +39,13 @@ struct PointDebugData {
   Loop::PointDesc p;
 };
 
+using PointListDebugData = std::array<std::vector<PointDebugData>, dim>;
+using PointListDebugMap = std::map<Location, PointListDebugData>;
+using InterpResultDebugMap =
+    std::map<Location, std::vector<std::vector<CCTK_REAL> > >;
+
+#endif
+
 struct point_location {
   int patch;
   int level;
@@ -59,13 +66,6 @@ struct source_points {
 
   std::vector<point_location> locations{};
 };
-
-using PointListDebugData = std::array<std::vector<PointDebugData>, dim>;
-using PointListDebugMap = std::map<Location, PointListDebugData>;
-using InterpResultDebugMap =
-    std::map<Location, std::vector<std::vector<CCTK_REAL> > >;
-
-#endif
 
 using PointList = std::array<std::vector<CCTK_REAL>, dim>;
 
@@ -865,8 +865,8 @@ static inline void interpolate_single(const CCTK_POINTER_TO_CONST cctkGH_,
 #ifdef CCTK_DEBUG
 #pragma omp critical
     { dump_interp_results(varind, cctkGH, src_pts, interp_results); }
-  }
 #endif
+  }
 }
 
 extern "C" void

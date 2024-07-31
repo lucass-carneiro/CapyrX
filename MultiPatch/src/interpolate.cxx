@@ -761,7 +761,7 @@ static inline void interpolate_single(const CCTK_POINTER_TO_CONST cctkGH_,
 
           point_location loc{patch, level, component, p.i, p.j, p.k};
 
-#pragma omp single
+#pragma omp critical
           {
             src_pts.global_xs.push_back(vcoords[0](p.I));
             src_pts.global_ys.push_back(vcoords[1](p.I));

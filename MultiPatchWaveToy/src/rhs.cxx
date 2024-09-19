@@ -101,4 +101,8 @@ extern "C" void MultiPatchWaveToy_RHS(CCTK_ARGUMENTS) {
       });
 }
 
+extern "C" void MultiPatchWaveToy_Sync(CCTK_ARGUMENTS) {
+  // Do nothing
+}
+
 } // namespace MultiPatchWaveToy

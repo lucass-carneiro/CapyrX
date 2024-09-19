@@ -10,7 +10,14 @@ SCHEDULE MultiPatchWaveToy_Initial AT initial
   SYNC: state
 } "Initialize scalar wave state"
 
-SCHEDULE MultiPatchWaveToy_RHS IN ODESolvers_RHS
+
+SCHEDULE MultiPatchWaveToy_Sync IN ODESolvers_RHS
+{
+  LANG: C
+  SYNC: state
+} "Sync the scalar wave state"
+
+SCHEDULE MultiPatchWaveToy_RHS IN ODESolvers_RHS AFTER MultiPatchWaveToy_Sync
 {
   LANG: C
   READS: state(everywhere) MultiPatch::vertex_Jacobians(everywhere) MultiPatch::vertex_dJacobians(everywhere)

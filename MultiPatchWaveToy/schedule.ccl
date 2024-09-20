@@ -2,6 +2,7 @@
 
 STORAGE: state
 
+# Init
 SCHEDULE MultiPatchWaveToy_Initial AT initial
 {
   LANG: C
@@ -11,22 +12,31 @@ SCHEDULE MultiPatchWaveToy_Initial AT initial
 } "Initialize scalar wave state"
 
 
-SCHEDULE MultiPatchWaveToy_Sync IN ODESolvers_RHS
+
+# Step
+SCHEDULE MultiPatchWaveToy_Sync IN postregrid
 {
   LANG: C
   SYNC: state
 } "Sync the scalar wave state"
 
-SCHEDULE MultiPatchWaveToy_RHS IN ODESolvers_RHS AFTER MultiPatchWaveToy_Sync
+SCHEDULE MultiPatchWaveToy_RHS IN ODESolvers_RHS
 {
   LANG: C
   READS: state(everywhere) MultiPatch::vertex_Jacobians(everywhere) MultiPatch::vertex_dJacobians(everywhere)
   WRITES: rhs(interior)
   SYNC: rhs
-} "Calculate scalar wave RHS"
  
+} "Calculate scalar wave RHS"
 
-SCHEDULE MultiPatchWaveToy_Error IN ODESolvers_PostStep
+SCHEDULE MultiPatchWaveToy_Sync IN ODESolvers_PostStep
+{
+  LANG: C
+  SYNC: state
+} "Sync the scalar wave state"
+
+# Error
+SCHEDULE MultiPatchWaveToy_Error IN ODESolvers_PostStep AFTER MultiPatchWaveToy_Sync 
 {
   LANG: C
   READS: state(interior) CoordinatesX::vertex_coords(interior)

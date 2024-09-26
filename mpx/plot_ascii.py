@@ -38,14 +38,12 @@ def read_to_dataframes(coords_file: str, data_file: str):
         "y",
         "z",
         "u",
-        "rho"
     ]
 
     df = pd.read_csv(coords_file, sep="\t", comment="#", names=columns)
     data_df = pd.read_csv(data_file, sep="\t", comment="#", names=data_columns)
 
     df["u"] = data_df["u"]
-    df["rho"] = data_df["rho"]
 
     return df
 
@@ -83,7 +81,7 @@ def plot_ascii(args):
 
     data_list = [
         filter_patch(data, 0),
-        filter_patch(data, 1),
+        # filter_patch(data, 1),
         # filter_patch(data, 2),
         # filter_patch(data, 3),
         # filter_patch(data, 4)

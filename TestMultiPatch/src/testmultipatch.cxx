@@ -8,141 +8,57 @@
 
 namespace TestMultiPatch {
 
-template <typename T>
-static constexpr void standing_wave(const T A, const T kx, const T ky,
-                                    const T kz, const T x, const T y, const T z,
-                                    T &u) {
+static constexpr auto standing_wave(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky,
+                                    CCTK_REAL kz, CCTK_REAL t, CCTK_REAL x,
+                                    CCTK_REAL y,
+                                    CCTK_REAL z) noexcept -> CCTK_REAL {
+  using std::cos, std::sin, std::sqrt;
 
-  using std::cos;
-  using std::sqrt;
+  const auto pi{acos(-1.0)};
+  const auto omega{sqrt(kx * kx + ky * ky + kz * kz)};
 
-  u = A * cos(2 * M_PI * kx * x) * cos(2 * M_PI * ky * y) *
-      cos(2 * M_PI * kz * z);
+  return A * cos(2 * pi * omega * t) * cos(2 * pi * kx * x) *
+         cos(2 * pi * ky * y) * cos(2 * pi * kz * z);
+  ;
 }
 
-extern "C" void TestMultiPatch_TestSync(CCTK_ARGUMENTS) {
-  DECLARE_CCTK_ARGUMENTSX_TestMultiPatch_TestSync;
-  DECLARE_CCTK_PARAMETERS;
-
-  grid.loop_int<0, 0, 0>(
-      grid.nghostzones, [=](const Loop::PointDesc &p) ARITH_INLINE {
-        standing_wave(A, kx, ky, kz, vcoordx(p.I), vcoordy(p.I), vcoordz(p.I),
-                      test_gf(p.I));
-      });
-}
-
-extern "C" void TestMultiPatch_TestGhostInterp(CCTK_ARGUMENTS) {
-  using std::abs;
-
-  DECLARE_CCTK_ARGUMENTSX_TestMultiPatch_TestGhostInterp;
-  DECLARE_CCTK_PARAMETERS;
-
-  grid.loop_all<0, 0, 0>(
-      grid.nghostzones, [=](const Loop::PointDesc &p) ARITH_INLINE {
-        const auto x{vcoordx(p.I)};
-        const auto y{vcoordy(p.I)};
-        const auto z{vcoordz(p.I)};
-        const auto actual_gf{test_gf(p.I)};
-
-        CCTK_REAL expected_gf{0};
-        standing_wave(A, kx, ky, kz, x, y, z, expected_gf);
-
-        // If the actual value does not match the expected and it is not 1138
-        // (the boundary value), the test is a failure.
-        if (!(abs(expected_gf - actual_gf) < tolerance)) {
-          if (!(abs(actual_gf - 1138.0) < tolerance)) {
-            CCTK_VINFO("\033[31;1mFAILED\033[0m:\n"
-                       "  Local coords: (%.16f, %.16f, %.16f).\n"
-                       "  Patch index: %i.\n"
-                       "  Grid index (%i, %i, %i).\n"
-                       "  Expected: %.16f.\n"
-                       "  Obtained: %.16f",
-                       x, y, z, p.patch, p.I[0], p.I[1], p.I[2], expected_gf,
-                       actual_gf);
-          }
-        }
-      });
-}
-
-// TestMultiPatch_TestCoordsSync
-extern "C" void TestMultiPatch_TestCoordsSync(CCTK_ARGUMENTS) {
-  DECLARE_CCTK_ARGUMENTSX_TestMultiPatch_TestCoordsSync;
+extern "C" void TestMultiPatch_write_state(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTSX_TestMultiPatch_write_state;
   DECLARE_CCTK_PARAMETERS;
 
   grid.loop_int<0, 0, 0>(grid.nghostzones,
                          [=](const Loop::PointDesc &p) ARITH_INLINE {
-                           test_x(p.I) = vcoordx(p.I);
-                           test_y(p.I) = vcoordy(p.I);
-                           test_z(p.I) = vcoordz(p.I);
+                           const auto t{cctk_time};
+                           const auto x{vcoordx(p.I)};
+                           const auto y{vcoordx(p.I)};
+                           const auto z{vcoordx(p.I)};
+
+                           u(p.I) = standing_wave(A, kx, ky, kz, t, x, y, z);
                          });
 }
 
-extern "C" void TestMultiPatch_TestCoordsGhostInterp(CCTK_ARGUMENTS) {
-  using std::fabs;
-
-  DECLARE_CCTK_ARGUMENTSX_TestMultiPatch_TestCoordsGhostInterp;
+extern "C" void TestMultiPatch_write_error(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTSX_TestMultiPatch_write_error;
   DECLARE_CCTK_PARAMETERS;
 
-  grid.loop_all<0, 0, 0>(grid.nghostzones, [=](const Loop::PointDesc
-                                                   &p) ARITH_INLINE {
-    const auto expected_x{vcoordx(p.I)};
-    const auto expected_y{vcoordy(p.I)};
-    const auto expected_z{vcoordz(p.I)};
+  using std::fabs;
 
-    const auto obtained_x{test_x(p.I)};
-    const auto obtained_y{test_y(p.I)};
-    const auto obtained_z{test_z(p.I)};
+  grid.loop_all<0, 0, 0>(
+      grid.nghostzones, [=](const Loop::PointDesc &p) ARITH_INLINE {
+        const auto t{cctk_time};
+        const auto x{vcoordx(p.I)};
+        const auto y{vcoordx(p.I)};
+        const auto z{vcoordx(p.I)};
 
-    const auto x_violation{!(fabs(expected_x - obtained_x) < exact_tolerance)};
-    const auto y_violation{!(fabs(expected_y - obtained_y) < exact_tolerance)};
-    const auto z_violation{!(fabs(expected_z - obtained_z) < exact_tolerance)};
+        const auto evolved_u{u(p.I)};
+        const auto real_u{standing_wave(A, kx, ky, kz, t, x, y, z)};
 
-    const auto x_bnd{(fabs(obtained_x - 1138.0) < exact_tolerance)};
-    const auto y_bnd{(fabs(obtained_y - 1138.0) < exact_tolerance)};
-    const auto z_bnd{(fabs(obtained_z - 1138.0) < exact_tolerance)};
+        u_err(p.I) = fabs(evolved_u - real_u);
+      });
+}
 
-#pragma omp critical
-    {
-      if ((x_violation || y_violation || z_violation) &&
-          !(x_bnd || y_bnd || z_bnd)) {
-        auto file{fopen("out.txt", "a")};
-        fprintf(file, "%i %.16f %.16f %.16f %.16f %.16f %.16f\n", p.patch,
-                expected_x, expected_y, expected_z, obtained_x, obtained_y,
-                obtained_z);
-        fclose(file);
-      }
-    }
-
-    /*if (!(abs(expected_y - obtained_y) < exact_tolerance)) {
-      if (!(abs(obtained_y - 1138.0) < exact_tolerance)) {
-        CCTK_VINFO("\033[31;1mFAILED\033[0m:\n"
-                   "  Local coords: (%.16f, %.16f, %.16f).\n"
-                   "  Patch index: %i.\n"
-                   "  Grid index (%i, %i, %i).\n"
-                   "  Expected y: %.16f.\n"
-                   "  Obtained y: %.16f"
-                   "  Error: %.16f\n",
-                   expected_x, expected_y, expected_z, p.patch, p.I[0],
-                   p.I[1], p.I[2], expected_y, obtained_y,
-                   expected_y - obtained_y);
-      }
-    }
-
-    if (!(abs(expected_z - obtained_z) < exact_tolerance)) {
-      if (!(abs(obtained_z - 1138.0) < exact_tolerance)) {
-        CCTK_VINFO("\033[31;1mFAILED\033[0m:\n"
-                   "  Local coords: (%.16f, %.16f, %.16f).\n"
-                   "  Patch index: %i.\n"
-                   "  Grid index (%i, %i, %i).\n"
-                   "  Expected z: %.16f.\n"
-                   "  Obtained z: %.16f"
-                   "  Error: %.16f\n",
-                   expected_x, expected_y, expected_z, p.patch, p.I[0],
-                   p.I[1], p.I[2], expected_z, obtained_z,
-                   expected_z - obtained_z);
-      }
-    }*/
-  });
+extern "C" void TestMultiPatch_sync(CCTK_ARGUMENTS) {
+  // Do nothing
 }
 
 } // namespace TestMultiPatch

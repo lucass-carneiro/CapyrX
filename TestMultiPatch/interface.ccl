@@ -9,30 +9,12 @@ USES INCLUDE HEADER: loop.hxx
 USES INCLUDE HEADER: loop_device.hxx
 USES INCLUDE HEADER: vec.hxx
 
-void FUNCTION MultiPatch_LocalToGlobal2(
-  CCTK_INT IN npoints,
-  CCTK_INT ARRAY IN patches,
-  CCTK_REAL ARRAY IN localsx,
-  CCTK_REAL ARRAY IN localsy,
-  CCTK_REAL ARRAY IN localsz,
-  CCTK_REAL ARRAY OUT globalsx,
-  CCTK_REAL ARRAY OUT globalsy,
-  CCTK_REAL ARRAY OUT globalsz)
-REQUIRES FUNCTION MultiPatch_LocalToGlobal2
-
-# We write 1138 to the outer boundaries for two reasons:
-# 1. Because we are not detecting if a point in the grid loop is a boundary point,
-# we need to accept the boundary value along with the other expected grid function
-# values. This value needs to be distinct from the possible test grid function values
-# 2. George Lucas's first movie, from 1971, is called THX 1138
-CCTK_REAL multipatch_test_gfs TYPE=gf CENTERING={vvv} TAGS='checkpoint="no" dirichlet_values={1138.0}'
+CCTK_REAL state TYPE=gf TAGS='dependents="error" dirichlet_values={1138.0 1138.0 1138.0}'
 {
-    test_gf
-} "The test grid function"
+    u
+} "Test grid function"
 
-CCTK_REAL multipatch_test_coords TYPE=gf CENTERING={vvv} TAGS='checkpoint="no" dirichlet_values={1138.0 1138.0 1138.0}'
+CCTK_REAL error TYPE=gf
 {
-    test_x
-    test_y
-    test_z
-} "Coordinate grid functions for testing the interpolator"
+  u_err
+} "Test grid function error"

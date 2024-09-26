@@ -1,35 +1,51 @@
 # Schedule definitions for thorn TestMultiPatch
 
-STORAGE: multipatch_test_gfs
-STORAGE: multipatch_test_coords
+STORAGE: state
+STORAGE: error
 
-if(run_sw_test)
+if(fake_evolution_test)
 {
-  SCHEDULE TestMultiPatch_TestSync AT initial
+  # Init
+  SCHEDULE TestMultiPatch_write_state AT initial
   {
     LANG: C
     READS: CoordinatesX::vertex_coords(interior)
-    WRITES: multipatch_test_gfs(interior)
-    SYNC: multipatch_test_gfs
+    WRITES: state(interior)
+    SYNC: state
   } "Fill test grid function with data"
 
-  SCHEDULE TestMultiPatch_TestGhostInterp AT postinitial
+  SCHEDULE TestMultiPatch_write_error AT initial AFTER TestMultiPatch_write_state
   {
     LANG: C
-    READS: CoordinatesX::vertex_coords(everywhere) multipatch_test_gfs(everywhere)
-  } "Checks if ghost zone values are correct"
+    READS: state(everywhere) CoordinatesX::vertex_coords(everywhere)
+    WRITES: error(everywhere)
+  } "Compute the fake evolution's error"
+
+  # Step
+  SCHEDULE TestMultiPatch_sync AT postregrid
+  {
+    LANG: C
+    SYNC: state
+  } "Synchronizes the state"
+
+  SCHEDULE TestMultiPatch_write_state AT evol
+  {
+    LANG: C
+    READS: CoordinatesX::vertex_coords(interior)
+    WRITES: state(interior)
+  } "Fill test grid function with data"
+
+  SCHEDULE TestMultiPatch_sync AT poststep
+  {
+    LANG: C
+    SYNC: state
+  } "Synchronizes the state"
+
+  # Error
+  SCHEDULE TestMultiPatch_write_error AT poststep AFTER TestMultiPatch_sync
+  {
+    LANG: C
+    READS: state(everywhere) CoordinatesX::vertex_coords(everywhere)
+    WRITES: error(everywhere)
+  } "Compute the fake evolution's error"
 }
-
-SCHEDULE TestMultiPatch_TestCoordsSync AT initial
-{
-  LANG: C
-  READS: CoordinatesX::vertex_coords(interior)
-  WRITES: multipatch_test_coords(interior)
-  SYNC: multipatch_test_coords
-} "Fill test grid function with coordinate data"
-
-SCHEDULE TestMultiPatch_TestCoordsGhostInterp AT postinitial
-{
-  LANG: C
-  READS: CoordinatesX::vertex_coords(everywhere) multipatch_test_coords(everywhere)
-} "Checks if coordinates ghost zone values are correct"

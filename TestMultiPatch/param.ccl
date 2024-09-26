@@ -1,37 +1,25 @@
 # Parameter definitions for thorn TestMultiPatch
 
+CCTK_BOOLEAN fake_evolution_test "Enable the fake evolution test"
+{
+} no
+
 CCTK_REAL A "Standing wave amplitude"
 {
   *:* :: ""
 } 1.0
 
-CCTK_REAL kx "kx for standing wave"
+CCTK_REAL kx "standing wave kx"
 {
   *:* :: ""
-} 0.5
+} 1.0
 
-CCTK_REAL ky "kz for standing wave"
+CCTK_REAL ky "standing wave ky"
 {
   *:* :: ""
-} 0.5
+} 1.0
 
-CCTK_REAL kz "ky for standing wave"
+CCTK_REAL kz "standing wave kz"
 {
   *:* :: ""
-} 0.5
-
-CCTK_BOOLEAN run_sw_test "Run the standing wave grid function test"
-{
-} yes
-
-CCTK_REAL tolerance "Tolerance for testing interpolator accuracy"
-{
-  *:* :: ""
-}
-1.0e-3
-
-CCTK_REAL exact_tolerance "Tolerance for testing interpolator accuracy for results that should be exact"
-{
-  *:* :: ""
-}
-1.0e-5
+} 1.0

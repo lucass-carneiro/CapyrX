@@ -81,10 +81,10 @@ def plot_ascii(args):
 
     data_list = [
         filter_patch(data, 0),
-        # filter_patch(data, 1),
-        # filter_patch(data, 2),
-        # filter_patch(data, 3),
-        # filter_patch(data, 4)
+        filter_patch(data, 1),
+        filter_patch(data, 2),
+        filter_patch(data, 3),
+        filter_patch(data, 4)
     ]
 
     if diverging == True:
@@ -121,8 +121,8 @@ def plot_ascii(args):
     plt.xlabel("x")
     plt.ylabel("y")
 
-    # cb = plt.colorbar()
-    # cb.ax.set_ylabel("u")
+    cb = plt.colorbar()
+    cb.ax.set_ylabel("u")
 
     plt.tight_layout()
 

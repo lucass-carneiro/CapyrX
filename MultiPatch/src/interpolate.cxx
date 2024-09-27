@@ -425,7 +425,6 @@ static inline void interpolate_batch(const CCTK_POINTER_TO_CONST cctkGH_,
   }
 
   // Step 1: Find coordinates where we need to interpolate
-
   std::map<Location, PointList> source_mapping{};
 
 #ifdef CCTK_DEBUG
@@ -869,12 +868,145 @@ static inline void interpolate_single(const CCTK_POINTER_TO_CONST cctkGH_,
   }
 }
 
+static inline void interpolate_debug(const CCTK_POINTER_TO_CONST cctkGH_,
+                                     const CCTK_INT nvars_,
+                                     const CCTK_INT *restrict const varinds_) {
+  CCTK_VINFO(
+      "Multipatch debug interpolator called via MultiPatch1_Interpolate");
+
+  // Step 0: Check input
+
+  // Function Input checking
+  if (cctkGH_ == nullptr) {
+    CCTK_VERROR("The cctkGH_ pointer is null. Unable to continue");
+  }
+
+  if (nvars_ < 0) {
+    CCTK_VERROR("The nvars_ variable is negatie. Unable to continue");
+  }
+
+  if (varinds_ == nullptr) {
+    CCTK_VERROR("The varinds_ pointer is null. Unable to continue");
+  }
+
+  // Cast GH and wrap varinds
+  const auto cctkGH{static_cast<const cGH *>(cctkGH_)};
+  const std::vector<CCTK_INT> varinds(varinds_, varinds_ + nvars_);
+
+  // Check input varinds validity
+  for (const auto &varind : varinds) {
+    if (varind < 0) {
+      CCTK_VERROR("The varind %i is negative", varind);
+    }
+
+    const auto gi{CCTK_GroupIndexFromVarI(varind)};
+
+    if (gi < 0) {
+      CCTK_VERROR("The goup index %i for varind %i is negative", gi, varind);
+    }
+
+    const auto v0{CCTK_FirstVarIndexI(gi)};
+
+    if (gi < 0) {
+      CCTK_VERROR("The first var index %i for varind %i is negative", v0,
+                  varind);
+    }
+
+    const auto vi{varind - v0};
+
+    if (vi < 0) {
+      CCTK_VERROR("The index %i for varind %i is negative", vi, varind);
+    }
+
+    cGroup group_data{};
+    const auto result{CCTK_GroupData(gi, &group_data)};
+
+    switch (result) {
+    case -1:
+      CCTK_VERROR("Error while retrieving group data for group index %i in "
+                  "varind %i: The "
+                  "group index is invalid",
+                  gi, varind);
+      break;
+
+    case -2:
+      CCTK_VERROR("Error while retrieving group data for group index %i in "
+                  "varind %i: The group data buffer is null",
+                  gi, varind);
+      break;
+
+    default:
+      break;
+    }
+
+    if (group_data.grouptype != CCTK_GF) {
+      CCTK_VERROR("The group data member \"grouptype\" in group index %i in "
+                  "varinds %i is not of type \"CCTK_GF\"",
+                  gi, varind);
+    }
+
+    if (group_data.vartype != CCTK_VARIABLE_REAL) {
+      CCTK_VERROR("The group data member \"vartype\" in group index %i in "
+                  "varinds %i is not of type \"CCTK_VARIABLE_REAL\"",
+                  gi, varind);
+    }
+
+    if (group_data.disttype != CCTK_DISTRIB_DEFAULT) {
+      CCTK_VERROR("The group data member \"disttype\" in group index %i in "
+                  "varinds %i is not of type \"CCTK_DISTRIB_DEFAULT\"",
+                  gi, varind);
+    }
+
+    if (group_data.dim != dim) {
+      CCTK_VERROR("The group data member \"dim\" in group index %i in varinds "
+                  "%i is not %i",
+                  gi, varind, dim);
+    }
+
+    // TODO: Check centerings table
+  }
+
+  CarpetX::active_levels_t().loop_parallel([&](int patch, int level, int index,
+                                               int component,
+                                               const cGH *cctkGH) {
+    const Loop::GridDescBase grid(cctkGH);
+    const std::array<int, dim> centering{0, 0, 0};
+    const Loop::GF3D2layout layout(cctkGH, centering);
+
+    const auto &current_patch{the_patch_system->patches.at(patch)};
+    const auto &patch_faces{current_patch.faces};
+
+    for (std::size_t n = 0; n < varinds.size(); ++n) {
+      const Loop::GF3D2<CCTK_REAL> var(
+          layout,
+          static_cast<CCTK_REAL *>(CCTK_VarDataPtrI(cctkGH, 0, varinds.at(n))));
+
+      // Note: This includes symmetry points
+      grid.loop_bnd<0, 0, 0>(grid.nghostzones, [&](const Loop::PointDesc &p) {
+        // Skip outer boundaries
+        for (int d = 0; d < dim; ++d) {
+          if (p.NI[d] < 0 && patch_faces[0][d].is_outer_boundary) {
+            return;
+          }
+
+          if (p.NI[d] > 0 && patch_faces[1][d].is_outer_boundary) {
+            return;
+          }
+        }
+
+        var(p.I) = 1138.0;
+      });
+    }
+  });
+}
+
 extern "C" void
 MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
                         const CCTK_INT nvars_,
                         const CCTK_INT *restrict const varinds_) {
-  interpolate_single(cctkGH_, nvars_, varinds_);
   // interpolate_batch(cctkGH_, nvars_, varinds_);
+  // interpolate_single(cctkGH_, nvars_, varinds_);
+  interpolate_debug(cctkGH_, nvars_, varinds_);
 }
 
 } // namespace MultiPatch

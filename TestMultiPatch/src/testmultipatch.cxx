@@ -8,10 +8,9 @@
 
 namespace TestMultiPatch {
 
-static constexpr auto standing_wave(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky,
-                                    CCTK_REAL kz, CCTK_REAL t, CCTK_REAL x,
-                                    CCTK_REAL y,
-                                    CCTK_REAL z) noexcept -> CCTK_REAL {
+static auto standing_wave(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
+                          CCTK_REAL t, CCTK_REAL x, CCTK_REAL y,
+                          CCTK_REAL z) noexcept -> CCTK_REAL {
   using std::cos, std::sin, std::sqrt;
 
   const auto pi{acos(-1.0)};
@@ -19,7 +18,6 @@ static constexpr auto standing_wave(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky,
 
   return A * cos(2 * pi * omega * t) * cos(2 * pi * kx * x) *
          cos(2 * pi * ky * y) * cos(2 * pi * kz * z);
-  ;
 }
 
 extern "C" void TestMultiPatch_write_state(CCTK_ARGUMENTS) {
@@ -30,8 +28,8 @@ extern "C" void TestMultiPatch_write_state(CCTK_ARGUMENTS) {
                          [=](const Loop::PointDesc &p) ARITH_INLINE {
                            const auto t{cctk_time};
                            const auto x{vcoordx(p.I)};
-                           const auto y{vcoordx(p.I)};
-                           const auto z{vcoordx(p.I)};
+                           const auto y{vcoordy(p.I)};
+                           const auto z{vcoordz(p.I)};
 
                            u(p.I) = standing_wave(A, kx, ky, kz, t, x, y, z);
                          });
@@ -47,8 +45,8 @@ extern "C" void TestMultiPatch_write_error(CCTK_ARGUMENTS) {
       grid.nghostzones, [=](const Loop::PointDesc &p) ARITH_INLINE {
         const auto t{cctk_time};
         const auto x{vcoordx(p.I)};
-        const auto y{vcoordx(p.I)};
-        const auto z{vcoordx(p.I)};
+        const auto y{vcoordy(p.I)};
+        const auto z{vcoordz(p.I)};
 
         const auto evolved_u{u(p.I)};
         const auto real_u{standing_wave(A, kx, ky, kz, t, x, y, z)};

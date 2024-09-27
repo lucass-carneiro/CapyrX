@@ -32,12 +32,12 @@ MultiPatch::patch_system = "Cake"
 MultiPatch::cake_outer_boundary_radius = 5.0
 MultiPatch::cake_inner_boundary_radius = 1.0
 
-MultiPatch::cake_cartesian_ncells_i = 80 
-MultiPatch::cake_cartesian_ncells_j = 80 
-MultiPatch::cake_cartesian_ncells_k = 80 
+MultiPatch::cake_cartesian_ncells_i = 10 
+MultiPatch::cake_cartesian_ncells_j = 10 
+MultiPatch::cake_cartesian_ncells_k = 10 
 
-MultiPatch::cake_angular_cells = 80
-MultiPatch::cake_radial_cells  = 80
+MultiPatch::cake_angular_cells = 10
+MultiPatch::cake_radial_cells  = 10
 
 TestMultiPatch::fake_evolution_test = yes
 

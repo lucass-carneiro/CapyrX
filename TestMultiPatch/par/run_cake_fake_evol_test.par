@@ -32,14 +32,17 @@ MultiPatch::patch_system = "Cake"
 MultiPatch::cake_outer_boundary_radius = 5.0
 MultiPatch::cake_inner_boundary_radius = 1.0
 
-MultiPatch::cake_cartesian_ncells_i = 10 
-MultiPatch::cake_cartesian_ncells_j = 10 
-MultiPatch::cake_cartesian_ncells_k = 10 
+MultiPatch::cake_cartesian_ncells_i = 20
+MultiPatch::cake_cartesian_ncells_j = 20
+MultiPatch::cake_cartesian_ncells_k = 20
 
-MultiPatch::cake_angular_cells = 10
-MultiPatch::cake_radial_cells  = 10
+MultiPatch::cake_angular_cells = 20
+MultiPatch::cake_radial_cells  = 20
 
 TestMultiPatch::fake_evolution_test = yes
+TestMultiPatch::kx = 0.75
+TestMultiPatch::ky = 0.75
+TestMultiPatch::kz = 0.75
 
 CarpetX::boundary_x = "dirichlet"
 CarpetX::boundary_y = "dirichlet"
@@ -48,8 +51,8 @@ CarpetX::boundary_upper_x = "dirichlet"
 CarpetX::boundary_upper_y = "dirichlet"
 CarpetX::boundary_upper_z = "dirichlet"
 
-CarpetX::ghost_size = 1
-CarpetX::interpolation_order = 1
+CarpetX::ghost_size = 4
+CarpetX::interpolation_order = 0
 
 IO::out_dir = $parfile
 IO::out_every = 1

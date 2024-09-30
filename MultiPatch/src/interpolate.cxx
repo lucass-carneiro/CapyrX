@@ -976,10 +976,22 @@ static inline void interpolate_debug(const CCTK_POINTER_TO_CONST cctkGH_,
     const auto &current_patch{the_patch_system->patches.at(patch)};
     const auto &patch_faces{current_patch.faces};
 
-    for (std::size_t n = 0; n < varinds.size(); ++n) {
+    const Loop::GF3D2<CCTK_REAL> vcoordx(
+        layout, static_cast<CCTK_REAL *>(
+                    CCTK_VarDataPtr(cctkGH, 0, "CoordinatesX::vcoordx")));
+
+    const Loop::GF3D2<CCTK_REAL> vcoordy(
+        layout, static_cast<CCTK_REAL *>(
+                    CCTK_VarDataPtr(cctkGH, 0, "CoordinatesX::vcoordy")));
+
+    const Loop::GF3D2<CCTK_REAL> vcoordz(
+        layout, static_cast<CCTK_REAL *>(
+                    CCTK_VarDataPtr(cctkGH, 0, "CoordinatesX::vcoordz")));
+
+    for (const auto &varind : varinds) {
       const Loop::GF3D2<CCTK_REAL> var(
           layout,
-          static_cast<CCTK_REAL *>(CCTK_VarDataPtrI(cctkGH, 0, varinds.at(n))));
+          static_cast<CCTK_REAL *>(CCTK_VarDataPtrI(cctkGH, 0, varind)));
 
       // Note: This includes symmetry points
       grid.loop_bnd<0, 0, 0>(grid.nghostzones, [&](const Loop::PointDesc &p) {
@@ -994,7 +1006,21 @@ static inline void interpolate_debug(const CCTK_POINTER_TO_CONST cctkGH_,
           }
         }
 
-        var(p.I) = 1138.0;
+        using std::sin, std::cos, std::sqrt;
+        const auto A{1.0};
+        const auto kx{0.75};
+        const auto ky{0.75};
+        const auto kz{0.75};
+        const auto omega{sqrt(kx * kx + ky * ky + kz * kz)};
+        const auto pi{acos(-1.0)};
+
+        const auto t{cctkGH->cctk_time};
+        const auto x{vcoordx(p.I)};
+        const auto y{vcoordy(p.I)};
+        const auto z{vcoordz(p.I)};
+
+        var(p.I) = A * cos(2 * pi * omega * t) * cos(2 * pi * kx * x) *
+                   cos(2 * pi * ky * y) * cos(2 * pi * kz * z);
       });
     }
   });
@@ -1005,7 +1031,7 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
                         const CCTK_INT nvars_,
                         const CCTK_INT *restrict const varinds_) {
   // interpolate_batch(cctkGH_, nvars_, varinds_);
-  // interpolate_single(cctkGH_, nvars_, varinds_);
+  //  interpolate_single(cctkGH_, nvars_, varinds_);
   interpolate_debug(cctkGH_, nvars_, varinds_);
 }
 

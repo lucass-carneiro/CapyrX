@@ -1030,9 +1030,9 @@ extern "C" void
 MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
                         const CCTK_INT nvars_,
                         const CCTK_INT *restrict const varinds_) {
-  // interpolate_batch(cctkGH_, nvars_, varinds_);
-  //  interpolate_single(cctkGH_, nvars_, varinds_);
-  interpolate_debug(cctkGH_, nvars_, varinds_);
+  interpolate_batch(cctkGH_, nvars_, varinds_);
+  //interpolate_single(cctkGH_, nvars_, varinds_);
+  //interpolate_debug(cctkGH_, nvars_, varinds_);
 }
 
 } // namespace MultiPatch

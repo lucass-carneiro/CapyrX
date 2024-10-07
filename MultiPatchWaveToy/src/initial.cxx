@@ -1,94 +1,36 @@
-#include "mpwavetoy.hxx"
+// clang-format off
+#include <loop.hxx>
 
-#include <cmath>
-#include <limits>
+#include <cctk.h>
+#include <cctk_Arguments.h>
+#include <cctk_Parameters.h>
+// clang-format on
+
+#include "standing_wave.hxx"
 
 namespace MultiPatchWaveToy {
-
-void standing_wave(const CCTK_REAL A, const CCTK_REAL kx, const CCTK_REAL ky,
-                   const CCTK_REAL kz, const CCTK_REAL t, const CCTK_REAL x,
-                   const CCTK_REAL y, const CCTK_REAL z, CCTK_REAL &u,
-                   CCTK_REAL &rho) noexcept {
-  using std::acos, std::cos, std::pow, std::sin, std::sqrt;
-
-  const CCTK_REAL pi = acos(-CCTK_REAL(1));
-  const CCTK_REAL omega = sqrt(pow(kx, 2) + pow(ky, 2) + pow(kz, 2));
-
-  u = A * cos(2 * pi * omega * t) * cos(2 * pi * kx * x) *
-      cos(2 * pi * ky * y) * cos(2 * pi * kz * z);
-  rho = A * (-2 * pi * omega) * sin(2 * pi * omega * t) * cos(2 * pi * kx * x) *
-        cos(2 * pi * ky * y) * cos(2 * pi * kz * z);
-}
-
-void gaussian(const CCTK_REAL A, const CCTK_REAL W, const CCTK_REAL t,
-              const CCTK_REAL x, const CCTK_REAL y, const CCTK_REAL z,
-              CCTK_REAL &u, CCTK_REAL &rho) noexcept {
-  using std::exp, std::pow, std::sqrt;
-
-  const CCTK_REAL r = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
-
-  const auto f = [&](const CCTK_REAL v) {
-    return A * exp(-pow(v, 2) / (2 * pow(W, 2)));
-  };
-
-  if (r < sqrt(std::numeric_limits<CCTK_REAL>::epsilon())) {
-    // L'Hôpital
-    u = 2 / pow(W, 2) * f(t) * t;
-    rho = -2 / pow(W, 4) * f(t) * (pow(t, 2) - pow(W, 2));
-  } else {
-    u = (f(t - r) - f(t + r)) / r;
-    rho = -(f(t - r) * (t - r) - f(t + r) * (t + r)) / (pow(W, 2) * r);
-  }
-}
-
-void plane_wave(const CCTK_REAL A, const CCTK_REAL kx, const CCTK_REAL ky,
-                const CCTK_REAL kz, const CCTK_REAL t, const CCTK_REAL x,
-                const CCTK_REAL y, const CCTK_REAL z, CCTK_REAL &u,
-                CCTK_REAL &rho) noexcept {
-  using std::cos, std::sin, std::sqrt;
-
-  const auto omega{sqrt(kx * kx + ky * ky + kz * kz)};
-
-  const auto nx{kx * x};
-  const auto ny{ky * y};
-  const auto nz{kz * z};
-  const auto nt{-omega * t};
-
-  const auto w{2 * M_PI * (nx + ny + nz + nt)};
-
-  u = A * cos(w);
-  rho = A * 2 * M_PI * omega * sin(w);
-}
 
 extern "C" void MultiPatchWaveToy_Initial(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTSX_MultiPatchWaveToy_Initial;
   DECLARE_CCTK_PARAMETERS;
 
   if (CCTK_EQUALS(initial_condition, "standing wave")) {
-    grid.loop_int_device<0, 0, 0>(
-        grid.nghostzones,
-        [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-          standing_wave(amplitude, wave_kx, wave_ky, wave_kz, cctk_time,
-                        vcoordx(p.I), vcoordy(p.I), vcoordz(p.I), u(p.I),
-                        rho(p.I));
+    grid.loop_all<0, 0, 0>(
+        grid.nghostzones, [=](const Loop::PointDesc &p) ARITH_INLINE {
+          const auto t{cctk_time};
+          const auto x{vcoordx(p.I)};
+          const auto y{vcoordy(p.I)};
+          const auto z{vcoordz(p.I)};
+
+          phi(p.I) = sw::phi(amplitude, wave_kx, wave_ky, wave_kz, t, x, y, z);
+          Pi(p.I) = sw::Pi(amplitude, wave_kx, wave_ky, wave_kz, t, x, y, z);
+          Dx(p.I) = sw::Dx(amplitude, wave_kx, wave_ky, wave_kz, t, x, y, z);
+          Dy(p.I) = sw::Dy(amplitude, wave_kx, wave_ky, wave_kz, t, x, y, z);
+          Dz(p.I) = sw::Dz(amplitude, wave_kx, wave_ky, wave_kz, t, x, y, z);
         });
 
   } else if (CCTK_EQUALS(initial_condition, "Gaussian")) {
-    grid.loop_int_device<0, 0, 0>(
-        grid.nghostzones,
-        [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-          gaussian(amplitude, gaussian_width, cctk_time, vcoordx(p.I),
-                   vcoordy(p.I), vcoordz(p.I), u(p.I), rho(p.I));
-        });
-
-  } else if (CCTK_EQUALS(initial_condition, "plane wave")) {
-    grid.loop_int_device<0, 0, 0>(
-        grid.nghostzones,
-        [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-          plane_wave(amplitude, wave_kx, wave_ky, wave_kz, cctk_time,
-                     vcoordx(p.I), vcoordy(p.I), vcoordz(p.I), u(p.I),
-                     rho(p.I));
-        });
+    CCTK_ERROR("Unimplemented initial condition");
 
   } else {
     CCTK_ERROR("Unknown initial condition");

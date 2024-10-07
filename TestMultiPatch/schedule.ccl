@@ -21,10 +21,13 @@ if(fake_evolution_test)
     WRITES: error(everywhere)
   } "Compute the fake evolution's error"
 
+
+
   # Step
   SCHEDULE TestMultiPatch_sync AT postregrid
   {
     LANG: C
+    OPTIONS: global
     SYNC: state
   } "Synchronizes the state"
 
@@ -38,8 +41,11 @@ if(fake_evolution_test)
   SCHEDULE TestMultiPatch_sync AT poststep
   {
     LANG: C
+    OPTIONS: global
     SYNC: state
   } "Synchronizes the state"
+
+
 
   # Error
   SCHEDULE TestMultiPatch_write_error AT poststep AFTER TestMultiPatch_sync

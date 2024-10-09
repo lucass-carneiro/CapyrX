@@ -1,5 +1,5 @@
 // clang-format off
-#include <loop.hxx>
+#include <loop_device.hxx>
 
 #include <cctk.h>
 #include <cctk_Arguments.h>
@@ -7,6 +7,8 @@
 // clang-format on
 
 namespace MultiPatchWaveToy {
+
+using namespace Arith;
 
 // Finite difference directions
 enum class local_fd_dir : std::size_t { a = 0, b = 1, c = 2 };
@@ -25,13 +27,14 @@ static inline auto fd_l_1_4(const Loop::PointDesc &p,
 }
 
 extern "C" void MultiPatchWaveToy_RHS(CCTK_ARGUMENTS) {
-  using std::pow;
-
   DECLARE_CCTK_ARGUMENTSX_MultiPatchWaveToy_RHS;
   DECLARE_CCTK_PARAMETERS;
 
+  using std::pow;
+
   grid.loop_int<0, 0, 0>(
-      grid.nghostzones, [=](const Loop::PointDesc &p) ARITH_INLINE {
+      grid.nghostzones,
+      [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
         const auto d_Pi_dx{vJ_da_dx(p.I) * fd_l_1_4<local_fd_dir::a>(p, Pi) +
                            vJ_db_dx(p.I) * fd_l_1_4<local_fd_dir::b>(p, Pi) +
                            vJ_dc_dx(p.I) * fd_l_1_4<local_fd_dir::c>(p, Pi)};

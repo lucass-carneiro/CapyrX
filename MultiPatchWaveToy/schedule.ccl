@@ -1,8 +1,6 @@
 # Schedule definitions for thorn MultiPatchWaveToy
 
-STORAGE: state
-STORAGE: error
-STORAGE: energy
+STORAGE: state rhs energy error
 
 # Init
 SCHEDULE MultiPatchWaveToy_Initial AT initial
@@ -15,9 +13,9 @@ SCHEDULE MultiPatchWaveToy_Initial AT initial
 SCHEDULE MultiPatchWaveToy_Error AT initial AFTER MultiPatchWaveToy_Initial 
 {
   LANG: C
-  READS: state(everywhere) CoordinatesX::vertex_coords(everywhere)
+  READS: CoordinatesX::vertex_coords(everywhere) state(everywhere)
   WRITES: error(everywhere)
-} "Calculate error in scalar wave state"
+} "Calculate error in scalar wave evolution"
 
 
 
@@ -32,8 +30,9 @@ SCHEDULE MultiPatchWaveToy_Sync IN postregrid
 SCHEDULE MultiPatchWaveToy_RHS IN ODESolvers_RHS
 {
   LANG: C
-  READS: state(everywhere) MultiPatch::vertex_Jacobians(everywhere)
+  READS: MultiPatch::vertex_Jacobians(everywhere) state(everywhere)
   WRITES: rhs(interior)
+  SYNC: rhs
 } "Calculate scalar wave RHS"
 
 SCHEDULE MultiPatchWaveToy_Sync IN ODESolvers_PostStep
@@ -49,9 +48,9 @@ SCHEDULE MultiPatchWaveToy_Sync IN ODESolvers_PostStep
 SCHEDULE MultiPatchWaveToy_Error IN ODESolvers_PostStep AFTER MultiPatchWaveToy_Sync 
 {
   LANG: C
-  READS: state(everywhere) CoordinatesX::vertex_coords(everywhere)
+  READS: CoordinatesX::vertex_coords(everywhere) state(everywhere)
   WRITES: error(everywhere)
-} "Calculate error in scalar wave state"
+} "Calculate error in scalar wave evolution"
 
 SCHEDULE MultiPatchWaveToy_Energy IN ODESolvers_PostStep AFTER MultiPatchWaveToy_Sync 
 {

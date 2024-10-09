@@ -6,13 +6,12 @@ IMPLEMENTS: MultiPatchWaveToy
 
 INHERITS: CoordinatesX MultiPatch
 
-USES INCLUDE HEADER: arith.hxx
-USES INCLUDE HEADER: loop.hxx
 USES INCLUDE HEADER: loop_device.hxx
-USES INCLUDE HEADER: vec.hxx
+USES INCLUDE HEADER: vect.hxx
 
 INCLUDES HEADER: gaussian.hxx IN gaussian.hxx
 INCLUDES HEADER: standing_wave.hxx IN standing_wave.hxx
+
 
 
 CCTK_REAL state TYPE=gf TAGS='rhs="rhs" dependents="energy error" dirichlet_values={0.0 0.0}'

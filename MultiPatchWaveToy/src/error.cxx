@@ -17,7 +17,7 @@ extern "C" void MultiPatchWaveToy_Error(CCTK_ARGUMENTS) {
   DECLARE_CCTK_PARAMETERS;
 
   if (CCTK_EQUALS(initial_condition, "standing wave")) {
-    grid.loop_all<0, 0, 0>(
+    grid.loop_int<0, 0, 0>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
           using std::fabs;

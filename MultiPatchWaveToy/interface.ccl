@@ -14,7 +14,7 @@ INCLUDES HEADER: standing_wave.hxx IN standing_wave.hxx
 
 
 
-CCTK_REAL state TYPE=gf TAGS='rhs="rhs" dependents="energy error" dirichlet_values={0.0 0.0}'
+CCTK_REAL state TYPE=gf TAGS='rhs="rhs" dependents="energy error" dirichlet_values={0.0 0.0 0.0 0.0 0.0}'
 {
   phi
   Pi

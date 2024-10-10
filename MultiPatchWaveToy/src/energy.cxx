@@ -16,7 +16,7 @@ extern "C" void MultiPatchWaveToy_Energy(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTSX_MultiPatchWaveToy_Energy;
   DECLARE_CCTK_PARAMETERS;
 
-  grid.loop_all<0, 0, 0>(grid.nghostzones,
+  grid.loop_int<0, 0, 0>(grid.nghostzones,
                          [=] CCTK_DEVICE(const Loop::PointDesc &p)
                              CCTK_ATTRIBUTE_ALWAYS_INLINE {
                                const auto l_Pi{Pi(p.I)};
@@ -24,8 +24,10 @@ extern "C" void MultiPatchWaveToy_Energy(CCTK_ARGUMENTS) {
                                const auto l_Dy{Dy(p.I)};
                                const auto l_Dz{Dz(p.I)};
 
-                               energy(p.I) = 0.5 * (l_Pi * l_Pi + l_Dx * l_Dx +
-                                                    l_Dy * l_Dy + l_Dz * l_Dz);
+                               // TODO: This contains two nans. Investigate.
+                               // energy(p.I) = 0.5 * (l_Pi * l_Pi + l_Dx * l_Dx
+                               // + l_Dy * l_Dy + l_Dz * l_Dz);
+                               energy(p.I) = 0.0;
                              });
 }
 

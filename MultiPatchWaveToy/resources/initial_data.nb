@@ -1,0 +1,398 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Wolfram 14.1' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       154,          7]
+NotebookDataLength[     15669,        390]
+NotebookOptionsPosition[     14542,        362]
+NotebookOutlinePosition[     14948,        379]
+CellTagsIndexPosition[     14905,        376]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["Formatting", "Section",
+ CellChangeTimes->{{3.937670501945611*^9, 3.937670505248205*^9}, 
+   3.937671032663916*^9},ExpressionUUID->"bdab5a60-0ecb-4c07-a418-\
+c9541d57787a"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"Unprotect", "[", "Power", "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"Format", "[", 
+    RowBox[{
+     RowBox[{"Power", "[", 
+      RowBox[{"E", ",", "a_"}], "]"}], ",", "CForm"}], "]"}], ":=", 
+   RowBox[{"exp", "[", "a", "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"Format", "[", 
+    RowBox[{
+     RowBox[{"Power", "[", 
+      RowBox[{"a_", ",", 
+       RowBox[{"1", "/", "2"}]}], "]"}], ",", "CForm"}], "]"}], ":=", 
+   RowBox[{"sqrt", "[", "a", "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"Format", "[", 
+    RowBox[{
+     RowBox[{"Power", "[", 
+      RowBox[{"a_", ",", "b_"}], "]"}], ",", "CForm"}], "]"}], ":=", 
+   RowBox[{"pow", "[", 
+    RowBox[{"a", ",", "b"}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"Protect", "[", "Power", "]"}], ";"}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Unprotect", "[", "Sin", "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"Format", "[", 
+    RowBox[{
+     RowBox[{"Sin", "[", "x_", "]"}], ",", "CForm"}], "]"}], ":=", 
+   RowBox[{"sin", "[", "x", "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"Protect", "[", "Sin", "]"}], ";"}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Unprotect", "[", "Cos", "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"Format", "[", 
+    RowBox[{
+     RowBox[{"Cos", "[", "x_", "]"}], ",", "CForm"}], "]"}], ":=", 
+   RowBox[{"cos", "[", "x", "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"Protect", "[", "Cos", "]"}], ";"}]}], "Input",
+ CellChangeTimes->{{3.9374049528001213`*^9, 3.937404979549554*^9}, {
+  3.93740505313776*^9, 3.93740505436294*^9}, {3.937670569395055*^9, 
+  3.937670579890191*^9}, {3.937670694851797*^9, 3.937670795244157*^9}},
+ CellLabel->"In[1]:=",ExpressionUUID->"f5a666d5-66cb-402d-bb56-fa9a39b332fd"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Standing wave", "Section",
+ CellChangeTimes->{{3.937655081385289*^9, 
+  3.937655084489181*^9}},ExpressionUUID->"29cfb5dd-0abf-4347-a047-\
+747adda231d6"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ClearAll", "[", "makeSwFuncString", "]"}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"makeSwFuncString", "[", "func_", "]"}], ":=", 
+   RowBox[{"\"\<\ntemplate<typename T>\nstatic inline auto \>\"", "<>", 
+    RowBox[{"ToString", "[", "func", "]"}], "<>", 
+    "\"\< (T A, T kx, T ky, T kz, T t, T x, T y, T z) noexcept -> T {\n  \
+using std::sqrt, std::sin, std::cos, std::acos;\n  const auto \
+pi{acos(T{-1})};\n  const auto omega{sqrt(kx * kx + ky * ky + kz * kz)};\n  \
+return \>\"", "<>", 
+    RowBox[{"ToString", "[", 
+     RowBox[{
+      RowBox[{"func", "[", 
+       RowBox[{"t", ",", "x", ",", "y", ",", "z"}], "]"}], ",", "CForm"}], 
+     "]"}], "<>", "\"\<;\n}\n\>\""}]}], ";"}]}], "Input",
+ CellLabel->"In[12]:=",ExpressionUUID->"5c2e5a60-40e3-426b-a708-75e535401392"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ClearAll", "[", 
+   RowBox[{"phi", ",", "PI", ",", "Dx", ",", "Dy", ",", "Dz"}], "]"}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"phi", "[", 
+    RowBox[{"t_", ",", "x_", ",", "y_", ",", "z_"}], "]"}], ":=", 
+   RowBox[{"A", "*", 
+    RowBox[{"Cos", "[", 
+     RowBox[{"2", "*", "omega", "*", "pi", "*", "t"}], "]"}], "*", 
+    RowBox[{"Cos", "[", 
+     RowBox[{"2", "*", "kx", "*", "pi", "*", "x"}], "]"}], "*", 
+    RowBox[{"Cos", "[", 
+     RowBox[{"2", "*", "ky", "*", "pi", "*", "y"}], "]"}], "*", 
+    RowBox[{"Cos", "[", 
+     RowBox[{"2", "*", "kz", "*", "pi", "*", "z"}], "]"}]}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"PI", "[", 
+    RowBox[{"t_", ",", "x_", ",", "y_", ",", "z_"}], "]"}], ":=", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"Derivative", "[", 
+      RowBox[{"1", ",", "0", ",", "0", ",", "0"}], "]"}], "[", "phi", "]"}], 
+    "[", 
+    RowBox[{"t", ",", "x", ",", "y", ",", "z"}], "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"Dx", "[", 
+    RowBox[{"t_", ",", "x_", ",", "y_", ",", "z_"}], "]"}], ":=", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"Derivative", "[", 
+      RowBox[{"0", ",", "1", ",", "0", ",", "0"}], "]"}], "[", "phi", "]"}], 
+    "[", 
+    RowBox[{"t", ",", "x", ",", "y", ",", "z"}], "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"Dy", "[", 
+    RowBox[{"t_", ",", "x_", ",", "y_", ",", "z_"}], "]"}], ":=", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"Derivative", "[", 
+      RowBox[{"0", ",", "0", ",", "1", ",", "0"}], "]"}], "[", "phi", "]"}], 
+    "[", 
+    RowBox[{"t", ",", "x", ",", "y", ",", "z"}], "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{
+    RowBox[{"Dz", "[", 
+     RowBox[{"t_", ",", "x_", ",", "y_", ",", "z_"}], "]"}], ":=", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"Derivative", "[", 
+       RowBox[{"0", ",", "0", ",", "0", ",", "1"}], "]"}], "[", "phi", "]"}], 
+     "[", 
+     RowBox[{"t", ",", "x", ",", "y", ",", "z"}], "]"}]}], ";"}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"ClearAll", "[", 
+   RowBox[{"dPidx", ",", "dPidy", ",", "dPidz"}], "]"}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"dPidx", "[", 
+    RowBox[{"t_", ",", "x_", ",", "y_", ",", "z_"}], "]"}], ":=", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"Derivative", "[", 
+      RowBox[{"0", ",", "1", ",", "0", ",", "0"}], "]"}], "[", "PI", "]"}], 
+    "[", 
+    RowBox[{"t", ",", "x", ",", "y", ",", "z"}], "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"dPidy", "[", 
+    RowBox[{"t_", ",", "x_", ",", "y_", ",", "z_"}], "]"}], ":=", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"Derivative", "[", 
+      RowBox[{"0", ",", "0", ",", "1", ",", "0"}], "]"}], "[", "PI", "]"}], 
+    "[", 
+    RowBox[{"t", ",", "x", ",", "y", ",", "z"}], "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{
+    RowBox[{"dPidz", "[", 
+     RowBox[{"t_", ",", "x_", ",", "y_", ",", "z_"}], "]"}], ":=", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"Derivative", "[", 
+       RowBox[{"0", ",", "0", ",", "0", ",", "1"}], "]"}], "[", "PI", "]"}], 
+     "[", 
+     RowBox[{"t", ",", "x", ",", "y", ",", "z"}], "]"}]}], ";"}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"dDxdx", "[", 
+    RowBox[{"t_", ",", "x_", ",", "y_", ",", "z_"}], "]"}], ":=", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"Derivative", "[", 
+      RowBox[{"0", ",", "1", ",", "0", ",", "0"}], "]"}], "[", "Dx", "]"}], 
+    "[", 
+    RowBox[{"t", ",", "x", ",", "y", ",", "z"}], "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"dDydy", "[", 
+    RowBox[{"t_", ",", "x_", ",", "y_", ",", "z_"}], "]"}], ":=", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"Derivative", "[", 
+      RowBox[{"0", ",", "0", ",", "1", ",", "0"}], "]"}], "[", "Dy", "]"}], 
+    "[", 
+    RowBox[{"t", ",", "x", ",", "y", ",", "z"}], "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"dDzdz", "[", 
+    RowBox[{"t_", ",", "x_", ",", "y_", ",", "z_"}], "]"}], ":=", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"Derivative", "[", 
+      RowBox[{"0", ",", "0", ",", "0", ",", "1"}], "]"}], "[", "Dz", "]"}], 
+    "[", 
+    RowBox[{"t", ",", "x", ",", "y", ",", "z"}], "]"}]}], ";"}]}], "Input",
+ CellChangeTimes->{{3.9376551002037487`*^9, 3.9376552247868633`*^9}, {
+  3.93767099601896*^9, 3.93767100855859*^9}, {3.937671185896625*^9, 
+  3.9376713578568487`*^9}},
+ CellLabel->"In[14]:=",ExpressionUUID->"bb14f219-c489-4540-848a-7064c742a08e"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ClearAll", "[", "swString", "]"}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"swString", "=", 
+   RowBox[{
+    RowBox[{"makeSwFuncString", "[", "phi", "]"}], "<>", 
+    "\[IndentingNewLine]", 
+    RowBox[{"makeSwFuncString", "[", "PI", "]"}], "<>", "\[IndentingNewLine]", 
+    RowBox[{"makeSwFuncString", "[", "Dx", "]"}], "<>", "\[IndentingNewLine]", 
+    RowBox[{"makeSwFuncString", "[", "Dy", "]"}], "<>", "\[IndentingNewLine]", 
+    RowBox[{"makeSwFuncString", "[", "Dz", "]"}], "<>", "\[IndentingNewLine]", 
+    RowBox[{"makeSwFuncString", "[", "dPidx", "]"}], "<>", 
+    "\[IndentingNewLine]", 
+    RowBox[{"makeSwFuncString", "[", "dPidy", "]"}], "<>", 
+    "\[IndentingNewLine]", 
+    RowBox[{"makeSwFuncString", "[", "dPidz", "]"}], "<>", 
+    "\[IndentingNewLine]", 
+    RowBox[{"makeSwFuncString", "[", "dDxdx", "]"}], "<>", 
+    "\[IndentingNewLine]", 
+    RowBox[{"makeSwFuncString", "[", "dDydy", "]"}], "<>", 
+    "\[IndentingNewLine]", 
+    RowBox[{"makeSwFuncString", "[", "dDzdz", "]"}]}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"swString", "=", 
+   RowBox[{"StringReplace", "[", 
+    RowBox[{"swString", ",", 
+     RowBox[{"{", 
+      RowBox[{"\"\<PI\>\"", "->", "\"\<Pi\>\""}], "}"}]}], "]"}]}], 
+  ";"}]}], "Input",
+ CellChangeTimes->{{3.937670240505965*^9, 3.937670334601624*^9}, {
+   3.9376709541658077`*^9, 3.937670963477099*^9}, 3.9376710476504173`*^9, {
+   3.937671122315864*^9, 3.937671172507864*^9}, {3.937671427397511*^9, 
+   3.937671597605291*^9}},
+ CellLabel->"In[27]:=",ExpressionUUID->"b9af2e79-adff-46b8-9e4e-ebc976bf3684"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Print", "[", "swString", "]"}]], "Input",
+ CellLabel->"In[30]:=",ExpressionUUID->"10af82ad-07f4-4238-a2dd-b878985ac0e7"],
+
+Cell[BoxData["\<\"\\ntemplate<typename T>\\nstatic inline auto phi (T A, T \
+kx, T ky, T kz, T t, T x, T y, T z) noexcept -> T {\\n  using std::sqrt, \
+std::sin, std::cos, std::acos;\\n  const auto pi{acos(T{-1})};\\n  const auto \
+omega{sqrt(kx * kx + ky * ky + kz * kz)};\\n  return \
+A*cos(2*omega*pi*t)*cos(2*kx*pi*x)*cos(2*ky*pi*y)*cos(2*kz*pi*z);\\n}\\n\\\
+ntemplate<typename T>\\nstatic inline auto Pi (T A, T kx, T ky, T kz, T t, T \
+x, T y, T z) noexcept -> T {\\n  using std::sqrt, std::sin, std::cos, \
+std::acos;\\n  const auto pi{acos(T{-1})};\\n  const auto omega{sqrt(kx * kx \
++ ky * ky + kz * kz)};\\n  return \
+-2*A*omega*pi*cos(2*kx*pi*x)*cos(2*ky*pi*y)*cos(2*kz*pi*z)*sin(2*omega*pi*t);\
+\\n}\\n\\ntemplate<typename T>\\nstatic inline auto Dx (T A, T kx, T ky, T \
+kz, T t, T x, T y, T z) noexcept -> T {\\n  using std::sqrt, std::sin, \
+std::cos, std::acos;\\n  const auto pi{acos(T{-1})};\\n  const auto \
+omega{sqrt(kx * kx + ky * ky + kz * kz)};\\n  return \
+-2*A*kx*pi*cos(2*omega*pi*t)*cos(2*ky*pi*y)*cos(2*kz*pi*z)*sin(2*kx*pi*x);\\n}\
+\\n\\ntemplate<typename T>\\nstatic inline auto Dy (T A, T kx, T ky, T kz, T \
+t, T x, T y, T z) noexcept -> T {\\n  using std::sqrt, std::sin, std::cos, \
+std::acos;\\n  const auto pi{acos(T{-1})};\\n  const auto omega{sqrt(kx * kx \
++ ky * ky + kz * kz)};\\n  return \
+-2*A*ky*pi*cos(2*omega*pi*t)*cos(2*kx*pi*x)*cos(2*kz*pi*z)*sin(2*ky*pi*y);\\n}\
+\\n\\ntemplate<typename T>\\nstatic inline auto Dz (T A, T kx, T ky, T kz, T \
+t, T x, T y, T z) noexcept -> T {\\n  using std::sqrt, std::sin, std::cos, \
+std::acos;\\n  const auto pi{acos(T{-1})};\\n  const auto omega{sqrt(kx * kx \
++ ky * ky + kz * kz)};\\n  return \
+-2*A*kz*pi*cos(2*omega*pi*t)*cos(2*kx*pi*x)*cos(2*ky*pi*y)*sin(2*kz*pi*z);\\n}\
+\\n\\ntemplate<typename T>\\nstatic inline auto dPidx (T A, T kx, T ky, T kz, \
+T t, T x, T y, T z) noexcept -> T {\\n  using std::sqrt, std::sin, std::cos, \
+std::acos;\\n  const auto pi{acos(T{-1})};\\n  const auto omega{sqrt(kx * kx \
++ ky * ky + kz * kz)};\\n  return \
+4*A*kx*omega*pow(pi,2)*cos(2*ky*pi*y)*cos(2*kz*pi*z)*sin(2*omega*pi*t)*sin(2*\
+kx*pi*x);\\n}\\n\\ntemplate<typename T>\\nstatic inline auto dPidy (T A, T \
+kx, T ky, T kz, T t, T x, T y, T z) noexcept -> T {\\n  using std::sqrt, \
+std::sin, std::cos, std::acos;\\n  const auto pi{acos(T{-1})};\\n  const auto \
+omega{sqrt(kx * kx + ky * ky + kz * kz)};\\n  return \
+4*A*ky*omega*pow(pi,2)*cos(2*kx*pi*x)*cos(2*kz*pi*z)*sin(2*omega*pi*t)*sin(2*\
+ky*pi*y);\\n}\\n\\ntemplate<typename T>\\nstatic inline auto dPidz (T A, T \
+kx, T ky, T kz, T t, T x, T y, T z) noexcept -> T {\\n  using std::sqrt, \
+std::sin, std::cos, std::acos;\\n  const auto pi{acos(T{-1})};\\n  const auto \
+omega{sqrt(kx * kx + ky * ky + kz * kz)};\\n  return \
+4*A*kz*omega*pow(pi,2)*cos(2*kx*pi*x)*cos(2*ky*pi*y)*sin(2*omega*pi*t)*sin(2*\
+kz*pi*z);\\n}\\n\\ntemplate<typename T>\\nstatic inline auto dDxdx (T A, T \
+kx, T ky, T kz, T t, T x, T y, T z) noexcept -> T {\\n  using std::sqrt, \
+std::sin, std::cos, std::acos;\\n  const auto pi{acos(T{-1})};\\n  const auto \
+omega{sqrt(kx * kx + ky * ky + kz * kz)};\\n  return \
+-4*A*pow(kx,2)*pow(pi,2)*cos(2*omega*pi*t)*cos(2*kx*pi*x)*cos(2*ky*pi*y)*cos(\
+2*kz*pi*z);\\n}\\n\\ntemplate<typename T>\\nstatic inline auto dDydy (T A, T \
+kx, T ky, T kz, T t, T x, T y, T z) noexcept -> T {\\n  using std::sqrt, \
+std::sin, std::cos, std::acos;\\n  const auto pi{acos(T{-1})};\\n  const auto \
+omega{sqrt(kx * kx + ky * ky + kz * kz)};\\n  return \
+-4*A*pow(ky,2)*pow(pi,2)*cos(2*omega*pi*t)*cos(2*kx*pi*x)*cos(2*ky*pi*y)*cos(\
+2*kz*pi*z);\\n}\\n\\ntemplate<typename T>\\nstatic inline auto dDzdz (T A, T \
+kx, T ky, T kz, T t, T x, T y, T z) noexcept -> T {\\n  using std::sqrt, \
+std::sin, std::cos, std::acos;\\n  const auto pi{acos(T{-1})};\\n  const auto \
+omega{sqrt(kx * kx + ky * ky + kz * kz)};\\n  return \
+-4*A*pow(kz,2)*pow(pi,2)*cos(2*omega*pi*t)*cos(2*kx*pi*x)*cos(2*ky*pi*y)*cos(\
+2*kz*pi*z);\\n}\\n\"\>"], "Print",
+ CellChangeTimes->{
+  3.937670964055427*^9, 3.937671054259416*^9, {3.937671098120178*^9, 
+   3.937671134279393*^9}, 3.937671174059445*^9, 3.9376714159936132`*^9, {
+   3.937671446636017*^9, 3.9376714761157427`*^9}, {3.9376715360657873`*^9, 
+   3.937671545810375*^9}, 3.937671600464675*^9, {3.937671845094838*^9, 
+   3.93767186054572*^9}},
+ CellLabel->
+  "During evaluation of \
+In[30]:=",ExpressionUUID->"2b5bbc6e-8373-4e4f-a37e-5e08247a1b7c"]
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{1152, 594},
+WindowMargins->{{0, Automatic}, {Automatic, 0}},
+DockedCells->{},
+FrontEndVersion->"14.1 for Linux x86 (64-bit) (July 16, 2024)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"81dcf3a3-4928-4dcf-91e2-abe4af6972bb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[576, 22, 178, 3, 70, "Section",ExpressionUUID->"bdab5a60-0ecb-4c07-a418-c9541d57787a"],
+Cell[757, 27, 1856, 55, 294, "Input",ExpressionUUID->"f5a666d5-66cb-402d-bb56-fa9a39b332fd"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[2650, 87, 158, 3, 70, "Section",ExpressionUUID->"29cfb5dd-0abf-4347-a047-747adda231d6"],
+Cell[2811, 92, 839, 18, 218, "Input",ExpressionUUID->"5c2e5a60-40e3-426b-a708-75e535401392"],
+Cell[3653, 112, 4638, 137, 338, "Input",ExpressionUUID->"bb14f219-c489-4540-848a-7064c742a08e"],
+Cell[8294, 251, 1619, 35, 298, "Input",ExpressionUUID->"b9af2e79-adff-46b8-9e4e-ebc976bf3684"],
+Cell[CellGroupData[{
+Cell[9938, 290, 144, 2, 30, "Input",ExpressionUUID->"10af82ad-07f4-4238-a2dd-b878985ac0e7"],
+Cell[10085, 294, 4429, 64, 1683, "Print",ExpressionUUID->"2b5bbc6e-8373-4e4f-a37e-5e08247a1b7c"]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+

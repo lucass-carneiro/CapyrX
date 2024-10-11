@@ -30,3 +30,7 @@ CCTK_REAL gaussian_width "width of Gaussian"
 {
   (0:* :: ""
 } 1.0
+
+BOOLEAN use_exact_derivatives "Use exact values for the derivatives of the initial data instead of finite differencing"
+{
+} no

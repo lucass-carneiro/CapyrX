@@ -13,17 +13,18 @@ SCHEDULE MultiPatchWaveToy_Initial AT initial
 
 
 # Step
-#SCHEDULE MultiPatchWaveToy_Sync IN postregrid
-#{
-#  LANG: C
-#  OPTIONS: global
-#  SYNC: state
-#} "Sync the scalar wave state"
+SCHEDULE MultiPatchWaveToy_Sync IN postregrid
+{
+  LANG: C
+  OPTIONS: global
+  SYNC: state
+} "Sync the scalar wave state"
 
 SCHEDULE MultiPatchWaveToy_RHS IN ODESolvers_RHS
 {
   LANG: C
-  READS: MultiPatch::vertex_Jacobians(everywhere) state(everywhere)
+  READS: MultiPatch::vertex_Jacobians(everywhere) CoordinatesX::vertex_coords(everywhere)
+  READS:  state(everywhere)
   WRITES: rhs(interior)
 } "Calculate scalar wave RHS"
 

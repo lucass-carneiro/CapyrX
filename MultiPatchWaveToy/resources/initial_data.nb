@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       154,          7]
-NotebookDataLength[     43278,       1006]
-NotebookOptionsPosition[     41499,        968]
-NotebookOutlinePosition[     41905,        985]
-CellTagsIndexPosition[     41862,        982]
+NotebookDataLength[     43223,       1006]
+NotebookOptionsPosition[     41439,        968]
+NotebookOutlinePosition[     41850,        985]
+CellTagsIndexPosition[     41807,        982]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -327,7 +327,7 @@ Cell[CellGroupData[{
 
 Cell[BoxData[
  RowBox[{"Print", "[", "swString", "]"}]], "Input",
- CellLabel->"In[30]:=",ExpressionUUID->"10af82ad-07f4-4238-a2dd-b878985ac0e7"],
+ CellLabel->"In[36]:=",ExpressionUUID->"10af82ad-07f4-4238-a2dd-b878985ac0e7"],
 
 Cell[BoxData["\<\"\\ntemplate<typename T>\\nstatic inline auto phi (T A, T \
 kx, T ky, T kz, T t, T x, T y, T z) noexcept -> T {\\n  using std::sqrt, \
@@ -390,10 +390,10 @@ omega{sqrt(kx * kx + ky * ky + kz * kz)};\\n  return \
    3.937671134279393*^9}, 3.937671174059445*^9, 3.9376714159936132`*^9, {
    3.937671446636017*^9, 3.9376714761157427`*^9}, {3.9376715360657873`*^9, 
    3.937671545810375*^9}, 3.937671600464675*^9, {3.937671845094838*^9, 
-   3.93767186054572*^9}, 3.93818537502956*^9},
+   3.93767186054572*^9}, 3.93818537502956*^9, 3.9382076574869413`*^9},
  CellLabel->
   "During evaluation of \
-In[30]:=",ExpressionUUID->"f30ee4f7-1d29-4ea8-a7bd-6ab69dcf8ec0"]
+In[36]:=",ExpressionUUID->"1e34360d-ba45-4079-9d18-31461dbbef9d"]
 }, Open  ]]
 }, Open  ]],
 
@@ -415,10 +415,9 @@ Cell[BoxData[{
     RowBox[{"funcsmall_", ",", "func_"}], "]"}], ":=", 
    RowBox[{"\"\<\ntemplate<typename T>\nstatic inline auto \>\"", "<>", 
     RowBox[{"ToString", "[", "func", "]"}], "<>", 
-    "\"\< (T A, T kx, T ky, T kz, T t, T x, T y, T z) noexcept -> T {\n  \
-using std::sqrt, std::cosh, std::sinh;\n  \n  const auto r{sqrt(x * x + y * y \
-+ z * z)};\n\n  if (r < sqrt(std::numeric_limits<T>::epsilon())) {\n    \
-return \>\"", "<>", 
+    "\"\< (T W, T A, T t, T x, T y, T z) noexcept -> T {\n  using std::sqrt, \
+std::cosh, std::sinh;\n  \n  const auto r{sqrt(x * x + y * y + z * z)};\n\n  \
+if (r < sqrt(std::numeric_limits<T>::epsilon())) {\n    return \>\"", "<>", 
     RowBox[{"ToString", "[", 
      RowBox[{
       RowBox[{"funcsmall", "[", 
@@ -431,8 +430,9 @@ return \>\"", "<>",
      "]"}], "<>", "\"\<;\n  }\n}\n\>\""}]}], ";"}]}], "Input",
  CellChangeTimes->{{3.9381821419624033`*^9, 3.93818217017717*^9}, {
    3.9381823207104597`*^9, 3.9381824764554453`*^9}, 3.938182509314999*^9, {
-   3.9381866395304193`*^9, 3.938186644631385*^9}},
- CellLabel->"In[36]:=",ExpressionUUID->"19faea74-0ac1-4a62-9a75-1a26fdc15c96"],
+   3.9381866395304193`*^9, 3.938186644631385*^9}, {3.938207638544055*^9, 
+   3.9382076497760897`*^9}},
+ CellLabel->"In[37]:=",ExpressionUUID->"19faea74-0ac1-4a62-9a75-1a26fdc15c96"],
 
 Cell[BoxData[{
  RowBox[{
@@ -762,7 +762,7 @@ Cell[BoxData[{
    3.938185649439459*^9, 3.9381856552579412`*^9}, {3.938185936074663*^9, 
    3.938185946092428*^9}, 3.938186041356524*^9, {3.938186162444386*^9, 
    3.938186242906374*^9}, {3.938186281140565*^9, 3.938186395830143*^9}},
- CellLabel->"In[38]:=",ExpressionUUID->"7c911681-4edf-4bd0-aaaf-9d6d8baaceb6"],
+ CellLabel->"In[39]:=",ExpressionUUID->"7c911681-4edf-4bd0-aaaf-9d6d8baaceb6"],
 
 Cell[BoxData[{
  RowBox[{
@@ -806,34 +806,34 @@ Cell[BoxData[{
    3.937671597605291*^9}, {3.938185052489337*^9, 3.938185059931484*^9}, {
    3.938185132694952*^9, 3.9381851420082903`*^9}, {3.938185215769493*^9, 
    3.9381853150705433`*^9}, 3.9381853601165247`*^9},
- CellLabel->"In[64]:=",ExpressionUUID->"3620e5e1-2717-47c4-afe7-5c8328a16f7b"],
+ CellLabel->"In[65]:=",ExpressionUUID->"3620e5e1-2717-47c4-afe7-5c8328a16f7b"],
 
 Cell[CellGroupData[{
 
 Cell[BoxData[
  RowBox[{"Print", "[", "gaussString", "]"}]], "Input",
- CellLabel->"In[67]:=",ExpressionUUID->"4384eceb-8932-47dd-8d29-4f5924dcd5da"],
+ CellLabel->"In[68]:=",ExpressionUUID->"4384eceb-8932-47dd-8d29-4f5924dcd5da"],
 
-Cell[BoxData["\<\"\\ntemplate<typename T>\\nstatic inline auto phi (T A, T \
-kx, T ky, T kz, T t, T x, T y, T z) noexcept -> T {\\n  using std::sqrt, \
-std::cosh, std::sinh;\\n  \\n  const auto r{sqrt(x * x + y * y + z * \
-z)};\\n\\n  if (r < sqrt(std::numeric_limits<T>::epsilon())) {\\n    return \
+Cell[BoxData["\<\"\\ntemplate<typename T>\\nstatic inline auto phi (T W, T A, \
+T t, T x, T y, T z) noexcept -> T {\\n  using std::sqrt, std::cosh, \
+std::sinh;\\n  \\n  const auto r{sqrt(x * x + y * y + z * z)};\\n\\n  if (r < \
+sqrt(std::numeric_limits<T>::epsilon())) {\\n    return \
 (2*A*t)/(exp(pow(t,2)/(2.*pow(W,2)))*pow(W,2));\\n  } else {\\n    return \
 (A*(exp(-0.5*pow(t - sqrt(pow(x,2) + pow(y,2) + pow(z,2)),2)/pow(W,2)) - \
 exp(-0.5*pow(t + sqrt(pow(x,2) + pow(y,2) + \
 pow(z,2)),2)/pow(W,2))))/sqrt(pow(x,2) + pow(y,2) + pow(z,2));\\n  \
-}\\n}\\n\\ntemplate<typename T>\\nstatic inline auto Pi (T A, T kx, T ky, T \
-kz, T t, T x, T y, T z) noexcept -> T {\\n  using std::sqrt, std::cosh, \
-std::sinh;\\n  \\n  const auto r{sqrt(x * x + y * y + z * z)};\\n\\n  if (r < \
+}\\n}\\n\\ntemplate<typename T>\\nstatic inline auto Pi (T W, T A, T t, T x, \
+T y, T z) noexcept -> T {\\n  using std::sqrt, std::cosh, std::sinh;\\n  \\n  \
+const auto r{sqrt(x * x + y * y + z * z)};\\n\\n  if (r < \
 sqrt(std::numeric_limits<T>::epsilon())) {\\n    return (2*A*(-t + W)*(t + \
 W))/(exp(pow(t,2)/(2.*pow(W,2)))*pow(W,4));\\n  } else {\\n    return \
 (2*A*(sqrt(pow(x,2) + pow(y,2) + pow(z,2))*cosh((t*sqrt(pow(x,2) + pow(y,2) + \
 pow(z,2)))/pow(W,2)) - t*sinh((t*sqrt(pow(x,2) + pow(y,2) + \
 pow(z,2)))/pow(W,2))))/(exp((pow(t,2) + pow(x,2) + pow(y,2) + \
 pow(z,2))/(2.*pow(W,2)))*pow(W,2)*sqrt(pow(x,2) + pow(y,2) + pow(z,2)));\\n  \
-}\\n}\\n\\ntemplate<typename T>\\nstatic inline auto Dx (T A, T kx, T ky, T \
-kz, T t, T x, T y, T z) noexcept -> T {\\n  using std::sqrt, std::cosh, \
-std::sinh;\\n  \\n  const auto r{sqrt(x * x + y * y + z * z)};\\n\\n  if (r < \
+}\\n}\\n\\ntemplate<typename T>\\nstatic inline auto Dx (T W, T A, T t, T x, \
+T y, T z) noexcept -> T {\\n  using std::sqrt, std::cosh, std::sinh;\\n  \\n  \
+const auto r{sqrt(x * x + y * y + z * z)};\\n\\n  if (r < \
 sqrt(std::numeric_limits<T>::epsilon())) {\\n    return 0;\\n  } else {\\n    \
 return (A*x*(pow(W,2) + pow(x,2) + pow(y,2) + pow(z,2) + t*sqrt(pow(x,2) + \
 pow(y,2) + pow(z,2)) + exp((2*t*sqrt(pow(x,2) + pow(y,2) + \
@@ -843,9 +843,9 @@ exp((2*t*sqrt(pow(x,2) + pow(y,2) + pow(z,2)))/pow(W,2))*(pow(W,2) + pow(x,2) \
 2*t*sqrt(pow(x,2) + pow(y,2) + \
 pow(z,2)))/(2.*pow(W,2)))*pow(W,2)*pow(pow(x,2) + pow(y,2) + \
 pow(z,2),1.5));\\n  }\\n}\\n\\ntemplate<typename T>\\nstatic inline auto Dy \
-(T A, T kx, T ky, T kz, T t, T x, T y, T z) noexcept -> T {\\n  using \
-std::sqrt, std::cosh, std::sinh;\\n  \\n  const auto r{sqrt(x * x + y * y + z \
-* z)};\\n\\n  if (r < sqrt(std::numeric_limits<T>::epsilon())) {\\n    return \
+(T W, T A, T t, T x, T y, T z) noexcept -> T {\\n  using std::sqrt, \
+std::cosh, std::sinh;\\n  \\n  const auto r{sqrt(x * x + y * y + z * \
+z)};\\n\\n  if (r < sqrt(std::numeric_limits<T>::epsilon())) {\\n    return \
 0;\\n  } else {\\n    return (A*y*(pow(W,2) + pow(x,2) + pow(y,2) + pow(z,2) \
 + t*sqrt(pow(x,2) + pow(y,2) + pow(z,2)) + exp((2*t*sqrt(pow(x,2) + pow(y,2) \
 + pow(z,2)))/pow(W,2))*t*sqrt(pow(x,2) + pow(y,2) + pow(z,2)) - \
@@ -854,9 +854,9 @@ exp((2*t*sqrt(pow(x,2) + pow(y,2) + pow(z,2)))/pow(W,2))*(pow(W,2) + pow(x,2) \
 2*t*sqrt(pow(x,2) + pow(y,2) + \
 pow(z,2)))/(2.*pow(W,2)))*pow(W,2)*pow(pow(x,2) + pow(y,2) + \
 pow(z,2),1.5));\\n  }\\n}\\n\\ntemplate<typename T>\\nstatic inline auto Dz \
-(T A, T kx, T ky, T kz, T t, T x, T y, T z) noexcept -> T {\\n  using \
-std::sqrt, std::cosh, std::sinh;\\n  \\n  const auto r{sqrt(x * x + y * y + z \
-* z)};\\n\\n  if (r < sqrt(std::numeric_limits<T>::epsilon())) {\\n    return \
+(T W, T A, T t, T x, T y, T z) noexcept -> T {\\n  using std::sqrt, \
+std::cosh, std::sinh;\\n  \\n  const auto r{sqrt(x * x + y * y + z * \
+z)};\\n\\n  if (r < sqrt(std::numeric_limits<T>::epsilon())) {\\n    return \
 0;\\n  } else {\\n    return (A*z*(pow(W,2) + pow(x,2) + pow(y,2) + pow(z,2) \
 + t*sqrt(pow(x,2) + pow(y,2) + pow(z,2)) + exp((2*t*sqrt(pow(x,2) + pow(y,2) \
 + pow(z,2)))/pow(W,2))*t*sqrt(pow(x,2) + pow(y,2) + pow(z,2)) - \
@@ -865,9 +865,9 @@ exp((2*t*sqrt(pow(x,2) + pow(y,2) + pow(z,2)))/pow(W,2))*(pow(W,2) + pow(x,2) \
 2*t*sqrt(pow(x,2) + pow(y,2) + \
 pow(z,2)))/(2.*pow(W,2)))*pow(W,2)*pow(pow(x,2) + pow(y,2) + \
 pow(z,2),1.5));\\n  }\\n}\\n\\ntemplate<typename T>\\nstatic inline auto \
-dPidx (T A, T kx, T ky, T kz, T t, T x, T y, T z) noexcept -> T {\\n  using \
-std::sqrt, std::cosh, std::sinh;\\n  \\n  const auto r{sqrt(x * x + y * y + z \
-* z)};\\n\\n  if (r < sqrt(std::numeric_limits<T>::epsilon())) {\\n    return \
+dPidx (T W, T A, T t, T x, T y, T z) noexcept -> T {\\n  using std::sqrt, \
+std::cosh, std::sinh;\\n  \\n  const auto r{sqrt(x * x + y * y + z * \
+z)};\\n\\n  if (r < sqrt(std::numeric_limits<T>::epsilon())) {\\n    return \
 0;\\n  } else {\\n    return (-2*A*x*(sqrt(pow(x,2) + pow(y,2) + \
 pow(z,2))*(pow(t,2) + pow(x,2) + pow(y,2) + pow(z,2))*cosh((t*sqrt(pow(x,2) + \
 pow(y,2) + pow(z,2)))/pow(W,2)) - t*(pow(W,2) + 2*(pow(x,2) + pow(y,2) + \
@@ -875,9 +875,9 @@ pow(z,2)))*sinh((t*sqrt(pow(x,2) + pow(y,2) + \
 pow(z,2)))/pow(W,2))))/(exp((pow(t,2) + pow(x,2) + pow(y,2) + \
 pow(z,2))/(2.*pow(W,2)))*pow(W,4)*pow(pow(x,2) + pow(y,2) + \
 pow(z,2),1.5));\\n  }\\n}\\n\\ntemplate<typename T>\\nstatic inline auto \
-dPidy (T A, T kx, T ky, T kz, T t, T x, T y, T z) noexcept -> T {\\n  using \
-std::sqrt, std::cosh, std::sinh;\\n  \\n  const auto r{sqrt(x * x + y * y + z \
-* z)};\\n\\n  if (r < sqrt(std::numeric_limits<T>::epsilon())) {\\n    return \
+dPidy (T W, T A, T t, T x, T y, T z) noexcept -> T {\\n  using std::sqrt, \
+std::cosh, std::sinh;\\n  \\n  const auto r{sqrt(x * x + y * y + z * \
+z)};\\n\\n  if (r < sqrt(std::numeric_limits<T>::epsilon())) {\\n    return \
 0;\\n  } else {\\n    return (-2*A*y*(sqrt(pow(x,2) + pow(y,2) + \
 pow(z,2))*(pow(t,2) + pow(x,2) + pow(y,2) + pow(z,2))*cosh((t*sqrt(pow(x,2) + \
 pow(y,2) + pow(z,2)))/pow(W,2)) - t*(pow(W,2) + 2*(pow(x,2) + pow(y,2) + \
@@ -885,9 +885,9 @@ pow(z,2)))*sinh((t*sqrt(pow(x,2) + pow(y,2) + \
 pow(z,2)))/pow(W,2))))/(exp((pow(t,2) + pow(x,2) + pow(y,2) + \
 pow(z,2))/(2.*pow(W,2)))*pow(W,4)*pow(pow(x,2) + pow(y,2) + \
 pow(z,2),1.5));\\n  }\\n}\\n\\ntemplate<typename T>\\nstatic inline auto \
-dPidz (T A, T kx, T ky, T kz, T t, T x, T y, T z) noexcept -> T {\\n  using \
-std::sqrt, std::cosh, std::sinh;\\n  \\n  const auto r{sqrt(x * x + y * y + z \
-* z)};\\n\\n  if (r < sqrt(std::numeric_limits<T>::epsilon())) {\\n    return \
+dPidz (T W, T A, T t, T x, T y, T z) noexcept -> T {\\n  using std::sqrt, \
+std::cosh, std::sinh;\\n  \\n  const auto r{sqrt(x * x + y * y + z * \
+z)};\\n\\n  if (r < sqrt(std::numeric_limits<T>::epsilon())) {\\n    return \
 0;\\n  } else {\\n    return (-2*A*z*(sqrt(pow(x,2) + pow(y,2) + \
 pow(z,2))*(pow(t,2) + pow(x,2) + pow(y,2) + pow(z,2))*cosh((t*sqrt(pow(x,2) + \
 pow(y,2) + pow(z,2)))/pow(W,2)) - t*(pow(W,2) + 2*(pow(x,2) + pow(y,2) + \
@@ -895,9 +895,9 @@ pow(z,2)))*sinh((t*sqrt(pow(x,2) + pow(y,2) + \
 pow(z,2)))/pow(W,2))))/(exp((pow(t,2) + pow(x,2) + pow(y,2) + \
 pow(z,2))/(2.*pow(W,2)))*pow(W,4)*pow(pow(x,2) + pow(y,2) + \
 pow(z,2),1.5));\\n  }\\n}\\n\\ntemplate<typename T>\\nstatic inline auto \
-dDxdx (T A, T kx, T ky, T kz, T t, T x, T y, T z) noexcept -> T {\\n  using \
-std::sqrt, std::cosh, std::sinh;\\n  \\n  const auto r{sqrt(x * x + y * y + z \
-* z)};\\n\\n  if (r < sqrt(std::numeric_limits<T>::epsilon())) {\\n    return \
+dDxdx (T W, T A, T t, T x, T y, T z) noexcept -> T {\\n  using std::sqrt, \
+std::cosh, std::sinh;\\n  \\n  const auto r{sqrt(x * x + y * y + z * \
+z)};\\n\\n  if (r < sqrt(std::numeric_limits<T>::epsilon())) {\\n    return \
 0;\\n  } else {\\n    return (A*((-1 + exp((2*t*sqrt(pow(x,2) + pow(y,2) + \
 pow(z,2)))/pow(W,2)))*pow(W,4)*(2*pow(x,2) - pow(y,2) - pow(z,2)) - 2*(1 + \
 exp((2*t*sqrt(pow(x,2) + pow(y,2) + \
@@ -915,9 +915,9 @@ pow(z,2)))))))/(exp((pow(t,2) + pow(x,2) + pow(y,2) + pow(z,2) + \
 2*t*sqrt(pow(x,2) + pow(y,2) + \
 pow(z,2)))/(2.*pow(W,2)))*pow(W,4)*pow(pow(x,2) + pow(y,2) + \
 pow(z,2),2.5));\\n  }\\n}\\n\\ntemplate<typename T>\\nstatic inline auto \
-dDydy (T A, T kx, T ky, T kz, T t, T x, T y, T z) noexcept -> T {\\n  using \
-std::sqrt, std::cosh, std::sinh;\\n  \\n  const auto r{sqrt(x * x + y * y + z \
-* z)};\\n\\n  if (r < sqrt(std::numeric_limits<T>::epsilon())) {\\n    return \
+dDydy (T W, T A, T t, T x, T y, T z) noexcept -> T {\\n  using std::sqrt, \
+std::cosh, std::sinh;\\n  \\n  const auto r{sqrt(x * x + y * y + z * \
+z)};\\n\\n  if (r < sqrt(std::numeric_limits<T>::epsilon())) {\\n    return \
 0;\\n  } else {\\n    return -((A*((-1 + exp((2*t*sqrt(pow(x,2) + pow(y,2) + \
 pow(z,2)))/pow(W,2)))*pow(W,4)*(pow(x,2) - 2*pow(y,2) + pow(z,2)) - \
 pow(y,2)*(pow(x,2) + pow(y,2) + pow(z,2))*((-1 + exp((2*t*sqrt(pow(x,2) + \
@@ -935,8 +935,8 @@ pow(y,2) + pow(z,2)) - t*pow(z,2)*sqrt(pow(x,2) + pow(y,2) + \
 pow(z,2))))))/(exp((pow(t,2) + pow(x,2) + pow(y,2) + pow(z,2) + \
 2*t*sqrt(pow(x,2) + pow(y,2) + \
 pow(z,2)))/(2.*pow(W,2)))*pow(W,4)*pow(pow(x,2) + pow(y,2) + pow(z,2),2.5)));\
-\\n  }\\n}\\n\\ntemplate<typename T>\\nstatic inline auto dDzdz (T A, T kx, T \
-ky, T kz, T t, T x, T y, T z) noexcept -> T {\\n  using std::sqrt, std::cosh, \
+\\n  }\\n}\\n\\ntemplate<typename T>\\nstatic inline auto dDzdz (T W, T A, T \
+t, T x, T y, T z) noexcept -> T {\\n  using std::sqrt, std::cosh, \
 std::sinh;\\n  \\n  const auto r{sqrt(x * x + y * y + z * z)};\\n\\n  if (r < \
 sqrt(std::numeric_limits<T>::epsilon())) {\\n    return 0;\\n  } else {\\n    \
 return -((A*((-1 + exp((2*t*sqrt(pow(x,2) + pow(y,2) + \
@@ -959,14 +959,14 @@ pow(y,2),2) - pow(z,4)))))/(exp((pow(t,2) + pow(x,2) + pow(y,2) + pow(z,2) + \
 2*t*sqrt(pow(x,2) + pow(y,2) + \
 pow(z,2)))/(2.*pow(W,2)))*pow(W,4)*pow(pow(x,2) + pow(y,2) + pow(z,2),2.5)));\
 \\n  }\\n}\\n\"\>"], "Print",
- CellChangeTimes->{3.938187029687727*^9},
+ CellChangeTimes->{3.938187029687727*^9, 3.938207695944425*^9},
  CellLabel->
   "During evaluation of \
-In[67]:=",ExpressionUUID->"b850a103-2f10-4e58-9a6f-96e4fcac8966"]
+In[68]:=",ExpressionUUID->"12987deb-6bb5-42ac-840a-ac9748c84a80"]
 }, Open  ]]
 }, Open  ]]
 },
-WindowSize->{1152, 594},
+WindowSize->{1150.5, 593.25},
 WindowMargins->{{0, Automatic}, {Automatic, 0}},
 DockedCells->{},
 FrontEndVersion->"14.1 for Linux x86 (64-bit) (July 16, 2024)",
@@ -995,17 +995,17 @@ Cell[4446, 137, 5187, 149, 338, "Input",ExpressionUUID->"bb14f219-c489-4540-848a
 Cell[9636, 288, 1619, 35, 298, "Input",ExpressionUUID->"b9af2e79-adff-46b8-9e4e-ebc976bf3684"],
 Cell[CellGroupData[{
 Cell[11280, 327, 144, 2, 30, "Input",ExpressionUUID->"10af82ad-07f4-4238-a2dd-b878985ac0e7"],
-Cell[11427, 331, 4450, 64, 1683, "Print",ExpressionUUID->"f30ee4f7-1d29-4ea8-a7bd-6ab69dcf8ec0"]
+Cell[11427, 331, 4474, 64, 1683, "Print",ExpressionUUID->"1e34360d-ba45-4079-9d18-31461dbbef9d"]
 }, Open  ]]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[15926, 401, 204, 4, 70, "Section",ExpressionUUID->"19790bb9-5598-4ad1-8abd-189d575fb0a0"],
-Cell[16133, 407, 1307, 27, 320, "Input",ExpressionUUID->"19faea74-0ac1-4a62-9a75-1a26fdc15c96"],
-Cell[17443, 436, 11417, 328, 809, "Input",ExpressionUUID->"7c911681-4edf-4bd0-aaaf-9d6d8baaceb6"],
-Cell[28863, 766, 2135, 42, 298, "Input",ExpressionUUID->"3620e5e1-2717-47c4-afe7-5c8328a16f7b"],
+Cell[15950, 401, 204, 4, 70, "Section",ExpressionUUID->"19790bb9-5598-4ad1-8abd-189d575fb0a0"],
+Cell[16157, 407, 1344, 27, 320, "Input",ExpressionUUID->"19faea74-0ac1-4a62-9a75-1a26fdc15c96"],
+Cell[17504, 436, 11417, 328, 809, "Input",ExpressionUUID->"7c911681-4edf-4bd0-aaaf-9d6d8baaceb6"],
+Cell[28924, 766, 2135, 42, 298, "Input",ExpressionUUID->"3620e5e1-2717-47c4-afe7-5c8328a16f7b"],
 Cell[CellGroupData[{
-Cell[31023, 812, 147, 2, 30, "Input",ExpressionUUID->"4384eceb-8932-47dd-8d29-4f5924dcd5da"],
-Cell[31173, 816, 10298, 148, 3494, "Print",ExpressionUUID->"b850a103-2f10-4e58-9a6f-96e4fcac8966"]
+Cell[31084, 812, 147, 2, 30, "Input",ExpressionUUID->"4384eceb-8932-47dd-8d29-4f5924dcd5da"],
+Cell[31234, 816, 10177, 148, 3494, "Print",ExpressionUUID->"12987deb-6bb5-42ac-840a-ac9748c84a80"]
 }, Open  ]]
 }, Open  ]]
 }

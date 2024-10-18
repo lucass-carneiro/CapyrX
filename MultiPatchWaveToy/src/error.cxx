@@ -7,6 +7,7 @@
 // clang-format on
 
 #include "standing_wave.hxx"
+#include "gaussian.hxx"
 
 namespace MultiPatchWaveToy {
 
@@ -52,8 +53,39 @@ extern "C" void MultiPatchWaveToy_Error(CCTK_ARGUMENTS) {
         });
 
   } else if (CCTK_EQUALS(initial_condition, "Gaussian")) {
-    CCTK_ERROR("Unimplemented initial condition");
+    grid.loop_int<0, 0, 0>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+          using std::fabs;
 
+          const auto t{cctk_time};
+          const auto x{vcoordx(p.I)};
+          const auto y{vcoordy(p.I)};
+          const auto z{vcoordz(p.I)};
+
+          const auto expected_phi{
+              gauss::phi(amplitude, gaussian_width, t, x, y, z)};
+          const auto expected_Pi{
+              gauss::Pi(amplitude, gaussian_width, t, x, y, z)};
+          const auto expected_Dx{
+              gauss::Dx(amplitude, gaussian_width, t, x, y, z)};
+          const auto expected_Dy{
+              gauss::Dy(amplitude, gaussian_width, t, x, y, z)};
+          const auto expected_Dz{
+              gauss::Dz(amplitude, gaussian_width, t, x, y, z)};
+
+          const auto actual_phi{phi(p.I)};
+          const auto actual_Pi{Pi(p.I)};
+          const auto actual_Dx{Dx(p.I)};
+          const auto actual_Dy{Dy(p.I)};
+          const auto actual_Dz{Dz(p.I)};
+
+          phi_error(p.I) = fabs(expected_phi - actual_phi);
+          Pi_error(p.I) = fabs(expected_Pi - actual_Pi);
+          Dx_error(p.I) = fabs(expected_Dx - actual_Dx);
+          Dy_error(p.I) = fabs(expected_Dy - actual_Dy);
+          Dz_error(p.I) = fabs(expected_Dz - actual_Dz);
+        });
   } else {
     CCTK_ERROR("Unknown initial condition");
   }

@@ -7,6 +7,7 @@
 // clang-format on
 
 #include "standing_wave.hxx"
+#include "gaussian.hxx"
 
 namespace MultiPatchWaveToy {
 
@@ -62,9 +63,33 @@ extern "C" void MultiPatchWaveToy_RHS(CCTK_ARGUMENTS) {
                 Dy_rhs(p.I) = dPidy;
                 Dz_rhs(p.I) = dPidz;
               });
-    } else if (CCTK_EQUALS(initial_condition, "standing wave")) {
-      CCTK_VERROR(
-          "Exact derivativ;e not implemented yet for this initial condition");
+    } else if (CCTK_EQUALS(initial_condition, "Gaussian")) {
+      grid.loop_int<0, 0, 0>(
+          grid.nghostzones,
+          [=] CCTK_DEVICE(const Loop::PointDesc &p)
+              CCTK_ATTRIBUTE_ALWAYS_INLINE {
+                const auto t{cctk_time};
+                const auto x{vcoordx(p.I)};
+                const auto y{vcoordy(p.I)};
+                const auto z{vcoordz(p.I)};
+
+                const auto A{amplitude};
+                const auto W{gaussian_width};
+
+                const auto dPidx{gauss::dPidx(A, W, t, x, y, z)};
+                const auto dPidy{gauss::dPidy(A, W, t, x, y, z)};
+                const auto dPidz{gauss::dPidz(A, W, t, x, y, z)};
+
+                const auto dDxdx{gauss::dDxdx(A, W, t, x, y, z)};
+                const auto dDydy{gauss::dDydy(A, W, t, x, y, z)};
+                const auto dDzdz{gauss::dDzdz(A, W, t, x, y, z)};
+
+                phi_rhs(p.I) = Pi(p.I);
+                Pi_rhs(p.I) = dDxdx + dDydy + dDzdz;
+                Dx_rhs(p.I) = dPidx;
+                Dy_rhs(p.I) = dPidy;
+                Dz_rhs(p.I) = dPidz;
+              });
     } else {
       CCTK_VERROR("Unrecognized initial data type");
     }

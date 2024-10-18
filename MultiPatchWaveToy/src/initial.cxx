@@ -7,6 +7,7 @@
 // clang-format on
 
 #include "standing_wave.hxx"
+#include "gaussian.hxx"
 
 namespace MultiPatchWaveToy {
 
@@ -33,8 +34,20 @@ extern "C" void MultiPatchWaveToy_Initial(CCTK_ARGUMENTS) {
         });
 
   } else if (CCTK_EQUALS(initial_condition, "Gaussian")) {
-    CCTK_ERROR("Unimplemented initial condition");
+    grid.loop_int<0, 0, 0>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+          const auto t{cctk_time};
+          const auto x{vcoordx(p.I)};
+          const auto y{vcoordy(p.I)};
+          const auto z{vcoordz(p.I)};
 
+          phi(p.I) = gauss::phi(amplitude, gaussian_width, t, x, y, z);
+          Pi(p.I) = gauss::Pi(amplitude, gaussian_width, t, x, y, z);
+          Dx(p.I) = gauss::Dx(amplitude, gaussian_width, t, x, y, z);
+          Dy(p.I) = gauss::Dy(amplitude, gaussian_width, t, x, y, z);
+          Dz(p.I) = gauss::Dz(amplitude, gaussian_width, t, x, y, z);
+        });
   } else {
     CCTK_ERROR("Unknown initial condition");
   }

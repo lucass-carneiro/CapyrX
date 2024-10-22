@@ -7,7 +7,24 @@ ActiveThorns = "
     MultiPatch
     MultiPatchWaveToy
 "
- 
+
+###### Settings ######
+$final_time = 10.0
+$out_every_time = 1.0
+
+$ncells = 80
+$cfl = 0.25
+
+$r0 = 1.0
+$rf = 5.0
+######################
+
+$dx = 2.0 * $r0 / $ncells
+$dt = $cfl * $dx
+
+$itlast = ceil($final_time / $dt)
+$out_every_it = ceil($out_every_time / $dt)
+
 Cactus::presync_mode = "mixed-error"
 Cactus::cctk_show_schedule = yes
 
@@ -24,15 +41,15 @@ ODESolvers::method = "RK4"
 
 MultiPatch::patch_system = "Cake"
                                                                         
-MultiPatch::cake_outer_boundary_radius = 5.0
-MultiPatch::cake_inner_boundary_radius = 1.0
+MultiPatch::cake_inner_boundary_radius = $r0
+MultiPatch::cake_outer_boundary_radius = $rf
 
-MultiPatch::cake_cartesian_ncells_i    = 80
-MultiPatch::cake_cartesian_ncells_j    = 80
-MultiPatch::cake_cartesian_ncells_k    = 80
+MultiPatch::cake_cartesian_ncells_i = $ncells
+MultiPatch::cake_cartesian_ncells_j = $ncells
+MultiPatch::cake_cartesian_ncells_k = $ncells
 
-MultiPatch::cake_angular_cells         = 80
-MultiPatch::cake_radial_cells          = 80
+MultiPatch::cake_angular_cells = $ncells
+MultiPatch::cake_radial_cells = $ncells
 
 MultiPatchWaveToy::initial_condition = "standing wave"
 MultiPatchWaveToy::wave_kx = 0.75
@@ -50,7 +67,7 @@ CarpetX::boundary_upper_z = "dirichlet"
 CarpetX::ghost_size = 2
 
 IO::out_dir = $parfile
-IO::out_every = 1
+IO::out_every = $out_every_it
 
 CarpetX::out_tsv = no
 CarpetX::out_tsv_vars = ""
@@ -67,8 +84,9 @@ TimerReport::out_filename = "TimerReport"
 TimerReport::output_schedule_timers = no
 TimerReport::n_top_timers = 100
 
-CarpetX::dtfac      = 0.25
+CarpetX::dtfac      = $cfl
 Cactus::terminate   = "iteration"
-Cactus::cctk_itlast = 200
+Cactus::cctk_itlast = $itlast
+
 #Cactus::terminate   = "time"
 #Cactus::cctk_final_time = 1.0

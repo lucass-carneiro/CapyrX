@@ -39,6 +39,9 @@ CarpetX::boundary_upper_x = "dirichlet"
 CarpetX::boundary_upper_y = "dirichlet"
 CarpetX::boundary_upper_z = "dirichlet"
 
+# We are using 5 point stencils
+CarpetX::ghost_size = 2
+
 IO::out_dir = $parfile
 IO::out_every = 1
 

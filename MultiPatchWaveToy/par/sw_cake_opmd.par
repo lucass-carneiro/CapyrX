@@ -34,7 +34,6 @@ MultiPatch::cake_cartesian_ncells_k    = 80
 MultiPatch::cake_angular_cells         = 80
 MultiPatch::cake_radial_cells          = 80
 
-MultiPatchWaveToy::use_exact_derivatives = yes
 MultiPatchWaveToy::initial_condition = "standing wave"
 MultiPatchWaveToy::wave_kx = 0.75
 MultiPatchWaveToy::wave_ky = 0.75

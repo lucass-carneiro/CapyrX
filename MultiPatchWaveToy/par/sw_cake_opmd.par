@@ -17,6 +17,8 @@ $cfl = 0.25
 
 $r0 = 1.0
 $rf = 5.0
+
+$wave_k = 0.75
 ######################
 
 $dx = 2.0 * $r0 / $ncells
@@ -52,9 +54,9 @@ MultiPatch::cake_angular_cells = $ncells
 MultiPatch::cake_radial_cells = $ncells
 
 MultiPatchWaveToy::initial_condition = "standing wave"
-MultiPatchWaveToy::wave_kx = 0.75
-MultiPatchWaveToy::wave_ky = 0.75
-MultiPatchWaveToy::wave_kz = 0.75
+MultiPatchWaveToy::wave_kx = $wave_k
+MultiPatchWaveToy::wave_ky = $wave_k
+MultiPatchWaveToy::wave_kz = $wave_k
 
 CarpetX::boundary_x = "dirichlet"
 CarpetX::boundary_y = "dirichlet"
@@ -87,6 +89,3 @@ TimerReport::n_top_timers = 100
 CarpetX::dtfac      = $cfl
 Cactus::terminate   = "iteration"
 Cactus::cctk_itlast = $itlast
-
-#Cactus::terminate   = "time"
-#Cactus::cctk_final_time = 1.0

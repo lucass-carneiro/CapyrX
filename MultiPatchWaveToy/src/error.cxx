@@ -1,10 +1,8 @@
-// clang-format off
-#include <loop_device.hxx>
-
 #include <cctk.h>
 #include <cctk_Arguments.h>
 #include <cctk_Parameters.h>
-// clang-format on
+
+#include <loop_device.hxx>
 
 #include "standing_wave.hxx"
 #include "gaussian.hxx"

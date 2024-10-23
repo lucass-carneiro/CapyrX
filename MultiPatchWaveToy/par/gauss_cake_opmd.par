@@ -1,0 +1,90 @@
+ActiveThorns = "
+    CarpetX
+    IOUtil
+    TimerReport
+    ODESolvers
+    CoordinatesX
+    MultiPatch
+    MultiPatchWaveToy
+"
+
+###### Settings ######
+$final_time = 10.0
+$out_every_time = 1.0
+
+$ncells = 80
+$cfl = 0.25
+
+$r0 = 1.0
+$rf = 5.0
+######################
+
+$dx = 2.0 * $r0 / $ncells
+$dt = $cfl * $dx
+
+$itlast = ceil($final_time / $dt)
+$out_every_it = ceil($out_every_time / $dt)
+
+Cactus::presync_mode = "mixed-error"
+Cactus::cctk_show_schedule = yes
+
+CarpetX::verbose = yes
+CarpetX::poison_undefined_values = yes
+
+CarpetX::blocking_factor_x = 1
+CarpetX::blocking_factor_y = 1
+CarpetX::blocking_factor_z = 1
+
+CarpetX::max_num_levels = 1
+
+ODESolvers::method = "RK4"
+
+MultiPatch::patch_system = "Cake"
+                                                                        
+MultiPatch::cake_inner_boundary_radius = $r0
+MultiPatch::cake_outer_boundary_radius = $rf
+
+MultiPatch::cake_cartesian_ncells_i = $ncells
+MultiPatch::cake_cartesian_ncells_j = $ncells
+MultiPatch::cake_cartesian_ncells_k = $ncells
+
+MultiPatch::cake_angular_cells = $ncells
+MultiPatch::cake_radial_cells = $ncells
+
+MultiPatchWaveToy::initial_condition = "Gaussian"
+MultiPatchWaveToy::gaussian_width = $cfl / sqrt(2)
+
+CarpetX::boundary_x = "dirichlet"
+CarpetX::boundary_y = "dirichlet"
+CarpetX::boundary_z = "dirichlet"
+CarpetX::boundary_upper_x = "dirichlet"
+CarpetX::boundary_upper_y = "dirichlet"
+CarpetX::boundary_upper_z = "dirichlet"
+
+# We are using 5 point stencils
+CarpetX::ghost_size = 2
+
+IO::out_dir = $parfile
+IO::out_every = $out_every_it
+
+CarpetX::out_tsv = no
+CarpetX::out_tsv_vars = ""
+
+CarpetX::out_openpmd_vars = "
+    CoordinatesX::vertex_coords
+    MultiPatchWaveToy::state
+    MultiPatchWaveToy::energy
+    MultiPatchWaveToy::error
+"
+
+TimerReport::out_every = 1
+TimerReport::out_filename = "TimerReport"
+TimerReport::output_schedule_timers = no
+TimerReport::n_top_timers = 100
+
+CarpetX::dtfac      = $cfl
+Cactus::terminate   = "iteration"
+Cactus::cctk_itlast = $itlast
+
+#Cactus::terminate   = "time"
+#Cactus::cctk_final_time = 1.0

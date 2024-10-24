@@ -13,8 +13,8 @@ enum class local_fd_dir : std::size_t { a = 0, b = 1, c = 2 };
 
 // Local central 1st order derivative (4th order accurate)
 template <local_fd_dir direction, typename T>
-static inline auto fd_l_1_4(const Loop::PointDesc &p,
-                            const Loop::GF3D2<T> &gf) noexcept -> T {
+static inline auto CCTK_HOST CCTK_DEVICE
+fd_l_1_4(const Loop::PointDesc &p, const Loop::GF3D2<T> &gf) noexcept -> T {
   constexpr auto d{static_cast<size_t>(direction)};
 
   const auto num{gf(p.I - 2 * p.DI[d]) - 8.0 * gf(p.I - 1 * p.DI[d]) +

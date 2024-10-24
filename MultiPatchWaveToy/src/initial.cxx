@@ -16,7 +16,7 @@ extern "C" void MultiPatchWaveToy_Initial(CCTK_ARGUMENTS) {
   DECLARE_CCTK_PARAMETERS;
 
   if (CCTK_EQUALS(initial_condition, "standing wave")) {
-    grid.loop_int<0, 0, 0>(
+    grid.loop_int_device<0, 0, 0>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
           const auto t{cctk_time};
@@ -32,7 +32,7 @@ extern "C" void MultiPatchWaveToy_Initial(CCTK_ARGUMENTS) {
         });
 
   } else if (CCTK_EQUALS(initial_condition, "Gaussian")) {
-    grid.loop_int<0, 0, 0>(
+    grid.loop_int_device<0, 0, 0>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
           const auto t{cctk_time};

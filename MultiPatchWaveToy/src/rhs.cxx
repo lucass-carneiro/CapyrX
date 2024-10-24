@@ -28,7 +28,7 @@ extern "C" void MultiPatchWaveToy_RHS(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTSX_MultiPatchWaveToy_RHS;
   DECLARE_CCTK_PARAMETERS;
 
-  grid.loop_int<0, 0, 0>(
+  grid.loop_int_device<0, 0, 0>(
       grid.nghostzones,
       [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
         const auto d_Pi_dx{vJ_da_dx(p.I) * fd_l_1_4<local_fd_dir::a>(p, Pi) +

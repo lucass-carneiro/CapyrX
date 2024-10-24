@@ -116,11 +116,18 @@ def plot_openpmd_slice(args):
                     levels=lvls
                 )
             else:
+                lvls = None
+
+                if autorange:
+                    lvls = 100
+                else:
+                    lvls = np.linspace(varmin, varmax, 101)
+
                 plt.tricontourf(
                     df[global_x],
                     df[global_y],
                     df[gf_name],
-                    levels=100,
+                    levels=lvls,
                 )
 
             if (plot_tri):

@@ -1,12 +1,15 @@
 #ifndef MULTIPATCH_WAVE_TOY_GAUSSIAN_HXX
 #define MULTIPATCH_WAVE_TOY_GAUSSIAN_HXX
 
+#include <cctk.h>
+
 #include <cmath>
 
 namespace MultiPatchWaveToy::gauss {
 
 template <typename T>
-static inline auto phi(T W, T A, T t, T x, T y, T z) noexcept -> T {
+static inline auto CCTK_HOST CCTK_DEVICE phi(T W, T A, T t, T x, T y,
+                                             T z) noexcept -> T {
   using std::sqrt, std::cosh, std::sinh;
 
   const auto r{sqrt(x * x + y * y + z * z)};
@@ -24,7 +27,8 @@ static inline auto phi(T W, T A, T t, T x, T y, T z) noexcept -> T {
 }
 
 template <typename T>
-static inline auto Pi(T W, T A, T t, T x, T y, T z) noexcept -> T {
+static inline auto CCTK_HOST CCTK_DEVICE Pi(T W, T A, T t, T x, T y,
+                                            T z) noexcept -> T {
   using std::sqrt, std::cosh, std::sinh;
 
   const auto r{sqrt(x * x + y * y + z * z)};
@@ -46,7 +50,8 @@ static inline auto Pi(T W, T A, T t, T x, T y, T z) noexcept -> T {
 }
 
 template <typename T>
-static inline auto Dx(T W, T A, T t, T x, T y, T z) noexcept -> T {
+static inline auto CCTK_HOST CCTK_DEVICE Dx(T W, T A, T t, T x, T y,
+                                            T z) noexcept -> T {
   using std::sqrt, std::cosh, std::sinh;
 
   const auto r{sqrt(x * x + y * y + z * z)};
@@ -71,7 +76,8 @@ static inline auto Dx(T W, T A, T t, T x, T y, T z) noexcept -> T {
 }
 
 template <typename T>
-static inline auto Dy(T W, T A, T t, T x, T y, T z) noexcept -> T {
+static inline auto CCTK_HOST CCTK_DEVICE Dy(T W, T A, T t, T x, T y,
+                                            T z) noexcept -> T {
   using std::sqrt, std::cosh, std::sinh;
 
   const auto r{sqrt(x * x + y * y + z * z)};
@@ -96,7 +102,8 @@ static inline auto Dy(T W, T A, T t, T x, T y, T z) noexcept -> T {
 }
 
 template <typename T>
-static inline auto Dz(T W, T A, T t, T x, T y, T z) noexcept -> T {
+static inline auto CCTK_HOST CCTK_DEVICE Dz(T W, T A, T t, T x, T y,
+                                            T z) noexcept -> T {
   using std::sqrt, std::cosh, std::sinh;
 
   const auto r{sqrt(x * x + y * y + z * z)};
@@ -121,7 +128,8 @@ static inline auto Dz(T W, T A, T t, T x, T y, T z) noexcept -> T {
 }
 
 template <typename T>
-static inline auto dPidx(T W, T A, T t, T x, T y, T z) noexcept -> T {
+static inline auto CCTK_HOST CCTK_DEVICE dPidx(T W, T A, T t, T x, T y,
+                                               T z) noexcept -> T {
   using std::sqrt, std::cosh, std::sinh;
 
   const auto r{sqrt(x * x + y * y + z * z)};
@@ -144,7 +152,8 @@ static inline auto dPidx(T W, T A, T t, T x, T y, T z) noexcept -> T {
 }
 
 template <typename T>
-static inline auto dPidy(T W, T A, T t, T x, T y, T z) noexcept -> T {
+static inline auto CCTK_HOST CCTK_DEVICE dPidy(T W, T A, T t, T x, T y,
+                                               T z) noexcept -> T {
   using std::sqrt, std::cosh, std::sinh;
 
   const auto r{sqrt(x * x + y * y + z * z)};
@@ -167,7 +176,8 @@ static inline auto dPidy(T W, T A, T t, T x, T y, T z) noexcept -> T {
 }
 
 template <typename T>
-static inline auto dPidz(T W, T A, T t, T x, T y, T z) noexcept -> T {
+static inline auto CCTK_HOST CCTK_DEVICE dPidz(T W, T A, T t, T x, T y,
+                                               T z) noexcept -> T {
   using std::sqrt, std::cosh, std::sinh;
 
   const auto r{sqrt(x * x + y * y + z * z)};
@@ -190,7 +200,8 @@ static inline auto dPidz(T W, T A, T t, T x, T y, T z) noexcept -> T {
 }
 
 template <typename T>
-static inline auto dDxdx(T W, T A, T t, T x, T y, T z) noexcept -> T {
+static inline auto CCTK_HOST CCTK_DEVICE dDxdx(T W, T A, T t, T x, T y,
+                                               T z) noexcept -> T {
   using std::sqrt, std::cosh, std::sinh;
 
   const auto r{sqrt(x * x + y * y + z * z)};
@@ -237,7 +248,8 @@ static inline auto dDxdx(T W, T A, T t, T x, T y, T z) noexcept -> T {
 }
 
 template <typename T>
-static inline auto dDydy(T W, T A, T t, T x, T y, T z) noexcept -> T {
+static inline auto CCTK_HOST CCTK_DEVICE dDydy(T W, T A, T t, T x, T y,
+                                               T z) noexcept -> T {
   using std::sqrt, std::cosh, std::sinh;
 
   const auto r{sqrt(x * x + y * y + z * z)};
@@ -292,7 +304,8 @@ static inline auto dDydy(T W, T A, T t, T x, T y, T z) noexcept -> T {
 }
 
 template <typename T>
-static inline auto dDzdz(T W, T A, T t, T x, T y, T z) noexcept -> T {
+static inline auto CCTK_HOST CCTK_DEVICE dDzdz(T W, T A, T t, T x, T y,
+                                               T z) noexcept -> T {
   using std::sqrt, std::cosh, std::sinh;
 
   const auto r{sqrt(x * x + y * y + z * z)};

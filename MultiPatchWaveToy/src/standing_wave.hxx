@@ -1,13 +1,15 @@
 #ifndef MULTIPATCH_WAVE_TOY_STANDING_WAVE_HXX
 #define MULTIPATCH_WAVE_TOY_STANDING_WAVE_HXX
 
+#include <cctk.h>
+
 #include <cmath>
 
 namespace MultiPatchWaveToy::sw {
 
 template <typename T>
-static inline auto phi(T A, T kx, T ky, T kz, T t, T x, T y,
-                       T z) noexcept -> T {
+static inline auto CCTK_HPST CCTK_DEVICE phi(T A, T kx, T ky, T kz, T t, T x,
+                                             T y, T z) noexcept -> T {
   using std::sqrt, std::sin, std::cos, std::acos;
   const auto pi{acos(T{-1})};
   const auto omega{sqrt(kx * kx + ky * ky + kz * kz)};
@@ -16,7 +18,8 @@ static inline auto phi(T A, T kx, T ky, T kz, T t, T x, T y,
 }
 
 template <typename T>
-static inline auto Pi(T A, T kx, T ky, T kz, T t, T x, T y, T z) noexcept -> T {
+static inline auto CCTK_HPST CCTK_DEVICE Pi(T A, T kx, T ky, T kz, T t, T x,
+                                            T y, T z) noexcept -> T {
   using std::sqrt, std::sin, std::cos, std::acos;
   const auto pi{acos(T{-1})};
   const auto omega{sqrt(kx * kx + ky * ky + kz * kz)};
@@ -25,7 +28,8 @@ static inline auto Pi(T A, T kx, T ky, T kz, T t, T x, T y, T z) noexcept -> T {
 }
 
 template <typename T>
-static inline auto Dx(T A, T kx, T ky, T kz, T t, T x, T y, T z) noexcept -> T {
+static inline auto CCTK_HPST CCTK_DEVICE Dx(T A, T kx, T ky, T kz, T t, T x,
+                                            T y, T z) noexcept -> T {
   using std::sqrt, std::sin, std::cos, std::acos;
   const auto pi{acos(T{-1})};
   const auto omega{sqrt(kx * kx + ky * ky + kz * kz)};
@@ -34,7 +38,8 @@ static inline auto Dx(T A, T kx, T ky, T kz, T t, T x, T y, T z) noexcept -> T {
 }
 
 template <typename T>
-static inline auto Dy(T A, T kx, T ky, T kz, T t, T x, T y, T z) noexcept -> T {
+static inline auto CCTK_HPST CCTK_DEVICE Dy(T A, T kx, T ky, T kz, T t, T x,
+                                            T y, T z) noexcept -> T {
   using std::sqrt, std::sin, std::cos, std::acos;
   const auto pi{acos(T{-1})};
   const auto omega{sqrt(kx * kx + ky * ky + kz * kz)};
@@ -43,7 +48,8 @@ static inline auto Dy(T A, T kx, T ky, T kz, T t, T x, T y, T z) noexcept -> T {
 }
 
 template <typename T>
-static inline auto Dz(T A, T kx, T ky, T kz, T t, T x, T y, T z) noexcept -> T {
+static inline auto CCTK_HPST CCTK_DEVICE Dz(T A, T kx, T ky, T kz, T t, T x,
+                                            T y, T z) noexcept -> T {
   using std::sqrt, std::sin, std::cos, std::acos;
   const auto pi{acos(T{-1})};
   const auto omega{sqrt(kx * kx + ky * ky + kz * kz)};
@@ -52,8 +58,8 @@ static inline auto Dz(T A, T kx, T ky, T kz, T t, T x, T y, T z) noexcept -> T {
 }
 
 template <typename T>
-static inline auto dPidx(T A, T kx, T ky, T kz, T t, T x, T y,
-                         T z) noexcept -> T {
+static inline auto CCTK_HPST CCTK_DEVICE dPidx(T A, T kx, T ky, T kz, T t, T x,
+                                               T y, T z) noexcept -> T {
   using std::sqrt, std::sin, std::cos, std::acos;
   const auto pi{acos(T{-1})};
   const auto omega{sqrt(kx * kx + ky * ky + kz * kz)};
@@ -62,8 +68,8 @@ static inline auto dPidx(T A, T kx, T ky, T kz, T t, T x, T y,
 }
 
 template <typename T>
-static inline auto dPidy(T A, T kx, T ky, T kz, T t, T x, T y,
-                         T z) noexcept -> T {
+static inline auto CCTK_HPST CCTK_DEVICE dPidy(T A, T kx, T ky, T kz, T t, T x,
+                                               T y, T z) noexcept -> T {
   using std::sqrt, std::sin, std::cos, std::acos;
   const auto pi{acos(T{-1})};
   const auto omega{sqrt(kx * kx + ky * ky + kz * kz)};
@@ -72,8 +78,8 @@ static inline auto dPidy(T A, T kx, T ky, T kz, T t, T x, T y,
 }
 
 template <typename T>
-static inline auto dPidz(T A, T kx, T ky, T kz, T t, T x, T y,
-                         T z) noexcept -> T {
+static inline auto CCTK_HPST CCTK_DEVICE dPidz(T A, T kx, T ky, T kz, T t, T x,
+                                               T y, T z) noexcept -> T {
   using std::sqrt, std::sin, std::cos, std::acos;
   const auto pi{acos(T{-1})};
   const auto omega{sqrt(kx * kx + ky * ky + kz * kz)};
@@ -82,8 +88,8 @@ static inline auto dPidz(T A, T kx, T ky, T kz, T t, T x, T y,
 }
 
 template <typename T>
-static inline auto dDxdx(T A, T kx, T ky, T kz, T t, T x, T y,
-                         T z) noexcept -> T {
+static inline auto CCTK_HPST CCTK_DEVICE dDxdx(T A, T kx, T ky, T kz, T t, T x,
+                                               T y, T z) noexcept -> T {
   using std::sqrt, std::sin, std::cos, std::acos;
   const auto pi{acos(T{-1})};
   const auto omega{sqrt(kx * kx + ky * ky + kz * kz)};
@@ -92,8 +98,8 @@ static inline auto dDxdx(T A, T kx, T ky, T kz, T t, T x, T y,
 }
 
 template <typename T>
-static inline auto dDydy(T A, T kx, T ky, T kz, T t, T x, T y,
-                         T z) noexcept -> T {
+static inline auto CCTK_HPST CCTK_DEVICE dDydy(T A, T kx, T ky, T kz, T t, T x,
+                                               T y, T z) noexcept -> T {
   using std::sqrt, std::sin, std::cos, std::acos;
   const auto pi{acos(T{-1})};
   const auto omega{sqrt(kx * kx + ky * ky + kz * kz)};
@@ -102,8 +108,8 @@ static inline auto dDydy(T A, T kx, T ky, T kz, T t, T x, T y,
 }
 
 template <typename T>
-static inline auto dDzdz(T A, T kx, T ky, T kz, T t, T x, T y,
-                         T z) noexcept -> T {
+static inline auto CCTK_HPST CCTK_DEVICE dDzdz(T A, T kx, T ky, T kz, T t, T x,
+                                               T y, T z) noexcept -> T {
   using std::sqrt, std::sin, std::cos, std::acos;
   const auto pi{acos(T{-1})};
   const auto omega{sqrt(kx * kx + ky * ky + kz * kz)};

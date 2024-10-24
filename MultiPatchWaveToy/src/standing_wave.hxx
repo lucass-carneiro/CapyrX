@@ -8,7 +8,7 @@
 namespace MultiPatchWaveToy::sw {
 
 template <typename T>
-static inline auto CCTK_HPST CCTK_DEVICE phi(T A, T kx, T ky, T kz, T t, T x,
+static inline auto CCTK_HOST CCTK_DEVICE phi(T A, T kx, T ky, T kz, T t, T x,
                                              T y, T z) noexcept -> T {
   using std::sqrt, std::sin, std::cos, std::acos;
   const auto pi{acos(T{-1})};
@@ -18,7 +18,7 @@ static inline auto CCTK_HPST CCTK_DEVICE phi(T A, T kx, T ky, T kz, T t, T x,
 }
 
 template <typename T>
-static inline auto CCTK_HPST CCTK_DEVICE Pi(T A, T kx, T ky, T kz, T t, T x,
+static inline auto CCTK_HOST CCTK_DEVICE Pi(T A, T kx, T ky, T kz, T t, T x,
                                             T y, T z) noexcept -> T {
   using std::sqrt, std::sin, std::cos, std::acos;
   const auto pi{acos(T{-1})};
@@ -28,7 +28,7 @@ static inline auto CCTK_HPST CCTK_DEVICE Pi(T A, T kx, T ky, T kz, T t, T x,
 }
 
 template <typename T>
-static inline auto CCTK_HPST CCTK_DEVICE Dx(T A, T kx, T ky, T kz, T t, T x,
+static inline auto CCTK_HOST CCTK_DEVICE Dx(T A, T kx, T ky, T kz, T t, T x,
                                             T y, T z) noexcept -> T {
   using std::sqrt, std::sin, std::cos, std::acos;
   const auto pi{acos(T{-1})};
@@ -38,7 +38,7 @@ static inline auto CCTK_HPST CCTK_DEVICE Dx(T A, T kx, T ky, T kz, T t, T x,
 }
 
 template <typename T>
-static inline auto CCTK_HPST CCTK_DEVICE Dy(T A, T kx, T ky, T kz, T t, T x,
+static inline auto CCTK_HOST CCTK_DEVICE Dy(T A, T kx, T ky, T kz, T t, T x,
                                             T y, T z) noexcept -> T {
   using std::sqrt, std::sin, std::cos, std::acos;
   const auto pi{acos(T{-1})};
@@ -48,7 +48,7 @@ static inline auto CCTK_HPST CCTK_DEVICE Dy(T A, T kx, T ky, T kz, T t, T x,
 }
 
 template <typename T>
-static inline auto CCTK_HPST CCTK_DEVICE Dz(T A, T kx, T ky, T kz, T t, T x,
+static inline auto CCTK_HOST CCTK_DEVICE Dz(T A, T kx, T ky, T kz, T t, T x,
                                             T y, T z) noexcept -> T {
   using std::sqrt, std::sin, std::cos, std::acos;
   const auto pi{acos(T{-1})};
@@ -58,7 +58,7 @@ static inline auto CCTK_HPST CCTK_DEVICE Dz(T A, T kx, T ky, T kz, T t, T x,
 }
 
 template <typename T>
-static inline auto CCTK_HPST CCTK_DEVICE dPidx(T A, T kx, T ky, T kz, T t, T x,
+static inline auto CCTK_HOST CCTK_DEVICE dPidx(T A, T kx, T ky, T kz, T t, T x,
                                                T y, T z) noexcept -> T {
   using std::sqrt, std::sin, std::cos, std::acos;
   const auto pi{acos(T{-1})};
@@ -68,7 +68,7 @@ static inline auto CCTK_HPST CCTK_DEVICE dPidx(T A, T kx, T ky, T kz, T t, T x,
 }
 
 template <typename T>
-static inline auto CCTK_HPST CCTK_DEVICE dPidy(T A, T kx, T ky, T kz, T t, T x,
+static inline auto CCTK_HOST CCTK_DEVICE dPidy(T A, T kx, T ky, T kz, T t, T x,
                                                T y, T z) noexcept -> T {
   using std::sqrt, std::sin, std::cos, std::acos;
   const auto pi{acos(T{-1})};
@@ -78,7 +78,7 @@ static inline auto CCTK_HPST CCTK_DEVICE dPidy(T A, T kx, T ky, T kz, T t, T x,
 }
 
 template <typename T>
-static inline auto CCTK_HPST CCTK_DEVICE dPidz(T A, T kx, T ky, T kz, T t, T x,
+static inline auto CCTK_HOST CCTK_DEVICE dPidz(T A, T kx, T ky, T kz, T t, T x,
                                                T y, T z) noexcept -> T {
   using std::sqrt, std::sin, std::cos, std::acos;
   const auto pi{acos(T{-1})};
@@ -88,7 +88,7 @@ static inline auto CCTK_HPST CCTK_DEVICE dPidz(T A, T kx, T ky, T kz, T t, T x,
 }
 
 template <typename T>
-static inline auto CCTK_HPST CCTK_DEVICE dDxdx(T A, T kx, T ky, T kz, T t, T x,
+static inline auto CCTK_HOST CCTK_DEVICE dDxdx(T A, T kx, T ky, T kz, T t, T x,
                                                T y, T z) noexcept -> T {
   using std::sqrt, std::sin, std::cos, std::acos;
   const auto pi{acos(T{-1})};
@@ -98,7 +98,7 @@ static inline auto CCTK_HPST CCTK_DEVICE dDxdx(T A, T kx, T ky, T kz, T t, T x,
 }
 
 template <typename T>
-static inline auto CCTK_HPST CCTK_DEVICE dDydy(T A, T kx, T ky, T kz, T t, T x,
+static inline auto CCTK_HOST CCTK_DEVICE dDydy(T A, T kx, T ky, T kz, T t, T x,
                                                T y, T z) noexcept -> T {
   using std::sqrt, std::sin, std::cos, std::acos;
   const auto pi{acos(T{-1})};
@@ -108,7 +108,7 @@ static inline auto CCTK_HPST CCTK_DEVICE dDydy(T A, T kx, T ky, T kz, T t, T x,
 }
 
 template <typename T>
-static inline auto CCTK_HPST CCTK_DEVICE dDzdz(T A, T kx, T ky, T kz, T t, T x,
+static inline auto CCTK_HOST CCTK_DEVICE dDzdz(T A, T kx, T ky, T kz, T t, T x,
                                                T y, T z) noexcept -> T {
   using std::sqrt, std::sin, std::cos, std::acos;
   const auto pi{acos(T{-1})};

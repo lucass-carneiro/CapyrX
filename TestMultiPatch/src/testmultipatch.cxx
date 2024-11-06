@@ -3,6 +3,7 @@
 #include <cctk_Parameters.h>
 
 #include <loop_device.hxx>
+#include <global_derivatives.hxx>
 
 #include <cmath>
 
@@ -257,6 +258,8 @@ extern "C" void TestMultiPatch_compute_deriv_error(CCTK_ARGUMENTS) {
     grid.loop_all<0, 0, 0>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+          using namespace MultiPatch::GlobalDerivatives;
+
           const auto t{cctk_time};
           const auto x{vcoordx(p.I)};
           const auto y{vcoordy(p.I)};
@@ -273,9 +276,7 @@ extern "C" void TestMultiPatch_compute_deriv_error(CCTK_ARGUMENTS) {
           const auto true_d2fdyz{standing_wave_dyz(A, kx, ky, kz, t, x, y, z)};
 
           // TODO Get from projections
-          const auto computed_dfdx{0.0};
-          const auto computed_dfdy{0.0};
-          const auto computed_dfdz{0.0};
+          const auto first_derivs{c_1_4(cctkGH, p, u)};
           const auto computed_d2fdx2{0.0};
           const auto computed_d2fdy2{0.0};
           const auto computed_d2fdz2{0.0};
@@ -283,9 +284,9 @@ extern "C" void TestMultiPatch_compute_deriv_error(CCTK_ARGUMENTS) {
           const auto computed_d2fdxz{0.0};
           const auto computed_d2fdyz{0.0};
 
-          dfdx(p.I) = fabs(true_dfdx - computed_dfdx);
-          dfdy(p.I) = fabs(true_dfdy - computed_dfdy);
-          dfdz(p.I) = fabs(true_dfdz - computed_dfdz);
+          dfdx(p.I) = fabs(true_dfdx - first_derivs.dx);
+          dfdy(p.I) = fabs(true_dfdy - first_derivs.dy);
+          dfdz(p.I) = fabs(true_dfdz - first_derivs.dz);
           d2fdx2(p.I) = fabs(true_d2fdx2 - computed_d2fdx2);
           d2fdy2(p.I) = fabs(true_d2fdy2 - computed_d2fdy2);
           d2fdz2(p.I) = fabs(true_d2fdz2 - computed_d2fdz2);
@@ -298,6 +299,8 @@ extern "C" void TestMultiPatch_compute_deriv_error(CCTK_ARGUMENTS) {
     grid.loop_all<0, 0, 0>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+          using namespace MultiPatch::GlobalDerivatives;
+
           const auto x{vcoordx(p.I)};
           const auto y{vcoordy(p.I)};
           const auto z{vcoordz(p.I)};
@@ -313,9 +316,7 @@ extern "C" void TestMultiPatch_compute_deriv_error(CCTK_ARGUMENTS) {
           const auto true_d2fdyz{parabola_dyz(x, y, z)};
 
           // TODO: Get from projections
-          const auto computed_dfdx{0.0};
-          const auto computed_dfdy{0.0};
-          const auto computed_dfdz{0.0};
+          const auto first_derivs{c_1_4(cctkGH, p, u)};
           const auto computed_d2fdx2{0.0};
           const auto computed_d2fdy2{0.0};
           const auto computed_d2fdz2{0.0};
@@ -323,9 +324,9 @@ extern "C" void TestMultiPatch_compute_deriv_error(CCTK_ARGUMENTS) {
           const auto computed_d2fdxz{0.0};
           const auto computed_d2fdyz{0.0};
 
-          dfdx(p.I) = fabs(true_dfdx - computed_dfdx);
-          dfdy(p.I) = fabs(true_dfdy - computed_dfdy);
-          dfdz(p.I) = fabs(true_dfdz - computed_dfdz);
+          dfdx(p.I) = fabs(true_dfdx - first_derivs.dx);
+          dfdy(p.I) = fabs(true_dfdy - first_derivs.dy);
+          dfdz(p.I) = fabs(true_dfdz - first_derivs.dz);
           d2fdx2(p.I) = fabs(true_d2fdx2 - computed_d2fdx2);
           d2fdy2(p.I) = fabs(true_d2fdy2 - computed_d2fdy2);
           d2fdz2(p.I) = fabs(true_d2fdz2 - computed_d2fdz2);

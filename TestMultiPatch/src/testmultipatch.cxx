@@ -1,16 +1,17 @@
-#include <loop.hxx>
-
 #include <cctk.h>
 #include <cctk_Arguments.h>
 #include <cctk_Parameters.h>
+
+#include <loop_device.hxx>
 
 #include <cmath>
 
 namespace TestMultiPatch {
 
-static auto standing_wave(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
-                          CCTK_REAL t, CCTK_REAL x, CCTK_REAL y,
-                          CCTK_REAL z) noexcept -> CCTK_REAL {
+static inline auto standing_wave(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky,
+                                 CCTK_REAL kz, CCTK_REAL t, CCTK_REAL x,
+                                 CCTK_REAL y,
+                                 CCTK_REAL z) noexcept -> CCTK_REAL {
   using std::cos, std::sin, std::sqrt;
 
   const auto pi{acos(-1.0)};
@@ -20,39 +21,319 @@ static auto standing_wave(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
          cos(2 * pi * ky * y) * cos(2 * pi * kz * z);
 }
 
-extern "C" void TestMultiPatch_write_state(CCTK_ARGUMENTS) {
-  DECLARE_CCTK_ARGUMENTSX_TestMultiPatch_write_state;
-  DECLARE_CCTK_PARAMETERS;
+static inline auto standing_wave_dx(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky,
+                                    CCTK_REAL kz, CCTK_REAL t, CCTK_REAL x,
+                                    CCTK_REAL y,
+                                    CCTK_REAL z) noexcept -> CCTK_REAL {
+  using std::cos, std::sin, std::sqrt;
 
-  grid.loop_int<0, 0, 0>(grid.nghostzones,
-                         [=](const Loop::PointDesc &p) ARITH_INLINE {
-                           const auto t{cctk_time};
-                           const auto x{vcoordx(p.I)};
-                           const auto y{vcoordy(p.I)};
-                           const auto z{vcoordz(p.I)};
+  const auto pi{acos(-1.0)};
+  const auto omega{sqrt(kx * kx + ky * ky + kz * kz)};
 
-                           u(p.I) = standing_wave(A, kx, ky, kz, t, x, y, z);
-                         });
+  return -2 * A * kx * pi * cos(2 * omega * pi * t) * cos(2 * ky * pi * y) *
+         cos(2 * kz * pi * z) * sin(2 * kx * pi * x);
 }
 
-extern "C" void TestMultiPatch_write_error(CCTK_ARGUMENTS) {
-  DECLARE_CCTK_ARGUMENTSX_TestMultiPatch_write_error;
+static inline auto standing_wave_dy(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky,
+                                    CCTK_REAL kz, CCTK_REAL t, CCTK_REAL x,
+                                    CCTK_REAL y,
+                                    CCTK_REAL z) noexcept -> CCTK_REAL {
+  using std::cos, std::sin, std::sqrt;
+
+  const auto pi{acos(-1.0)};
+  const auto omega{sqrt(kx * kx + ky * ky + kz * kz)};
+
+  return -2 * A * ky * pi * cos(2 * omega * pi * t) * cos(2 * kx * pi * x) *
+         cos(2 * kz * pi * z) * sin(2 * ky * pi * y);
+}
+
+static inline auto standing_wave_dz(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky,
+                                    CCTK_REAL kz, CCTK_REAL t, CCTK_REAL x,
+                                    CCTK_REAL y,
+                                    CCTK_REAL z) noexcept -> CCTK_REAL {
+  using std::cos, std::sin, std::sqrt;
+
+  const auto pi{acos(-1.0)};
+  const auto omega{sqrt(kx * kx + ky * ky + kz * kz)};
+
+  return -2 * A * kz * pi * cos(2 * omega * pi * t) * cos(2 * kx * pi * x) *
+         cos(2 * ky * pi * y) * sin(2 * kz * pi * z);
+}
+
+static inline auto standing_wave_dx2(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky,
+                                     CCTK_REAL kz, CCTK_REAL t, CCTK_REAL x,
+                                     CCTK_REAL y,
+                                     CCTK_REAL z) noexcept -> CCTK_REAL {
+  using std::cos, std::sin, std::sqrt;
+
+  const auto pi{acos(-1.0)};
+  const auto omega{sqrt(kx * kx + ky * ky + kz * kz)};
+
+  return -4 * A * kx * kx * pi * pi * cos(2 * omega * pi * t) *
+         cos(2 * kx * pi * x) * cos(2 * ky * pi * y) * cos(2 * kz * pi * z);
+}
+
+static inline auto standing_wave_dy2(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky,
+                                     CCTK_REAL kz, CCTK_REAL t, CCTK_REAL x,
+                                     CCTK_REAL y,
+                                     CCTK_REAL z) noexcept -> CCTK_REAL {
+  using std::cos, std::sin, std::sqrt;
+
+  const auto pi{acos(-1.0)};
+  const auto omega{sqrt(kx * kx + ky * ky + kz * kz)};
+
+  return -4 * A * ky * ky * pi * pi * cos(2 * omega * pi * t) *
+         cos(2 * kx * pi * x) * cos(2 * ky * pi * y) * cos(2 * kz * pi * z);
+}
+
+static inline auto standing_wave_dz2(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky,
+                                     CCTK_REAL kz, CCTK_REAL t, CCTK_REAL x,
+                                     CCTK_REAL y,
+                                     CCTK_REAL z) noexcept -> CCTK_REAL {
+  using std::cos, std::sin, std::sqrt;
+
+  const auto pi{acos(-1.0)};
+  const auto omega{sqrt(kx * kx + ky * ky + kz * kz)};
+
+  return -4 * A * kz * kz * pi * pi * cos(2 * omega * pi * t) *
+         cos(2 * kx * pi * x) * cos(2 * ky * pi * y) * cos(2 * kz * pi * z);
+}
+
+static inline auto standing_wave_dxy(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky,
+                                     CCTK_REAL kz, CCTK_REAL t, CCTK_REAL x,
+                                     CCTK_REAL y,
+                                     CCTK_REAL z) noexcept -> CCTK_REAL {
+  using std::cos, std::sin, std::sqrt;
+
+  const auto pi{acos(-1.0)};
+  const auto omega{sqrt(kx * kx + ky * ky + kz * kz)};
+
+  return 4 * A * kx * ky * pi * pi * cos(2 * omega * pi * t) *
+         cos(2 * kz * pi * z) * sin(2 * kx * pi * x) * sin(2 * ky * pi * y);
+}
+
+static inline auto standing_wave_dxz(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky,
+                                     CCTK_REAL kz, CCTK_REAL t, CCTK_REAL x,
+                                     CCTK_REAL y,
+                                     CCTK_REAL z) noexcept -> CCTK_REAL {
+  using std::cos, std::sin, std::sqrt;
+
+  const auto pi{acos(-1.0)};
+  const auto omega{sqrt(kx * kx + ky * ky + kz * kz)};
+
+  return 4 * A * kx * kz * pi * pi * cos(2 * omega * pi * t) *
+         cos(2 * ky * pi * y) * sin(2 * kx * pi * x) * sin(2 * kz * pi * z);
+}
+
+static inline auto standing_wave_dyz(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky,
+                                     CCTK_REAL kz, CCTK_REAL t, CCTK_REAL x,
+                                     CCTK_REAL y,
+                                     CCTK_REAL z) noexcept -> CCTK_REAL {
+  using std::cos, std::sin, std::sqrt;
+
+  const auto pi{acos(-1.0)};
+  const auto omega{sqrt(kx * kx + ky * ky + kz * kz)};
+
+  return 4 * A * ky * kz * pi * pi * cos(2 * omega * pi * t) *
+         cos(2 * kx * pi * x) * sin(2 * ky * pi * y) * sin(2 * kz * pi * z);
+}
+
+static inline auto parabola(CCTK_REAL x, CCTK_REAL y,
+                            CCTK_REAL z) -> CCTK_REAL {
+  return x * x + y * y + z * z;
+}
+
+static inline auto parabola_dx(CCTK_REAL x, CCTK_REAL, CCTK_REAL) -> CCTK_REAL {
+  return 2.0 * x;
+}
+
+static inline auto parabola_dy(CCTK_REAL, CCTK_REAL y, CCTK_REAL) -> CCTK_REAL {
+  return 2.0 * y;
+}
+
+static inline auto parabola_dz(CCTK_REAL, CCTK_REAL, CCTK_REAL z) -> CCTK_REAL {
+  return 2.0 * z;
+}
+
+static inline auto parabola_dx2(CCTK_REAL, CCTK_REAL, CCTK_REAL) -> CCTK_REAL {
+  return 2.0;
+}
+
+static inline auto parabola_dy2(CCTK_REAL, CCTK_REAL, CCTK_REAL) -> CCTK_REAL {
+  return 2.0;
+}
+
+static inline auto parabola_dz2(CCTK_REAL, CCTK_REAL, CCTK_REAL) -> CCTK_REAL {
+  return 2.0;
+}
+
+static inline auto parabola_dxy(CCTK_REAL, CCTK_REAL, CCTK_REAL) -> CCTK_REAL {
+  return 0.0;
+}
+
+static inline auto parabola_dxz(CCTK_REAL, CCTK_REAL, CCTK_REAL) -> CCTK_REAL {
+  return 0.0;
+}
+
+static inline auto parabola_dyz(CCTK_REAL, CCTK_REAL, CCTK_REAL) -> CCTK_REAL {
+  return 0.0;
+}
+
+extern "C" void TestMultiPatch_write_test_data(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTSX_TestMultiPatch_write_test_data;
   DECLARE_CCTK_PARAMETERS;
 
-  using std::fabs;
+  if (CCTK_Equals(test_data, "standing wave")) {
+    grid.loop_int<0, 0, 0>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+          const auto t{cctk_time};
+          const auto x{vcoordx(p.I)};
+          const auto y{vcoordy(p.I)};
+          const auto z{vcoordz(p.I)};
 
-  grid.loop_all<0, 0, 0>(
-      grid.nghostzones, [=](const Loop::PointDesc &p) ARITH_INLINE {
-        const auto t{cctk_time};
-        const auto x{vcoordx(p.I)};
-        const auto y{vcoordy(p.I)};
-        const auto z{vcoordz(p.I)};
+          u(p.I) = standing_wave(A, kx, ky, kz, t, x, y, z);
+        });
 
-        const auto evolved_u{u(p.I)};
-        const auto real_u{standing_wave(A, kx, ky, kz, t, x, y, z)};
+  } else if (CCTK_Equals(test_data, "parabola")) {
+    grid.loop_int<0, 0, 0>(grid.nghostzones,
+                           [=] CCTK_DEVICE(const Loop::PointDesc &p)
+                               CCTK_ATTRIBUTE_ALWAYS_INLINE {
+                                 const auto x{vcoordx(p.I)};
+                                 const auto y{vcoordy(p.I)};
+                                 const auto z{vcoordz(p.I)};
 
-        u_err(p.I) = fabs(evolved_u - real_u);
-      });
+                                 u(p.I) = parabola(x, y, z);
+                               });
+  } else {
+    CCTK_VERROR("Unknown test data type %s", test_data);
+  }
+}
+
+extern "C" void TestMultiPatch_compute_interp_error(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTSX_TestMultiPatch_compute_interp_error;
+  DECLARE_CCTK_PARAMETERS;
+
+  if (CCTK_Equals(test_data, "standing wave")) {
+    grid.loop_all<0, 0, 0>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+          using std::fabs;
+
+          const auto t{cctk_time};
+          const auto x{vcoordx(p.I)};
+          const auto y{vcoordy(p.I)};
+          const auto z{vcoordz(p.I)};
+
+          const auto evolved_u{u(p.I)};
+          const auto real_u{standing_wave(A, kx, ky, kz, t, x, y, z)};
+
+          interp(p.I) = fabs(evolved_u - real_u);
+        });
+
+  } else if (CCTK_Equals(test_data, "parabola")) {
+    grid.loop_all<0, 0, 0>(grid.nghostzones,
+                           [=] CCTK_DEVICE(const Loop::PointDesc &p)
+                               CCTK_ATTRIBUTE_ALWAYS_INLINE {
+                                 using std::fabs;
+
+                                 const auto x{vcoordx(p.I)};
+                                 const auto y{vcoordy(p.I)};
+                                 const auto z{vcoordz(p.I)};
+
+                                 const auto evolved_u{u(p.I)};
+                                 const auto real_u{parabola(x, y, z)};
+
+                                 interp(p.I) = fabs(evolved_u - real_u);
+                               });
+  }
+}
+
+extern "C" void TestMultiPatch_compute_deriv_error(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTSX_TestMultiPatch_compute_deriv_error;
+  DECLARE_CCTK_PARAMETERS;
+
+  if (CCTK_Equals(test_data, "standing wave")) {
+    grid.loop_all<0, 0, 0>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+          const auto t{cctk_time};
+          const auto x{vcoordx(p.I)};
+          const auto y{vcoordy(p.I)};
+          const auto z{vcoordz(p.I)};
+
+          const auto true_dfdx{standing_wave_dx(A, kx, ky, kz, t, x, y, z)};
+          const auto true_dfdy{standing_wave_dy(A, kx, ky, kz, t, x, y, z)};
+          const auto true_dfdz{standing_wave_dz(A, kx, ky, kz, t, x, y, z)};
+          const auto true_d2fdx2{standing_wave_dx2(A, kx, ky, kz, t, x, y, z)};
+          const auto true_d2fdy2{standing_wave_dy2(A, kx, ky, kz, t, x, y, z)};
+          const auto true_d2fdz2{standing_wave_dz2(A, kx, ky, kz, t, x, y, z)};
+          const auto true_d2fdxy{standing_wave_dxy(A, kx, ky, kz, t, x, y, z)};
+          const auto true_d2fdxz{standing_wave_dxz(A, kx, ky, kz, t, x, y, z)};
+          const auto true_d2fdyz{standing_wave_dyz(A, kx, ky, kz, t, x, y, z)};
+
+          // TODO Get from projections
+          const auto computed_dfdx{0.0};
+          const auto computed_dfdy{0.0};
+          const auto computed_dfdz{0.0};
+          const auto computed_d2fdx2{0.0};
+          const auto computed_d2fdy2{0.0};
+          const auto computed_d2fdz2{0.0};
+          const auto computed_d2fdxy{0.0};
+          const auto computed_d2fdxz{0.0};
+          const auto computed_d2fdyz{0.0};
+
+          dfdx(p.I) = fabs(true_dfdx - computed_dfdx);
+          dfdy(p.I) = fabs(true_dfdy - computed_dfdy);
+          dfdz(p.I) = fabs(true_dfdz - computed_dfdz);
+          d2fdx2(p.I) = fabs(true_d2fdx2 - computed_d2fdx2);
+          d2fdy2(p.I) = fabs(true_d2fdy2 - computed_d2fdy2);
+          d2fdz2(p.I) = fabs(true_d2fdz2 - computed_d2fdz2);
+          d2fdxy(p.I) = fabs(true_d2fdxy - computed_d2fdxy);
+          d2fdxz(p.I) = fabs(true_d2fdxz - computed_d2fdxz);
+          d2fdyz(p.I) = fabs(true_d2fdyz - computed_d2fdyz);
+        });
+
+  } else if (CCTK_Equals(test_data, "parabola")) {
+    grid.loop_all<0, 0, 0>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+          const auto x{vcoordx(p.I)};
+          const auto y{vcoordy(p.I)};
+          const auto z{vcoordz(p.I)};
+
+          const auto true_dfdx{parabola_dx(x, y, z)};
+          const auto true_dfdy{parabola_dy(x, y, z)};
+          const auto true_dfdz{parabola_dz(x, y, z)};
+          const auto true_d2fdx2{parabola_dx2(x, y, z)};
+          const auto true_d2fdy2{parabola_dy2(x, y, z)};
+          const auto true_d2fdz2{parabola_dz2(x, y, z)};
+          const auto true_d2fdxy{parabola_dxy(x, y, z)};
+          const auto true_d2fdxz{parabola_dxz(x, y, z)};
+          const auto true_d2fdyz{parabola_dyz(x, y, z)};
+
+          // TODO: Get from projections
+          const auto computed_dfdx{0.0};
+          const auto computed_dfdy{0.0};
+          const auto computed_dfdz{0.0};
+          const auto computed_d2fdx2{0.0};
+          const auto computed_d2fdy2{0.0};
+          const auto computed_d2fdz2{0.0};
+          const auto computed_d2fdxy{0.0};
+          const auto computed_d2fdxz{0.0};
+          const auto computed_d2fdyz{0.0};
+
+          dfdx(p.I) = fabs(true_dfdx - computed_dfdx);
+          dfdy(p.I) = fabs(true_dfdy - computed_dfdy);
+          dfdz(p.I) = fabs(true_dfdz - computed_dfdz);
+          d2fdx2(p.I) = fabs(true_d2fdx2 - computed_d2fdx2);
+          d2fdy2(p.I) = fabs(true_d2fdy2 - computed_d2fdy2);
+          d2fdz2(p.I) = fabs(true_d2fdz2 - computed_d2fdz2);
+          d2fdxy(p.I) = fabs(true_d2fdxy - computed_d2fdxy);
+          d2fdxz(p.I) = fabs(true_d2fdxz - computed_d2fdxz);
+          d2fdyz(p.I) = fabs(true_d2fdyz - computed_d2fdyz);
+        });
+  }
 }
 
 extern "C" void TestMultiPatch_sync(CCTK_ARGUMENTS) {

@@ -1,57 +1,97 @@
 # Schedule definitions for thorn TestMultiPatch
 
-STORAGE: state
+STORAGE: test_data
 STORAGE: error
 
-if(fake_evolution_test)
+if(interpolation)
 {
   # Init
-  SCHEDULE TestMultiPatch_write_state AT initial
+  SCHEDULE TestMultiPatch_write_test_data AT initial
   {
     LANG: C
     READS: CoordinatesX::vertex_coords(interior)
-    WRITES: state(interior)
-    SYNC: state
-  } "Fill test grid function with data"
+    WRITES: test_data(interior)
+    SYNC: test_data
+  } "Fill test data"
 
-  SCHEDULE TestMultiPatch_write_error AT initial AFTER TestMultiPatch_write_state
+  SCHEDULE TestMultiPatch_compute_interp_error AT initial AFTER TestMultiPatch_write_test_data
   {
     LANG: C
-    READS: state(everywhere) CoordinatesX::vertex_coords(everywhere)
-    WRITES: error(everywhere)
-  } "Compute the fake evolution's error"
-
-
+    READS: test_data(everywhere) CoordinatesX::vertex_coords(everywhere)
+    WRITES: interp(everywhere)
+  } "Compute interpolation error"
 
   # Step
   SCHEDULE TestMultiPatch_sync AT postregrid
   {
     LANG: C
     OPTIONS: global
-    SYNC: state
-  } "Synchronizes the state"
+    SYNC: test_data
+  } "Synchronizes grid functions"
 
-  SCHEDULE TestMultiPatch_write_state AT evol
+  SCHEDULE TestMultiPatch_write_test_data AT evol
   {
     LANG: C
     READS: CoordinatesX::vertex_coords(interior)
-    WRITES: state(interior)
-  } "Fill test grid function with data"
+    WRITES: test_data(interior)
+  } "Fill test data"
 
   SCHEDULE TestMultiPatch_sync AT poststep
   {
     LANG: C
     OPTIONS: global
-    SYNC: state
-  } "Synchronizes the state"
-
-
+    SYNC: test_data
+  } "Synchronizes grid functions"
 
   # Error
-  SCHEDULE TestMultiPatch_write_error AT poststep AFTER TestMultiPatch_sync
+  SCHEDULE TestMultiPatch_compute_interp_error AT poststep AFTER TestMultiPatch_sync
   {
     LANG: C
-    READS: state(everywhere) CoordinatesX::vertex_coords(everywhere)
-    WRITES: error(everywhere)
-  } "Compute the fake evolution's error"
+    READS: test_data(everywhere) CoordinatesX::vertex_coords(everywhere)
+    WRITES: interp(everywhere)
+  } "Compute interpolation error"
+}
+
+if(derivatives && test_data)
+{
+  SCHEDULE TestMultiPatch_compute_deriv_error AT initial AFTER TestMultiPatch_write_test_data
+  {
+    LANG: C
+    READS: test_data(everywhere) CoordinatesX::vertex_coords(everywhere)
+    WRITES: dfdx(everywhere)
+    WRITES: dfdy(everywhere)
+    WRITES: dfdz(everywhere)
+    WRITES: d2fdx2(everywhere)
+    WRITES: d2fdy2(everywhere)
+    WRITES: d2fdz2(everywhere)
+    WRITES: d2fdxy(everywhere)
+    WRITES: d2fdxz(everywhere)
+    WRITES: d2fdyz(everywhere)
+  } "Compute derivative error"
+}
+
+if(derivatives && !test_data)
+{
+  SCHEDULE TestMultiPatch_write_test_data AT initial
+  {
+    LANG: C
+    READS: CoordinatesX::vertex_coords(interior)
+    WRITES: test_data(interior)
+    SYNC: test_data
+  } "Fill test data"
+  
+  SCHEDULE TestMultiPatch_compute_deriv_error AT initial AFTER TestMultiPatch_write_test_data
+  {
+    LANG: C
+    READS: test_data(everywhere) CoordinatesX::vertex_coords(everywhere)
+    WRITES: dfdx(everywhere)
+    WRITES: dfdy(everywhere)
+    WRITES: dfdz(everywhere)
+    WRITES: d2fdx2(everywhere)
+    WRITES: d2fdy2(everywhere)
+    WRITES: d2fdz2(everywhere)
+    WRITES: d2fdxy(everywhere)
+    WRITES: d2fdxz(everywhere)
+    WRITES: d2fdyz(everywhere)
+  } "Compute derivative error"
 }

@@ -50,31 +50,28 @@ auto CCTK_HOST CCTK_DEVICE c_1_4(
     const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> FirstDerivativeResults {
   using namespace Loop;
 
-  // Recover Jacobian GFs
-  auto da_dx{get_var(cctkGH_, "MultiPatch::vJ_da_dx")};
-  auto da_dy{get_var(cctkGH_, "MultiPatch::vJ_da_dy")};
-  auto da_dz{get_var(cctkGH_, "MultiPatch::vJ_da_dz")};
-  auto db_dx{get_var(cctkGH_, "MultiPatch::vJ_db_dx")};
-  auto db_dy{get_var(cctkGH_, "MultiPatch::vJ_db_dy")};
-  auto db_dz{get_var(cctkGH_, "MultiPatch::vJ_db_dz")};
-  auto dc_dx{get_var(cctkGH_, "MultiPatch::vJ_dc_dx")};
-  auto dc_dy{get_var(cctkGH_, "MultiPatch::vJ_dc_dy")};
-  auto dc_dz{get_var(cctkGH_, "MultiPatch::vJ_dc_dz")};
+  // Recover Jacobians
+  const auto da_dx{get_var(cctkGH_, "MultiPatch::vJ_da_dx")(p.I)};
+  const auto da_dy{get_var(cctkGH_, "MultiPatch::vJ_da_dy")(p.I)};
+  const auto da_dz{get_var(cctkGH_, "MultiPatch::vJ_da_dz")(p.I)};
+  const auto db_dx{get_var(cctkGH_, "MultiPatch::vJ_db_dx")(p.I)};
+  const auto db_dy{get_var(cctkGH_, "MultiPatch::vJ_db_dy")(p.I)};
+  const auto db_dz{get_var(cctkGH_, "MultiPatch::vJ_db_dz")(p.I)};
+  const auto dc_dx{get_var(cctkGH_, "MultiPatch::vJ_dc_dx")(p.I)};
+  const auto dc_dy{get_var(cctkGH_, "MultiPatch::vJ_dc_dy")(p.I)};
+  const auto dc_dz{get_var(cctkGH_, "MultiPatch::vJ_dc_dz")(p.I)};
 
-  // Projection
-  const auto d_Gf_dx{da_dx(p.I) * c_l_1_4<local_fd_dir::a>(p, gf) +
-                     db_dx(p.I) * c_l_1_4<local_fd_dir::b>(p, gf) +
-                     dc_dx(p.I) * c_l_1_4<local_fd_dir::c>(p, gf)};
+  // Compute local derivatives
+  const auto dgf_da{c_l_1_4<local_fd_dir::a>(p, gf)};
+  const auto dgf_db{c_l_1_4<local_fd_dir::a>(p, gf)};
+  const auto dgf_dc{c_l_1_4<local_fd_dir::a>(p, gf)};
 
-  const auto d_Gf_dy{da_dy(p.I) * c_l_1_4<local_fd_dir::a>(p, gf) +
-                     db_dy(p.I) * c_l_1_4<local_fd_dir::b>(p, gf) +
-                     dc_dy(p.I) * c_l_1_4<local_fd_dir::c>(p, gf)};
+  // Projections
+  const auto dgf_dx{dgf_db * db_dx + dgf_dc * dc_dx + da_dx * dgf_da};
+  const auto dgf_dy{dgf_dc * dc_dy + db_dy * dgf_db + da_dy * dgf_da};
+  const auto dgf_dz{dc_dz * dgf_dc + db_dz * dgf_db + da_dz * dgf_da};
 
-  const auto d_Gf_dz{da_dz(p.I) * c_l_1_4<local_fd_dir::a>(p, gf) +
-                     db_dz(p.I) * c_l_1_4<local_fd_dir::b>(p, gf) +
-                     dc_dz(p.I) * c_l_1_4<local_fd_dir::c>(p, gf)};
-
-  return FirstDerivativeResults{d_Gf_dx, d_Gf_dy, d_Gf_dz};
+  return FirstDerivativeResults{dgf_dx, dgf_dy, dgf_dz};
 }
 
 } // namespace MultiPatch::GlobalDerivatives

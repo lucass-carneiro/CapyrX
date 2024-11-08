@@ -255,7 +255,7 @@ extern "C" void TestMultiPatch_compute_deriv_error(CCTK_ARGUMENTS) {
   DECLARE_CCTK_PARAMETERS;
 
   if (CCTK_Equals(test_data, "standing wave")) {
-    grid.loop_all<0, 0, 0>(
+    grid.loop_int<0, 0, 0>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
           using namespace MultiPatch::GlobalDerivatives;
@@ -276,27 +276,22 @@ extern "C" void TestMultiPatch_compute_deriv_error(CCTK_ARGUMENTS) {
           const auto true_d2fdyz{standing_wave_dyz(A, kx, ky, kz, t, x, y, z)};
 
           // TODO Get from projections
-          const auto first_derivs{c_1_4(cctkGH, p, u)};
-          const auto computed_d2fdx2{0.0};
-          const auto computed_d2fdy2{0.0};
-          const auto computed_d2fdz2{0.0};
-          const auto computed_d2fdxy{0.0};
-          const auto computed_d2fdxz{0.0};
-          const auto computed_d2fdyz{0.0};
+          const auto first_derivs{c4o_1(cctkGH, p, u)};
+          const auto second_derivs{c4o_2(cctkGH, p, u)};
 
           dfdx(p.I) = fabs(true_dfdx - first_derivs.dx);
           dfdy(p.I) = fabs(true_dfdy - first_derivs.dy);
           dfdz(p.I) = fabs(true_dfdz - first_derivs.dz);
-          d2fdx2(p.I) = fabs(true_d2fdx2 - computed_d2fdx2);
-          d2fdy2(p.I) = fabs(true_d2fdy2 - computed_d2fdy2);
-          d2fdz2(p.I) = fabs(true_d2fdz2 - computed_d2fdz2);
-          d2fdxy(p.I) = fabs(true_d2fdxy - computed_d2fdxy);
-          d2fdxz(p.I) = fabs(true_d2fdxz - computed_d2fdxz);
-          d2fdyz(p.I) = fabs(true_d2fdyz - computed_d2fdyz);
+          d2fdx2(p.I) = fabs(true_d2fdx2 - second_derivs.dxdx);
+          d2fdy2(p.I) = fabs(true_d2fdy2 - second_derivs.dydy);
+          d2fdz2(p.I) = fabs(true_d2fdz2 - second_derivs.dzdz);
+          d2fdxy(p.I) = fabs(true_d2fdxy - second_derivs.dxdy);
+          d2fdxz(p.I) = fabs(true_d2fdxz - second_derivs.dxdz);
+          d2fdyz(p.I) = fabs(true_d2fdyz - second_derivs.dydz);
         });
 
   } else if (CCTK_Equals(test_data, "parabola")) {
-    grid.loop_all<0, 0, 0>(
+    grid.loop_int<0, 0, 0>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
           using namespace MultiPatch::GlobalDerivatives;
@@ -316,23 +311,18 @@ extern "C" void TestMultiPatch_compute_deriv_error(CCTK_ARGUMENTS) {
           const auto true_d2fdyz{parabola_dyz(x, y, z)};
 
           // TODO: Get from projections
-          const auto first_derivs{c_1_4(cctkGH, p, u)};
-          const auto computed_d2fdx2{0.0};
-          const auto computed_d2fdy2{0.0};
-          const auto computed_d2fdz2{0.0};
-          const auto computed_d2fdxy{0.0};
-          const auto computed_d2fdxz{0.0};
-          const auto computed_d2fdyz{0.0};
+          const auto first_derivs{c4o_1(cctkGH, p, u)};
+          const auto second_derivs{c4o_2(cctkGH, p, u)};
 
           dfdx(p.I) = fabs(true_dfdx - first_derivs.dx);
           dfdy(p.I) = fabs(true_dfdy - first_derivs.dy);
           dfdz(p.I) = fabs(true_dfdz - first_derivs.dz);
-          d2fdx2(p.I) = fabs(true_d2fdx2 - computed_d2fdx2);
-          d2fdy2(p.I) = fabs(true_d2fdy2 - computed_d2fdy2);
-          d2fdz2(p.I) = fabs(true_d2fdz2 - computed_d2fdz2);
-          d2fdxy(p.I) = fabs(true_d2fdxy - computed_d2fdxy);
-          d2fdxz(p.I) = fabs(true_d2fdxz - computed_d2fdxz);
-          d2fdyz(p.I) = fabs(true_d2fdyz - computed_d2fdyz);
+          d2fdx2(p.I) = fabs(true_d2fdx2 - second_derivs.dxdx);
+          d2fdy2(p.I) = fabs(true_d2fdy2 - second_derivs.dydy);
+          d2fdz2(p.I) = fabs(true_d2fdz2 - second_derivs.dzdz);
+          d2fdxy(p.I) = fabs(true_d2fdxy - second_derivs.dxdy);
+          d2fdxz(p.I) = fabs(true_d2fdxz - second_derivs.dxdz);
+          d2fdyz(p.I) = fabs(true_d2fdyz - second_derivs.dydz);
         });
   }
 }

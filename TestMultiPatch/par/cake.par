@@ -50,7 +50,7 @@ CarpetX::boundary_upper_y = "dirichlet"
 CarpetX::boundary_upper_z = "dirichlet"
 
 IO::out_dir = $parfile
-IO::out_every = 1
+IO::out_every = 2
 
 CarpetX::out_tsv = no
 CarpetX::out_tsv_vars = ""

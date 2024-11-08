@@ -7,14 +7,6 @@ KEYWORD test_data "Analytical data to use in testing"
   "parabola" :: "Parabola"
 } "standing wave"
 
-CCTK_BOOLEAN interpolation "Computes the interpolation error of test data"
-{
-} yes
-
-CCTK_BOOLEAN derivatives "Computes the first derivative error of the test data"
-{
-} yes
-
 CCTK_REAL A "Standing wave amplitude"
 {
   *:* :: ""

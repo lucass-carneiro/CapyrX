@@ -38,6 +38,7 @@ MultiPatch::cake_cartesian_ncells_k = 128
 MultiPatch::cake_angular_cells = 128
 MultiPatch::cake_radial_cells  = 128
 
+TestMultiPatch::test_data = "parabola"
 TestMultiPatch::kx = 0.75
 TestMultiPatch::ky = 0.75
 TestMultiPatch::kz = 0.75

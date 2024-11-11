@@ -13,10 +13,16 @@ SCHEDULE MultiPatchWaveToy_Initial AT initial
 
 
 # Step
+SCHEDULE MultiPatchWaveToy_Sync AT PostRegrid
+{
+  LANG: C
+  OPTIONS: global
+  SYNC: state
+} "Sync the scalar wave state"
+
 SCHEDULE MultiPatchWaveToy_RHS IN ODESolvers_RHS
 {
   LANG: C
-  READS: MultiPatch::vertex_Jacobians(everywhere) CoordinatesX::vertex_coords(everywhere)
   READS:  state(everywhere)
   WRITES: rhs(interior)
 } "Calculate scalar wave RHS"
@@ -42,7 +48,7 @@ SCHEDULE MultiPatchWaveToy_Error IN ODESolvers_PostStep AFTER MultiPatchWaveToy_
 SCHEDULE MultiPatchWaveToy_Energy IN ODESolvers_PostStep AFTER MultiPatchWaveToy_Sync 
 {
   LANG: C
-  READS: state(everywhere)
+  READS: state(interior)
   WRITES: energy(interior)
   SYNC: energy
 } "Calculate the energy density of the scalar wave equation"

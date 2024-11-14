@@ -9,10 +9,10 @@
 
 namespace TestMultiPatch {
 
-static inline auto standing_wave(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky,
-                                 CCTK_REAL kz, CCTK_REAL t, CCTK_REAL x,
-                                 CCTK_REAL y,
-                                 CCTK_REAL z) noexcept -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+standing_wave(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
+              CCTK_REAL t, CCTK_REAL x, CCTK_REAL y,
+              CCTK_REAL z) noexcept -> CCTK_REAL {
   using std::cos, std::sin, std::sqrt;
 
   const auto pi{acos(-1.0)};
@@ -22,10 +22,10 @@ static inline auto standing_wave(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky,
          cos(2 * pi * ky * y) * cos(2 * pi * kz * z);
 }
 
-static inline auto standing_wave_dx(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky,
-                                    CCTK_REAL kz, CCTK_REAL t, CCTK_REAL x,
-                                    CCTK_REAL y,
-                                    CCTK_REAL z) noexcept -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+standing_wave_dx(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
+                 CCTK_REAL t, CCTK_REAL x, CCTK_REAL y,
+                 CCTK_REAL z) noexcept -> CCTK_REAL {
   using std::cos, std::sin, std::sqrt;
 
   const auto pi{acos(-1.0)};
@@ -35,10 +35,10 @@ static inline auto standing_wave_dx(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky,
          cos(2 * kz * pi * z) * sin(2 * kx * pi * x);
 }
 
-static inline auto standing_wave_dy(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky,
-                                    CCTK_REAL kz, CCTK_REAL t, CCTK_REAL x,
-                                    CCTK_REAL y,
-                                    CCTK_REAL z) noexcept -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+standing_wave_dy(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
+                 CCTK_REAL t, CCTK_REAL x, CCTK_REAL y,
+                 CCTK_REAL z) noexcept -> CCTK_REAL {
   using std::cos, std::sin, std::sqrt;
 
   const auto pi{acos(-1.0)};
@@ -48,10 +48,10 @@ static inline auto standing_wave_dy(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky,
          cos(2 * kz * pi * z) * sin(2 * ky * pi * y);
 }
 
-static inline auto standing_wave_dz(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky,
-                                    CCTK_REAL kz, CCTK_REAL t, CCTK_REAL x,
-                                    CCTK_REAL y,
-                                    CCTK_REAL z) noexcept -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+standing_wave_dz(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
+                 CCTK_REAL t, CCTK_REAL x, CCTK_REAL y,
+                 CCTK_REAL z) noexcept -> CCTK_REAL {
   using std::cos, std::sin, std::sqrt;
 
   const auto pi{acos(-1.0)};
@@ -61,10 +61,10 @@ static inline auto standing_wave_dz(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky,
          cos(2 * ky * pi * y) * sin(2 * kz * pi * z);
 }
 
-static inline auto standing_wave_dx2(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky,
-                                     CCTK_REAL kz, CCTK_REAL t, CCTK_REAL x,
-                                     CCTK_REAL y,
-                                     CCTK_REAL z) noexcept -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+standing_wave_dx2(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
+                  CCTK_REAL t, CCTK_REAL x, CCTK_REAL y,
+                  CCTK_REAL z) noexcept -> CCTK_REAL {
   using std::cos, std::sin, std::sqrt;
 
   const auto pi{acos(-1.0)};
@@ -74,10 +74,10 @@ static inline auto standing_wave_dx2(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky,
          cos(2 * kx * pi * x) * cos(2 * ky * pi * y) * cos(2 * kz * pi * z);
 }
 
-static inline auto standing_wave_dy2(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky,
-                                     CCTK_REAL kz, CCTK_REAL t, CCTK_REAL x,
-                                     CCTK_REAL y,
-                                     CCTK_REAL z) noexcept -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+standing_wave_dy2(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
+                  CCTK_REAL t, CCTK_REAL x, CCTK_REAL y,
+                  CCTK_REAL z) noexcept -> CCTK_REAL {
   using std::cos, std::sin, std::sqrt;
 
   const auto pi{acos(-1.0)};
@@ -87,10 +87,10 @@ static inline auto standing_wave_dy2(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky,
          cos(2 * kx * pi * x) * cos(2 * ky * pi * y) * cos(2 * kz * pi * z);
 }
 
-static inline auto standing_wave_dz2(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky,
-                                     CCTK_REAL kz, CCTK_REAL t, CCTK_REAL x,
-                                     CCTK_REAL y,
-                                     CCTK_REAL z) noexcept -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+standing_wave_dz2(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
+                  CCTK_REAL t, CCTK_REAL x, CCTK_REAL y,
+                  CCTK_REAL z) noexcept -> CCTK_REAL {
   using std::cos, std::sin, std::sqrt;
 
   const auto pi{acos(-1.0)};
@@ -100,10 +100,10 @@ static inline auto standing_wave_dz2(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky,
          cos(2 * kx * pi * x) * cos(2 * ky * pi * y) * cos(2 * kz * pi * z);
 }
 
-static inline auto standing_wave_dxy(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky,
-                                     CCTK_REAL kz, CCTK_REAL t, CCTK_REAL x,
-                                     CCTK_REAL y,
-                                     CCTK_REAL z) noexcept -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+standing_wave_dxy(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
+                  CCTK_REAL t, CCTK_REAL x, CCTK_REAL y,
+                  CCTK_REAL z) noexcept -> CCTK_REAL {
   using std::cos, std::sin, std::sqrt;
 
   const auto pi{acos(-1.0)};
@@ -113,10 +113,10 @@ static inline auto standing_wave_dxy(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky,
          cos(2 * kz * pi * z) * sin(2 * kx * pi * x) * sin(2 * ky * pi * y);
 }
 
-static inline auto standing_wave_dxz(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky,
-                                     CCTK_REAL kz, CCTK_REAL t, CCTK_REAL x,
-                                     CCTK_REAL y,
-                                     CCTK_REAL z) noexcept -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+standing_wave_dxz(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
+                  CCTK_REAL t, CCTK_REAL x, CCTK_REAL y,
+                  CCTK_REAL z) noexcept -> CCTK_REAL {
   using std::cos, std::sin, std::sqrt;
 
   const auto pi{acos(-1.0)};
@@ -126,10 +126,10 @@ static inline auto standing_wave_dxz(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky,
          cos(2 * ky * pi * y) * sin(2 * kx * pi * x) * sin(2 * kz * pi * z);
 }
 
-static inline auto standing_wave_dyz(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky,
-                                     CCTK_REAL kz, CCTK_REAL t, CCTK_REAL x,
-                                     CCTK_REAL y,
-                                     CCTK_REAL z) noexcept -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+standing_wave_dyz(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
+                  CCTK_REAL t, CCTK_REAL x, CCTK_REAL y,
+                  CCTK_REAL z) noexcept -> CCTK_REAL {
   using std::cos, std::sin, std::sqrt;
 
   const auto pi{acos(-1.0)};
@@ -139,44 +139,53 @@ static inline auto standing_wave_dyz(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky,
          cos(2 * kx * pi * x) * sin(2 * ky * pi * y) * sin(2 * kz * pi * z);
 }
 
-static inline auto parabola(CCTK_REAL x, CCTK_REAL y,
-                            CCTK_REAL z) -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+parabola(CCTK_REAL x, CCTK_REAL y, CCTK_REAL z) -> CCTK_REAL {
   return x * x + y * y + z * z;
 }
 
-static inline auto parabola_dx(CCTK_REAL x, CCTK_REAL, CCTK_REAL) -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+parabola_dx(CCTK_REAL x, CCTK_REAL, CCTK_REAL) -> CCTK_REAL {
   return 2.0 * x;
 }
 
-static inline auto parabola_dy(CCTK_REAL, CCTK_REAL y, CCTK_REAL) -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+parabola_dy(CCTK_REAL, CCTK_REAL y, CCTK_REAL) -> CCTK_REAL {
   return 2.0 * y;
 }
 
-static inline auto parabola_dz(CCTK_REAL, CCTK_REAL, CCTK_REAL z) -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+parabola_dz(CCTK_REAL, CCTK_REAL, CCTK_REAL z) -> CCTK_REAL {
   return 2.0 * z;
 }
 
-static inline auto parabola_dx2(CCTK_REAL, CCTK_REAL, CCTK_REAL) -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+parabola_dx2(CCTK_REAL, CCTK_REAL, CCTK_REAL) -> CCTK_REAL {
   return 2.0;
 }
 
-static inline auto parabola_dy2(CCTK_REAL, CCTK_REAL, CCTK_REAL) -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+parabola_dy2(CCTK_REAL, CCTK_REAL, CCTK_REAL) -> CCTK_REAL {
   return 2.0;
 }
 
-static inline auto parabola_dz2(CCTK_REAL, CCTK_REAL, CCTK_REAL) -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+parabola_dz2(CCTK_REAL, CCTK_REAL, CCTK_REAL) -> CCTK_REAL {
   return 2.0;
 }
 
-static inline auto parabola_dxy(CCTK_REAL, CCTK_REAL, CCTK_REAL) -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+parabola_dxy(CCTK_REAL, CCTK_REAL, CCTK_REAL) -> CCTK_REAL {
   return 0.0;
 }
 
-static inline auto parabola_dxz(CCTK_REAL, CCTK_REAL, CCTK_REAL) -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+parabola_dxz(CCTK_REAL, CCTK_REAL, CCTK_REAL) -> CCTK_REAL {
   return 0.0;
 }
 
-static inline auto parabola_dyz(CCTK_REAL, CCTK_REAL, CCTK_REAL) -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+parabola_dyz(CCTK_REAL, CCTK_REAL, CCTK_REAL) -> CCTK_REAL {
   return 0.0;
 }
 
@@ -185,7 +194,7 @@ extern "C" void TestMultiPatch_write_test_data(CCTK_ARGUMENTS) {
   DECLARE_CCTK_PARAMETERS;
 
   if (CCTK_Equals(test_data, "standing wave")) {
-    grid.loop_int<0, 0, 0>(
+    grid.loop_int_device<0, 0, 0>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
           const auto t{cctk_time};
@@ -197,15 +206,15 @@ extern "C" void TestMultiPatch_write_test_data(CCTK_ARGUMENTS) {
         });
 
   } else if (CCTK_Equals(test_data, "parabola")) {
-    grid.loop_int<0, 0, 0>(grid.nghostzones,
-                           [=] CCTK_DEVICE(const Loop::PointDesc &p)
-                               CCTK_ATTRIBUTE_ALWAYS_INLINE {
-                                 const auto x{vcoordx(p.I)};
-                                 const auto y{vcoordy(p.I)};
-                                 const auto z{vcoordz(p.I)};
+    grid.loop_int_device<0, 0, 0>(grid.nghostzones,
+                                  [=] CCTK_DEVICE(const Loop::PointDesc &p)
+                                      CCTK_ATTRIBUTE_ALWAYS_INLINE {
+                                        const auto x{vcoordx(p.I)};
+                                        const auto y{vcoordy(p.I)};
+                                        const auto z{vcoordz(p.I)};
 
-                                 u(p.I) = parabola(x, y, z);
-                               });
+                                        u(p.I) = parabola(x, y, z);
+                                      });
   } else {
     CCTK_VERROR("Unknown test data type %s", test_data);
   }
@@ -216,7 +225,7 @@ extern "C" void TestMultiPatch_compute_interp_error(CCTK_ARGUMENTS) {
   DECLARE_CCTK_PARAMETERS;
 
   if (CCTK_Equals(test_data, "standing wave")) {
-    grid.loop_all<0, 0, 0>(
+    grid.loop_all_device<0, 0, 0>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
           using std::fabs;
@@ -233,20 +242,20 @@ extern "C" void TestMultiPatch_compute_interp_error(CCTK_ARGUMENTS) {
         });
 
   } else if (CCTK_Equals(test_data, "parabola")) {
-    grid.loop_all<0, 0, 0>(grid.nghostzones,
-                           [=] CCTK_DEVICE(const Loop::PointDesc &p)
-                               CCTK_ATTRIBUTE_ALWAYS_INLINE {
-                                 using std::fabs;
+    grid.loop_all_device<0, 0, 0>(grid.nghostzones,
+                                  [=] CCTK_DEVICE(const Loop::PointDesc &p)
+                                      CCTK_ATTRIBUTE_ALWAYS_INLINE {
+                                        using std::fabs;
 
-                                 const auto x{vcoordx(p.I)};
-                                 const auto y{vcoordy(p.I)};
-                                 const auto z{vcoordz(p.I)};
+                                        const auto x{vcoordx(p.I)};
+                                        const auto y{vcoordy(p.I)};
+                                        const auto z{vcoordz(p.I)};
 
-                                 const auto evolved_u{u(p.I)};
-                                 const auto real_u{parabola(x, y, z)};
+                                        const auto evolved_u{u(p.I)};
+                                        const auto real_u{parabola(x, y, z)};
 
-                                 interp(p.I) = fabs(evolved_u - real_u);
-                               });
+                                        interp(p.I) = fabs(evolved_u - real_u);
+                                      });
   }
 }
 
@@ -255,7 +264,7 @@ extern "C" void TestMultiPatch_compute_deriv_error(CCTK_ARGUMENTS) {
   DECLARE_CCTK_PARAMETERS;
 
   if (CCTK_Equals(test_data, "standing wave")) {
-    grid.loop_int<0, 0, 0>(
+    grid.loop_int_device<0, 0, 0>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
           using namespace MultiPatch::GlobalDerivatives;
@@ -291,7 +300,7 @@ extern "C" void TestMultiPatch_compute_deriv_error(CCTK_ARGUMENTS) {
         });
 
   } else if (CCTK_Equals(test_data, "parabola")) {
-    grid.loop_int<0, 0, 0>(
+    grid.loop_int_device<0, 0, 0>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
           using namespace MultiPatch::GlobalDerivatives;

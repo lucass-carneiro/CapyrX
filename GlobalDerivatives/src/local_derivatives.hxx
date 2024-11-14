@@ -1,8 +1,7 @@
-#ifndef CAPYRX_LOCAL_DERIVATIVES_HXX
-#define CAPYRX_LOCAL_DERIVATIVES_HXX
+#ifndef CAPYRX_GLOBAL_DERIVATIVES_LOCAL_DERIVATIVES_HXX
+#define CAPYRX_GLOBAL_DERIVATIVES_LOCAL_DERIVATIVES_HXX
 
 #include <cctk.h>
-
 #include <loop_device.hxx>
 
 namespace MultiPatch::GlobalDerivatives {
@@ -126,4 +125,4 @@ c4o_0_0_2(const Loop::PointDesc &p,
 
 } // namespace MultiPatch::GlobalDerivatives
 
-#endif // CAPYRX_LOCAL_DERIVATIVES_HXX
+#endif // CAPYRX_GLOBAL_DERIVATIVES_LOCAL_DERIVATIVES_HXX

@@ -4,10 +4,7 @@ import matplotlib.tri as tri
 
 import openpmd_utils as opmdu
 
-import multiprocessing
-
-# DEBUG
-# import pandas as pd
+import concurrent.futures
 
 import logging
 logger = logging.getLogger(__name__)
@@ -58,90 +55,84 @@ def plot_openpmd_slice(args):
         logger.error(f"Unrecognized slice coordinate {slice_coord}")
         raise RuntimeError(f"Unrecognized slice coordinate {slice_coord}")
 
+    num_patches = len(patches)
+    patch_dataframe_futures = [None] * num_patches
+
     # Get dataframes for each patch in parallel
-    with multiprocessing.Pool(processes=len(patches)) as pool:
-        results = [
-            pool.apply_async(
+    with concurrent.futures.ProcessPoolExecutor(max_workers=num_patches) as executor:
+        for i in range(0, num_patches):
+            patch_dataframe_futures[i] = executor.submit(
                 opmdu.merge_multipatch_dataframes,
-                [
-                    verbose,
-                    fname,
-                    iteration_index,
-                    p,
-                    level,
-                    thorn_name,
-                    group_name,
-                    gf_name,
-                    slice_coord,
-                    slice_val
-                ],
+                verbose,
+                fname,
+                iteration_index,
+                patches[i],
+                level,
+                thorn_name,
+                group_name,
+                gf_name,
+                slice_coord,
+                slice_val
             )
-            for p in patches
-        ]
 
-        plt.close("all")
+    patch_dataframes = [f.result() for f in patch_dataframe_futures]
 
-        for result in results:
-            df = result.get()
+    plt.close("all")
 
-            # DEBUG
-            # pd.options.display.precision = 16
-            # print(df[np.isclose(df["coordinatesx_vcoordz"], 1.0)])
-            # exit()
+    for df in patch_dataframes:
+        x = df[global_x].to_numpy()
+        y = df[global_y].to_numpy()
+        gf = df[gf_name].to_numpy()
 
-            x = df[global_x].to_numpy()
-            y = df[global_y].to_numpy()
-            gf = df[gf_name].to_numpy()
+        triang = tri.Triangulation(x, y)
+        if (mask_radius > 0.0 and not np.isclose(mask_radius, 0.0)):
+            triang.set_mask(
+                np.hypot(
+                    x[triang.triangles].mean(axis=1),
+                    y[triang.triangles].mean(axis=1)
+                ) < mask_radius
+            )
 
-            triang = tri.Triangulation(x, y)
-            if (mask_radius > 0.0 and not np.isclose(mask_radius, 0.0)):
-                triang.set_mask(
-                    np.hypot(
-                        x[triang.triangles].mean(axis=1),
-                        y[triang.triangles].mean(axis=1)
-                    ) < mask_radius
-                )
+        if diverging == True:
+            lvls = None
 
-            if diverging == True:
-                lvls = None
-
-                if autorange:
-                    lvls = 100
-                else:
-                    lvls = np.linspace(varmin, varmax, 101)
-                plt.tricontourf(
-                    triang,
-                    gf,
-                    cmap="seismic",
-                    levels=lvls
-                )
+            if autorange:
+                lvls = 100
             else:
-                lvls = None
-
-                if autorange:
-                    lvls = 100
-                else:
-                    lvls = np.linspace(varmin, varmax, 101)
-
-                plt.tricontourf(
-                    df[global_x],
-                    df[global_y],
-                    df[gf_name],
-                    levels=lvls,
-                )
-
-            if (plot_tri):
-                plt.triplot(triang)
-
-        plt.xlabel(global_x)
-        plt.ylabel(global_y)
-
-        cb = plt.colorbar()
-        cb.ax.set_ylabel(var_name)
-
-        plt.tight_layout()
-
-        if not save_file:
-            plt.show()
+                lvls = np.linspace(varmin, varmax, 101)
+            plt.tricontourf(
+                triang,
+                gf,
+                cmap="seismic",
+                levels=lvls
+            )
         else:
-            plt.savefig(f"{var_name}_it{iteration_index_pad}.png")
+            lvls = None
+
+            if autorange:
+                lvls = 100
+            else:
+                lvls = np.linspace(varmin, varmax, 101)
+
+            plt.tricontourf(
+                df[global_x],
+                df[global_y],
+                df[gf_name],
+                levels=lvls,
+            )
+
+        if (plot_tri):
+            plt.triplot(triang)
+
+    plt.xlabel(global_x)
+    plt.ylabel(global_y)
+
+    cb = plt.colorbar()
+    cb.ax.set_ylabel(var_name)
+
+    plt.tight_layout()
+
+    if not save_file:
+        plt.show()
+    else:
+        plt.savefig(f"{var_name}_it{iteration_index_pad}.png")

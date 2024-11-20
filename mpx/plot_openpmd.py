@@ -77,6 +77,9 @@ def plot_openpmd_slice(args):
 
     patch_dataframes = [f.result() for f in patch_dataframe_futures]
 
+    if verbose:
+        logger.info(f"Creating plot for iteration {iteration_index}")
+
     plt.close("all")
 
     for df in patch_dataframes:
@@ -136,3 +139,6 @@ def plot_openpmd_slice(args):
         plt.show()
     else:
         plt.savefig(f"{var_name}_it{iteration_index_pad}.png")
+
+    if verbose:
+        logger.info("Done")

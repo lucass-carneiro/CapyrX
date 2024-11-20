@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 import openpmd_api as io
 
+import concurrent.futures
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -124,61 +126,69 @@ def filter_multipatch_dataframes(verbose, patch, merged_df, slice_coord, slice_v
 def merge_multipatch_dataframes(verbose, fname, iteration_index, patch, level, thorn_name, group_name, gf_name, slice_coord, slice_val):
     # Coordiantes
     if verbose:
-        logger.info("Loading coordinate data")
+        # autopep8: off
+        logger.info(f"Loading data for iteration {iteration_index} patch {patch}")
+        # autopep8: on
 
-    vcoordx_df = openpmd_to_dataframe(
-        fname,
-        verbose,
-        iteration_index,
-        f"coordinatesx_vertex_coords_patch{patch[0]}_lev{level}",
-        "coordinatesx_vcoordx"
-    )
+    mesh_name = f"{thorn_name}_{group_name}_patch{patch[0]}_lev{level}"
 
-    vcoordy_df = openpmd_to_dataframe(
-        fname,
-        verbose,
-        iteration_index,
-        f"coordinatesx_vertex_coords_patch{patch[0]}_lev{level}",
-        "coordinatesx_vcoordy"
-    )
+    with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
+        vcoordx_future = executor.submit(
+            openpmd_to_dataframe,
+            fname,
+            verbose,
+            iteration_index,
+            f"coordinatesx_vertex_coords_patch{patch[0]}_lev{level}",
+            "coordinatesx_vcoordx"
+        )
 
-    vcoordz_df = openpmd_to_dataframe(
-        fname,
-        verbose,
-        iteration_index,
-        f"coordinatesx_vertex_coords_patch{patch[0]}_lev{level}",
-        "coordinatesx_vcoordz"
-    )
+        vcoordy_future = executor.submit(
+            openpmd_to_dataframe,
+            fname,
+            verbose,
+            iteration_index,
+            f"coordinatesx_vertex_coords_patch{patch[0]}_lev{level}",
+            "coordinatesx_vcoordy"
+        )
+
+        vcoordz_future = executor.submit(
+            openpmd_to_dataframe,
+            fname,
+            verbose,
+            iteration_index,
+            f"coordinatesx_vertex_coords_patch{patch[0]}_lev{level}",
+            "coordinatesx_vcoordz"
+        )
+
+        main_gf_future = executor.submit(
+            openpmd_to_dataframe,
+            fname,
+            verbose,
+            iteration_index,
+            mesh_name,
+            gf_name
+        )
+
+    vcoordx_df = vcoordx_future.result()
+    vcoordy_df = vcoordy_future.result()
+    vcoordz_df = vcoordz_future.result()
+    main_gf_df = main_gf_future.result()
 
     if verbose:
-        logger.info("Merging coordinate data")
+        # autopep8: off
+        logger.info(f"Merging data for iteration {iteration_index} patch {patch} ")
+        # autopep8: on
 
     merge_cols = ["i", "j", "k", "x", "y", "z"]
 
     coords_df = pd.merge(vcoordx_df, vcoordy_df, on=merge_cols)
     coords_df = pd.merge(coords_df, vcoordz_df, on=merge_cols)
-
-    # Main data
-    mesh_name = f"{thorn_name}_{group_name}_patch{patch[0]}_lev{level}"
-
-    if verbose:
-        logger.info(f"Loading main data {mesh_name}/{gf_name}")
-
-    main_gf_df = openpmd_to_dataframe(
-        fname,
-        verbose,
-        iteration_index,
-        mesh_name,
-        gf_name
-    )
-
-    if verbose:
-        logger.info("Merging main data with coordinates")
-
     merged_df = pd.merge(coords_df, main_gf_df, on=merge_cols)
 
     if verbose:
-        logger.info("Filtering ghost zones")
+        # autopep8: off
+        logger.info(f"Filtering ghost zones for iteration {iteration_index} patch {patch} ")
+        # autopep8: on
 
     merged_df = merged_df[
         ((merged_df["x"] > -1.0) | np.isclose(merged_df["x"], -1.0)) &

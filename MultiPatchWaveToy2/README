@@ -1,0 +1,11 @@
+Cactus Code Thorn MultiPatchWaveToy2
+Author(s)    : Lucas T. Sanches <lucas.t.s.carneiro@gmail.com>
+Maintainer(s): Lucas T. Sanches <lucas.t.s.carneiro@gmail.com>
+Licence      : LGPL
+--------------------------------------------------------------------------
+
+1. Purpose
+
+Solve the scalar wave equation using MultiPatch grids.
+This thorn is simliar to MultiPatchWaveToy, but it uses
+a second order formulation for the evolution equations.

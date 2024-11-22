@@ -1,0 +1,3 @@
+# Configuration definitions for thorn MultiPatchWaveToy2
+
+REQUIRES Loop GlobalDerivatives

@@ -1,0 +1,32 @@
+# Parameter definitions for thorn MultiPatchWaveToy2
+
+KEYWORD initial_condition "Initial condition"
+{
+  "standing wave" :: "Standing wave"
+  "Gaussian" :: "Gaussian"
+} "standing wave"
+
+CCTK_REAL amplitude "Initial amplitude for gaussian and wave initial data"
+{
+  *:* :: ""
+} 1.0
+
+CCTK_REAL wave_kx "kx wave number for wave initial data"
+{
+  *:* :: ""
+} 1.0
+
+CCTK_REAL wave_ky "ky wave number for wave initial data"
+{
+  *:* :: ""
+} 1.0
+
+CCTK_REAL wave_kz "kz wave number for wave initial data"
+{
+  *:* :: ""
+} 1.0
+
+CCTK_REAL gaussian_width "width of Gaussian"
+{
+  (0:* :: ""
+} 1.0

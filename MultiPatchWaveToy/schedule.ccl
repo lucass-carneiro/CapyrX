@@ -37,13 +37,16 @@ SCHEDULE MultiPatchWaveToy_Sync IN ODESolvers_PostStep
 
 
 # Error and energy
-SCHEDULE MultiPatchWaveToy_Error IN ODESolvers_PostStep AFTER MultiPatchWaveToy_Sync 
+if (CCTK_EQUALS(initial_condition, "standing wave") || CCTK_EQUALS(initial_condition, "Gaussian"))
 {
-  LANG: C
-  READS: CoordinatesX::vertex_coords(interior) state(interior)
-  WRITES: error(interior)
-  SYNC: error
-} "Calculate error in scalar wave evolution"
+  SCHEDULE MultiPatchWaveToy_Error IN ODESolvers_PostStep AFTER MultiPatchWaveToy_Sync 
+  {
+    LANG: C
+    READS: CoordinatesX::vertex_coords(interior) state(interior)
+    WRITES: error(interior)
+    SYNC: error
+  } "Calculate error in scalar wave evolution"
+}
 
 SCHEDULE MultiPatchWaveToy_Energy IN ODESolvers_PostStep AFTER MultiPatchWaveToy_Sync 
 {

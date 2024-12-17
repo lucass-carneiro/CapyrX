@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       154,          7]
-NotebookDataLength[     43223,       1006]
-NotebookOptionsPosition[     41439,        968]
-NotebookOutlinePosition[     41850,        985]
-CellTagsIndexPosition[     41807,        982]
+NotebookDataLength[     79319,       1682]
+NotebookOptionsPosition[     76790,       1633]
+NotebookOutlinePosition[     77195,       1650]
+CellTagsIndexPosition[     77152,       1647]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -395,7 +395,7 @@ omega{sqrt(kx * kx + ky * ky + kz * kz)};\\n  return \
   "During evaluation of \
 In[36]:=",ExpressionUUID->"1e34360d-ba45-4079-9d18-31461dbbef9d"]
 }, Open  ]]
-}, Open  ]],
+}, Closed]],
 
 Cell[CellGroupData[{
 
@@ -964,9 +964,674 @@ pow(z,2)))/(2.*pow(W,2)))*pow(W,4)*pow(pow(x,2) + pow(y,2) + pow(z,2),2.5)));\
   "During evaluation of \
 In[68]:=",ExpressionUUID->"12987deb-6bb5-42ac-840a-ac9748c84a80"]
 }, Open  ]]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["Quadrupolar Gaussian", "Section",
+ CellChangeTimes->{{3.94223262214503*^9, 3.94223262570091*^9}, {
+  3.942235629998825*^9, 
+  3.9422356318313932`*^9}},ExpressionUUID->"ccc0e9a0-95c9-4162-89f4-\
+d54406daf441"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ClearAll", "[", "gaussian", "]"}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"gaussian", "=", 
+    RowBox[{"A", "*", 
+     RowBox[{"Exp", "[", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"-", "1"}], "/", "2"}], 
+       RowBox[{
+        RowBox[{
+         RowBox[{"(", 
+          RowBox[{
+           SqrtBox[
+            RowBox[{
+             SuperscriptBox[
+              RowBox[{"(", 
+               RowBox[{"x", "-", "x0"}], ")"}], "2"], "+", 
+             SuperscriptBox[
+              RowBox[{"(", 
+               RowBox[{"y", "-", "y0"}], ")"}], "2"], "+", 
+             SuperscriptBox[
+              RowBox[{"(", 
+               RowBox[{"z", "-", "z0"}], ")"}], "2"]}]], "-", "R0"}], ")"}], 
+         "^", "2"}], "/", 
+        RowBox[{"sigma", "^", "2"}]}]}], "]"}]}]}], ";"}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"ClearAll", "[", "RealSphericalHarmonicY", "]"}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{
+    RowBox[{"RealSphericalHarmonicY", "[", 
+     RowBox[{"l_", ",", "m_", ",", "\[Theta]_", ",", "\[Phi]_"}], "]"}], ":=", 
+    RowBox[{"Piecewise", "[", "\[IndentingNewLine]", 
+     RowBox[{"{", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"I", "/", 
+           RowBox[{"Sqrt", "[", "2", "]"}]}], 
+          RowBox[{"(", 
+           RowBox[{
+            RowBox[{"SphericalHarmonicY", "[", 
+             RowBox[{"l", ",", "m", ",", "\[Theta]", ",", "\[Phi]"}], "]"}], 
+            "-", 
+            RowBox[{
+             SuperscriptBox[
+              RowBox[{"(", 
+               RowBox[{"-", "1"}], ")"}], "m"], 
+             RowBox[{"SphericalHarmonicY", "[", 
+              RowBox[{"l", ",", 
+               RowBox[{"-", "m"}], ",", "\[Theta]", ",", "\[Phi]"}], 
+              "]"}]}]}], ")"}]}], ",", 
+         RowBox[{"m", "<", "0"}]}], "}"}], ",", "\[IndentingNewLine]", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"SphericalHarmonicY", "[", 
+          RowBox[{"l", ",", "0", ",", "\[Theta]", ",", "\[Phi]"}], "]"}], ",", 
+         RowBox[{"m", "==", "0"}]}], "}"}], ",", "\[IndentingNewLine]", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"1", "/", 
+           RowBox[{"Sqrt", "[", "2", "]"}]}], 
+          RowBox[{"(", 
+           RowBox[{
+            RowBox[{"SphericalHarmonicY", "[", 
+             RowBox[{"l", ",", 
+              RowBox[{"-", "m"}], ",", "\[Theta]", ",", "\[Phi]"}], "]"}], 
+            "+", 
+            RowBox[{
+             SuperscriptBox[
+              RowBox[{"(", 
+               RowBox[{"-", "1"}], ")"}], "m"], 
+             RowBox[{"SphericalHarmonicY", "[", 
+              RowBox[{"l", ",", "m", ",", "\[Theta]", ",", "\[Phi]"}], 
+              "]"}]}]}], ")"}]}], ",", 
+         RowBox[{"m", ">", "0"}]}], "}"}]}], "\[IndentingNewLine]", "}"}], 
+     "\[IndentingNewLine]", "]"}]}], ";"}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"ClearAll", "[", "quadrupole", "]"}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"quadrupole", "=", 
+   RowBox[{"FullSimplify", "[", "\[IndentingNewLine]", 
+    RowBox[{"RealSphericalHarmonicY", "[", 
+     RowBox[{"2", ",", "2", ",", 
+      RowBox[{"ArcCos", "[", 
+       RowBox[{"z", "/", 
+        RowBox[{"Sqrt", "[", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"(", 
+            RowBox[{"x", "-", "x0"}], ")"}], "^", "2"}], "+", 
+          RowBox[{
+           RowBox[{"(", 
+            RowBox[{"y", "-", "y0"}], ")"}], "^", "2"}], "+", 
+          RowBox[{
+           RowBox[{"(", 
+            RowBox[{"z", "-", "z0"}], ")"}], "^", "2"}]}], "]"}]}], "]"}], 
+      ",", 
+      RowBox[{"ArcTan", "[", 
+       RowBox[{
+        RowBox[{"x", "-", "x0"}], ",", 
+        RowBox[{"y", "-", "y0"}]}], "]"}]}], "]"}], "\[IndentingNewLine]", 
+    "]"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"quadrupole", "=", 
+    RowBox[{"FullSimplify", "[", 
+     RowBox[{"TrigExpand", "[", "quadrupole", "]"}], "]"}]}], ";"}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{"ClearAll", "[", "quadrupoleGaussian", 
+  "]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"quadrupoleGaussian", "[", 
+    RowBox[{"x_", ",", "y_", ",", "z_"}], "]"}], "=", 
+   RowBox[{"FullSimplify", "[", 
+    RowBox[{
+     RowBox[{"gaussian", "*", "quadrupole"}], "//.", 
+     RowBox[{"A", "->", 
+      RowBox[{"4", 
+       RowBox[{"Sqrt", "[", 
+        RowBox[{"Pi", "/", "15"}], "]"}]}]}]}], "]"}]}], ";"}]}], "Input",
+ CellChangeTimes->{{3.942233052086543*^9, 3.942233057239781*^9}, {
+   3.942233123299117*^9, 3.942233321410346*^9}, {3.942233888950502*^9, 
+   3.9422338915782633`*^9}, {3.942233995312098*^9, 3.942234086786428*^9}, {
+   3.9422356485328617`*^9, 3.942235649359968*^9}, {3.94223636167262*^9, 
+   3.942236438253332*^9}, 3.942236716719368*^9, {3.943456804484288*^9, 
+   3.943456817779581*^9}, {3.943457233086314*^9, 3.943457235542287*^9}, {
+   3.943457407309466*^9, 3.9434574115099154`*^9}, {3.943459733400865*^9, 
+   3.943459745370595*^9}, {3.943459782367021*^9, 3.9434599182819433`*^9}},
+ CellLabel->"In[18]:=",ExpressionUUID->"727b4ee1-30d9-4db6-8287-f8af67a9ac39"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ClearAll", "[", "makeQuadGaussFuncString", "]"}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"makeQuadGaussFuncString", "[", "func_", "]"}], ":=", 
+   RowBox[{"\"\<\ntemplate<typename T>\nstatic inline auto \>\"", "<>", 
+    RowBox[{"ToString", "[", "func", "]"}], "<>", 
+    "\"\<(T sigma, T R0, T x0, T y0, T z0, T x, T y, T z) noexcept -> T {\n  \
+using std::sqrt, std::pow, std::exp;\n  return \>\"", "<>", 
+    RowBox[{"ToString", "[", 
+     RowBox[{
+      RowBox[{"func", "[", 
+       RowBox[{"t", ",", "x", ",", "y", ",", "z"}], "]"}], ",", "CForm"}], 
+     "]"}], "<>", "\"\<;\n}\n\>\""}]}], ";"}]}], "Input",
+ CellChangeTimes->{{3.942235683129517*^9, 3.942235683131028*^9}, {
+  3.942235741736812*^9, 3.942235744612339*^9}, {3.942235780511943*^9, 
+  3.942235810229372*^9}, {3.942236732383713*^9, 3.942236732533251*^9}, {
+  3.942236963233624*^9, 3.942236984778349*^9}, {3.9422466342635927`*^9, 
+  3.942246710152761*^9}, {3.943453628829413*^9, 3.943453629021851*^9}, {
+  3.943454171975296*^9, 3.9434541739381943`*^9}, {3.943457443601079*^9, 
+  3.943457444289913*^9}},
+ CellLabel->"In[27]:=",ExpressionUUID->"cd29fe23-2215-4b78-8347-ae33ed73d49b"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ClearAll", "[", 
+   RowBox[{"phi", ",", "PI", ",", "Dx", ",", "Dy", ",", "Dz"}], "]"}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"phi", "[", 
+    RowBox[{"t_", ",", "x_", ",", "y_", ",", "z_"}], "]"}], "=", 
+   RowBox[{"quadrupoleGaussian", "[", 
+    RowBox[{"x", ",", "y", ",", "z"}], "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"PI", "[", 
+    RowBox[{"t_", ",", "x_", ",", "y_", ",", "z_"}], "]"}], "=", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"Derivative", "[", 
+      RowBox[{"1", ",", "0", ",", "0", ",", "0"}], "]"}], "[", "phi", "]"}], 
+    "[", 
+    RowBox[{"t", ",", "x", ",", "y", ",", "z"}], "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"Dx", "[", 
+    RowBox[{"t_", ",", "x_", ",", "y_", ",", "z_"}], "]"}], "=", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"Derivative", "[", 
+      RowBox[{"0", ",", "1", ",", "0", ",", "0"}], "]"}], "[", "phi", "]"}], 
+    "[", 
+    RowBox[{"t", ",", "x", ",", "y", ",", "z"}], "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"Dy", "[", 
+    RowBox[{"t_", ",", "x_", ",", "y_", ",", "z_"}], "]"}], "=", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"Derivative", "[", 
+      RowBox[{"0", ",", "0", ",", "1", ",", "0"}], "]"}], "[", "phi", "]"}], 
+    "[", 
+    RowBox[{"t", ",", "x", ",", "y", ",", "z"}], "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{
+    RowBox[{"Dz", "[", 
+     RowBox[{"t_", ",", "x_", ",", "y_", ",", "z_"}], "]"}], "=", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"Derivative", "[", 
+       RowBox[{"0", ",", "0", ",", "0", ",", "1"}], "]"}], "[", "phi", "]"}], 
+     "[", 
+     RowBox[{"t", ",", "x", ",", "y", ",", "z"}], "]"}]}], ";"}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"ClearAll", "[", 
+   RowBox[{"dPidx", ",", "dPidy", ",", "dPidz"}], "]"}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"dPidx", "[", 
+    RowBox[{"t_", ",", "x_", ",", "y_", ",", "z_"}], "]"}], "=", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"Derivative", "[", 
+      RowBox[{"0", ",", "1", ",", "0", ",", "0"}], "]"}], "[", "PI", "]"}], 
+    "[", 
+    RowBox[{"t", ",", "x", ",", "y", ",", "z"}], "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"dPidy", "[", 
+    RowBox[{"t_", ",", "x_", ",", "y_", ",", "z_"}], "]"}], "=", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"Derivative", "[", 
+      RowBox[{"0", ",", "0", ",", "1", ",", "0"}], "]"}], "[", "PI", "]"}], 
+    "[", 
+    RowBox[{"t", ",", "x", ",", "y", ",", "z"}], "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{
+    RowBox[{"dPidz", "[", 
+     RowBox[{"t_", ",", "x_", ",", "y_", ",", "z_"}], "]"}], "=", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"Derivative", "[", 
+       RowBox[{"0", ",", "0", ",", "0", ",", "1"}], "]"}], "[", "PI", "]"}], 
+     "[", 
+     RowBox[{"t", ",", "x", ",", "y", ",", "z"}], "]"}]}], ";"}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"dDxdx", "[", 
+    RowBox[{"t_", ",", "x_", ",", "y_", ",", "z_"}], "]"}], "=", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"Derivative", "[", 
+      RowBox[{"0", ",", "1", ",", "0", ",", "0"}], "]"}], "[", "Dx", "]"}], 
+    "[", 
+    RowBox[{"t", ",", "x", ",", "y", ",", "z"}], "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"dDydy", "[", 
+    RowBox[{"t_", ",", "x_", ",", "y_", ",", "z_"}], "]"}], "=", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"Derivative", "[", 
+      RowBox[{"0", ",", "0", ",", "1", ",", "0"}], "]"}], "[", "Dy", "]"}], 
+    "[", 
+    RowBox[{"t", ",", "x", ",", "y", ",", "z"}], "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"dDzdz", "[", 
+    RowBox[{"t_", ",", "x_", ",", "y_", ",", "z_"}], "]"}], "=", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"Derivative", "[", 
+      RowBox[{"0", ",", "0", ",", "0", ",", "1"}], "]"}], "[", "Dz", "]"}], 
+    "[", 
+    RowBox[{"t", ",", "x", ",", "y", ",", "z"}], "]"}]}], ";"}]}], "Input",
+ CellChangeTimes->{{3.9422468019355373`*^9, 3.942246817305459*^9}, {
+  3.9422470176780367`*^9, 3.942247054229514*^9}, {3.942247304246456*^9, 
+  3.9422473256422358`*^9}, {3.943460034433428*^9, 3.9434600360947113`*^9}},
+ CellLabel->"In[29]:=",ExpressionUUID->"aeb2768c-97b6-4bb7-8a8f-7d04ec8840dc"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ClearAll", "[", "quadGaussString", "]"}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"quadGaussString", "=", 
+   RowBox[{
+    RowBox[{"makeQuadGaussFuncString", "[", "phi", "]"}], "<>", 
+    "\[IndentingNewLine]", 
+    RowBox[{"makeQuadGaussFuncString", "[", "PI", "]"}], "<>", 
+    "\[IndentingNewLine]", 
+    RowBox[{"makeQuadGaussFuncString", "[", "Dx", "]"}], "<>", 
+    "\[IndentingNewLine]", 
+    RowBox[{"makeQuadGaussFuncString", "[", "Dy", "]"}], "<>", 
+    "\[IndentingNewLine]", 
+    RowBox[{"makeQuadGaussFuncString", "[", "Dz", "]"}], "<>", 
+    "\[IndentingNewLine]", 
+    RowBox[{"makeQuadGaussFuncString", "[", "dPidx", "]"}], "<>", 
+    "\[IndentingNewLine]", 
+    RowBox[{"makeQuadGaussFuncString", "[", "dPidy", "]"}], "<>", 
+    "\[IndentingNewLine]", 
+    RowBox[{"makeQuadGaussFuncString", "[", "dPidz", "]"}], "<>", 
+    "\[IndentingNewLine]", 
+    RowBox[{"makeQuadGaussFuncString", "[", "dDxdx", "]"}], "<>", 
+    "\[IndentingNewLine]", 
+    RowBox[{"makeQuadGaussFuncString", "[", "dDydy", "]"}], "<>", 
+    "\[IndentingNewLine]", 
+    RowBox[{"makeQuadGaussFuncString", "[", "dDzdz", "]"}]}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"quadGaussString", "=", 
+   RowBox[{"StringReplace", "[", 
+    RowBox[{"quadGaussString", ",", 
+     RowBox[{"{", 
+      RowBox[{"\"\<PI\>\"", "->", "\"\<Pi\>\""}], "}"}]}], "]"}]}], 
+  ";"}]}], "Input",
+ CellChangeTimes->{{3.9422472169587*^9, 3.942247272335883*^9}},
+ CellLabel->"In[42]:=",ExpressionUUID->"b4beabe6-bf83-4ae9-a6ab-9e63d25250db"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Print", "[", "quadGaussString", "]"}]], "Input",
+ CellChangeTimes->{{3.942247286722868*^9, 3.94224728826863*^9}},
+ CellLabel->"In[45]:=",ExpressionUUID->"5798f9f9-2f4f-4b27-9d4f-6e2e6216970d"],
+
+Cell[BoxData["\<\"\\ntemplate<typename T>\\nstatic inline auto phi(T sigma, T \
+R0, T x0, T y0, T z0, T x, T y, T z) noexcept -> T {\\n  using std::sqrt, \
+std::pow, std::exp;\\n  return ((x - x0 + y - y0)*(x - x0 - y + y0)*(pow(x - \
+x0,2) + pow(y - y0,2) - 2*z*z0 + pow(z0,2)))/(exp(pow(R0 - sqrt(pow(x - x0,2) \
++ pow(y - y0,2) + pow(z - z0,2)),2)/(2.*pow(sigma,2)))*(pow(x - x0,2) + pow(y \
+- y0,2))*(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)));\\n}\\n\\ntemplate<typename T>\\nstatic inline auto Pi(T sigma, T R0, \
+T x0, T y0, T z0, T x, T y, T z) noexcept -> T {\\n  using std::sqrt, \
+std::pow, std::exp;\\n  return 0;\\n}\\n\\ntemplate<typename T>\\nstatic \
+inline auto Dx(T sigma, T R0, T x0, T y0, T z0, T x, T y, T z) noexcept -> T \
+{\\n  using std::sqrt, std::pow, std::exp;\\n  return (2*(x - x0)*(x - x0 + y \
+- y0)*(x - x0 - y + y0))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + \
+pow(z - z0,2)),2)/(2.*pow(sigma,2)))*(pow(x - x0,2) + pow(y - y0,2))*(pow(x - \
+x0,2) + pow(y - y0,2) + pow(z - z0,2))) - (2*(x - x0)*(x - x0 + y - y0)*(x - \
+x0 - y + y0)*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + \
+pow(z0,2)))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*(pow(x - x0,2) + pow(y - y0,2))*pow(pow(x - \
+x0,2) + pow(y - y0,2) + pow(z - z0,2),2)) + ((x - x0)*(x - x0 + y - y0)*(x - \
+x0 - y + y0)*(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)))*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + pow(z0,2)))/(exp(pow(R0 - \
+sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*pow(sigma,2)*(pow(x - x0,2) + pow(y - \
+y0,2))*pow(pow(x - x0,2) + pow(y - y0,2) + pow(z - z0,2),1.5)) + ((x - x0 + y \
+- y0)*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + pow(z0,2)))/(exp(pow(R0 - \
+sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*(pow(x - x0,2) + pow(y - y0,2))*(pow(x - x0,2) + \
+pow(y - y0,2) + pow(z - z0,2))) + ((x - x0 - y + y0)*(pow(x - x0,2) + pow(y - \
+y0,2) - 2*z*z0 + pow(z0,2)))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) \
++ pow(z - z0,2)),2)/(2.*pow(sigma,2)))*(pow(x - x0,2) + pow(y - y0,2))*(pow(x \
+- x0,2) + pow(y - y0,2) + pow(z - z0,2))) - (2*(x - x0)*(x - x0 + y - y0)*(x \
+- x0 - y + y0)*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + \
+pow(z0,2)))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*pow(pow(x - x0,2) + pow(y - y0,2),2)*(pow(x - \
+x0,2) + pow(y - y0,2) + pow(z - z0,2)));\\n}\\n\\ntemplate<typename \
+T>\\nstatic inline auto Dy(T sigma, T R0, T x0, T y0, T z0, T x, T y, T z) \
+noexcept -> T {\\n  using std::sqrt, std::pow, std::exp;\\n  return (2*(y - \
+y0)*(x - x0 + y - y0)*(x - x0 - y + y0))/(exp(pow(R0 - sqrt(pow(x - x0,2) + \
+pow(y - y0,2) + pow(z - z0,2)),2)/(2.*pow(sigma,2)))*(pow(x - x0,2) + pow(y - \
+y0,2))*(pow(x - x0,2) + pow(y - y0,2) + pow(z - z0,2))) - (2*(y - y0)*(x - x0 \
++ y - y0)*(x - x0 - y + y0)*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + \
+pow(z0,2)))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*(pow(x - x0,2) + pow(y - y0,2))*pow(pow(x - \
+x0,2) + pow(y - y0,2) + pow(z - z0,2),2)) + ((y - y0)*(x - x0 + y - y0)*(x - \
+x0 - y + y0)*(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)))*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + pow(z0,2)))/(exp(pow(R0 - \
+sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*pow(sigma,2)*(pow(x - x0,2) + pow(y - \
+y0,2))*pow(pow(x - x0,2) + pow(y - y0,2) + pow(z - z0,2),1.5)) - ((x - x0 + y \
+- y0)*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + pow(z0,2)))/(exp(pow(R0 - \
+sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*(pow(x - x0,2) + pow(y - y0,2))*(pow(x - x0,2) + \
+pow(y - y0,2) + pow(z - z0,2))) + ((x - x0 - y + y0)*(pow(x - x0,2) + pow(y - \
+y0,2) - 2*z*z0 + pow(z0,2)))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) \
++ pow(z - z0,2)),2)/(2.*pow(sigma,2)))*(pow(x - x0,2) + pow(y - y0,2))*(pow(x \
+- x0,2) + pow(y - y0,2) + pow(z - z0,2))) - (2*(y - y0)*(x - x0 + y - y0)*(x \
+- x0 - y + y0)*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + \
+pow(z0,2)))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*pow(pow(x - x0,2) + pow(y - y0,2),2)*(pow(x - \
+x0,2) + pow(y - y0,2) + pow(z - z0,2)));\\n}\\n\\ntemplate<typename \
+T>\\nstatic inline auto Dz(T sigma, T R0, T x0, T y0, T z0, T x, T y, T z) \
+noexcept -> T {\\n  using std::sqrt, std::pow, std::exp;\\n  return (-2*(x - \
+x0 + y - y0)*(x - x0 - y + y0)*z0)/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - \
+y0,2) + pow(z - z0,2)),2)/(2.*pow(sigma,2)))*(pow(x - x0,2) + pow(y - \
+y0,2))*(pow(x - x0,2) + pow(y - y0,2) + pow(z - z0,2))) - (2*(x - x0 + y - \
+y0)*(x - x0 - y + y0)*(z - z0)*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + \
+pow(z0,2)))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*(pow(x - x0,2) + pow(y - y0,2))*pow(pow(x - \
+x0,2) + pow(y - y0,2) + pow(z - z0,2),2)) + ((x - x0 + y - y0)*(x - x0 - y + \
+y0)*(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - z0,2)))*(z - \
+z0)*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + pow(z0,2)))/(exp(pow(R0 - \
+sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*pow(sigma,2)*(pow(x - x0,2) + pow(y - \
+y0,2))*pow(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2),1.5));\\n}\\n\\ntemplate<typename T>\\nstatic inline auto dPidx(T \
+sigma, T R0, T x0, T y0, T z0, T x, T y, T z) noexcept -> T {\\n  using \
+std::sqrt, std::pow, std::exp;\\n  return 0;\\n}\\n\\ntemplate<typename \
+T>\\nstatic inline auto dPidy(T sigma, T R0, T x0, T y0, T z0, T x, T y, T z) \
+noexcept -> T {\\n  using std::sqrt, std::pow, std::exp;\\n  return 0;\\n}\\n\
+\\ntemplate<typename T>\\nstatic inline auto dPidz(T sigma, T R0, T x0, T y0, \
+T z0, T x, T y, T z) noexcept -> T {\\n  using std::sqrt, std::pow, std::exp;\
+\\n  return 0;\\n}\\n\\ntemplate<typename T>\\nstatic inline auto dDxdx(T \
+sigma, T R0, T x0, T y0, T z0, T x, T y, T z) noexcept -> T {\\n  using \
+std::sqrt, std::pow, std::exp;\\n  return (-8*pow(x - x0,2)*(x - x0 + y - \
+y0)*(x - x0 - y + y0))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + \
+pow(z - z0,2)),2)/(2.*pow(sigma,2)))*(pow(x - x0,2) + pow(y - \
+y0,2))*pow(pow(x - x0,2) + pow(y - y0,2) + pow(z - z0,2),2)) + (4*pow(x - \
+x0,2)*(x - x0 + y - y0)*(x - x0 - y + y0)*(R0 - sqrt(pow(x - x0,2) + pow(y - \
+y0,2) + pow(z - z0,2))))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + \
+pow(z - z0,2)),2)/(2.*pow(sigma,2)))*pow(sigma,2)*(pow(x - x0,2) + pow(y - \
+y0,2))*pow(pow(x - x0,2) + pow(y - y0,2) + pow(z - z0,2),1.5)) + (4*(x - \
+x0)*(x - x0 + y - y0))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + \
+pow(z - z0,2)),2)/(2.*pow(sigma,2)))*(pow(x - x0,2) + pow(y - y0,2))*(pow(x - \
+x0,2) + pow(y - y0,2) + pow(z - z0,2))) + (4*(x - x0)*(x - x0 - y + \
+y0))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*(pow(x - x0,2) + pow(y - y0,2))*(pow(x - x0,2) + \
+pow(y - y0,2) + pow(z - z0,2))) - (8*pow(x - x0,2)*(x - x0 + y - y0)*(x - x0 \
+- y + y0))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*pow(pow(x - x0,2) + pow(y - y0,2),2)*(pow(x - \
+x0,2) + pow(y - y0,2) + pow(z - z0,2))) + (2*(x - x0 + y - y0)*(x - x0 - y + \
+y0))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*(pow(x - x0,2) + pow(y - y0,2))*(pow(x - x0,2) + \
+pow(y - y0,2) + pow(z - z0,2))) + (8*pow(x - x0,2)*(x - x0 + y - y0)*(x - x0 \
+- y + y0)*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + pow(z0,2)))/(exp(pow(R0 - \
+sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*(pow(x - x0,2) + pow(y - y0,2))*pow(pow(x - \
+x0,2) + pow(y - y0,2) + pow(z - z0,2),3)) - (5*pow(x - x0,2)*(x - x0 + y - \
+y0)*(x - x0 - y + y0)*(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)))*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + pow(z0,2)))/(exp(pow(R0 - \
+sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*pow(sigma,2)*(pow(x - x0,2) + pow(y - \
+y0,2))*pow(pow(x - x0,2) + pow(y - y0,2) + pow(z - z0,2),2.5)) - (4*(x - \
+x0)*(x - x0 + y - y0)*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + \
+pow(z0,2)))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*(pow(x - x0,2) + pow(y - y0,2))*pow(pow(x - \
+x0,2) + pow(y - y0,2) + pow(z - z0,2),2)) - (4*(x - x0)*(x - x0 - y + \
+y0)*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + pow(z0,2)))/(exp(pow(R0 - \
+sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*(pow(x - x0,2) + pow(y - y0,2))*pow(pow(x - \
+x0,2) + pow(y - y0,2) + pow(z - z0,2),2)) + (8*pow(x - x0,2)*(x - x0 + y - \
+y0)*(x - x0 - y + y0)*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + \
+pow(z0,2)))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*pow(pow(x - x0,2) + pow(y - y0,2),2)*pow(pow(x - \
+x0,2) + pow(y - y0,2) + pow(z - z0,2),2)) - (2*(x - x0 + y - y0)*(x - x0 - y \
++ y0)*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + pow(z0,2)))/(exp(pow(R0 - \
+sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*(pow(x - x0,2) + pow(y - y0,2))*pow(pow(x - \
+x0,2) + pow(y - y0,2) + pow(z - z0,2),2)) - (pow(x - x0,2)*(x - x0 + y - \
+y0)*(x - x0 - y + y0)*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + \
+pow(z0,2)))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*pow(sigma,2)*(pow(x - x0,2) + pow(y - \
+y0,2))*pow(pow(x - x0,2) + pow(y - y0,2) + pow(z - z0,2),2)) + (pow(x - \
+x0,2)*(x - x0 + y - y0)*(x - x0 - y + y0)*pow(R0 - sqrt(pow(x - x0,2) + pow(y \
+- y0,2) + pow(z - z0,2)),2)*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + \
+pow(z0,2)))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*pow(sigma,4)*(pow(x - x0,2) + pow(y - \
+y0,2))*pow(pow(x - x0,2) + pow(y - y0,2) + pow(z - z0,2),2)) + (2*(x - x0)*(x \
+- x0 + y - y0)*(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)))*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + pow(z0,2)))/(exp(pow(R0 - \
+sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*pow(sigma,2)*(pow(x - x0,2) + pow(y - \
+y0,2))*pow(pow(x - x0,2) + pow(y - y0,2) + pow(z - z0,2),1.5)) + (2*(x - \
+x0)*(x - x0 - y + y0)*(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)))*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + pow(z0,2)))/(exp(pow(R0 - \
+sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*pow(sigma,2)*(pow(x - x0,2) + pow(y - \
+y0,2))*pow(pow(x - x0,2) + pow(y - y0,2) + pow(z - z0,2),1.5)) - (4*pow(x - \
+x0,2)*(x - x0 + y - y0)*(x - x0 - y + y0)*(R0 - sqrt(pow(x - x0,2) + pow(y - \
+y0,2) + pow(z - z0,2)))*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + \
+pow(z0,2)))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*pow(sigma,2)*pow(pow(x - x0,2) + pow(y - \
+y0,2),2)*pow(pow(x - x0,2) + pow(y - y0,2) + pow(z - z0,2),1.5)) + ((x - x0 + \
+y - y0)*(x - x0 - y + y0)*(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)))*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + pow(z0,2)))/(exp(pow(R0 - \
+sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*pow(sigma,2)*(pow(x - x0,2) + pow(y - \
+y0,2))*pow(pow(x - x0,2) + pow(y - y0,2) + pow(z - z0,2),1.5)) + (2*(pow(x - \
+x0,2) + pow(y - y0,2) - 2*z*z0 + pow(z0,2)))/(exp(pow(R0 - sqrt(pow(x - x0,2) \
++ pow(y - y0,2) + pow(z - z0,2)),2)/(2.*pow(sigma,2)))*(pow(x - x0,2) + pow(y \
+- y0,2))*(pow(x - x0,2) + pow(y - y0,2) + pow(z - z0,2))) - (4*(x - x0)*(x - \
+x0 + y - y0)*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + \
+pow(z0,2)))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*pow(pow(x - x0,2) + pow(y - y0,2),2)*(pow(x - \
+x0,2) + pow(y - y0,2) + pow(z - z0,2))) - (4*(x - x0)*(x - x0 - y + \
+y0)*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + pow(z0,2)))/(exp(pow(R0 - \
+sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*pow(pow(x - x0,2) + pow(y - y0,2),2)*(pow(x - \
+x0,2) + pow(y - y0,2) + pow(z - z0,2))) + (8*pow(x - x0,2)*(x - x0 + y - \
+y0)*(x - x0 - y + y0)*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + \
+pow(z0,2)))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*pow(pow(x - x0,2) + pow(y - y0,2),3)*(pow(x - \
+x0,2) + pow(y - y0,2) + pow(z - z0,2))) - (2*(x - x0 + y - y0)*(x - x0 - y + \
+y0)*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + pow(z0,2)))/(exp(pow(R0 - \
+sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*pow(pow(x - x0,2) + pow(y - y0,2),2)*(pow(x - \
+x0,2) + pow(y - y0,2) + pow(z - z0,2)));\\n}\\n\\ntemplate<typename \
+T>\\nstatic inline auto dDydy(T sigma, T R0, T x0, T y0, T z0, T x, T y, T z) \
+noexcept -> T {\\n  using std::sqrt, std::pow, std::exp;\\n  return (-8*pow(y \
+- y0,2)*(x - x0 + y - y0)*(x - x0 - y + y0))/(exp(pow(R0 - sqrt(pow(x - x0,2) \
++ pow(y - y0,2) + pow(z - z0,2)),2)/(2.*pow(sigma,2)))*(pow(x - x0,2) + pow(y \
+- y0,2))*pow(pow(x - x0,2) + pow(y - y0,2) + pow(z - z0,2),2)) + (4*pow(y - \
+y0,2)*(x - x0 + y - y0)*(x - x0 - y + y0)*(R0 - sqrt(pow(x - x0,2) + pow(y - \
+y0,2) + pow(z - z0,2))))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + \
+pow(z - z0,2)),2)/(2.*pow(sigma,2)))*pow(sigma,2)*(pow(x - x0,2) + pow(y - \
+y0,2))*pow(pow(x - x0,2) + pow(y - y0,2) + pow(z - z0,2),1.5)) - (4*(y - \
+y0)*(x - x0 + y - y0))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + \
+pow(z - z0,2)),2)/(2.*pow(sigma,2)))*(pow(x - x0,2) + pow(y - y0,2))*(pow(x - \
+x0,2) + pow(y - y0,2) + pow(z - z0,2))) + (4*(y - y0)*(x - x0 - y + \
+y0))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*(pow(x - x0,2) + pow(y - y0,2))*(pow(x - x0,2) + \
+pow(y - y0,2) + pow(z - z0,2))) + (2*(x - x0 + y - y0)*(x - x0 - y + \
+y0))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*(pow(x - x0,2) + pow(y - y0,2))*(pow(x - x0,2) + \
+pow(y - y0,2) + pow(z - z0,2))) - (8*pow(y - y0,2)*(x - x0 + y - y0)*(x - x0 \
+- y + y0))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*pow(pow(x - x0,2) + pow(y - y0,2),2)*(pow(x - \
+x0,2) + pow(y - y0,2) + pow(z - z0,2))) + (8*pow(y - y0,2)*(x - x0 + y - \
+y0)*(x - x0 - y + y0)*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + \
+pow(z0,2)))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*(pow(x - x0,2) + pow(y - y0,2))*pow(pow(x - \
+x0,2) + pow(y - y0,2) + pow(z - z0,2),3)) - (5*pow(y - y0,2)*(x - x0 + y - \
+y0)*(x - x0 - y + y0)*(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)))*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + pow(z0,2)))/(exp(pow(R0 - \
+sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*pow(sigma,2)*(pow(x - x0,2) + pow(y - \
+y0,2))*pow(pow(x - x0,2) + pow(y - y0,2) + pow(z - z0,2),2.5)) + (4*(y - \
+y0)*(x - x0 + y - y0)*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + \
+pow(z0,2)))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*(pow(x - x0,2) + pow(y - y0,2))*pow(pow(x - \
+x0,2) + pow(y - y0,2) + pow(z - z0,2),2)) - (4*(y - y0)*(x - x0 - y + \
+y0)*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + pow(z0,2)))/(exp(pow(R0 - \
+sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*(pow(x - x0,2) + pow(y - y0,2))*pow(pow(x - \
+x0,2) + pow(y - y0,2) + pow(z - z0,2),2)) - (2*(x - x0 + y - y0)*(x - x0 - y \
++ y0)*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + pow(z0,2)))/(exp(pow(R0 - \
+sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*(pow(x - x0,2) + pow(y - y0,2))*pow(pow(x - \
+x0,2) + pow(y - y0,2) + pow(z - z0,2),2)) + (8*pow(y - y0,2)*(x - x0 + y - \
+y0)*(x - x0 - y + y0)*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + \
+pow(z0,2)))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*pow(pow(x - x0,2) + pow(y - y0,2),2)*pow(pow(x - \
+x0,2) + pow(y - y0,2) + pow(z - z0,2),2)) - (pow(y - y0,2)*(x - x0 + y - \
+y0)*(x - x0 - y + y0)*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + \
+pow(z0,2)))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*pow(sigma,2)*(pow(x - x0,2) + pow(y - \
+y0,2))*pow(pow(x - x0,2) + pow(y - y0,2) + pow(z - z0,2),2)) + (pow(y - \
+y0,2)*(x - x0 + y - y0)*(x - x0 - y + y0)*pow(R0 - sqrt(pow(x - x0,2) + pow(y \
+- y0,2) + pow(z - z0,2)),2)*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + \
+pow(z0,2)))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*pow(sigma,4)*(pow(x - x0,2) + pow(y - \
+y0,2))*pow(pow(x - x0,2) + pow(y - y0,2) + pow(z - z0,2),2)) - (2*(y - y0)*(x \
+- x0 + y - y0)*(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)))*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + pow(z0,2)))/(exp(pow(R0 - \
+sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*pow(sigma,2)*(pow(x - x0,2) + pow(y - \
+y0,2))*pow(pow(x - x0,2) + pow(y - y0,2) + pow(z - z0,2),1.5)) + (2*(y - \
+y0)*(x - x0 - y + y0)*(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)))*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + pow(z0,2)))/(exp(pow(R0 - \
+sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*pow(sigma,2)*(pow(x - x0,2) + pow(y - \
+y0,2))*pow(pow(x - x0,2) + pow(y - y0,2) + pow(z - z0,2),1.5)) + ((x - x0 + y \
+- y0)*(x - x0 - y + y0)*(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)))*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + pow(z0,2)))/(exp(pow(R0 - \
+sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*pow(sigma,2)*(pow(x - x0,2) + pow(y - \
+y0,2))*pow(pow(x - x0,2) + pow(y - y0,2) + pow(z - z0,2),1.5)) - (4*pow(y - \
+y0,2)*(x - x0 + y - y0)*(x - x0 - y + y0)*(R0 - sqrt(pow(x - x0,2) + pow(y - \
+y0,2) + pow(z - z0,2)))*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + \
+pow(z0,2)))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*pow(sigma,2)*pow(pow(x - x0,2) + pow(y - \
+y0,2),2)*pow(pow(x - x0,2) + pow(y - y0,2) + pow(z - z0,2),1.5)) - (2*(pow(x \
+- x0,2) + pow(y - y0,2) - 2*z*z0 + pow(z0,2)))/(exp(pow(R0 - sqrt(pow(x - \
+x0,2) + pow(y - y0,2) + pow(z - z0,2)),2)/(2.*pow(sigma,2)))*(pow(x - x0,2) + \
+pow(y - y0,2))*(pow(x - x0,2) + pow(y - y0,2) + pow(z - z0,2))) + (4*(y - \
+y0)*(x - x0 + y - y0)*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + \
+pow(z0,2)))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*pow(pow(x - x0,2) + pow(y - y0,2),2)*(pow(x - \
+x0,2) + pow(y - y0,2) + pow(z - z0,2))) - (4*(y - y0)*(x - x0 - y + \
+y0)*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + pow(z0,2)))/(exp(pow(R0 - \
+sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*pow(pow(x - x0,2) + pow(y - y0,2),2)*(pow(x - \
+x0,2) + pow(y - y0,2) + pow(z - z0,2))) - (2*(x - x0 + y - y0)*(x - x0 - y + \
+y0)*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + pow(z0,2)))/(exp(pow(R0 - \
+sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*pow(pow(x - x0,2) + pow(y - y0,2),2)*(pow(x - \
+x0,2) + pow(y - y0,2) + pow(z - z0,2))) + (8*pow(y - y0,2)*(x - x0 + y - \
+y0)*(x - x0 - y + y0)*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + \
+pow(z0,2)))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*pow(pow(x - x0,2) + pow(y - y0,2),3)*(pow(x - \
+x0,2) + pow(y - y0,2) + pow(z - z0,2)));\\n}\\n\\ntemplate<typename \
+T>\\nstatic inline auto dDzdz(T sigma, T R0, T x0, T y0, T z0, T x, T y, T z) \
+noexcept -> T {\\n  using std::sqrt, std::pow, std::exp;\\n  return (8*(x - \
+x0 + y - y0)*(x - x0 - y + y0)*(z - z0)*z0)/(exp(pow(R0 - sqrt(pow(x - x0,2) \
++ pow(y - y0,2) + pow(z - z0,2)),2)/(2.*pow(sigma,2)))*(pow(x - x0,2) + pow(y \
+- y0,2))*pow(pow(x - x0,2) + pow(y - y0,2) + pow(z - z0,2),2)) - (4*(x - x0 + \
+y - y0)*(x - x0 - y + y0)*(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)))*(z - z0)*z0)/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z \
+- z0,2)),2)/(2.*pow(sigma,2)))*pow(sigma,2)*(pow(x - x0,2) + pow(y - \
+y0,2))*pow(pow(x - x0,2) + pow(y - y0,2) + pow(z - z0,2),1.5)) - (2*(x - x0 + \
+y - y0)*(x - x0 - y + y0)*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + \
+pow(z0,2)))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*(pow(x - x0,2) + pow(y - y0,2))*pow(pow(x - \
+x0,2) + pow(y - y0,2) + pow(z - z0,2),2)) + ((x - x0 + y - y0)*(x - x0 - y + \
+y0)*(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - z0,2)))*(pow(x - x0,2) \
++ pow(y - y0,2) - 2*z*z0 + pow(z0,2)))/(exp(pow(R0 - sqrt(pow(x - x0,2) + \
+pow(y - y0,2) + pow(z - z0,2)),2)/(2.*pow(sigma,2)))*pow(sigma,2)*(pow(x - \
+x0,2) + pow(y - y0,2))*pow(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2),1.5)) + (8*(x - x0 + y - y0)*(x - x0 - y + y0)*pow(z - z0,2)*(pow(x - \
+x0,2) + pow(y - y0,2) - 2*z*z0 + pow(z0,2)))/(exp(pow(R0 - sqrt(pow(x - x0,2) \
++ pow(y - y0,2) + pow(z - z0,2)),2)/(2.*pow(sigma,2)))*(pow(x - x0,2) + pow(y \
+- y0,2))*pow(pow(x - x0,2) + pow(y - y0,2) + pow(z - z0,2),3)) - (5*(x - x0 + \
+y - y0)*(x - x0 - y + y0)*(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)))*pow(z - z0,2)*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + \
+pow(z0,2)))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*pow(sigma,2)*(pow(x - x0,2) + pow(y - \
+y0,2))*pow(pow(x - x0,2) + pow(y - y0,2) + pow(z - z0,2),2.5)) - ((x - x0 + y \
+- y0)*(x - x0 - y + y0)*pow(z - z0,2)*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 \
++ pow(z0,2)))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*pow(sigma,2)*(pow(x - x0,2) + pow(y - \
+y0,2))*pow(pow(x - x0,2) + pow(y - y0,2) + pow(z - z0,2),2)) + ((x - x0 + y - \
+y0)*(x - x0 - y + y0)*pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)*pow(z - z0,2)*(pow(x - x0,2) + pow(y - y0,2) - 2*z*z0 + \
+pow(z0,2)))/(exp(pow(R0 - sqrt(pow(x - x0,2) + pow(y - y0,2) + pow(z - \
+z0,2)),2)/(2.*pow(sigma,2)))*pow(sigma,4)*(pow(x - x0,2) + pow(y - \
+y0,2))*pow(pow(x - x0,2) + pow(y - y0,2) + pow(z - z0,2),2));\\n}\\n\"\>"], \
+"Print",
+ CellChangeTimes->{3.942247288792141*^9, 3.9434537831672792`*^9, 
+  3.943454183245091*^9, 3.943456892142008*^9, 3.9434569546522627`*^9, 
+  3.943457604595937*^9, 3.943460354120824*^9},
+ CellLabel->
+  "During evaluation of \
+In[45]:=",ExpressionUUID->"1302764d-9f9d-40da-82e0-af67543589ea"]
+}, Open  ]]
 }, Open  ]]
 },
-WindowSize->{1150.5, 593.25},
+WindowSize->{969, 552},
 WindowMargins->{{0, Automatic}, {Automatic, 0}},
 DockedCells->{},
 FrontEndVersion->"14.1 for Linux x86 (64-bit) (July 16, 2024)",
@@ -997,15 +1662,26 @@ Cell[CellGroupData[{
 Cell[11280, 327, 144, 2, 30, "Input",ExpressionUUID->"10af82ad-07f4-4238-a2dd-b878985ac0e7"],
 Cell[11427, 331, 4474, 64, 1683, "Print",ExpressionUUID->"1e34360d-ba45-4079-9d18-31461dbbef9d"]
 }, Open  ]]
-}, Open  ]],
+}, Closed]],
 Cell[CellGroupData[{
-Cell[15950, 401, 204, 4, 70, "Section",ExpressionUUID->"19790bb9-5598-4ad1-8abd-189d575fb0a0"],
+Cell[15950, 401, 204, 4, 56, "Section",ExpressionUUID->"19790bb9-5598-4ad1-8abd-189d575fb0a0"],
 Cell[16157, 407, 1344, 27, 320, "Input",ExpressionUUID->"19faea74-0ac1-4a62-9a75-1a26fdc15c96"],
 Cell[17504, 436, 11417, 328, 809, "Input",ExpressionUUID->"7c911681-4edf-4bd0-aaaf-9d6d8baaceb6"],
 Cell[28924, 766, 2135, 42, 298, "Input",ExpressionUUID->"3620e5e1-2717-47c4-afe7-5c8328a16f7b"],
 Cell[CellGroupData[{
 Cell[31084, 812, 147, 2, 30, "Input",ExpressionUUID->"4384eceb-8932-47dd-8d29-4f5924dcd5da"],
-Cell[31234, 816, 10177, 148, 3494, "Print",ExpressionUUID->"12987deb-6bb5-42ac-840a-ac9748c84a80"]
+Cell[31234, 816, 10177, 148, 3588, "Print",ExpressionUUID->"12987deb-6bb5-42ac-840a-ac9748c84a80"]
+}, Open  ]]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[41460, 970, 214, 4, 56, "Section",ExpressionUUID->"ccc0e9a0-95c9-4162-89f4-d54406daf441"],
+Cell[41677, 976, 5261, 139, 539, "Input",ExpressionUUID->"727b4ee1-30d9-4db6-8287-f8af67a9ac39"],
+Cell[46941, 1117, 1191, 22, 198, "Input",ExpressionUUID->"cd29fe23-2215-4b78-8347-ae33ed73d49b"],
+Cell[48135, 1141, 4381, 130, 338, "Input",ExpressionUUID->"aeb2768c-97b6-4bb7-8a8f-7d04ec8840dc"],
+Cell[52519, 1273, 1569, 37, 298, "Input",ExpressionUUID->"b4beabe6-bf83-4ae9-a6ab-9e63d25250db"],
+Cell[CellGroupData[{
+Cell[54113, 1314, 216, 3, 30, "Input",ExpressionUUID->"5798f9f9-2f4f-4b27-9d4f-6e2e6216970d"],
+Cell[54332, 1319, 22430, 310, 4702, "Print",ExpressionUUID->"1302764d-9f9d-40da-82e0-af67543589ea"]
 }, Open  ]]
 }, Open  ]]
 }

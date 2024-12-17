@@ -12,6 +12,7 @@ USES INCLUDE HEADER: global_derivatives.hxx
 
 INCLUDES HEADER: gaussian.hxx IN gaussian.hxx
 INCLUDES HEADER: standing_wave.hxx IN standing_wave.hxx
+INCLUDES HEADER: quad_gaussian.hxx IN quad_gaussian.hxx
 
 
 

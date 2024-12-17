@@ -87,4 +87,4 @@ TimerReport::n_top_timers = 100
 
 CarpetX::dtfac      = $cfl
 Cactus::terminate   = "iteration"
-Cactus::cctk_itlast = 1#$itlast
+Cactus::cctk_itlast = $itlast

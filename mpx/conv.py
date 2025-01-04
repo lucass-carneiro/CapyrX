@@ -10,15 +10,20 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def plot_openpmd_slice(args):
+def conv_opmd_slice(args):
     slice_coord = str(args["--slice-coord"])
     slice_val = float(args["--slice-val"])
 
     verbose = bool(args["--verbose"])
     openpmd_format = (args["--openpmd-format"])
 
-    data_file = args["<data-file>"]
-    fname = f"{data_file}.it%08T{openpmd_format}"
+    file_c = args["<coarse>"]
+    file_m = args["<medium>"]
+    file_f = args["<fine>"]
+
+    fname_c = f"{file_c}.it%08T{openpmd_format}"
+    fname_m = f"{file_m}.it%08T{openpmd_format}"
+    fname_f = f"{file_f}.it%08T{openpmd_format}"
 
     thorn_name = args["<thorn-name>"]
     group_name = args["<group-name>"]
@@ -56,15 +61,17 @@ def plot_openpmd_slice(args):
         raise RuntimeError(f"Unrecognized slice coordinate {slice_coord}")
 
     num_patches = len(patches)
-    patch_dataframe_futures = [None] * num_patches
+    patch_dataframe_futures_c = [None] * num_patches
+    patch_dataframe_futures_m = [None] * num_patches
+    patch_dataframe_futures_f = [None] * num_patches
 
     # Get dataframes for each patch in parallel
     with concurrent.futures.ProcessPoolExecutor(max_workers=num_patches) as executor:
         for i in range(0, num_patches):
-            patch_dataframe_futures[i] = executor.submit(
+            patch_dataframe_futures_c[i] = executor.submit(
                 opmdu.merge_multipatch_dataframes,
                 verbose,
-                fname,
+                fname_c,
                 iteration_index,
                 patches[i],
                 level,
@@ -75,17 +82,64 @@ def plot_openpmd_slice(args):
                 slice_val
             )
 
-    patch_dataframes = [f.result() for f in patch_dataframe_futures]
+            patch_dataframe_futures_m[i] = executor.submit(
+                opmdu.merge_multipatch_dataframes,
+                verbose,
+                fname_m,
+                iteration_index,
+                patches[i],
+                level,
+                thorn_name,
+                group_name,
+                gf_name,
+                slice_coord,
+                slice_val
+            )
 
+            patch_dataframe_futures_f[i] = executor.submit(
+                opmdu.merge_multipatch_dataframes,
+                verbose,
+                fname_f,
+                iteration_index,
+                patches[i],
+                level,
+                thorn_name,
+                group_name,
+                gf_name,
+                slice_coord,
+                slice_val
+            )
+
+    patch_dataframes_c = [f.result() for f in patch_dataframe_futures_c]
+    patch_dataframes_m = [f.result() for f in patch_dataframe_futures_m]
+    patch_dataframes_f = [f.result() for f in patch_dataframe_futures_f]
+
+    opmdu.downsample_patch_dataframes(
+        verbose, opmdu.Resolution.medium, slice_coord, patch_dataframes_m)
+
+    opmdu.downsample_patch_dataframes(
+        verbose, opmdu.Resolution.fine, slice_coord,  patch_dataframes_f)
+
+    # autopep8: off
     if verbose:
-        logger.info(f"Creating plot for iteration {iteration_index}")
+        logger.info(f"Creating convergence plot for iteration {iteration_index}")
+    # autopep8: on
 
     plt.close("all")
 
-    for df in patch_dataframes:
-        x = df[global_x].to_numpy()
-        y = df[global_y].to_numpy()
-        gf = df[gf_name].to_numpy()
+    for i in range(0, len(patch_dataframes_c)):
+        df_c = patch_dataframes_c[i]
+        df_m = patch_dataframes_m[i]
+        df_f = patch_dataframes_f[i]
+
+        x = df_c[global_x].to_numpy()
+        y = df_c[global_y].to_numpy()
+
+        gf_c = df_c[gf_name].to_numpy()
+        gf_m = df_m[gf_name].to_numpy()
+        gf_f = df_f[gf_name].to_numpy()
+
+        conv = np.abs(np.abs(gf_m - gf_f) * 2.0**(4.0) - np.abs(gf_c - gf_m))
 
         triang = tri.Triangulation(x, y)
         if (mask_radius > 0.0 and not np.isclose(mask_radius, 0.0)):
@@ -103,9 +157,10 @@ def plot_openpmd_slice(args):
                 lvls = 200
             else:
                 lvls = np.linspace(varmin, varmax, 201)
+
             plt.tricontourf(
                 triang,
-                gf,
+                conv,
                 cmap="seismic",
                 levels=lvls
             )
@@ -120,9 +175,8 @@ def plot_openpmd_slice(args):
             plt.tricontourf(
                 x,
                 y,
-                gf,
-                levels=lvls,
-                extend="both"
+                conv,
+                levels=lvls
             )
 
         if (plot_tri):

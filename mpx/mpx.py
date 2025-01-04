@@ -2,6 +2,7 @@
 
 Usage:
   mpx plot-openpmd-slice [options] <data-file> <thorn-name> <group-name> <var-name> <iteration> <patches-data>
+  mpx conv-openpmd-slice [options] <coarse> <medium> <fine> <thorn-name> <group-name> <var-name> <iteration> <patches-data>
   mpx plot-ascii-slice [options] <coords-file> <data-file>
                           
   mpx (-h | --help)
@@ -31,6 +32,7 @@ from docopt import docopt
 
 import plot_openpmd as plt_opmd
 import plot_ascii as plt_ascii
+import conv
 
 import logging
 logger = logging.getLogger(__name__)
@@ -52,8 +54,10 @@ def main(args):
         plt_opmd.plot_openpmd_slice(args)
     elif args["plot-ascii-slice"]:
         plt_ascii.plot_ascii(args)
+    elif args["conv-openpmd-slice"]:
+        conv.conv_opmd_slice(args)
 
-        # Required in order to keep subprocesses from launching recursivelly
+    # Required in order to keep subprocesses from launching recursivelly
 if __name__ == "__main__":
     arguments = docopt(__doc__, version="mpx 1.0")
     main(arguments)

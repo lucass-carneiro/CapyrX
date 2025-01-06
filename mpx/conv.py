@@ -36,26 +36,16 @@ def conv_opmd_slice(args):
 
     save_file = bool(args["--save"])
 
-    diverging = bool(args["--diverging"])
     varmin = float(args["--varmin"])
     varmax = float(args["--varmax"])
     autorange = bool(args["--autorange"])
 
     gf_name = f"{thorn_name}_{var_name}"
 
-    plot_tri = bool(args["--plot-tri"])
-    mask_radius = float(args["--mask-radius"])
-
     # Get the name of the global coordinate GFs used for the plots
-    if slice_coord == "z":
+    if slice_coord == "yz":
+        slice_coord = ["y", "z"]
         global_x = "coordinatesx_vcoordx"
-        global_y = "coordinatesx_vcoordy"
-    elif slice_coord == "y":
-        global_x = "coordinatesx_vcoordx"
-        global_y = "coordinatesx_vcoordz"
-    elif slice_coord == "x":
-        global_x = "coordinatesx_vcoordy"
-        global_y = "coordinatesx_vcoordz"
     else:
         logger.error(f"Unrecognized slice coordinate {slice_coord}")
         raise RuntimeError(f"Unrecognized slice coordinate {slice_coord}")
@@ -133,60 +123,24 @@ def conv_opmd_slice(args):
         df_f = patch_dataframes_f[i]
 
         x = df_c[global_x].to_numpy()
-        y = df_c[global_y].to_numpy()
 
         gf_c = df_c[gf_name].to_numpy()
         gf_m = df_m[gf_name].to_numpy()
         gf_f = df_f[gf_name].to_numpy()
 
-        conv = np.abs(np.abs(gf_m - gf_f) * 2.0**(4.0) - np.abs(gf_c - gf_m))
+        conv = np.abs((gf_c - gf_m) / (gf_m - gf_f))
+        conv = np.log2(conv)
 
-        triang = tri.Triangulation(x, y)
-        if (mask_radius > 0.0 and not np.isclose(mask_radius, 0.0)):
-            triang.set_mask(
-                np.hypot(
-                    x[triang.triangles].mean(axis=1),
-                    y[triang.triangles].mean(axis=1)
-                ) < mask_radius
-            )
-
-        if diverging == True:
-            lvls = None
-
-            if autorange:
-                lvls = 200
-            else:
-                lvls = np.linspace(varmin, varmax, 201)
-
-            plt.tricontourf(
-                triang,
-                conv,
-                cmap="seismic",
-                levels=lvls
-            )
-        else:
-            lvls = None
-
-            if autorange:
-                lvls = 200
-            else:
-                lvls = np.linspace(varmin, varmax, 201)
-
-            plt.tricontourf(
-                x,
-                y,
-                conv,
-                levels=lvls
-            )
-
-        if (plot_tri):
-            plt.triplot(triang)
+        plt.scatter(
+            x,
+            conv
+        )
 
     plt.xlabel(global_x)
-    plt.ylabel(global_y)
+    plt.ylabel(var_name)
 
-    cb = plt.colorbar()
-    cb.ax.set_ylabel(var_name)
+    if not autorange:
+        plt.ylim(varmin, varmax)
 
     plt.tight_layout()
 

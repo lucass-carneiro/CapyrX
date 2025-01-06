@@ -203,13 +203,34 @@ def merge_multipatch_dataframes(verbose, fname, iteration_index, patch, level, t
         ((merged_df["z"] < 1.0) | np.isclose(merged_df["z"], 1.0))
     ]
 
-    merged_df = filter_multipatch_dataframes(
-        verbose,
-        patch,
-        merged_df,
-        slice_coord,
-        slice_val
-    )
+    if len(slice_coord) == 2:
+        if slice_coord[0] == slice_coord[1]:
+            logger.error(f"Unable to double slice in {slice_coord[0]}")
+            raise RuntimeError(f"Unable to double slice in {slice_coord[0]}")
+        else:
+            merged_df = filter_multipatch_dataframes(
+                verbose,
+                patch,
+                merged_df,
+                slice_coord[0],
+                slice_val
+            )
+
+            merged_df = filter_multipatch_dataframes(
+                verbose,
+                patch,
+                merged_df,
+                slice_coord[1],
+                slice_val
+            )
+    else:
+        merged_df = filter_multipatch_dataframes(
+            verbose,
+            patch,
+            merged_df,
+            slice_coord,
+            slice_val
+        )
 
     if verbose:
         # autopep8: off
@@ -234,23 +255,18 @@ def downsample_patch_dataframes(verbose, resolution: Resolution, slice_coord, mp
         # autopep8: on
 
     for idx, df in enumerate(mp_dfs):
-        if df["i"].nunique() == 1:
+        nunique_i = df["i"].nunique()
+        nunique_j = df["j"].nunique()
+        nunique_k = df["k"].nunique()
+
+        if nunique_i == 1 and nunique_j == 1:
+            idx_a = "k"
+        elif nunique_i == 1 and nunique_k == 1:
             idx_a = "j"
-            idx_b = "k"
-        elif df["j"].nunique() == 1:
+        elif nunique_j == 1 and nunique_k == 1:
             idx_a = "i"
-            idx_b = "k"
-        elif df["k"].nunique() == 1:
-            idx_a = "i"
-            idx_b = "j"
-        else:
-            logger.error(f"Unrecognized slice coordinate {slice_coord}")
-            raise RuntimeError(f"Unrecognized slice coordinate {slice_coord}")
 
         max_i = df[idx_a].max()
         range_i = range(0, max_i + resolution.value, resolution.value)
 
-        mp_dfs[idx] = df[
-            df[idx_a].isin(range_i) &
-            df[idx_b].isin(range_i)
-        ]
+        mp_dfs[idx] = df[df[idx_a].isin(range_i)]

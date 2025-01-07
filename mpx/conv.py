@@ -145,7 +145,7 @@ def conv_opmd_slice(args):
     if not autorange:
         plt.ylim(varmin, varmax)
 
-    if xmin != None and xmax != None:
+    if xmin is not None and xmax is not None:
         plt.xlim(float(xmin), float(xmax))
 
     plt.tight_layout()

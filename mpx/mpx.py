@@ -23,6 +23,8 @@ Options:
   --openpmd-format=<format>   The underlying format of OpenPMD files [default: .bp5].
   --plot-tri                  Plots the underlying triangulation used by matplotlib.
   --mask-radius=<radius>      Masks a radius from the origin. Zero radius means no mask. Usefull in Thornburg06 [default: 0.0].
+  --xmin=<min>                Min. x value in convergence plots.
+  --xmax=<max>                Max. y value in convergence plots.
 """
 
 

@@ -38,6 +38,8 @@ def conv_opmd_slice(args):
 
     varmin = float(args["--varmin"])
     varmax = float(args["--varmax"])
+    xmin = args["--xmin"]
+    xmax = args["--xmax"]
     autorange = bool(args["--autorange"])
 
     gf_name = f"{thorn_name}_{var_name}"
@@ -142,6 +144,9 @@ def conv_opmd_slice(args):
 
     if not autorange:
         plt.ylim(varmin, varmax)
+
+    if xmin != None and xmax != None:
+        plt.xlim(float(xmin), float(xmax))
 
     plt.tight_layout()
 

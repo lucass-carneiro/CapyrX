@@ -128,6 +128,7 @@ def conv_opmd_slice(args):
         gf_m = df_m[gf_name].to_numpy()
         gf_f = df_f[gf_name].to_numpy()
 
+        np.seterr(divide='ignore', invalid='ignore')
         conv = np.abs((gf_c - gf_m) / (gf_m - gf_f))
         conv = np.log2(conv)
 

@@ -48,6 +48,12 @@ def conv_opmd_slice(args):
     if slice_coord == "yz":
         slice_coord = ["y", "z"]
         global_x = "coordinatesx_vcoordx"
+    elif slice_coord == "xz":
+        slice_coord = ["x", "z"]
+        global_x = "coordinatesx_vcoordy"
+    elif slice_coord == "xy":
+        slice_coord = ["x", "y"]
+        global_x = "coordinatesx_vcoordz"
     else:
         logger.error(f"Unrecognized slice coordinate {slice_coord}")
         raise RuntimeError(f"Unrecognized slice coordinate {slice_coord}")
@@ -153,7 +159,7 @@ def conv_opmd_slice(args):
     if not save_file:
         plt.show()
     else:
-        plt.savefig(f"{var_name}_it{iteration_index_pad}.png")
+        plt.savefig(f"conv_{var_name}_it{iteration_index_pad}.pdf")
 
     if verbose:
         logger.info("Done")

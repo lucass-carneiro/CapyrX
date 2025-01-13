@@ -15,6 +15,12 @@ struct FirstDerivativeResults {
   CCTK_REAL dz{0.0};
 };
 
+struct FirstDerivativeInputs {
+  CCTK_REAL da{0.0};
+  CCTK_REAL db{0.0};
+  CCTK_REAL dc{0.0};
+};
+
 struct SecondDerivativeResults {
   CCTK_REAL dxdx{0.0};
   CCTK_REAL dxdy{0.0};
@@ -113,6 +119,59 @@ c4o_2(const CCTK_POINTER_TO_CONST cctkGH_, const Loop::PointDesc &p,
 
   return SecondDerivativeResults{dgf_dxdx, dgf_dxdy, dgf_dxdz,
                                  dgf_dydy, dgf_dydz, dgf_dzdz};
+}
+
+#define VERTEX_JACOBIANS_FIRST                                                 \
+  vJ_da_dx, vJ_da_dy, vJ_da_dz, vJ_db_dx, vJ_db_dy, vJ_db_dz, vJ_dc_dx,        \
+      vJ_dc_dy, vJ_dc_dz
+
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+project_first(
+    const CCTK_REAL &dgf_da, const CCTK_REAL &dgf_db, const CCTK_REAL &dgf_dc,
+    const Loop::PointDesc &p, const Loop::GF3D2<const CCTK_REAL> &vJ_da_dx,
+    const Loop::GF3D2<const CCTK_REAL> &vJ_da_dy,
+    const Loop::GF3D2<const CCTK_REAL> &vJ_da_dz,
+    const Loop::GF3D2<const CCTK_REAL> &vJ_db_dx,
+    const Loop::GF3D2<const CCTK_REAL> &vJ_db_dy,
+    const Loop::GF3D2<const CCTK_REAL> &vJ_db_dz,
+    const Loop::GF3D2<const CCTK_REAL> &vJ_dc_dx,
+    const Loop::GF3D2<const CCTK_REAL> &vJ_dc_dy,
+    const Loop::GF3D2<const CCTK_REAL> &vJ_dc_dz) -> FirstDerivativeResults {
+
+  // Recover Jacobians
+  const auto da_dx{vJ_da_dx(p.I)};
+  const auto da_dy{vJ_da_dy(p.I)};
+  const auto da_dz{vJ_da_dz(p.I)};
+  const auto db_dx{vJ_db_dx(p.I)};
+  const auto db_dy{vJ_db_dy(p.I)};
+  const auto db_dz{vJ_db_dz(p.I)};
+  const auto dc_dx{vJ_dc_dx(p.I)};
+  const auto dc_dy{vJ_dc_dy(p.I)};
+  const auto dc_dz{vJ_dc_dz(p.I)};
+
+  // Projections
+  const auto dgf_dx{dgf_db * db_dx + dgf_dc * dc_dx + da_dx * dgf_da};
+  const auto dgf_dy{dgf_dc * dc_dy + db_dy * dgf_db + da_dy * dgf_da};
+  const auto dgf_dz{dc_dz * dgf_dc + db_dz * dgf_db + da_dz * dgf_da};
+
+  return FirstDerivativeResults{dgf_dx, dgf_dy, dgf_dz};
+}
+
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+project_first(const FirstDerivativeInputs &dgf, const Loop::PointDesc &p,
+              const Loop::GF3D2<const CCTK_REAL> &vJ_da_dx,
+              const Loop::GF3D2<const CCTK_REAL> &vJ_da_dy,
+              const Loop::GF3D2<const CCTK_REAL> &vJ_da_dz,
+              const Loop::GF3D2<const CCTK_REAL> &vJ_db_dx,
+              const Loop::GF3D2<const CCTK_REAL> &vJ_db_dy,
+              const Loop::GF3D2<const CCTK_REAL> &vJ_db_dz,
+              const Loop::GF3D2<const CCTK_REAL> &vJ_dc_dx,
+              const Loop::GF3D2<const CCTK_REAL> &vJ_dc_dy,
+              const Loop::GF3D2<const CCTK_REAL> &vJ_dc_dz)
+    -> FirstDerivativeResults {
+  return project_first(dgf.da, dgf.db, dgf.dc, p, vJ_da_dx, vJ_da_dy, vJ_da_dz,
+                       vJ_db_dx, vJ_db_dy, vJ_db_dz, vJ_dc_dx, vJ_dc_dy,
+                       vJ_dc_dz);
 }
 
 } // namespace MultiPatch::GlobalDerivatives

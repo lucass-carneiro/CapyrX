@@ -1,0 +1,43 @@
+\documentclass{article}
+\usepackage{ifthen}
+\usepackage{epsfig}
+\usepackage[utf8]{inputenc}
+\usepackage{xcolor}
+\color{white}
+\pagecolor{black}
+\usepackage{newunicodechar}
+  \makeatletter
+    \def\doxynewunicodechar#1#2{%
+    \@tempswafalse
+    \edef\nuc@tempa{\detokenize{#1}}%
+    \if\relax\nuc@tempa\relax
+      \nuc@emptyargerr
+    \else
+      \edef\@tempb{\expandafter\@car\nuc@tempa\@nil}%
+      \nuc@check
+      \if@tempswa
+        \@namedef{u8:\nuc@tempa}{#2}%
+      \fi
+    \fi
+  }
+  \makeatother
+  \doxynewunicodechar{⁻}{${}^{-}$}% Superscript minus
+  \doxynewunicodechar{²}{${}^{2}$}% Superscript two
+  \doxynewunicodechar{³}{${}^{3}$}% Superscript three
+
+\pagestyle{empty}
+\begin{document}
+\[J^{i}_{\phantom{i}j} = \frac{\mathrm{d} a^i}{\mathrm{d} x^j}\]
+\pagebreak
+
+$J^{i}_{\phantom{i}j}$
+\pagebreak
+
+\[J^{i}_{\phantom{i}jk} = \frac{\mathrm{d}^2 a^i}{\mathrm{d} x^j
+\mathrm{d}x^k}\]
+\pagebreak
+
+$J^{i}_{\phantom{i}jk}$
+\pagebreak
+
+\end{document}

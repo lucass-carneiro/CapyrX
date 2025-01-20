@@ -86,7 +86,7 @@ struct JacobianDerivatives {
   CCTK_REAL d2c_dzdz{};
 };
 
-static inline auto
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
 project_first(const LocalFirstDerivatives &lfd,
               const Jacobians &jac) -> GlobalFirstDerivatives {
 
@@ -105,7 +105,7 @@ project_first(const LocalFirstDerivatives &lfd,
   };
 }
 
-static inline auto
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
 project_second(const LocalFirstDerivatives &lfd,
                const LocalSecondDerivatives &lsd, const Jacobians &jac,
                const JacobianDerivatives &djac) -> GlobalSecondDerivatives {

@@ -4,6 +4,7 @@
 
 #include <loop_device.hxx>
 #include <global_derivatives.hxx>
+#include <local_derivatives.hxx>
 
 #include <cmath>
 
@@ -284,9 +285,18 @@ extern "C" void TestMultiPatch_compute_deriv_error(CCTK_ARGUMENTS) {
           const auto true_d2fdxz{standing_wave_dxz(A, kx, ky, kz, t, x, y, z)};
           const auto true_d2fdyz{standing_wave_dyz(A, kx, ky, kz, t, x, y, z)};
 
-          // TODO Get from projections
-          const auto first_derivs{c4o_1(cctkGH, p, u)};
-          const auto second_derivs{c4o_2(cctkGH, p, u)};
+          const LocalFirstDerivatives ldu{c4o_1_0_0(p, u), c4o_0_1_0(p, u),
+                                          c4o_0_0_1(p, u)};
+
+          const LocalSecondDerivatives ld2u{c4o_2_0_0(p, u), c4o_1_1_0(p, u),
+                                            c4o_1_0_1(p, u), c4o_0_2_0(p, u),
+                                            c4o_0_1_1(p, u), c4o_0_0_2(p, u)};
+
+          const Jacobians jac{VERTEX_JACOBIANS_FIRST(p)};
+          const JacobianDerivatives djac{VERTEX_JACOBIANS_SECOND(p)};
+
+          const auto first_derivs{project_first(ldu, jac)};
+          const auto second_derivs{project_second(ldu, ld2u, jac, djac)};
 
           dfdx(p.I) = fabs(true_dfdx - first_derivs.dx);
           dfdy(p.I) = fabs(true_dfdy - first_derivs.dy);
@@ -319,9 +329,18 @@ extern "C" void TestMultiPatch_compute_deriv_error(CCTK_ARGUMENTS) {
           const auto true_d2fdxz{parabola_dxz(x, y, z)};
           const auto true_d2fdyz{parabola_dyz(x, y, z)};
 
-          // TODO: Get from projections
-          const auto first_derivs{c4o_1(cctkGH, p, u)};
-          const auto second_derivs{c4o_2(cctkGH, p, u)};
+          const LocalFirstDerivatives ldu{c4o_1_0_0(p, u), c4o_0_1_0(p, u),
+                                          c4o_0_0_1(p, u)};
+
+          const LocalSecondDerivatives ld2u{c4o_2_0_0(p, u), c4o_1_1_0(p, u),
+                                            c4o_1_0_1(p, u), c4o_0_2_0(p, u),
+                                            c4o_0_1_1(p, u), c4o_0_0_2(p, u)};
+
+          const Jacobians jac{VERTEX_JACOBIANS_FIRST(p)};
+          const JacobianDerivatives djac{VERTEX_JACOBIANS_SECOND(p)};
+
+          const auto first_derivs{project_first(ldu, jac)};
+          const auto second_derivs{project_second(ldu, ld2u, jac, djac)};
 
           dfdx(p.I) = fabs(true_dfdx - first_derivs.dx);
           dfdy(p.I) = fabs(true_dfdy - first_derivs.dy);

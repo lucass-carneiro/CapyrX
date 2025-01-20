@@ -24,6 +24,8 @@ SCHEDULE MultiPatchWaveToy2_RHS IN ODESolvers_RHS
 {
   LANG: C
   READS:  state(everywhere)
+  READS: MultiPatch::vertex_Jacobians(everywhere)
+  READS: MultiPatch::vertex_dJacobians(everywhere)
   WRITES: rhs(interior)
 } "Calculate scalar wave RHS"
 

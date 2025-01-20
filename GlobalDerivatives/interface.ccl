@@ -7,3 +7,4 @@ INHERITS: CoordinatesX
 USES INCLUDE HEADER: loop_device.hxx
 
 INCLUDES HEADER: global_derivatives.hxx IN global_derivatives.hxx
+INCLUDES HEADER: local_derivatives.hxx IN local_derivatives.hxx

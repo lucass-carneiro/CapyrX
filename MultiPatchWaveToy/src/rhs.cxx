@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <loop_device.hxx>
 #include <global_derivatives.hxx>
+#include <local_derivatives.hxx>
 
 namespace MultiPatchWaveToy {
 
@@ -30,31 +31,30 @@ extern "C" void MultiPatchWaveToy_RHS(CCTK_ARGUMENTS) {
   grid.loop_int_device<0, 0, 0>(
       grid.nghostzones,
       [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-        const FirstDerivativeInputs local_dPi{c4o<fd_dir::a>(p, Pi),
-                                              c4o<fd_dir::b>(p, Pi),
-                                              c4o<fd_dir::c>(p, Pi)};
-        const auto dPi{project_first(local_dPi, p, VERTEX_JACOBIANS_FIRST)};
+        const LocalFirstDerivatives lPi{c4o_1_0_0(p, Pi), c4o_0_1_0(p, Pi),
+                                        c4o_0_0_1(p, Pi)};
 
-        const FirstDerivativeInputs local_dDx{c4o<fd_dir::a>(p, Dx),
-                                              c4o<fd_dir::b>(p, Dx),
-                                              c4o<fd_dir::c>(p, Dx)};
-        const auto dDx{project_first(local_dDx, p, VERTEX_JACOBIANS_FIRST)};
+        const LocalFirstDerivatives lDx{c4o_1_0_0(p, Dx), c4o_0_1_0(p, Dx),
+                                        c4o_0_0_1(p, Dx)};
 
-        const FirstDerivativeInputs local_dDy{c4o<fd_dir::a>(p, Dy),
-                                              c4o<fd_dir::b>(p, Dy),
-                                              c4o<fd_dir::c>(p, Dy)};
-        const auto dDy{project_first(local_dDy, p, VERTEX_JACOBIANS_FIRST)};
+        const LocalFirstDerivatives lDy{c4o_1_0_0(p, Dy), c4o_0_1_0(p, Dy),
+                                        c4o_0_0_1(p, Dy)};
 
-        const FirstDerivativeInputs local_dDz{c4o<fd_dir::a>(p, Dz),
-                                              c4o<fd_dir::b>(p, Dz),
-                                              c4o<fd_dir::c>(p, Dz)};
-        const auto dDz{project_first(local_dDz, p, VERTEX_JACOBIANS_FIRST)};
+        const LocalFirstDerivatives lDz{c4o_1_0_0(p, Dz), c4o_0_1_0(p, Dz),
+                                        c4o_0_0_1(p, Dz)};
+
+        const Jacobians jac{VERTEX_JACOBIANS_FIRST(p)};
+
+        const auto gPi{project_first(lPi, jac)};
+        const auto gDx{project_first(lDx, jac)};
+        const auto gDy{project_first(lDy, jac)};
+        const auto gDz{project_first(lDz, jac)};
 
         phi_rhs(p.I) = Pi(p.I);
-        Pi_rhs(p.I) = dDx.dx + dDy.dy + dDz.dz;
-        Dx_rhs(p.I) = dPi.dx;
-        Dy_rhs(p.I) = dPi.dy;
-        Dz_rhs(p.I) = dPi.dz;
+        Pi_rhs(p.I) = gDx.dx + gDy.dy + gDz.dz;
+        Dx_rhs(p.I) = gPi.dx;
+        Dy_rhs(p.I) = gPi.dy;
+        Dz_rhs(p.I) = gPi.dz;
       });
 }
 

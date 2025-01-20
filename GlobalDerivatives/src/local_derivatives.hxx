@@ -1,12 +1,12 @@
-#ifndef CAPYRX_GLOBAL_DERIVATIVES_LOCAL_DERIVATIVES_HXX
-#define CAPYRX_GLOBAL_DERIVATIVES_LOCAL_DERIVATIVES_HXX
+#ifndef CAPYRX_LOCAL_DERIVATIVES_HXX
+#define CAPYRX_LOCAL_DERIVATIVES_HXX
 
 #include <cctk.h>
 #include <loop_device.hxx>
 
 namespace MultiPatch::GlobalDerivatives {
 
-static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+static inline auto
 c4o_1_0_0(const Loop::PointDesc &p,
           const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
   const auto num{gf(-2 * p.DI[0] + p.I) - 8 * gf(-p.DI[0] + p.I) +
@@ -15,7 +15,7 @@ c4o_1_0_0(const Loop::PointDesc &p,
   return num * den;
 }
 
-static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+static inline auto
 c4o_0_1_0(const Loop::PointDesc &p,
           const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
   const auto num{gf(-2 * p.DI[1] + p.I) - 8 * gf(-p.DI[1] + p.I) +
@@ -24,7 +24,7 @@ c4o_0_1_0(const Loop::PointDesc &p,
   return num * den;
 }
 
-static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+static inline auto
 c4o_0_0_1(const Loop::PointDesc &p,
           const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
   const auto num{gf(-2 * p.DI[2] + p.I) - 8 * gf(-p.DI[2] + p.I) +
@@ -33,7 +33,7 @@ c4o_0_0_1(const Loop::PointDesc &p,
   return num * den;
 }
 
-static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+static inline auto
 c4o_2_0_0(const Loop::PointDesc &p,
           const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
   const auto num{-30 * gf(p.I) - gf(-2 * p.DI[0] + p.I) +
@@ -43,7 +43,7 @@ c4o_2_0_0(const Loop::PointDesc &p,
   return num * den;
 }
 
-static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+static inline auto
 c4o_1_1_0(const Loop::PointDesc &p,
           const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
   const auto num{
@@ -63,7 +63,7 @@ c4o_1_1_0(const Loop::PointDesc &p,
   return num * den;
 }
 
-static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+static inline auto
 c4o_1_0_1(const Loop::PointDesc &p,
           const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
   const auto num{
@@ -83,7 +83,7 @@ c4o_1_0_1(const Loop::PointDesc &p,
   return num * den;
 }
 
-static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+static inline auto
 c4o_0_2_0(const Loop::PointDesc &p,
           const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
   const auto num{-30 * gf(p.I) - gf(-2 * p.DI[1] + p.I) +
@@ -93,7 +93,7 @@ c4o_0_2_0(const Loop::PointDesc &p,
   return num * den;
 }
 
-static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+static inline auto
 c4o_0_1_1(const Loop::PointDesc &p,
           const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
   const auto num{
@@ -113,7 +113,7 @@ c4o_0_1_1(const Loop::PointDesc &p,
   return num * den;
 }
 
-static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+static inline auto
 c4o_0_0_2(const Loop::PointDesc &p,
           const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
   const auto num{-30 * gf(p.I) - gf(-2 * p.DI[2] + p.I) +
@@ -125,4 +125,4 @@ c4o_0_0_2(const Loop::PointDesc &p,
 
 } // namespace MultiPatch::GlobalDerivatives
 
-#endif // CAPYRX_GLOBAL_DERIVATIVES_LOCAL_DERIVATIVES_HXX
+#endif // CAPYRX_LOCAL_DERIVATIVES_HXX

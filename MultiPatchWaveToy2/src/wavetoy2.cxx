@@ -5,6 +5,8 @@
 #include <loop_device.hxx>
 #include <global_derivatives.hxx>
 
+#include "local_derivatives.hxx"
+
 namespace MultiPatchWaveToy2 {
 
 // u(t,x,y,z) =
@@ -84,10 +86,22 @@ extern "C" void MultiPatchWaveToy2_RHS(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTSX_MultiPatchWaveToy2_RHS;
   DECLARE_CCTK_PARAMETERS;
 
+  using namespace MultiPatch::GlobalDerivatives;
+
   grid.loop_int_device<0, 0, 0>(
       grid.nghostzones,
       [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-        const auto d2u{MultiPatch::GlobalDerivatives::c4o_2(cctkGH, p, u)};
+        const LocalFirstDerivatives ldu{c4o_1_0_0(p, u), c4o_0_1_0(p, u),
+                                        c4o_0_0_1(p, u)};
+
+        const LocalSecondDerivatives ld2u{c4o_2_0_0(p, u), c4o_1_1_0(p, u),
+                                          c4o_1_0_1(p, u), c4o_0_2_0(p, u),
+                                          c4o_0_1_1(p, u), c4o_0_0_2(p, u)};
+
+        const Jacobians jac{VERTEX_JACOBIANS_FIRST(p)};
+        const JacobianDerivatives djac{VERTEX_JACOBIANS_SECOND(p)};
+
+        const auto d2u{project_second(ldu, ld2u, jac, djac)};
 
         u_rhs(p.I) = rho(p.I);
         rho_rhs(p.I) = d2u.dxdx + d2u.dydy + d2u.dzdz;

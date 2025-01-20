@@ -27,7 +27,10 @@ SCHEDULE TestMultiPatch_compute_interp_error AT initial AFTER TestMultiPatch_syn
 SCHEDULE TestMultiPatch_compute_deriv_error AT initial AFTER TestMultiPatch_compute_interp_error
 {
   LANG: C
-  READS: test_data(everywhere) CoordinatesX::vertex_coords(everywhere)
+  READS: test_data(everywhere)
+  READS: CoordinatesX::vertex_coords(everywhere)
+  READS: MultiPatch::vertex_Jacobians(everywhere)
+  READS: MultiPatch::vertex_dJacobians(everywhere)
   WRITES: dfdx(interior)
   WRITES: dfdy(interior)
   WRITES: dfdz(interior)

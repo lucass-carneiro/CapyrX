@@ -10,18 +10,68 @@
 namespace MultiPatch {
 namespace Cake {
 
-/**
- * @brief The local to global coordinate transformation implementation.
- * This is where the actual coordinate transformations are performed but it is
- * also suitable for passing to CarpetX.
- *
- * @param pt The patch data
- * @param patch The index of the patch to transform.
- * @param local_vars The values of the local variables (a,b,c)
- * @return A spatial vector containing the coordinate transformations.
- */
-CCTK_DEVICE CCTK_HOST svec local2global(const PatchTransformations &pt,
-                                        int patch, const svec &local_vars) {
+CCTK_DEVICE CCTK_HOST patch_piece
+get_owner_patch(const PatchTransformations &pt, const svec &global_vars) {
+  using std::distance;
+  using std::fabs;
+  using std::max_element;
+
+  const auto x{global_vars(0)};
+  const auto y{global_vars(1)};
+  const auto z{global_vars(2)};
+
+  const auto abs_x{fabs(x)};
+  const auto abs_y{fabs(y)};
+  const auto abs_z{fabs(z)};
+
+  const auto r0 = pt.cake_inner_boundary_radius;
+
+  if (abs_x <= r0 && abs_y <= r0 && abs_z <= r0) {
+    return patch_piece::cartesian;
+  }
+
+  std::array<CCTK_REAL, 3> abs_coords{abs_x, abs_y, abs_z};
+  const auto max_coord_idx{distance(
+      abs_coords.begin(), max_element(abs_coords.begin(), abs_coords.end()))};
+
+  if (x > 0.0 && max_coord_idx == 0) {
+    return patch_piece::plus_x;
+  }
+
+  if (x < 0.0 && max_coord_idx == 0) {
+    return patch_piece::minus_x;
+  }
+
+  if (y > 0.0 && max_coord_idx == 1) {
+    return patch_piece::plus_y;
+  }
+
+  if (y < 0.0 && max_coord_idx == 1) {
+    return patch_piece::minus_y;
+  }
+
+  if (z > 0.0 && max_coord_idx == 2) {
+    return patch_piece::plus_z;
+  }
+
+  if (z < 0.0 && max_coord_idx == 2) {
+    return patch_piece::minus_z;
+  }
+
+// We don't know where we are. This is unexpected
+#ifndef __CUDACC__
+  CCTK_VERROR("Coordinate triplet (%f, %f, %f) cannot be located within "
+              "the simulation domain",
+              x, y, z);
+#else
+  assert(0);
+#endif
+  return patch_piece::unknown;
+}
+
+CCTK_DEVICE CCTK_HOST svec local2global_impl(const PatchTransformations &pt,
+                                             int patch,
+                                             const svec &local_vars) {
   using std::pow;
   using std::sqrt;
 
@@ -127,17 +177,8 @@ CCTK_DEVICE CCTK_HOST svec local2global(const PatchTransformations &pt,
   return global_vars;
 }
 
-/**
- * @brief The global to local coordinate transformation implementation.
- * This is where the actual coordinate transformations are performed but it is
- * also suitable to be passed to CarpetX without any wrappers.
- *
- * @param pt The patch data
- * @param global_vars The values of the local global (x, y, z)
- * @return A tuple containing the patch piece and the global coordinate triplet.
- */
 CCTK_DEVICE CCTK_HOST std_tuple<int, svec>
-global2local(const PatchTransformations &pt, const svec &global_vars) {
+global2local_impl(const PatchTransformations &pt, const svec &global_vars) {
   using std::pow;
   using std::sqrt;
 
@@ -238,26 +279,9 @@ global2local(const PatchTransformations &pt, const svec &global_vars) {
   return std_make_tuple(static_cast<int>(piece), local_vars);
 }
 
-/**
- * @brief This function computes the local to global coordinate
- * transformation, the jacobian and it's derivative. It can be passed directly
- * to CarpetX.
- *
- * @note The Jacobians are defined as
- * J(i)(j) = $J^{i}_{j} = \frac{d a^i}{d x^j}$.
- * dJ(i)(j,k) = $dJ^{i}_{j k} = \frac{d^2 a^i}{d x^j d x^k}
- * \right)$.
- *
- *
- * @param pt The patch data
- * @param patch The index of the patch to transform.
- * @param local_vars The values of the local variables (a,b,c)
- * @return A tuple containing the local to global coordinate transformation,
- * the local to global jacobian matrix and it's derivative.
- */
 CCTK_DEVICE CCTK_HOST std_tuple<svec, jac_t, djac_t>
-d2local_dglobal2(const PatchTransformations &pt, int patch,
-                 const svec &local_vars) {
+d2local_dglobal2_impl(const PatchTransformations &pt, int patch,
+                      const svec &local_vars) {
 
   const auto local_to_global_result = pt.local2global(pt, patch, local_vars);
   const auto jacobian_results = cake_jacs(pt, patch, local_to_global_result);
@@ -266,22 +290,9 @@ d2local_dglobal2(const PatchTransformations &pt, int patch,
                         std::get<1>(jacobian_results));
 }
 
-/**
- * @brief This function computes the local to global coordinate transformation
- * and the jacobian. It can be passed directly to CarpetX.
- *
- * @note NThe Jacobians is defined as:
- * J(i)(j) = $J^{i}_{j} = \frac{d a^i}{d x^j}$.
- *
- * @param pt The patch data
- * @param patch The index of the patch to transform.
- * @param local_vars The values of the local variables (a,b,c)
- * @return A tuple containing the local to global coordinate transformation
- * and the local to global jacobian matrix.
- */
 CCTK_DEVICE CCTK_HOST std_tuple<svec, jac_t>
-dlocal_dglobal(const PatchTransformations &pt, int patch,
-               const svec &local_vars) {
+dlocal_dglobal_impl(const PatchTransformations &pt, int patch,
+                    const svec &local_vars) {
 
   const auto data = pt.d2local_dglobal2(pt, patch, local_vars);
   return std_make_tuple(std::get<0>(data), std::get<1>(data));
@@ -347,23 +358,63 @@ template <patch_piece p> Patch make_patch(const PatchTransformations &pt) {
   return patch;
 }
 
+// Host functions
+svec local2global(const PatchTransformations &pt, int patch,
+                  const svec &local_vars) {
+  return local2global_impl(pt, patch, local_vars);
+}
+
+std_tuple<int, svec> global2local(const PatchTransformations &pt,
+                                  const svec &global_vars) {
+  return global2local_impl(pt, global_vars);
+}
+
+std_tuple<svec, jac_t> dlocal_dglobal(const PatchTransformations &pt, int patch,
+                                      const svec &local_vars) {
+  return dlocal_dglobal_impl(pt, patch, local_vars);
+}
+
+std_tuple<svec, jac_t, djac_t> d2local_dglobal2(const PatchTransformations &pt,
+                                                int patch,
+                                                const svec &local_vars) {
+  return d2local_dglobal2_impl(pt, patch, local_vars);
+}
+
+// Device functions
+CCTK_DEVICE svec local2global_device(const PatchTransformations &pt, int patch,
+                                     const svec &local_vars) {
+  return local2global_impl(pt, patch, local_vars);
+}
+
+CCTK_DEVICE std_tuple<int, svec>
+global2local_device(const PatchTransformations &pt, const svec &global_vars) {
+  return global2local_impl(pt, global_vars);
+}
+
+CCTK_DEVICE std_tuple<svec, jac_t>
+dlocal_dglobal_device(const PatchTransformations &pt, int patch,
+                      const svec &local_vars) {
+  return dlocal_dglobal_impl(pt, patch, local_vars);
+}
+
+CCTK_DEVICE std_tuple<svec, jac_t, djac_t>
+d2local_dglobal2_device(const PatchTransformations &pt, int patch,
+                        const svec &local_vars) {
+  return d2local_dglobal2_impl(pt, patch, local_vars);
+}
+
 } // namespace Cake
 
-/**
- * @brief Creates the Cake patch system
- *
- * @return PatchSystem object with Cake data and functions
- */
 PatchSystem SetupCake() {
   PatchTransformations pt;
   pt.global2local = &Cake::global2local;
   pt.local2global = &Cake::local2global;
   pt.dlocal_dglobal = &Cake::dlocal_dglobal;
   pt.d2local_dglobal2 = &Cake::d2local_dglobal2;
-  pt.global2local_device = &Cake::global2local;
-  pt.local2global_device = &Cake::local2global;
-  pt.dlocal_dglobal_device = &Cake::dlocal_dglobal;
-  pt.d2local_dglobal2_device = &Cake::d2local_dglobal2;
+  pt.global2local_device = &Cake::global2local_device;
+  pt.local2global_device = &Cake::local2global_device;
+  pt.dlocal_dglobal_device = &Cake::dlocal_dglobal_device;
+  pt.d2local_dglobal2_device = &Cake::d2local_dglobal2_device;
 
   const auto patches =
       std::vector<Patch>{Cake::make_patch<Cake::patch_piece::cartesian>(pt),

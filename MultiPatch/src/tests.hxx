@@ -1,10 +1,9 @@
 #ifndef CAPYRX_MULTIPATCH_TESTS_HXX
 #define CAPYRX_MULTIPATCH_TESTS_HXX
 
+#include <cctk.h>
+
 #include <cmath>
-#include <functional>
-#include <limits>
-#include <random>
 #include <sstream>
 #include <string>
 

@@ -5,6 +5,7 @@
 #include <cctk_Parameters.h>
 
 #include <sstream>
+#include <random>
 #include <string>
 
 namespace MultiPatch {

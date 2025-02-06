@@ -1,4 +1,4 @@
 # make.code.defn file for the Cake patch system definition and tests
 
 # Source files in this directory
-SRCS = cake_get_owner_patch.cxx cake_tests.cxx cake.cxx
+SRCS = cake_tests.cxx cake.cxx

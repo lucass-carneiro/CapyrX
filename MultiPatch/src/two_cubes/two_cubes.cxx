@@ -6,6 +6,7 @@
 
 #include <string>
 #include <sstream>
+#include <random>
 
 namespace MultiPatch {
 namespace TwoCubes {

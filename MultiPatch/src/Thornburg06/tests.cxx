@@ -5,10 +5,10 @@
 #include <cctk_Parameters.h>
 
 #include <cmath>
-#include <cstddef>
 #include <sstream>
 #include <string>
 #include <utility>
+#include <random>
 
 namespace MultiPatch {
 namespace Thornburg06Tests {

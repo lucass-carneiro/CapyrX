@@ -189,11 +189,17 @@ MultiPatch1_GetSystemSpecification(CCTK_INT *restrict const npatches) {
 }
 
 extern "C" CCTK_INT MultiPatch1_GetPatchSpecification(
-    const CCTK_INT ipatch, const CCTK_INT size, CCTK_INT *restrict const ncells,
+    const CCTK_INT ipatch, CCTK_INT *restrict const is_cartesian,
+    const CCTK_INT size, CCTK_INT *restrict const ncells,
     CCTK_REAL *restrict const xmin, CCTK_REAL *restrict const xmax) {
   assert(ipatch >= 0 && ipatch < the_patch_system->num_patches());
   assert(size == dim);
   const Patch &patch = the_patch_system->patches.at(ipatch);
+
+  if (is_cartesian != nullptr) {
+    *is_cartesian = static_cast<CCTK_INT>(patch.is_cartesian);
+  }
+
   for (int d = 0; d < dim; ++d) {
     ncells[d] = patch.ncells[d];
     xmin[d] = patch.xmin[d];

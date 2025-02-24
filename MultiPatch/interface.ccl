@@ -26,14 +26,14 @@ PROVIDES FUNCTION MultiPatch_GetSystemSpecification \
   LANGUAGE C
 
 # Overall size of the domain
-CCTK_INT FUNCTION MultiPatch_GetPatchSpecification( \
+CCTK_INT FUNCTION MultiPatch_GetPatchSpecification2( \
   CCTK_INT IN patch, \
   CCTK_INT OUT is_cartesian, \
   CCTK_INT IN size, \
   CCTK_INT OUT ARRAY ncells, \
   CCTK_REAL OUT ARRAY xmin, \
   CCTK_REAL OUT ARRAY xmax)
-PROVIDES FUNCTION MultiPatch_GetPatchSpecification \
+PROVIDES FUNCTION MultiPatch_GetPatchSpecification2 \
   WITH MultiPatch1_GetPatchSpecification \
   LANGUAGE C
 

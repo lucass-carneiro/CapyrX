@@ -141,10 +141,17 @@ def plot_openpmd_slice(args):
     if not save_file:
         plt.show()
     else:
-        plt.savefig(
-            f"{var_name}_it{iteration_index_pad}.{out_format}",
-            dpi=out_dpi
-        )
+        if out_format == "svg" or out_format == "pdf":
+            plt.savefig(
+                f"{var_name}_it{iteration_index_pad}.{out_format}",
+                format=out_format
+            )
+        else:
+            plt.savefig(
+                f"{var_name}_it{iteration_index_pad}.{out_format}",
+                format=out_format,
+                dpi=out_dpi
+            )
 
     if verbose:
         logger.info("Done")

@@ -13,6 +13,8 @@ Options:
   --version                   Show version.
   --verbose                   Log operations.
   --save                      Save plot to file.
+  --out-format=<fmt>          Format to use when saving images. [default: png]
+  --out-dpi=<dpi>             Resolution of the output image, in dpi (dots per inch). Relevant only on raster formats, such as png. [default: 300]
   --diverging                 Use a diverging color map.
   --autorange                 Computes the colorbar range automatically. Requires --diverging. Ignores --varmin and --varmax.
   --varmin=<min>              Minimun value of the colorbar. Requires --diverging. [default: -1.0].

@@ -30,6 +30,8 @@ def plot_openpmd_slice(args):
     iteration_index_pad = args["<iteration>"].zfill(8)
 
     save_file = bool(args["--save"])
+    out_format = args["--out-format"]
+    out_dpi = int(args["--out-dpi"])
 
     diverging = bool(args["--diverging"])
     varmin = float(args["--varmin"])
@@ -139,7 +141,10 @@ def plot_openpmd_slice(args):
     if not save_file:
         plt.show()
     else:
-        plt.savefig(f"{var_name}_it{iteration_index_pad}.png")
+        plt.savefig(
+            f"{var_name}_it{iteration_index_pad}.{out_format}",
+            dpi=out_dpi
+        )
 
     if verbose:
         logger.info("Done")

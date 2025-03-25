@@ -1,0 +1,57 @@
+# Parameter definitions for thorn CapyrX_MultiPatch
+
+KEYWORD patch_system "Patch system"
+{
+  "none" :: "disable multi-patch systems"
+  "Cartesian" :: "Cartesian coordinates"
+  "Cubed sphere" :: "Cartesian cube surrounded with 6 spherical-like patches"
+} "none"
+
+
+
+# Cartesian patch system
+
+INT cartesian_ncells_i "Number of cells in i direction"
+{
+  0:* :: ""
+} 10
+
+INT cartesian_ncells_j "Number of cells in j direction"
+{
+  0:* :: ""
+} 10
+
+INT cartesian_ncells_k "Number of cells in k direction"
+{
+  0:* :: ""
+} 10
+
+REAL cartesian_xmin "xmin"
+{
+  *:* :: ""
+} -1.0
+
+REAL cartesian_ymin "ymin"
+{
+  *:* :: ""
+} -1.0
+
+REAL cartesian_zmin "zmin"
+{
+  *:* :: ""
+} -1.0
+
+REAL cartesian_xmax "xmax"
+{
+  *:* :: ""
+} +1.0
+
+REAL cartesian_ymax "ymax"
+{
+  *:* :: ""
+} +1.0
+
+REAL cartesian_zmax "zmax"
+{
+  *:* :: ""
+} +1.0

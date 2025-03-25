@@ -6,10 +6,4 @@ SRCS =						    \
 	multipatch.cxx
 
 # Subdirectories containing source files
-SUBDIRS =        \
-	cake         \
-	cartesian    \
-	cubed_sphere \
-	swirl        \
-	two_cubes    \
-	Thornburg06
+SUBDIRS =

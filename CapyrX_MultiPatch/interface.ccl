@@ -1,22 +1,15 @@
-# Interface definition for thorn MultiPatch
+# Interface definition for thorn CapyrX_MultiPatch
 
 IMPLEMENTS: MultiPatch
 
 INHERITS: CoordinatesX
 
-USES INCLUDE HEADER: loop.hxx
-USES INCLUDE HEADER: loop_device.hxx
-USES INCLUDE HEADER: driver.hxx
-USES INCLUDE HEADER: schedule.hxx
 USES INCLUDE HEADER: mat.hxx
-USES INCLUDE HEADER: sum.hxx
-USES INCLUDE HEADER: tuple.hxx
 USES INCLUDE HEADER: vec.hxx
 USES INCLUDE HEADER: vect.hxx
+USES INCLUDE HEADER: loop.hxx
 
 INCLUDES HEADER: multipatch.hxx IN multipatch.hxx
-
-
 
 # Number of patches
 CCTK_INT FUNCTION MultiPatch_GetSystemSpecification( \

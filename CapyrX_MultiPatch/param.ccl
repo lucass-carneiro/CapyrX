@@ -7,6 +7,10 @@ KEYWORD patch_system "Patch system"
   "Cubed sphere" :: "Cartesian cube surrounded with 6 spherical-like patches"
 } "none"
 
+BOOLEAN verbose "Enable verbose output"
+{
+} no
+
 
 
 # Cartesian patch system

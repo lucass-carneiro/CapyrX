@@ -1,8 +1,6 @@
 #include "multipatch.hxx"
 
-#include "CParameters.h"
 #include "cartesian/cartesian.hxx"
-#include "cctk_Config.h"
 #include "type_aliases.hxx"
 
 #include <cctk.h>

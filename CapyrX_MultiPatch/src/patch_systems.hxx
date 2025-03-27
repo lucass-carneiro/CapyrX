@@ -3,8 +3,11 @@
 
 namespace CapyrX::MultiPatch {
 
+/**
+ * Tag for identifying patch systems.
+ */
 enum class PatchSystems : int { none = 0, cartesian, cubed_spehre };
 
-}
+} // namespace CapyrX::MultiPatch
 
 #endif // CAPYRX_MULTIPATCH_PATCH_SYSTEMS_HXX

@@ -1,6 +1,5 @@
 #include "multipatch.hxx"
 
-#include "../../../CarpetX/CarpetX/src/driver.hxx"
 #include "../../../CarpetX/CarpetX/src/schedule.hxx"
 
 #include <cctk.h>

@@ -2,8 +2,10 @@
 #define CAPYRX_MULTIPATCH_MULTIPATCH_HXX
 
 #include "type_aliases.hxx"
+#include "patch_systems.hxx"
 
 #include <vector>
+#include <memory>
 
 namespace CapyrX::MultiPatch {
 
@@ -67,52 +69,24 @@ struct Patch {
  * Describes a patch system, that is, a collection of patches and patch
  * transformations
  */
-class PatchSystem {
-private:
+struct PatchSystem {
   /**
    * String repreentation of the name of the patch system
    */
-  const char *name{"Patch system"};
+  const char *name{"No System"};
+
+  /**
+   * ID tag of the patch system
+   */
+  PatchSystems id_tag{PatchSystems::none};
 
   /**
    * A vector containing all patches in the system.
    */
   std::vector<Patch> patches{};
-
-public:
-  /**
-   * Constructs a new empty PatchSystem object
-   */
-  PatchSystem() {}
-
-  /**
-   * Construct a new Patch System object
-   *
-   * @par Inputs:
-   * 1. `std::string name`: The name of the patch system.
-   * 2. `std::vector<Patch> patches`: The patches comprising the patch system.
-   * 3. `PatchTransformations transformations`: The patch system coordinate
-   * transformations and data object.
-   */
-  PatchSystem(const char *nm, std::vector<Patch> ptc)
-      : name{nm}, patches{ptc} {}
-
-  /**
-   * Returns the current number of patches in the system.
-   *
-   * @par Returns:
-   * An `int` containing the number of patches in the system.
-   */
-  [[nodiscard]] auto get_num_patches() const -> int { return patches.size(); }
-
-  /**
-   * Returns the name of the system.
-   *
-   * @par Returns:
-   * A C-style string containing the number of patches in the system.
-   */
-  [[nodiscard]] auto get_name() const -> const char * { return name; }
 };
+
+extern std::unique_ptr<PatchSystem> g_patch_system;
 
 } // namespace CapyrX::MultiPatch
 

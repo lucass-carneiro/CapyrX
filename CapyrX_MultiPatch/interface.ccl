@@ -7,7 +7,8 @@ INHERITS: CoordinatesX
 USES INCLUDE HEADER: mat.hxx
 USES INCLUDE HEADER: vec.hxx
 USES INCLUDE HEADER: vect.hxx
-USES INCLUDE HEADER: loop.hxx
+USES INCLUDE HEADER: loop_device.hxx
+USES INCLUDE HEADER: tuple.hxx
 
 INCLUDES HEADER: multipatch.hxx IN multipatch.hxx
 

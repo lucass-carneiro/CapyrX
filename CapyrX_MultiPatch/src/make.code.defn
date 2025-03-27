@@ -6,4 +6,5 @@ SRCS =						    \
 	multipatch.cxx
 
 # Subdirectories containing source files
-SUBDIRS =
+SUBDIRS =        \
+	cartesian    \

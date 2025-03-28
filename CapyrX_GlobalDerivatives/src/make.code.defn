@@ -1,4 +1,4 @@
-# Main make.code.defn file for thorn GlobalDerivatives
+# Main make.code.defn file for thorn CapyrX_GlobalDerivatives
 
 # Source files in this directory
 SRCS =

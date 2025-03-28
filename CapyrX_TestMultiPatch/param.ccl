@@ -1,4 +1,4 @@
-# Parameter definitions for thorn TestMultiPatch
+# Parameter definitions for thorn CapyrX_TestMultiPatch
 
 
 KEYWORD test_data "Analytical data to use in testing"

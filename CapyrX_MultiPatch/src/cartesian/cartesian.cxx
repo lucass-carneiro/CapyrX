@@ -20,13 +20,11 @@ CCTK_HOST CCTK_DEVICE auto local2global(const PatchParams &p, int patch,
 CCTK_HOST CCTK_DEVICE auto
 dlocal_dglobal(const PatchParams &p, int patch,
                const svec_t &local_coords) -> std_tuple<svec_t, jac_t> {
-  const auto x_dx_ddx{d2local_dglobal2_fun(p, patch, local_coords)};
+  const auto x_dx_ddx{d2local_dglobal2(p, patch, local_coords)};
   return std_make_tuple(std::get<0>(x_dx_ddx), std::get<1>(x_dx_ddx));
 }
 
-CCTK_HOST CCTK_DEVICE auto d2local_dglobal2_fun(const PatchParams &, int,
-                                                const svec_t &local_coords)
-    -> std_tuple<svec_t, jac_t, djac_t> {
+CCTK_HOST CCTK_DEVICE auto d2local_dglobal2(const PatchParams &, int, const svec_t &local_coords) -> std_tuple<svec_t, jac_t, djac_t> {
   using namespace Arith;
   return std_make_tuple(local_coords, zero<vec<vec<CCTK_REAL, dim>, dim> >()(),
                         zero<vec<smat<CCTK_REAL, dim>, dim> >()());

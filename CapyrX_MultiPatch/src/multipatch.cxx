@@ -89,8 +89,9 @@ extern "C" void MultiPatch1_GlobalToLocal2(
 
     for (int n = 0; n < npoints; ++n) {
       const svec_t global_coords{globalsx[n], globalsy[n], globalsz[n]};
-      const auto [patch, local_coords] =
-          Cartesian::global2local(p, global_coords);
+      const auto g2l{Cartesian::global2local(p, global_coords)};
+      const auto patch{std::get<0>(g2l)};
+      const auto local_coords{std::get<1>(g2l)};
       patches[n] = patch;
       localsx[n] = local_coords(0);
       localsy[n] = local_coords(1);
@@ -219,8 +220,7 @@ extern "C" void CapyrX_MultiPatch_Coordinates_Setup(CCTK_ARGUMENTS) {
         [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
           const svec_t a{p.x, p.y, p.z};
 
-          const auto d2J_tuple{
-              Cartesian::d2local_dglobal2_fun(par, p.patch, a)};
+          const auto d2J_tuple{Cartesian::d2local_dglobal2(par, p.patch, a)};
 
           const auto &x{std::get<0>(d2J_tuple)};
           const auto &J{std::get<1>(d2J_tuple)};
@@ -265,8 +265,7 @@ extern "C" void CapyrX_MultiPatch_Coordinates_Setup(CCTK_ARGUMENTS) {
         [=] ARITH_DEVICE(const Loop::PointDesc &p) ARITH_INLINE {
           const svec_t a{p.x, p.y, p.z};
 
-          const auto d2J_tuple{
-              Cartesian::d2local_dglobal2_fun(par, p.patch, a)};
+          const auto d2J_tuple{Cartesian::d2local_dglobal2(par, p.patch, a)};
 
           const auto &x{std::get<0>(d2J_tuple)};
           const auto &J{std::get<1>(d2J_tuple)};

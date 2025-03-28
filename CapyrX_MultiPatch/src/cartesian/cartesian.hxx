@@ -112,9 +112,7 @@ dlocal_dglobal(const PatchParams &p, int patch,
  * \mathrm{d}x^k}\f] In code, \f$J^{i}_{\phantom{i}jk}\f$ is acessed by
  * calling `J(i)(j,k)` on a `djac_t` type object.
  */
-CCTK_HOST CCTK_DEVICE auto d2local_dglobal2_fun(const PatchParams &p, int patch,
-                                                const svec_t &local_coords)
-    -> std_tuple<svec_t, jac_t, djac_t>;
+CCTK_HOST CCTK_DEVICE auto d2local_dglobal2(const PatchParams &p, int patch, const svec_t &local_coords) -> std_tuple<svec_t, jac_t, djac_t>;
 
 /**
  * Creates a cartesian PatchSystem

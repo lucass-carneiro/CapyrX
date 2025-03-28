@@ -4,11 +4,10 @@
 
 #include <loop_device.hxx>
 #include <global_derivatives.hxx>
-#include <local_derivatives.hxx>
 
 #include <cmath>
 
-namespace TestMultiPatch {
+namespace CapyrX::TestMultiPatch {
 
 static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
 standing_wave(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
@@ -190,6 +189,124 @@ parabola_dyz(CCTK_REAL, CCTK_REAL, CCTK_REAL) -> CCTK_REAL {
   return 0.0;
 }
 
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+    CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+    c4o_1_0_0(const Loop::PointDesc &p,
+              const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
+  const auto num{gf(-2 * p.DI[0] + p.I) - 8 * gf(-p.DI[0] + p.I) +
+                 8 * gf(p.DI[0] + p.I) - gf(2 * p.DI[0] + p.I)};
+  const auto den{1.0 / (12 * p.DX[0])};
+  return num * den;
+}
+
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+c4o_0_1_0(const Loop::PointDesc &p,
+          const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
+  const auto num{gf(-2 * p.DI[1] + p.I) - 8 * gf(-p.DI[1] + p.I) +
+                 8 * gf(p.DI[1] + p.I) - gf(2 * p.DI[1] + p.I)};
+  const auto den{1.0 / (12 * p.DX[1])};
+  return num * den;
+}
+
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+c4o_0_0_1(const Loop::PointDesc &p,
+          const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
+  const auto num{gf(-2 * p.DI[2] + p.I) - 8 * gf(-p.DI[2] + p.I) +
+                 8 * gf(p.DI[2] + p.I) - gf(2 * p.DI[2] + p.I)};
+  const auto den{1.0 / (12 * p.DX[2])};
+  return num * den;
+}
+
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+c4o_2_0_0(const Loop::PointDesc &p,
+          const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
+  const auto num{-30 * gf(p.I) - gf(-2 * p.DI[0] + p.I) +
+                 16 * gf(-p.DI[0] + p.I) + 16 * gf(p.DI[0] + p.I) -
+                 gf(2 * p.DI[0] + p.I)};
+  const auto den{1.0 / (12 * (p.DX[0] * p.DX[0]))};
+  return num * den;
+}
+
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+c4o_1_1_0(const Loop::PointDesc &p,
+          const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
+  const auto num{
+      gf(-2 * p.DI[0] - 2 * p.DI[1] + p.I) -
+      8 * gf(-p.DI[0] - 2 * p.DI[1] + p.I) +
+      8 * gf(p.DI[0] - 2 * p.DI[1] + p.I) -
+      gf(2 * p.DI[0] - 2 * p.DI[1] + p.I) -
+      8 * gf(-2 * p.DI[0] - p.DI[1] + p.I) + 64 * gf(-p.DI[0] - p.DI[1] + p.I) -
+      64 * gf(p.DI[0] - p.DI[1] + p.I) + 8 * gf(2 * p.DI[0] - p.DI[1] + p.I) +
+      8 * gf(-2 * p.DI[0] + p.DI[1] + p.I) - 64 * gf(-p.DI[0] + p.DI[1] + p.I) +
+      64 * gf(p.DI[0] + p.DI[1] + p.I) - 8 * gf(2 * p.DI[0] + p.DI[1] + p.I) -
+      gf(-2 * p.DI[0] + 2 * p.DI[1] + p.I) +
+      8 * gf(-p.DI[0] + 2 * p.DI[1] + p.I) -
+      8 * gf(p.DI[0] + 2 * p.DI[1] + p.I) +
+      gf(2 * p.DI[0] + 2 * p.DI[1] + p.I)};
+  const auto den{1.0 / (144 * p.DX[0] * p.DX[1])};
+  return num * den;
+}
+
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+c4o_1_0_1(const Loop::PointDesc &p,
+          const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
+  const auto num{
+      gf(-2 * p.DI[0] - 2 * p.DI[2] + p.I) -
+      8 * gf(-p.DI[0] - 2 * p.DI[2] + p.I) +
+      8 * gf(p.DI[0] - 2 * p.DI[2] + p.I) -
+      gf(2 * p.DI[0] - 2 * p.DI[2] + p.I) -
+      8 * gf(-2 * p.DI[0] - p.DI[2] + p.I) + 64 * gf(-p.DI[0] - p.DI[2] + p.I) -
+      64 * gf(p.DI[0] - p.DI[2] + p.I) + 8 * gf(2 * p.DI[0] - p.DI[2] + p.I) +
+      8 * gf(-2 * p.DI[0] + p.DI[2] + p.I) - 64 * gf(-p.DI[0] + p.DI[2] + p.I) +
+      64 * gf(p.DI[0] + p.DI[2] + p.I) - 8 * gf(2 * p.DI[0] + p.DI[2] + p.I) -
+      gf(-2 * p.DI[0] + 2 * p.DI[2] + p.I) +
+      8 * gf(-p.DI[0] + 2 * p.DI[2] + p.I) -
+      8 * gf(p.DI[0] + 2 * p.DI[2] + p.I) +
+      gf(2 * p.DI[0] + 2 * p.DI[2] + p.I)};
+  const auto den{1.0 / (144 * p.DX[0] * p.DX[2])};
+  return num * den;
+}
+
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+c4o_0_2_0(const Loop::PointDesc &p,
+          const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
+  const auto num{-30 * gf(p.I) - gf(-2 * p.DI[1] + p.I) +
+                 16 * gf(-p.DI[1] + p.I) + 16 * gf(p.DI[1] + p.I) -
+                 gf(2 * p.DI[1] + p.I)};
+  const auto den{1.0 / (12 * (p.DX[1] * p.DX[1]))};
+  return num * den;
+}
+
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+c4o_0_1_1(const Loop::PointDesc &p,
+          const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
+  const auto num{
+      gf(-2 * p.DI[1] - 2 * p.DI[2] + p.I) -
+      8 * gf(-p.DI[1] - 2 * p.DI[2] + p.I) +
+      8 * gf(p.DI[1] - 2 * p.DI[2] + p.I) -
+      gf(2 * p.DI[1] - 2 * p.DI[2] + p.I) -
+      8 * gf(-2 * p.DI[1] - p.DI[2] + p.I) + 64 * gf(-p.DI[1] - p.DI[2] + p.I) -
+      64 * gf(p.DI[1] - p.DI[2] + p.I) + 8 * gf(2 * p.DI[1] - p.DI[2] + p.I) +
+      8 * gf(-2 * p.DI[1] + p.DI[2] + p.I) - 64 * gf(-p.DI[1] + p.DI[2] + p.I) +
+      64 * gf(p.DI[1] + p.DI[2] + p.I) - 8 * gf(2 * p.DI[1] + p.DI[2] + p.I) -
+      gf(-2 * p.DI[1] + 2 * p.DI[2] + p.I) +
+      8 * gf(-p.DI[1] + 2 * p.DI[2] + p.I) -
+      8 * gf(p.DI[1] + 2 * p.DI[2] + p.I) +
+      gf(2 * p.DI[1] + 2 * p.DI[2] + p.I)};
+  const auto den{1.0 / (144 * p.DX[1] * p.DX[2])};
+  return num * den;
+}
+
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+c4o_0_0_2(const Loop::PointDesc &p,
+          const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
+  const auto num{-30 * gf(p.I) - gf(-2 * p.DI[2] + p.I) +
+                 16 * gf(-p.DI[2] + p.I) + 16 * gf(p.DI[2] + p.I) -
+                 gf(2 * p.DI[2] + p.I)};
+  const auto den{1.0 / (12 * (p.DX[2] * p.DX[2]))};
+  return num * den;
+}
+
 extern "C" void TestMultiPatch_write_test_data(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTSX_TestMultiPatch_write_test_data;
   DECLARE_CCTK_PARAMETERS;
@@ -268,7 +385,7 @@ extern "C" void TestMultiPatch_compute_deriv_error(CCTK_ARGUMENTS) {
     grid.loop_int_device<0, 0, 0>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-          using namespace MultiPatch::GlobalDerivatives;
+          using namespace CapyrX::MultiPatch::GlobalDerivatives;
 
           const auto t{cctk_time};
           const auto x{vcoordx(p.I)};
@@ -292,8 +409,8 @@ extern "C" void TestMultiPatch_compute_deriv_error(CCTK_ARGUMENTS) {
                                             c4o_1_0_1(p, u), c4o_0_2_0(p, u),
                                             c4o_0_1_1(p, u), c4o_0_0_2(p, u)};
 
-          const Jacobians jac{VERTEX_JACOBIANS_FIRST(p)};
-          const JacobianDerivatives djac{VERTEX_JACOBIANS_SECOND(p)};
+          const Jacobians jac{VERTEX_JACOBIANS(p)};
+          const JacobianDerivatives djac{VERTEX_DJACOBIANS(p)};
 
           const auto first_derivs{project_first(ldu, jac)};
           const auto second_derivs{project_second(ldu, ld2u, jac, djac)};
@@ -313,7 +430,7 @@ extern "C" void TestMultiPatch_compute_deriv_error(CCTK_ARGUMENTS) {
     grid.loop_int_device<0, 0, 0>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-          using namespace MultiPatch::GlobalDerivatives;
+          using namespace CapyrX::MultiPatch::GlobalDerivatives;
 
           const auto x{vcoordx(p.I)};
           const auto y{vcoordy(p.I)};
@@ -336,8 +453,8 @@ extern "C" void TestMultiPatch_compute_deriv_error(CCTK_ARGUMENTS) {
                                             c4o_1_0_1(p, u), c4o_0_2_0(p, u),
                                             c4o_0_1_1(p, u), c4o_0_0_2(p, u)};
 
-          const Jacobians jac{VERTEX_JACOBIANS_FIRST(p)};
-          const JacobianDerivatives djac{VERTEX_JACOBIANS_SECOND(p)};
+          const Jacobians jac{VERTEX_JACOBIANS(p)};
+          const JacobianDerivatives djac{VERTEX_DJACOBIANS(p)};
 
           const auto first_derivs{project_first(ldu, jac)};
           const auto second_derivs{project_second(ldu, ld2u, jac, djac)};
@@ -359,4 +476,4 @@ extern "C" void TestMultiPatch_sync(CCTK_ARGUMENTS) {
   // Do nothing
 }
 
-} // namespace TestMultiPatch
+} // namespace CapyrX::TestMultiPatch

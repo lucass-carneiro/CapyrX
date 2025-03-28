@@ -18,17 +18,17 @@ BOOLEAN verbose "Enable verbose output"
 INT cartesian_ncells_i "Number of cells in i direction"
 {
   0:* :: ""
-} 10
+} 20
 
 INT cartesian_ncells_j "Number of cells in j direction"
 {
   0:* :: ""
-} 10
+} 20
 
 INT cartesian_ncells_k "Number of cells in k direction"
 {
   0:* :: ""
-} 10
+} 20
 
 REAL cartesian_xmin "xmin"
 {

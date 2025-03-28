@@ -1,0 +1,3 @@
+# Configuration definition for thorn CapyrX_TestMultiPatch
+
+REQUIRES Arith Loop CapyrX_GlobalDerivatives

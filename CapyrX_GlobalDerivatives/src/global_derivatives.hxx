@@ -2,17 +2,18 @@
 #define CAPYRX_GLOBAL_DERIVATIVES_HXX
 
 #include <cctk.h>
+#include <loop_device.hxx>
 
-namespace MultiPatch::GlobalDerivatives {
+namespace CapyrX::MultiPatch::GlobalDerivatives {
 
-#define VERTEX_JACOBIANS_FIRST(point_descriptor)                               \
+#define VERTEX_JACOBIANS(point_descriptor)                                     \
   vJ_da_dx(point_descriptor.I), vJ_da_dy(point_descriptor.I),                  \
       vJ_da_dz(point_descriptor.I), vJ_db_dx(point_descriptor.I),              \
       vJ_db_dy(point_descriptor.I), vJ_db_dz(point_descriptor.I),              \
       vJ_dc_dx(point_descriptor.I), vJ_dc_dy(point_descriptor.I),              \
       vJ_dc_dz(point_descriptor.I)
 
-#define VERTEX_JACOBIANS_SECOND(point_descriptor)                              \
+#define VERTEX_DJACOBIANS(point_descriptor)                                    \
   vdJ_d2a_dxdx(point_descriptor.I), vdJ_d2a_dxdy(point_descriptor.I),          \
       vdJ_d2a_dxdz(point_descriptor.I), vdJ_d2a_dydy(point_descriptor.I),      \
       vdJ_d2a_dydz(point_descriptor.I), vdJ_d2a_dzdz(point_descriptor.I),      \
@@ -54,36 +55,36 @@ struct GlobalSecondDerivatives {
 };
 
 struct Jacobians {
-  CCTK_REAL da_dx{};
-  CCTK_REAL da_dy{};
-  CCTK_REAL da_dz{};
-  CCTK_REAL db_dx{};
-  CCTK_REAL db_dy{};
-  CCTK_REAL db_dz{};
-  CCTK_REAL dc_dx{};
-  CCTK_REAL dc_dy{};
-  CCTK_REAL dc_dz{};
+  CCTK_REAL da_dx{0.0};
+  CCTK_REAL da_dy{0.0};
+  CCTK_REAL da_dz{0.0};
+  CCTK_REAL db_dx{0.0};
+  CCTK_REAL db_dy{0.0};
+  CCTK_REAL db_dz{0.0};
+  CCTK_REAL dc_dx{0.0};
+  CCTK_REAL dc_dy{0.0};
+  CCTK_REAL dc_dz{0.0};
 };
 
 struct JacobianDerivatives {
-  CCTK_REAL d2a_dxdx{};
-  CCTK_REAL d2a_dxdy{};
-  CCTK_REAL d2a_dxdz{};
-  CCTK_REAL d2a_dydy{};
-  CCTK_REAL d2a_dydz{};
-  CCTK_REAL d2a_dzdz{};
-  CCTK_REAL d2b_dxdx{};
-  CCTK_REAL d2b_dxdy{};
-  CCTK_REAL d2b_dxdz{};
-  CCTK_REAL d2b_dydy{};
-  CCTK_REAL d2b_dydz{};
-  CCTK_REAL d2b_dzdz{};
-  CCTK_REAL d2c_dxdx{};
-  CCTK_REAL d2c_dxdy{};
-  CCTK_REAL d2c_dxdz{};
-  CCTK_REAL d2c_dydy{};
-  CCTK_REAL d2c_dydz{};
-  CCTK_REAL d2c_dzdz{};
+  CCTK_REAL d2a_dxdx{0.0};
+  CCTK_REAL d2a_dxdy{0.0};
+  CCTK_REAL d2a_dxdz{0.0};
+  CCTK_REAL d2a_dydy{0.0};
+  CCTK_REAL d2a_dydz{0.0};
+  CCTK_REAL d2a_dzdz{0.0};
+  CCTK_REAL d2b_dxdx{0.0};
+  CCTK_REAL d2b_dxdy{0.0};
+  CCTK_REAL d2b_dxdz{0.0};
+  CCTK_REAL d2b_dydy{0.0};
+  CCTK_REAL d2b_dydz{0.0};
+  CCTK_REAL d2b_dzdz{0.0};
+  CCTK_REAL d2c_dxdx{0.0};
+  CCTK_REAL d2c_dxdy{0.0};
+  CCTK_REAL d2c_dxdz{0.0};
+  CCTK_REAL d2c_dydy{0.0};
+  CCTK_REAL d2c_dydz{0.0};
+  CCTK_REAL d2c_dzdz{0.0};
 };
 
 static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
@@ -158,6 +159,6 @@ project_second(const LocalFirstDerivatives &lfd,
           da_dz * (dc_dz * d2gf_dadc + db_dz * d2gf_dadb + da_dz * d2gf_dada)};
 }
 
-} // namespace MultiPatch::GlobalDerivatives
+} // namespace CapyrX::MultiPatch::GlobalDerivatives
 
 #endif // CAPYRX_GLOBAL_DERIVATIVES_HXX

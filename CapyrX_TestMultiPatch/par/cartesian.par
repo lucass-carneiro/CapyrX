@@ -23,8 +23,9 @@ CarpetX::max_num_levels = 1
 
 CarpetX::ghost_size = 2
 
-CapyrX_MultiPatch::verbose      =  yes
-CapyrX_MultiPatch::patch_system = "cartesian"
+CapyrX_MultiPatch::verbose        =  yes
+CapyrX_MultiPatch::patch_system   = "cartesian"
+CapyrX_MultiPatch::run_unit_tests = yes
                                                                         
 CapyrX_TestMultiPatch::test_data = "parabola"
 

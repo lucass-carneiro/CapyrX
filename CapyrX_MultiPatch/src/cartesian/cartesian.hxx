@@ -112,12 +112,20 @@ dlocal_dglobal(const PatchParams &p, int patch,
  * \mathrm{d}x^k}\f] In code, \f$J^{i}_{\phantom{i}jk}\f$ is acessed by
  * calling `J(i)(j,k)` on a `djac_t` type object.
  */
-CCTK_HOST CCTK_DEVICE auto d2local_dglobal2(const PatchParams &p, int patch, const svec_t &local_coords) -> std_tuple<svec_t, jac_t, djac_t>;
+CCTK_HOST CCTK_DEVICE auto d2local_dglobal2(const PatchParams &p, int patch,
+                                            const svec_t &local_coords)
+    -> std_tuple<svec_t, jac_t, djac_t>;
 
 /**
  * Creates a cartesian PatchSystem
  */
 auto make_system(const PatchParams &p) -> PatchSystem;
+
+/**
+ * Runs patch system unit tests
+ */
+auto unit_test(std::size_t repetitions, std::size_t seed,
+               const PatchParams &p) -> bool;
 
 } // namespace CapyrX::MultiPatch::Cartesian
 

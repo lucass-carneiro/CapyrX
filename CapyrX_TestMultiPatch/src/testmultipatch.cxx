@@ -307,8 +307,8 @@ c4o_0_0_2(const Loop::PointDesc &p,
   return num * den;
 }
 
-extern "C" void TestMultiPatch_write_test_data(CCTK_ARGUMENTS) {
-  DECLARE_CCTK_ARGUMENTSX_TestMultiPatch_write_test_data;
+extern "C" void CapyrX_TestMultiPatch_write_test_data(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTSX_CapyrX_TestMultiPatch_write_test_data;
   DECLARE_CCTK_PARAMETERS;
 
   if (CCTK_Equals(test_data, "standing wave")) {
@@ -338,8 +338,8 @@ extern "C" void TestMultiPatch_write_test_data(CCTK_ARGUMENTS) {
   }
 }
 
-extern "C" void TestMultiPatch_compute_interp_error(CCTK_ARGUMENTS) {
-  DECLARE_CCTK_ARGUMENTSX_TestMultiPatch_compute_interp_error;
+extern "C" void CapyrX_TestMultiPatch_compute_interp_error(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTSX_CapyrX_TestMultiPatch_compute_interp_error;
   DECLARE_CCTK_PARAMETERS;
 
   if (CCTK_Equals(test_data, "standing wave")) {
@@ -377,8 +377,8 @@ extern "C" void TestMultiPatch_compute_interp_error(CCTK_ARGUMENTS) {
   }
 }
 
-extern "C" void TestMultiPatch_compute_deriv_error(CCTK_ARGUMENTS) {
-  DECLARE_CCTK_ARGUMENTSX_TestMultiPatch_compute_deriv_error;
+extern "C" void CapyrX_TestMultiPatch_compute_deriv_error(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTSX_CapyrX_TestMultiPatch_compute_deriv_error;
   DECLARE_CCTK_PARAMETERS;
 
   if (CCTK_Equals(test_data, "standing wave")) {
@@ -472,7 +472,7 @@ extern "C" void TestMultiPatch_compute_deriv_error(CCTK_ARGUMENTS) {
   }
 }
 
-extern "C" void TestMultiPatch_sync(CCTK_ARGUMENTS) {
+extern "C" void CapyrX_TestMultiPatch_sync(CCTK_ARGUMENTS) {
   // Do nothing
 }
 

@@ -9,6 +9,8 @@
 
 #include <loop_device.hxx>
 
+#include <cmath>
+
 namespace CapyrX::MultiPatch {
 
 std::unique_ptr<PatchSystem> g_patch_system{nullptr};
@@ -297,6 +299,41 @@ extern "C" void CapyrX_MultiPatch_Coordinates_Setup(CCTK_ARGUMENTS) {
 extern "C" void CapyrX_MultiPatch_Check_Parameters(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTSX_CapyrX_MultiPatch_Check_Parameters;
   DECLARE_CCTK_PARAMETERS;
+}
+
+extern "C" void CapyrX_MultiPatch_Run_Unit_Tests(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_PARAMETERS;
+
+  if (CCTK_EQUALS(patch_system, "none")) {
+    return;
+
+  } else if (CCTK_EQUALS(patch_system, "Cartesian")) {
+    CCTK_VINFO("Running unit tests for patch \"%s\"", patch_system);
+
+    Cartesian::PatchParams par{
+        .ncells_i = cartesian_ncells_i,
+        .ncells_j = cartesian_ncells_j,
+        .ncells_k = cartesian_ncells_k,
+
+        .xmin = cartesian_xmin,
+        .ymin = cartesian_xmin,
+        .zmin = cartesian_xmin,
+
+        .xmax = cartesian_xmax,
+        .ymax = cartesian_xmax,
+        .zmax = cartesian_xmax,
+    };
+
+    const auto pass{Cartesian::unit_test(test_repetitions, test_seed, par)};
+
+    if (pass) {
+      CCTK_VINFO("Unit tests for patch \"%s\" have \033[1;32mPASSED\033[0m",
+                 patch_system);
+    }
+
+  } else {
+    CCTK_VERROR("Unknown patch system \"%s\"", patch_system);
+  }
 }
 
 } // namespace CapyrX::MultiPatch

@@ -3,28 +3,28 @@
 STORAGE: test_data
 STORAGE: error
 
-SCHEDULE TestMultiPatch_write_test_data AT initial
+SCHEDULE CapyrX_TestMultiPatch_write_test_data AT initial
 {
   LANG: C
   READS: CoordinatesX::vertex_coords(interior)
   WRITES: test_data(interior)
 } "Fill test data"
 
-SCHEDULE TestMultiPatch_sync AS TestMultiPatch_sync_test_data AT initial AFTER TestMultiPatch_write_test_data
+SCHEDULE CapyrX_TestMultiPatch_sync AS TestMultiPatch_sync_test_data AT initial AFTER TestMultiPatch_write_test_data
 {
   LANG: C
   OPTIONS: global
   SYNC: test_data
 } "Synchronizes grid functions"
 
-SCHEDULE TestMultiPatch_compute_interp_error AT initial AFTER TestMultiPatch_sync_test_data
+SCHEDULE CapyrX_TestMultiPatch_compute_interp_error AT initial AFTER TestMultiPatch_sync_test_data
 {
   LANG: C
   READS: test_data(everywhere) CoordinatesX::vertex_coords(everywhere)
   WRITES: interp(everywhere)
 } "Compute interpolation error"
 
-SCHEDULE TestMultiPatch_compute_deriv_error AT initial AFTER TestMultiPatch_compute_interp_error
+SCHEDULE CapyrX_TestMultiPatch_compute_deriv_error AT initial AFTER TestMultiPatch_compute_interp_error
 {
   LANG: C
   READS: test_data(everywhere)
@@ -42,7 +42,7 @@ SCHEDULE TestMultiPatch_compute_deriv_error AT initial AFTER TestMultiPatch_comp
   WRITES: d2fdyz(interior)
 } "Compute derivative error"
 
-SCHEDULE TestMultiPatch_sync AS TestMultiPatch_sync_error AT initial AFTER TestMultiPatch_compute_deriv_error
+SCHEDULE CapyrX_TestMultiPatch_sync AS CapyrX_TestMultiPatch_sync_error AT initial AFTER TestMultiPatch_compute_deriv_error
 {
   LANG: C
   OPTIONS: global

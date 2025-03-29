@@ -11,7 +11,19 @@ BOOLEAN verbose "Enable verbose output"
 {
 } no
 
+CCTK_BOOLEAN run_unit_tests "Wether or not to perform tests on the coordinate transformation routines"
+{
+} no
 
+INT test_repetitions "How many times to repeat each test"
+{
+  1:* :: "Greater or equal 1"
+} 10
+
+INT test_seed "Integer seed for random generator in unit tests"
+{
+  0:* :: "Positive"
+} 100
 
 # Cartesian patch system
 

@@ -8,7 +8,8 @@ SCHEDULE CapyrX_MultiPatch_Setup AT startup BEFORE Driver_Startup
   LANG: C
 } "Initialize multi-patch system"
 
-if (!CCTK_EQUALS(patch_system, "none")) {
+if (!CCTK_EQUALS(patch_system, "none"))
+{
   SCHEDULE CapyrX_MultiPatch_Coordinates_Setup AT basegrid AFTER Coordinates_Setup
   {
     LANG: C
@@ -24,4 +25,13 @@ if (!CCTK_EQUALS(patch_system, "none")) {
     LANG: C
     OPTIONS: meta
   } "Check multipatch parameters"
+
+  if (run_unit_tests)
+  {
+    SCHEDULE CapyrX_MultiPatch_Run_Unit_Tests AT wragh
+    {
+      LANG: C
+      OPTIONS: meta
+    } "Perform Cartesian patch system tests"
+  }
 }

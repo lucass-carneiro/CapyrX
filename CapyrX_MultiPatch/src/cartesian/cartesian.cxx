@@ -77,8 +77,9 @@ auto unit_test(std::size_t repetitions, std::size_t seed,
   // local2global(global2local(global)) == global ?
   for (CCTK_INT i = 0; i < repetitions; i++) {
     const svec_t g_i{x_dist(engine), y_dist(engine), z_dist(engine)};
-    const auto [p, l] = Cartesian::global2local(par, g_i);
-    const auto g_f{Cartesian::local2global(par, p, l)};
+    const auto l{Cartesian::global2local(par, g_i)};
+    const auto g_f{
+        Cartesian::local2global(par, std::get<0>(l), std::get<1>(l))};
 
     const auto passed{isapprox(g_i(0), g_f(0)) && isapprox(g_i(1), g_f(1)) &&
                       isapprox(g_i(2), g_f(2))};
@@ -95,8 +96,12 @@ auto unit_test(std::size_t repetitions, std::size_t seed,
   // global2local(local2global(local)) == global ?
   for (CCTK_INT i = 0; i < repetitions; i++) {
     const svec_t l_i{x_dist(engine), y_dist(engine), z_dist(engine)};
+
     const auto g{Cartesian::local2global(par, 0, l_i)};
-    const auto [p, l_f] = Cartesian::global2local(par, g);
+    const auto l{Cartesian::global2local(par, g)};
+
+    const auto &p{std::get<0>(l)};
+    const auto &l_f{std::get<1>(l)};
 
     const auto passed{isapprox(l_i(0), l_f(0)) && isapprox(l_i(1), l_f(1)) &&
                       isapprox(l_i(2), l_f(2)) && p == 0};

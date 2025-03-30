@@ -71,3 +71,25 @@ REAL cartesian_zmax "zmax"
 {
   *:* :: ""
 } +1.0
+
+# Cubed Sphere patch system
+
+REAL cubed_sphere_inner_boundary_radius  "Half of the length of the side of the central cartesian cube"
+{
+  0:* :: "Positive"
+} 1.0
+
+REAL cubed_sphere_outer_boundary_radius "Radius where the outer boundaries of the cake will be placed."
+{
+  0:* :: "Positive"
+} 4.0
+
+INT cubed_sphere_angular_cells "Number of cells in the angular direction"
+{
+  0:* :: "Positive"
+} 10
+
+INT cubed_sphere_radial_cells "Number of cells in the radial direction" 
+{
+  0:* :: "Positive"
+} 10

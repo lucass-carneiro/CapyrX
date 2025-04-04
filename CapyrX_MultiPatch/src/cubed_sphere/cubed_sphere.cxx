@@ -69,10 +69,14 @@ get_owner_patch(const PatchParams &par,
     return PatchPiece::minus_z;
   }
 
-  // We don't know where we are. This is unexpected
+// We don't know where we are. This is unexpected
+#ifndef __CUDACC__
   CCTK_VINFO("Coordinate triplet (%.16f, %.16f, %.16f) cannot be located "
              "within the simulation domain",
              x, y, z);
+#else
+  assert(false);
+#endif
 
   return PatchPiece::unknown;
 }
@@ -167,7 +171,11 @@ global2local(const PatchParams &par,
     break;
 
   default:
+#ifndef __CUDACC__
     CCTK_VERROR("Unable to compute global2local: Unknown patch piece");
+#else
+    assert(false);
+#endif
     break;
   }
 
@@ -271,7 +279,11 @@ CCTK_HOST CCTK_DEVICE auto local2global(const PatchParams &par, int patch,
     break;
 
   default:
+#ifndef __CUDACC__
     CCTK_VERROR("Unable to compute local2global: Unknown patch piece");
+#else
+    assert(false);
+#endif
     break;
   }
 
@@ -1023,7 +1035,11 @@ cubed_sphere_jacs(const PatchParams &par, int patch,
     break;
 
   default:
+#ifndef __CUDACC__
     CCTK_VERROR("Unable to compute jacobians: Unknown patch piece");
+#else
+    assert(false);
+#endif
     break;
   }
 
@@ -1083,7 +1099,11 @@ static inline auto make_patch(const PatchPiece &p,
     break;
 
   default:
+#ifndef __CUDACC__
     CCTK_VERROR("Unable to create patch. Unknown patch piece");
+#else
+    assert(false);
+#endif
     break;
   }
 

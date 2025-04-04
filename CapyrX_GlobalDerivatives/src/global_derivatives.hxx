@@ -2,7 +2,6 @@
 #define CAPYRX_GLOBAL_DERIVATIVES_HXX
 
 #include <cctk.h>
-#include <loop_device.hxx>
 
 namespace CapyrX::MultiPatch::GlobalDerivatives {
 

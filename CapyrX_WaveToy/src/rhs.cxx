@@ -2,35 +2,49 @@
 #include <cctk_Arguments.h>
 #include <cctk_Parameters.h>
 
-#include <cstddef>
 #include <loop_device.hxx>
 #include <global_derivatives.hxx>
-#include <local_derivatives.hxx>
 
-namespace MultiPatchWaveToy {
+namespace CapyrX::WaveToy {
 
-enum class fd_dir : std::size_t { a = 0, b = 1, c = 2 };
-
-template <fd_dir dir>
 static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
-c4o(const Loop::PointDesc &p,
-    const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
-  const auto d{static_cast<std::size_t>(dir)};
-  const auto num{gf(-2 * p.DI[d] + p.I) - 8 * gf(-p.DI[d] + p.I) +
-                 8 * gf(p.DI[d] + p.I) - gf(2 * p.DI[d] + p.I)};
-  const auto den{1.0 / (12 * p.DX[d])};
+    CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+    c4o_1_0_0(const Loop::PointDesc &p,
+              const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
+  const auto num{gf(-2 * p.DI[0] + p.I) - 8 * gf(-p.DI[0] + p.I) +
+                 8 * gf(p.DI[0] + p.I) - gf(2 * p.DI[0] + p.I)};
+  const auto den{1.0 / (12 * p.DX[0])};
   return num * den;
 }
 
-extern "C" void MultiPatchWaveToy_RHS(CCTK_ARGUMENTS) {
-  DECLARE_CCTK_ARGUMENTSX_MultiPatchWaveToy_RHS;
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+c4o_0_1_0(const Loop::PointDesc &p,
+          const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
+  const auto num{gf(-2 * p.DI[1] + p.I) - 8 * gf(-p.DI[1] + p.I) +
+                 8 * gf(p.DI[1] + p.I) - gf(2 * p.DI[1] + p.I)};
+  const auto den{1.0 / (12 * p.DX[1])};
+  return num * den;
+}
+
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+c4o_0_0_1(const Loop::PointDesc &p,
+          const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
+  const auto num{gf(-2 * p.DI[2] + p.I) - 8 * gf(-p.DI[2] + p.I) +
+                 8 * gf(p.DI[2] + p.I) - gf(2 * p.DI[2] + p.I)};
+  const auto den{1.0 / (12 * p.DX[2])};
+  return num * den;
+}
+
+extern "C" void CapyrX_WaveToy_RHS(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTSX_CapyrX_WaveToy_RHS;
   DECLARE_CCTK_PARAMETERS;
 
-  using namespace MultiPatch::GlobalDerivatives;
+  using namespace Loop;
+  using namespace CapyrX::MultiPatch::GlobalDerivatives;
 
   grid.loop_int_device<0, 0, 0>(
-      grid.nghostzones,
-      [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+      grid.nghostzones, [=] CCTK_HOST CCTK_DEVICE(
+                            const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
         const LocalFirstDerivatives lPi{c4o_1_0_0(p, Pi), c4o_0_1_0(p, Pi),
                                         c4o_0_0_1(p, Pi)};
 
@@ -43,7 +57,7 @@ extern "C" void MultiPatchWaveToy_RHS(CCTK_ARGUMENTS) {
         const LocalFirstDerivatives lDz{c4o_1_0_0(p, Dz), c4o_0_1_0(p, Dz),
                                         c4o_0_0_1(p, Dz)};
 
-        const Jacobians jac{VERTEX_JACOBIANS_FIRST(p)};
+        const Jacobians jac{VERTEX_JACOBIANS(p)};
 
         const auto gPi{project_first(lPi, jac)};
         const auto gDx{project_first(lDx, jac)};
@@ -58,8 +72,8 @@ extern "C" void MultiPatchWaveToy_RHS(CCTK_ARGUMENTS) {
       });
 }
 
-extern "C" void MultiPatchWaveToy_Sync(CCTK_ARGUMENTS) {
+extern "C" void CapyrX_WaveToy_Sync(CCTK_ARGUMENTS) {
   // Do nothing
 }
 
-} // namespace MultiPatchWaveToy
+} // namespace CapyrX::WaveToy

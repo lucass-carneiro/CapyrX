@@ -1,15 +1,13 @@
-# Interface definition for thorn MultiPatchWaveToy
+# Interface definition for thorn CapyrX_WaveToy
 # The implementatio will follow Eqs. (14)-(16) of 
 # http://arxiv.org/abs/gr-qc/0512001v1
 
-IMPLEMENTS: MultiPatchWaveToy
+IMPLEMENTS: CapyrX_WaveToy
 
 INHERITS: CoordinatesX MultiPatch
 
 USES INCLUDE HEADER: loop_device.hxx
-USES INCLUDE HEADER: vect.hxx
 USES INCLUDE HEADER: global_derivatives.hxx
-USES INCLUDE HEADER: local_derivatives.hxx
 
 INCLUDES HEADER: gaussian.hxx IN gaussian.hxx
 INCLUDES HEADER: standing_wave.hxx IN standing_wave.hxx

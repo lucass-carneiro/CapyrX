@@ -24,10 +24,15 @@ CarpetX::max_num_levels = 1
 CarpetX::ghost_size = 2
 
 CapyrX_MultiPatch::verbose        =  yes
-CapyrX_MultiPatch::patch_system   = "Cartesian"
+CapyrX_MultiPatch::patch_system   = "Cubed sphere"
 CapyrX_MultiPatch::run_unit_tests = yes
+
+CapyrX_MultiPatch::cubed_sphere_inner_boundary_radius = 1.0
+CapyrX_MultiPatch::cubed_sphere_outer_boundary_radius = 5.0
+CapyrX_MultiPatch::cubed_sphere_angular_cells         = 20
+CapyrX_MultiPatch::cubed_sphere_radial_cells          = 20
                                                                         
-CapyrX_TestMultiPatch::test_data = "parabola"
+CapyrX_TestMultiPatch::test_data = "standing wave"
 
 CarpetX::boundary_x = "dirichlet"
 CarpetX::boundary_y = "dirichlet"

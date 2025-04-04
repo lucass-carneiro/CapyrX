@@ -18,7 +18,7 @@ CCTK_BOOLEAN run_unit_tests "Wether or not to perform tests on the coordinate tr
 INT test_repetitions "How many times to repeat each test"
 {
   1:* :: "Greater or equal 1"
-} 10
+} 100
 
 INT test_seed "Integer seed for random generator in unit tests"
 {
@@ -87,9 +87,9 @@ REAL cubed_sphere_outer_boundary_radius "Radius where the outer boundaries of th
 INT cubed_sphere_angular_cells "Number of cells in the angular direction"
 {
   0:* :: "Positive"
-} 10
+} 20
 
 INT cubed_sphere_radial_cells "Number of cells in the radial direction" 
 {
   0:* :: "Positive"
-} 10
+} 20

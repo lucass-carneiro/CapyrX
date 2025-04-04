@@ -4,8 +4,8 @@ ActiveThorns = "
     TimerReport
     ODESolvers
     CoordinatesX
-    MultiPatch
-    MultiPatchWaveToy
+    CapyrX_MultiPatch
+    CapyrX_WaveToy
 "
 
 ###### Settings ######
@@ -17,6 +17,8 @@ $cfl = 0.25
 
 $r0 = 1.0
 $rf = 5.0
+
+$wave_k = 0.75
 ######################
 
 $dx = 2.0 * $r0 / $ncells
@@ -39,24 +41,18 @@ CarpetX::max_num_levels = 1
 
 ODESolvers::method = "RK4"
 
-MultiPatch::patch_system = "Cake"
-                                                                        
-MultiPatch::cake_inner_boundary_radius = $r0
-MultiPatch::cake_outer_boundary_radius = $rf
+CapyrX_MultiPatch::verbose        =  yes
+CapyrX_MultiPatch::patch_system   = "Cubed sphere"
 
-MultiPatch::cake_cartesian_ncells_i = $ncells
-MultiPatch::cake_cartesian_ncells_j = $ncells
-MultiPatch::cake_cartesian_ncells_k = $ncells
+CapyrX_MultiPatch::cubed_sphere_inner_boundary_radius = $r0
+CapyrX_MultiPatch::cubed_sphere_outer_boundary_radius = $rf
+CapyrX_MultiPatch::cubed_sphere_angular_cells         = $ncells
+CapyrX_MultiPatch::cubed_sphere_radial_cells          = $ncells
 
-MultiPatch::cake_angular_cells = $ncells
-MultiPatch::cake_radial_cells = $ncells
-
-MultiPatchWaveToy::initial_condition = "Quadrupolar Gaussian"
-MultiPatchWaveToy::gaussian_width = $cfl / sqrt(2)
-MultiPatchWaveToy::quad_gaussian_R0 = 2.5
-MultiPatchWaveToy::quad_gaussian_x0 = 0.0
-MultiPatchWaveToy::quad_gaussian_y0 = 0.0
-MultiPatchWaveToy::quad_gaussian_z0 = 0.0
+CapyrX_WaveToy::initial_condition = "standing wave"
+CapyrX_WaveToy::wave_kx = $wave_k
+CapyrX_WaveToy::wave_ky = $wave_k
+CapyrX_WaveToy::wave_kz = $wave_k
 
 CarpetX::boundary_x = "dirichlet"
 CarpetX::boundary_y = "dirichlet"
@@ -76,8 +72,9 @@ CarpetX::out_tsv_vars = ""
 
 CarpetX::out_openpmd_vars = "
     CoordinatesX::vertex_coords
-    MultiPatchWaveToy::state
-    MultiPatchWaveToy::energy
+    Capyrx_WaveToy::state
+    Capyrx_WaveToy::energy
+    Capyrx_WaveToy::error
 "
 
 TimerReport::out_every = 1

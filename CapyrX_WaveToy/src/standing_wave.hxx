@@ -1,11 +1,13 @@
-#ifndef MULTIPATCH_WAVE_TOY_STANDING_WAVE_HXX
-#define MULTIPATCH_WAVE_TOY_STANDING_WAVE_HXX
+#ifndef CAPYRX_WAVETOY_STANDING_WAVE_HXX
+#define CAPYRX_WAVETOY_STANDING_WAVE_HXX
 
 #include <cctk.h>
 
+#include <loop_device.hxx>
+
 #include <cmath>
 
-namespace MultiPatchWaveToy::sw {
+namespace CapyrX::WaveToy::sw {
 
 template <typename T>
 static inline auto CCTK_HOST CCTK_DEVICE phi(T A, T kx, T ky, T kz, T t, T x,
@@ -117,6 +119,6 @@ static inline auto CCTK_HOST CCTK_DEVICE dDzdz(T A, T kx, T ky, T kz, T t, T x,
          cos(2 * kx * pi * x) * cos(2 * ky * pi * y) * cos(2 * kz * pi * z);
 }
 
-} // namespace MultiPatchWaveToy::sw
+} // namespace CapyrX::WaveToy::sw
 
-#endif // MULTIPATCH_WAVE_TOY_STANDING_WAVE_HXX
+#endif // CAPYRX_WAVETOY_STANDING_WAVE_HXX

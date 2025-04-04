@@ -9,18 +9,18 @@
 #include "gaussian.hxx"
 #include "quad_gaussian.hxx"
 
-namespace MultiPatchWaveToy {
+namespace CapyrX::WaveToy {
 
-using namespace Arith;
-
-extern "C" void MultiPatchWaveToy_Initial(CCTK_ARGUMENTS) {
-  DECLARE_CCTK_ARGUMENTSX_MultiPatchWaveToy_Initial;
+extern "C" void CapyrX_WaveToy_Initial(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTSX_CapyrX_WaveToy_Initial;
   DECLARE_CCTK_PARAMETERS;
 
+  using namespace Loop;
+
   if (CCTK_EQUALS(initial_condition, "standing wave")) {
-    grid.loop_int_device<0, 0, 0>(
-        grid.nghostzones,
-        [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+    grid.loop_all_device<0, 0, 0>(
+        grid.nghostzones, [=] CCTK_HOST CCTK_DEVICE(
+                              const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
           const auto t{cctk_time};
           const auto x{vcoordx(p.I)};
           const auto y{vcoordy(p.I)};
@@ -34,9 +34,9 @@ extern "C" void MultiPatchWaveToy_Initial(CCTK_ARGUMENTS) {
         });
 
   } else if (CCTK_EQUALS(initial_condition, "Gaussian")) {
-    grid.loop_int_device<0, 0, 0>(
-        grid.nghostzones,
-        [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+    grid.loop_all_device<0, 0, 0>(
+        grid.nghostzones, [=] CCTK_HOST CCTK_DEVICE(
+                              const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
           const auto t{cctk_time};
           const auto x{vcoordx(p.I)};
           const auto y{vcoordy(p.I)};
@@ -48,6 +48,7 @@ extern "C" void MultiPatchWaveToy_Initial(CCTK_ARGUMENTS) {
           Dy(p.I) = gauss::Dy(amplitude, gaussian_width, t, x, y, z);
           Dz(p.I) = gauss::Dz(amplitude, gaussian_width, t, x, y, z);
         });
+
   } else if (CCTK_EQUALS(initial_condition, "Quadrupolar Gaussian")) {
     constexpr auto eps{std::numeric_limits<double>::epsilon()};
     const auto sigma{gaussian_width};
@@ -56,9 +57,9 @@ extern "C" void MultiPatchWaveToy_Initial(CCTK_ARGUMENTS) {
     const auto y0{quad_gaussian_y0};
     const auto z0{quad_gaussian_z0};
 
-    grid.loop_int_device<0, 0, 0>(
-        grid.nghostzones,
-        [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+    grid.loop_all_device<0, 0, 0>(
+        grid.nghostzones, [=] CCTK_HOST CCTK_DEVICE(
+                              const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
           using std::sqrt;
           const auto x{vcoordx(p.I)};
           const auto y{vcoordy(p.I)};
@@ -81,9 +82,10 @@ extern "C" void MultiPatchWaveToy_Initial(CCTK_ARGUMENTS) {
             Dz(p.I) = quad_gauss::Dz(sigma, R0, x0, y0, z0, x, y, z);
           }
         });
+
   } else {
     CCTK_ERROR("Unknown initial condition");
   }
 }
 
-} // namespace MultiPatchWaveToy
+} // namespace CapyrX::WaveToy

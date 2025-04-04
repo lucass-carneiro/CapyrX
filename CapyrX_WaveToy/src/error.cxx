@@ -7,18 +7,18 @@
 #include "standing_wave.hxx"
 #include "gaussian.hxx"
 
-namespace MultiPatchWaveToy {
+namespace CapyrX::WaveToy {
 
-using namespace Arith;
-
-extern "C" void MultiPatchWaveToy_Error(CCTK_ARGUMENTS) {
-  DECLARE_CCTK_ARGUMENTSX_MultiPatchWaveToy_Error;
+extern "C" void CapyrX_WaveToy_Error(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTSX_CapyrX_WaveToy_Error;
   DECLARE_CCTK_PARAMETERS;
+
+  using namespace Loop;
 
   if (CCTK_EQUALS(initial_condition, "standing wave")) {
     grid.loop_int_device<0, 0, 0>(
-        grid.nghostzones,
-        [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+        grid.nghostzones, [=] CCTK_HOST CCTK_DEVICE(
+                              const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
           using std::fabs;
 
           const auto t{cctk_time};
@@ -52,8 +52,8 @@ extern "C" void MultiPatchWaveToy_Error(CCTK_ARGUMENTS) {
 
   } else if (CCTK_EQUALS(initial_condition, "Gaussian")) {
     grid.loop_int_device<0, 0, 0>(
-        grid.nghostzones,
-        [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+        grid.nghostzones, [=] CCTK_HOST CCTK_DEVICE(
+                              const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
           using std::fabs;
 
           const auto t{cctk_time};
@@ -89,4 +89,4 @@ extern "C" void MultiPatchWaveToy_Error(CCTK_ARGUMENTS) {
   }
 }
 
-} // namespace MultiPatchWaveToy
+} // namespace CapyrX::WaveToy

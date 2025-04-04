@@ -1,26 +1,36 @@
-# Schedule definitions for thorn MultiPatchWaveToy
+# Schedule definitions for thorn CapyrX_WaveToy
 
 STORAGE: state rhs energy error
 
-# Init
-SCHEDULE MultiPatchWaveToy_Initial AT initial
-{
-  LANG: C
-  READS: CoordinatesX::vertex_coords(interior)
-  WRITES: state(interior)
-} "Initialize scalar wave state"
-
-
-
-# Step
-SCHEDULE MultiPatchWaveToy_Sync AT PostRegrid
+# Sync points
+SCHEDULE CapyrX_WaveToy_Sync IN ODESolvers_PostStep
 {
   LANG: C
   OPTIONS: global
   SYNC: state
 } "Sync the scalar wave state"
 
-SCHEDULE MultiPatchWaveToy_RHS IN ODESolvers_RHS
+SCHEDULE CapyrX_WaveToy_Sync AT PostRegrid
+{
+  LANG: C
+  OPTIONS: global
+  SYNC: state
+} "Sync the scalar wave state"
+
+
+
+# Init
+SCHEDULE CapyrX_WaveToy_Initial AT initial
+{
+  LANG: C
+  READS: CoordinatesX::vertex_coords(everywhere)
+  WRITES: state(everywhere)
+} "Initialize scalar wave state"
+
+
+
+# Step
+SCHEDULE CapyrX_WaveToy_RHS IN ODESolvers_RHS
 {
   LANG: C
   READS: state(everywhere)
@@ -28,19 +38,12 @@ SCHEDULE MultiPatchWaveToy_RHS IN ODESolvers_RHS
   WRITES: rhs(interior)
 } "Calculate scalar wave RHS"
 
-SCHEDULE MultiPatchWaveToy_Sync IN ODESolvers_PostStep
-{
-  LANG: C
-  OPTIONS: global
-  SYNC: state
-} "Sync the scalar wave state"
-
 
 
 # Error and energy
 if (CCTK_EQUALS(initial_condition, "standing wave") || CCTK_EQUALS(initial_condition, "Gaussian"))
 {
-  SCHEDULE MultiPatchWaveToy_Error IN ODESolvers_PostStep AFTER MultiPatchWaveToy_Sync 
+  SCHEDULE CapyrX_WaveToy_Error IN ODESolvers_PostStep AFTER CapyrX_WaveToy_Sync 
   {
     LANG: C
     READS: CoordinatesX::vertex_coords(interior) state(interior)
@@ -49,7 +52,7 @@ if (CCTK_EQUALS(initial_condition, "standing wave") || CCTK_EQUALS(initial_condi
   } "Calculate error in scalar wave evolution"
 }
 
-SCHEDULE MultiPatchWaveToy_Energy IN ODESolvers_PostStep AFTER MultiPatchWaveToy_Sync 
+SCHEDULE CapyrX_WaveToy_Energy IN ODESolvers_PostStep AFTER CapyrX_WaveToy_Sync 
 {
   LANG: C
   READS: state(interior)

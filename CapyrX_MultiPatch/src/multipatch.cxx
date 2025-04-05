@@ -238,8 +238,8 @@ extern "C" int CapyrX_MultiPatch_Setup() {
 
 #define COORDINATE_SETUP_KERNEL(d2local_dglobal2_func)                         \
   grid.loop_all_device<0, 0, 0>(                                               \
-      grid.nghostzones,                                                        \
-      [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE { \
+      grid.nghostzones, [=] CCTK_HOST CCTK_DEVICE(                             \
+                            const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE { \
         const svec_t a{p.x, p.y, p.z};                                         \
                                                                                \
         const auto d2J_tuple{d2local_dglobal2_func(par, p.patch, a)};          \
@@ -283,8 +283,8 @@ extern "C" int CapyrX_MultiPatch_Setup() {
       });                                                                      \
                                                                                \
   grid.loop_all_device<1, 1, 1>(                                               \
-      grid.nghostzones,                                                        \
-      [=] ARITH_DEVICE(const Loop::PointDesc &p) ARITH_INLINE {                \
+      grid.nghostzones, [=] CCTK_HOST CCTK_DEVICE(                             \
+                            const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE { \
         const svec_t a{p.x, p.y, p.z};                                         \
                                                                                \
         const auto d2J_tuple{d2local_dglobal2_func(par, p.patch, a)};          \
@@ -307,6 +307,8 @@ extern "C" int CapyrX_MultiPatch_Setup() {
 extern "C" void CapyrX_MultiPatch_Coordinates_Setup(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTSX_CapyrX_MultiPatch_Coordinates_Setup;
   DECLARE_CCTK_PARAMETERS;
+
+  using namespace Loop;
 
   switch (g_patch_system->id_tag) {
 

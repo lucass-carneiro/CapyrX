@@ -21,8 +21,8 @@ enum class PatchPiece : int {
 };
 
 static inline CCTK_HOST CCTK_DEVICE auto
-get_owner_patch(const PatchParams &par,
-                const svec_t &global_coords) -> PatchPiece {
+get_owner_patch(const PatchParams &par, const svec_t &global_coords)
+    -> PatchPiece {
   using std::distance;
   using std::fabs;
   using std::max_element;
@@ -81,9 +81,9 @@ get_owner_patch(const PatchParams &par,
   return PatchPiece::unknown;
 }
 
-CCTK_HOST CCTK_DEVICE auto
-global2local(const PatchParams &par,
-             const svec_t &global_coords) -> std_tuple<int, svec_t> {
+CCTK_HOST CCTK_DEVICE auto global2local(const PatchParams &par,
+                                        const svec_t &global_coords)
+    -> std_tuple<int, svec_t> {
   using std::pow;
   using std::sqrt;
 
@@ -1046,9 +1046,9 @@ cubed_sphere_jacs(const PatchParams &par, int patch,
   return std_make_tuple(J, dJ);
 }
 
-CCTK_HOST CCTK_DEVICE auto
-dlocal_dglobal(const PatchParams &par, int patch,
-               const svec_t &local_coords) -> std_tuple<svec_t, jac_t> {
+CCTK_HOST CCTK_DEVICE auto dlocal_dglobal(const PatchParams &par, int patch,
+                                          const svec_t &local_coords)
+    -> std_tuple<svec_t, jac_t> {
   const auto data{d2local_dglobal2(par, patch, local_coords)};
   return std_make_tuple(std::get<0>(data), std::get<1>(data));
 }
@@ -1064,48 +1064,9 @@ CCTK_HOST CCTK_DEVICE auto d2local_dglobal2(const PatchParams &par, int patch,
                         std::get<1>(jacobian_results));
 }
 
-static inline auto make_patch(const PatchPiece &p,
-                              const PatchParams &par) -> Patch {
+static inline auto make_patch(const PatchPiece &p, const PatchParams &par)
+    -> Patch {
   Patch patch{};
-
-  switch (p) {
-
-  case PatchPiece::cartesian:
-    patch.name = "Cartesian";
-    break;
-
-  case PatchPiece::plus_x:
-    patch.name = "Plus X";
-    break;
-
-  case PatchPiece::minus_x:
-    patch.name = "Minus X";
-    break;
-
-  case PatchPiece::plus_y:
-    patch.name = "Plus Y";
-    break;
-
-  case PatchPiece::minus_y:
-    patch.name = "Minus Y";
-    break;
-
-  case PatchPiece::plus_z:
-    patch.name = "Plus Z";
-    break;
-
-  case PatchPiece::minus_z:
-    patch.name = "Minus Z";
-    break;
-
-  default:
-#ifndef __CUDACC__
-    CCTK_VERROR("Unable to create patch. Unknown patch piece");
-#else
-    assert(false);
-#endif
-    break;
-  }
 
   patch.ncells = {par.angular_cells, par.angular_cells, par.radial_cells};
 
@@ -1123,28 +1084,52 @@ static inline auto make_patch(const PatchPiece &p,
   PatchFace pz{false, static_cast<int>(PatchPiece::plus_z)};
   PatchFace mz{false, static_cast<int>(PatchPiece::minus_z)};
 
-  if (p == PatchPiece::cartesian) {
+  switch (p) {
+
+  case PatchPiece::cartesian:
+    patch.name = "Cartesian";
     patch.ncells = {par.angular_cells, par.angular_cells, par.angular_cells};
     patch.is_cartesian = true;
     patch.faces = {{mx, my, mz}, {px, py, pz}};
+    break;
 
-  } else if (p == PatchPiece::plus_x) {
+  case PatchPiece::plus_x:
+    patch.name = "Plus X";
     patch.faces = {{mz, my, co}, {pz, py, ob}};
+    break;
 
-  } else if (p == PatchPiece::minus_x) {
+  case PatchPiece::minus_x:
+    patch.name = "Minus X";
     patch.faces = {{mz, py, co}, {pz, my, ob}};
+    break;
 
-  } else if (p == PatchPiece::plus_y) {
+  case PatchPiece::plus_y:
+    patch.name = "Plus Y";
     patch.faces = {{mz, px, co}, {pz, mx, ob}};
+    break;
 
-  } else if (p == PatchPiece::minus_y) {
+  case PatchPiece::minus_y:
+    patch.name = "Minus Y";
     patch.faces = {{mz, mx, co}, {pz, px, ob}};
+    break;
 
-  } else if (p == PatchPiece::plus_z) {
+  case PatchPiece::plus_z:
+    patch.name = "Plus Z";
     patch.faces = {{px, my, co}, {mx, py, ob}};
+    break;
 
-  } else if (p == PatchPiece::minus_z) {
+  case PatchPiece::minus_z:
+    patch.name = "Minus Z";
     patch.faces = {{mx, my, co}, {px, py, ob}};
+    break;
+
+  default:
+#ifndef __CUDACC__
+    CCTK_VERROR("Unable to create patch. Unknown patch piece");
+#else
+    assert(false);
+#endif
+    break;
   }
 
   return patch;
@@ -1158,8 +1143,8 @@ auto make_system(const PatchParams &par) -> PatchSystem {
                                  make_patch(PatchPiece::minus_x, par),
                                  make_patch(PatchPiece::plus_y, par),
                                  make_patch(PatchPiece::minus_y, par),
-                                 make_patch(PatchPiece::plus_z, par),
-                                 make_patch(PatchPiece::minus_z, par)}};
+                                 make_patch(PatchPiece::minus_z, par),
+                                 make_patch(PatchPiece::plus_z, par)}};
 }
 
 template <typename fp_type>
@@ -1240,6 +1225,21 @@ auto unit_test(std::size_t repetitions, std::size_t seed,
           "\033[1;31mFAILED\033[0m. Expected (%.16f, %.16f, %.16f) patch %i "
           "but got (%.16f, %.16f, %.16f) patch %i",
           i, l_i(0), l_i(1), l_i(2), p_i, l_f(0), l_f(1), l_f(2), p_f);
+      all_pass = false;
+    }
+  }
+
+  // Patch owner
+  {
+    const svec_t global_coords{
+        par.inner_boundary + (par.outer_boundary - par.inner_boundary) / 2.0,
+        0.0, 0.0};
+    const auto owner{get_owner_patch(par, global_coords)};
+
+    if (owner != PatchPiece::plus_x) {
+      CCTK_VINFO(
+          "Patch owner test failed. Expected owner patch %i but got patch %i",
+          static_cast<int>(PatchPiece::plus_x), static_cast<int>(owner));
       all_pass = false;
     }
   }

@@ -28,9 +28,9 @@ CapyrX_MultiPatch::patch_system   = "Cubed sphere"
 CapyrX_MultiPatch::run_unit_tests = yes
 
 CapyrX_MultiPatch::cubed_sphere_inner_boundary_radius = 1.0
-CapyrX_MultiPatch::cubed_sphere_outer_boundary_radius = 5.0
-CapyrX_MultiPatch::cubed_sphere_angular_cells         = 20
-CapyrX_MultiPatch::cubed_sphere_radial_cells          = 20
+CapyrX_MultiPatch::cubed_sphere_outer_boundary_radius = 4.0
+CapyrX_MultiPatch::cubed_sphere_angular_cells         = 40
+CapyrX_MultiPatch::cubed_sphere_radial_cells          = 40
                                                                         
 CapyrX_TestMultiPatch::test_data = "standing wave"
 
@@ -46,6 +46,12 @@ IO::out_every = 2
 
 CarpetX::out_tsv = yes
 CarpetX::out_tsv_vars = "
+  CoordinatesX::vertex_coords
+  CapyrX_TestMultiPatch::test_data
+  CapyrX_TestMultiPatch::error
+"
+
+CarpetX::out_silo_vars = "
   CoordinatesX::vertex_coords
   CapyrX_TestMultiPatch::test_data
   CapyrX_TestMultiPatch::error

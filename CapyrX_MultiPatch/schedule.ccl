@@ -10,7 +10,7 @@ SCHEDULE CapyrX_MultiPatch_Setup AT startup BEFORE Driver_Startup
 
 if (!CCTK_EQUALS(patch_system, "none"))
 {
-  SCHEDULE CapyrX_MultiPatch_Coordinates_Setup AT basegrid AFTER Coordinates_Setup
+  SCHEDULE CapyrX_MultiPatch_Coordinates_Setup AT basegrid AFTER CoordinatesX_Setup
   {
     LANG: C
     WRITES: CoordinatesX::vertex_coords(everywhere)

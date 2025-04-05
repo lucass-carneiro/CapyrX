@@ -41,7 +41,7 @@ struct Patch {
    * The number of cells in the logical x, y and z dimentions that the patch wil
    * contain.
    */
-  ivec_t ncells{0};
+  ivec_t ncells{0, 0, 0};
 
   /**
    * Lower coordinate boundary for each logical x, y, z dimention in the patch

@@ -9,23 +9,24 @@ ActiveThorns = "
 "
 
 ###### Settings ######
-$final_time = 5.0
-$out_every_time = 0.5
+$final_time = 1.0
+$out_every_it = 1
 
-$ncells = 80
+$r0 = 0.25
+$rf = 4.0 * $r0
+
+$radial_cells = 20
+$angular_cells = 10
+
 $cfl = 0.25
 
-$r0 = 1.0
-$rf = 5.0
-
-$wave_k = 0.75
+$wave_k = 0.50
 ######################
 
-$dx = 2.0 * $r0 / $ncells
+$dx = 2.0 / $angular_cells
 $dt = $cfl * $dx
 
 $itlast = ceil($final_time / $dt)
-$out_every_it = ceil($out_every_time / $dt)
 
 Cactus::presync_mode = "mixed-error"
 Cactus::cctk_show_schedule = yes
@@ -46,8 +47,8 @@ CapyrX_MultiPatch::patch_system   = "Cubed sphere"
 
 CapyrX_MultiPatch::cubed_sphere_inner_boundary_radius = $r0
 CapyrX_MultiPatch::cubed_sphere_outer_boundary_radius = $rf
-CapyrX_MultiPatch::cubed_sphere_angular_cells         = $ncells
-CapyrX_MultiPatch::cubed_sphere_radial_cells          = $ncells
+CapyrX_MultiPatch::cubed_sphere_angular_cells         = $angular_cells
+CapyrX_MultiPatch::cubed_sphere_radial_cells          = $radial_cells
 
 CapyrX_WaveToy::initial_condition = "standing wave"
 CapyrX_WaveToy::wave_kx = $wave_k
@@ -70,8 +71,7 @@ IO::out_every = $out_every_it
 CarpetX::out_tsv = no
 CarpetX::out_tsv_vars = ""
 
-CarpetX::out_openpmd_vars = "
-    CoordinatesX::vertex_coords
+CarpetX::out_silo_vars = "
     Capyrx_WaveToy::state
     Capyrx_WaveToy::energy
     Capyrx_WaveToy::error

@@ -16,7 +16,7 @@ extern "C" void CapyrX_WaveToy_Error(CCTK_ARGUMENTS) {
   using namespace Loop;
 
   if (CCTK_EQUALS(initial_condition, "standing wave")) {
-    grid.loop_int_device<0, 0, 0>(
+    grid.loop_all_device<0, 0, 0>(
         grid.nghostzones, [=] CCTK_HOST CCTK_DEVICE(
                               const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
           using std::fabs;

@@ -2,15 +2,8 @@
 
 STORAGE: state rhs energy error
 
-# Sync points
+# Sync
 SCHEDULE CapyrX_WaveToy_Sync IN ODESolvers_PostStep
-{
-  LANG: C
-  OPTIONS: global
-  SYNC: state
-} "Sync the scalar wave state"
-
-SCHEDULE CapyrX_WaveToy_Sync AT PostRegrid
 {
   LANG: C
   OPTIONS: global
@@ -40,22 +33,23 @@ SCHEDULE CapyrX_WaveToy_RHS IN ODESolvers_RHS
 
 
 
-# Error and energy
-if (CCTK_EQUALS(initial_condition, "standing wave") || CCTK_EQUALS(initial_condition, "Gaussian"))
-{
-  SCHEDULE CapyrX_WaveToy_Error IN ODESolvers_PostStep AFTER CapyrX_WaveToy_Sync 
-  {
-    LANG: C
-    READS: CoordinatesX::vertex_coords(interior) state(interior)
-    WRITES: error(interior)
-    SYNC: error
-  } "Calculate error in scalar wave evolution"
-}
-
-SCHEDULE CapyrX_WaveToy_Energy IN ODESolvers_PostStep AFTER CapyrX_WaveToy_Sync 
+# Energy
+SCHEDULE CapyrX_WaveToy_Energy AT analysis
 {
   LANG: C
-  READS: state(interior)
-  WRITES: energy(interior)
-  SYNC: energy
+  READS: state(everywhere)
+  WRITES: energy(everywhere)
 } "Calculate the energy density of the scalar wave equation"
+
+
+
+# Evolution error
+if (CCTK_EQUALS(initial_condition, "standing wave") || CCTK_EQUALS(initial_condition, "Gaussian"))
+{
+  SCHEDULE CapyrX_WaveToy_Error AT analysis
+  {
+    LANG: C
+    READS: CoordinatesX::vertex_coords(everywhere) state(everywhere)
+    WRITES: error(everywhere)
+  } "Calculate error in scalar wave evolution"
+}

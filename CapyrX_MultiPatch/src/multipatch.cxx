@@ -37,10 +37,12 @@ extern "C" CCTK_INT MultiPatch1_GetPatchSpecification(
     *is_cartesian = static_cast<CCTK_INT>(patch.is_cartesian);
   }
 
-  for (int d = 0; d < dim; ++d) {
-    ncells[d] = patch.ncells[d];
-    xmin[d] = patch.xmin[d];
-    xmax[d] = patch.xmax[d];
+  if (ncells != nullptr && xmin != nullptr && xmax != nullptr) {
+    for (int d = 0; d < dim; ++d) {
+      ncells[d] = patch.ncells[d];
+      xmin[d] = patch.xmin[d];
+      xmax[d] = patch.xmax[d];
+    }
   }
 
   return 0;

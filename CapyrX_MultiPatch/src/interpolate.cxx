@@ -245,7 +245,7 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
   }
 
   // Interpolate
-  const bool allow_boundaries = false;
+  const bool allow_boundaries = true;
   Interpolate(cctkGH, npoints, coords[0].data(), coords[1].data(),
               coords[2].data(), varinds.size(), varinds.data(),
               operations.data(), allow_boundaries, resultptrs.data());

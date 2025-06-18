@@ -238,6 +238,10 @@ extern "C" int CapyrX_MultiPatch_Setup() {
   return 0;
 }
 
+// template<typename F>
+// void COORDINATE_SETUP_KERNEL(const F& d2local_dglobal2_func) {
+//   ...
+// }
 #define COORDINATE_SETUP_KERNEL(d2local_dglobal2_func)                         \
   grid.loop_all_device<0, 0, 0>(                                               \
       grid.nghostzones, [=] CCTK_HOST CCTK_DEVICE(                             \
@@ -337,8 +341,8 @@ extern "C" void CapyrX_MultiPatch_Coordinates_Setup(CCTK_ARGUMENTS) {
 
   case PatchSystems::cubed_spehre: {
     CubedSphere::PatchParams par{
-        .angular_cells = cubed_sphere_angular_cells,
-        .radial_cells = cubed_sphere_radial_cells,
+        .angular_cells = cubed_sphere_angular_cells + 2*par.overlap_points,
+        .radial_cells = cubed_sphere_radial_cells + 2*par.overlap_points,
         .inner_boundary = cubed_sphere_inner_boundary_radius,
         .outer_boundary = cubed_sphere_outer_boundary_radius};
     COORDINATE_SETUP_KERNEL(CubedSphere::d2local_dglobal2);

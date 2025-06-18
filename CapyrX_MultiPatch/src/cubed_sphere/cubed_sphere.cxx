@@ -1068,10 +1068,22 @@ static inline auto make_patch(const PatchPiece &p, const PatchParams &par)
     -> Patch {
   Patch patch{};
 
-  patch.ncells = {par.angular_cells, par.angular_cells, par.radial_cells};
+  patch.ncells = {par.angular_cells + 2*par.overlap_points,
+                  par.angular_cells + 2*par.overlap_points,
+                  par.radial_cells + 2*par.overlap_points,
+  };
 
-  patch.xmin = {-1.0, -1.0, -1.0};
-  patch.xmax = {1.0, 1.0, 1.0};
+  const CCTK_REAL angular_delta = 2.0 / par.angular_cells;
+  const CCTK_REAL radial_delta = 2.0 / par.radial_cells;
+
+  patch.xmin = {-1.0 - par.overlap.cells * angular_delta,
+                -1.0 - par.overlap.cells * angular_delta,
+                -1.0 - par.overlap.cells * radial_delta,
+  };
+  patch.xmax = {1.0 + par.overlap_cells * angular_delta,
+                1.0 + par.overlap_cells * angular_delta,
+                1.0 + par.overlap_cells * radial_delta,
+  };
 
   patch.is_cartesian = false;
 
@@ -1088,7 +1100,18 @@ static inline auto make_patch(const PatchPiece &p, const PatchParams &par)
 
   case PatchPiece::cartesian:
     patch.name = "Cartesian";
-    patch.ncells = {par.angular_cells, par.angular_cells, par.angular_cells};
+    patch.ncells = {par.angular_cells + 2*par.overlap_points,
+                    par.angular_cells + 2*par.overlap_points,
+                    par.angular_cells + 2*par.overlap_points,
+    };
+    patch.xmin = {-1.0 - par.overlap.cells * angular_delta,
+                  -1.0 - par.overlap.cells * angular_delta,
+                  -1.0 - par.overlap.cells * angular_delta,
+    };
+    patch.xmax = {1.0 + par.overlap_cells * angular_delta,
+                  1.0 + par.overlap_cells * angular_delta,
+                  1.0 + par.overlap_cells * angular_delta,
+    };
     patch.is_cartesian = true;
     patch.faces = {{mx, my, mz}, {px, py, pz}};
     break;

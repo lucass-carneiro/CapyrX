@@ -1,5 +1,5 @@
 ActiveThorns = "
-    BoxInBox
+    #BoxInBox
     CarpetX
     IOUtil
     TimerReport
@@ -56,20 +56,24 @@ CapyrX_MultiPatch::cubed_sphere_outer_boundary_radius = $rf
 CapyrX_MultiPatch::cubed_sphere_angular_cells         = $angular_cells
 CapyrX_MultiPatch::cubed_sphere_radial_cells          = $radial_cells
 
-CarpetX::ghost_size = 2 # We are using 5 point stencils
+# We are using 5 point stencils
+CarpetX::ghost_size = 2 
+
+# We are restricted to this becase we have no patch overlaps
+CarpetX::interpolation_order = 1
 
 # Mesh refinement
 CarpetX::max_num_levels         = $nlevels
 CarpetX::regrid_every           = 128
 CarpetX::regrid_error_threshold = 1.0e-5
 
-BoxInBox::num_regions  = 1
-BoxInBox::shape_1      = "cube"
-BoxInBox::num_levels_1 = $nlevels
-BoxInBox::position_x_1 = 0.0
-BoxInBox::position_y_1 = 0.0
-BoxInBox::position_z_1 = 0.0
-BoxInBox::radius_1     = [-1.0, 0.8, 0.5]
+#BoxInBox::num_regions  = 1
+#BoxInBox::shape_1      = "cube"
+#BoxInBox::num_levels_1 = $nlevels
+#BoxInBox::position_x_1 = 0.0
+#BoxInBox::position_y_1 = 0.0
+#BoxInBox::position_z_1 = 0.0
+#BoxInBox::radius_1     = [-1.0, 0.8, 0.5]
 
 # Initial data
 CapyrX_WaveToy::initial_condition = "Quadrupolar Gaussian"

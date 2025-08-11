@@ -9,8 +9,8 @@ ActiveThorns = "
 "
 
 ###### Settings ######
-$itlast       = 1
-$out_every_it = 1
+$itlast       = 256
+$out_every_it = 16
 
 $r0 = 1.0
 $rf = 4.0 * $r0
@@ -22,9 +22,9 @@ $cfl = 0.25
 
 $wave_k = 0.50
 
-$interp_order  = 1  
+$interp_order  = 3
 $ghost_size    = 2
-$patch_overlap = 2
+$patch_overlap = 7
 ######################
 
 $dx = 2.0 / $angular_cells

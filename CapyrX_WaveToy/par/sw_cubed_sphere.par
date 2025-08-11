@@ -65,6 +65,9 @@ CarpetX::boundary_upper_z = "dirichlet"
 # We are using 5 point stencils
 CarpetX::ghost_size = 2
 
+# We are restricted to this becase we have no patch overlaps
+CarpetX::interpolation_order = 1
+
 IO::out_dir = $parfile
 IO::out_every = $out_every_it
 

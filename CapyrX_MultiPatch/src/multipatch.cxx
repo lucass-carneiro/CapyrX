@@ -116,10 +116,11 @@ extern "C" void MultiPatch1_GlobalToLocal2(
 
   case PatchSystems::cubed_spehre: {
     CubedSphere::PatchParams p{
-        .angular_cells = cubed_sphere_angular_cells,
-        .radial_cells = cubed_sphere_radial_cells,
+        .angular_cells = cubed_sphere_angular_cells + 2 * patch_overlap,
+        .radial_cells = cubed_sphere_radial_cells + 2 * patch_overlap,
         .inner_boundary = cubed_sphere_inner_boundary_radius,
-        .outer_boundary = cubed_sphere_outer_boundary_radius};
+        .outer_boundary = cubed_sphere_outer_boundary_radius,
+        .patch_overlap = patch_overlap};
     GLOBAL2LOCAL_KERNEL(CubedSphere::global2local);
     break;
   }
@@ -180,10 +181,11 @@ extern "C" void MultiPatch1_LocalToGlobal2(
 
   case PatchSystems::cubed_spehre: {
     CubedSphere::PatchParams p{
-        .angular_cells = cubed_sphere_angular_cells,
-        .radial_cells = cubed_sphere_radial_cells,
+        .angular_cells = cubed_sphere_angular_cells + 2 * patch_overlap,
+        .radial_cells = cubed_sphere_radial_cells + 2 * patch_overlap,
         .inner_boundary = cubed_sphere_inner_boundary_radius,
-        .outer_boundary = cubed_sphere_outer_boundary_radius};
+        .outer_boundary = cubed_sphere_outer_boundary_radius,
+        .patch_overlap = patch_overlap};
     LOCAL2GLOBAL_KERNEL(CubedSphere::local2global);
     break;
   }
@@ -220,10 +222,11 @@ extern "C" int CapyrX_MultiPatch_Setup() {
 
   } else if (CCTK_EQUALS(patch_system, "Cubed sphere")) {
     CubedSphere::PatchParams p{
-        .angular_cells = cubed_sphere_angular_cells,
-        .radial_cells = cubed_sphere_radial_cells,
+        .angular_cells = cubed_sphere_angular_cells + 2 * patch_overlap,
+        .radial_cells = cubed_sphere_radial_cells + 2 * patch_overlap,
         .inner_boundary = cubed_sphere_inner_boundary_radius,
-        .outer_boundary = cubed_sphere_outer_boundary_radius};
+        .outer_boundary = cubed_sphere_outer_boundary_radius,
+        .patch_overlap = patch_overlap};
 
     g_patch_system = std::make_unique<PatchSystem>(CubedSphere::make_system(p));
 
@@ -337,10 +340,16 @@ extern "C" void CapyrX_MultiPatch_Coordinates_Setup(CCTK_ARGUMENTS) {
 
   case PatchSystems::cubed_spehre: {
     CubedSphere::PatchParams par{
-        .angular_cells = cubed_sphere_angular_cells,
-        .radial_cells = cubed_sphere_radial_cells,
+        .angular_cells = cubed_sphere_angular_cells + 2 * patch_overlap,
+        .radial_cells = cubed_sphere_radial_cells + 2 * patch_overlap,
         .inner_boundary = cubed_sphere_inner_boundary_radius,
-        .outer_boundary = cubed_sphere_outer_boundary_radius};
+        .outer_boundary = cubed_sphere_outer_boundary_radius,
+        .patch_overlap = patch_overlap};
+
+    if (verbose && patch_overlap != 0) {
+      CCTK_VINFO("Using %i cells of patch overlaps", patch_overlap);
+    }
+
     COORDINATE_SETUP_KERNEL(CubedSphere::d2local_dglobal2);
     break;
   }
@@ -402,10 +411,11 @@ extern "C" void CapyrX_MultiPatch_Run_Unit_Tests(CCTK_ARGUMENTS) {
 
   } else if (CCTK_EQUALS(patch_system, "Cubed sphere")) {
     CubedSphere::PatchParams par{
-        .angular_cells = cubed_sphere_angular_cells,
-        .radial_cells = cubed_sphere_radial_cells,
+        .angular_cells = cubed_sphere_angular_cells + 2 * patch_overlap,
+        .radial_cells = cubed_sphere_radial_cells + 2 * patch_overlap,
         .inner_boundary = cubed_sphere_inner_boundary_radius,
-        .outer_boundary = cubed_sphere_outer_boundary_radius};
+        .outer_boundary = cubed_sphere_outer_boundary_radius,
+        .patch_overlap = patch_overlap};
 
     const auto pass{CubedSphere::unit_test(test_repetitions, test_seed, par)};
 

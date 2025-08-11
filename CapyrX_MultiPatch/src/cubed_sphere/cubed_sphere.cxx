@@ -357,13 +357,11 @@ cubed_sphere_jacs(const PatchParams &par, int patch,
     J(1)(0) = -(y / pow(x, 2));
     J(1)(1) = 1 / x;
     J(1)(2) = 0;
-    J(2)
-    (0) = (4 * x) /
-          sqrt(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
-               4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
-               4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)));
-    J(2)
-    (1) =
+    J(2)(0) = (4 * x) /
+              sqrt(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                   4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                   4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)));
+    J(2)(1) =
         (2 * y *
          (1 +
           (2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2)) /
@@ -371,8 +369,7 @@ cubed_sphere_jacs(const PatchParams &par, int patch,
                    4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
                    4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2))))) /
         pow(r0 - r1, 2);
-    J(2)
-    (2) =
+    J(2)(2) =
         (2 * z *
          (1 +
           (2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2)) /
@@ -475,13 +472,11 @@ cubed_sphere_jacs(const PatchParams &par, int patch,
     J(1)(0) = -(y / pow(x, 2));
     J(1)(1) = 1 / x;
     J(1)(2) = 0;
-    J(2)
-    (0) = (4 * x) /
-          sqrt(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
-               4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
-               4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)));
-    J(2)
-    (1) =
+    J(2)(0) = (4 * x) /
+              sqrt(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                   4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                   4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)));
+    J(2)(1) =
         (2 * y *
          (1 +
           (2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2)) /
@@ -489,8 +484,7 @@ cubed_sphere_jacs(const PatchParams &par, int patch,
                    4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
                    4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2))))) /
         pow(r0 - r1, 2);
-    J(2)
-    (2) =
+    J(2)(2) =
         (2 * z *
          (1 +
           (2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2)) /
@@ -593,8 +587,7 @@ cubed_sphere_jacs(const PatchParams &par, int patch,
     J(1)(0) = -(1 / y);
     J(1)(1) = x / pow(y, 2);
     J(1)(2) = 0;
-    J(2)
-    (0) =
+    J(2)(0) =
         (2 * x *
          (1 +
           (2 * r0 * (r0 - r1) + pow(x, 2) + pow(z, 2)) /
@@ -602,13 +595,11 @@ cubed_sphere_jacs(const PatchParams &par, int patch,
                    4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
                    4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2))))) /
         pow(r0 - r1, 2);
-    J(2)
-    (1) = (4 * y) /
-          sqrt(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
-               4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
-               4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2)));
-    J(2)
-    (2) =
+    J(2)(1) = (4 * y) /
+              sqrt(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
+                   4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                   4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2)));
+    J(2)(2) =
         (2 * z *
          (1 +
           (2 * r0 * (r0 - r1) + pow(x, 2) + pow(z, 2)) /
@@ -711,8 +702,7 @@ cubed_sphere_jacs(const PatchParams &par, int patch,
     J(1)(0) = -(1 / y);
     J(1)(1) = x / pow(y, 2);
     J(1)(2) = 0;
-    J(2)
-    (0) =
+    J(2)(0) =
         (2 * x *
          (1 +
           (2 * r0 * (r0 - r1) + pow(x, 2) + pow(z, 2)) /
@@ -720,13 +710,11 @@ cubed_sphere_jacs(const PatchParams &par, int patch,
                    4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
                    4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2))))) /
         pow(r0 - r1, 2);
-    J(2)
-    (1) = (4 * y) /
-          sqrt(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
-               4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
-               4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2)));
-    J(2)
-    (2) =
+    J(2)(1) = (4 * y) /
+              sqrt(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
+                   4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                   4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2)));
+    J(2)(2) =
         (2 * z *
          (1 +
           (2 * r0 * (r0 - r1) + pow(x, 2) + pow(z, 2)) /
@@ -829,24 +817,21 @@ cubed_sphere_jacs(const PatchParams &par, int patch,
     J(1)(0) = 0;
     J(1)(1) = 1 / z;
     J(1)(2) = -(y / pow(z, 2));
-    J(2)
-    (0) = (2 * x *
-           (1 + (2 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) /
-                    sqrt((pow(x, 2) + pow(y, 2)) *
-                             (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
-                         4 * pow(r0 - r1, 2) * pow(z, 2)))) /
-          pow(r0 - r1, 2);
-    J(2)
-    (1) = (2 * y *
-           (1 + (2 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) /
-                    sqrt((pow(x, 2) + pow(y, 2)) *
-                             (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
-                         4 * pow(r0 - r1, 2) * pow(z, 2)))) /
-          pow(r0 - r1, 2);
-    J(2)
-    (2) = (4 * z) / sqrt((pow(x, 2) + pow(y, 2)) *
-                             (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
-                         4 * pow(r0 - r1, 2) * pow(z, 2));
+    J(2)(0) = (2 * x *
+               (1 + (2 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) /
+                        sqrt((pow(x, 2) + pow(y, 2)) *
+                                 (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                             4 * pow(r0 - r1, 2) * pow(z, 2)))) /
+              pow(r0 - r1, 2);
+    J(2)(1) = (2 * y *
+               (1 + (2 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) /
+                        sqrt((pow(x, 2) + pow(y, 2)) *
+                                 (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                             4 * pow(r0 - r1, 2) * pow(z, 2)))) /
+              pow(r0 - r1, 2);
+    J(2)(2) = (4 * z) / sqrt((pow(x, 2) + pow(y, 2)) *
+                                 (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                             4 * pow(r0 - r1, 2) * pow(z, 2));
 
     dJ(0)(0, 0) = 0;
     dJ(0)(0, 1) = 0;
@@ -935,24 +920,21 @@ cubed_sphere_jacs(const PatchParams &par, int patch,
     J(1)(0) = 0;
     J(1)(1) = -(1 / z);
     J(1)(2) = y / pow(z, 2);
-    J(2)
-    (0) = (2 * x *
-           (1 + (2 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) /
-                    sqrt((pow(x, 2) + pow(y, 2)) *
-                             (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
-                         4 * pow(r0 - r1, 2) * pow(z, 2)))) /
-          pow(r0 - r1, 2);
-    J(2)
-    (1) = (2 * y *
-           (1 + (2 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) /
-                    sqrt((pow(x, 2) + pow(y, 2)) *
-                             (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
-                         4 * pow(r0 - r1, 2) * pow(z, 2)))) /
-          pow(r0 - r1, 2);
-    J(2)
-    (2) = (4 * z) / sqrt((pow(x, 2) + pow(y, 2)) *
-                             (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
-                         4 * pow(r0 - r1, 2) * pow(z, 2));
+    J(2)(0) = (2 * x *
+               (1 + (2 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) /
+                        sqrt((pow(x, 2) + pow(y, 2)) *
+                                 (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                             4 * pow(r0 - r1, 2) * pow(z, 2)))) /
+              pow(r0 - r1, 2);
+    J(2)(1) = (2 * y *
+               (1 + (2 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) /
+                        sqrt((pow(x, 2) + pow(y, 2)) *
+                                 (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                             4 * pow(r0 - r1, 2) * pow(z, 2)))) /
+              pow(r0 - r1, 2);
+    J(2)(2) = (4 * z) / sqrt((pow(x, 2) + pow(y, 2)) *
+                                 (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                             4 * pow(r0 - r1, 2) * pow(z, 2));
 
     dJ(0)(0, 0) = 0;
     dJ(0)(0, 1) = 0;
@@ -1070,8 +1052,20 @@ static inline auto make_patch(const PatchPiece &p, const PatchParams &par)
 
   patch.ncells = {par.angular_cells, par.angular_cells, par.radial_cells};
 
-  patch.xmin = {-1.0, -1.0, -1.0};
-  patch.xmax = {1.0, 1.0, 1.0};
+  const CCTK_REAL angular_delta = 2.0 / par.angular_cells;
+  const CCTK_REAL radial_delta = 2.0 / par.radial_cells;
+
+  patch.xmin = {
+      -1.0 - par.patch_overlap * angular_delta,
+      -1.0 - par.patch_overlap * angular_delta,
+      -1.0 - par.patch_overlap * radial_delta,
+  };
+
+  patch.xmax = {
+      1.0 + par.patch_overlap * angular_delta,
+      1.0 + par.patch_overlap * angular_delta,
+      1.0 + par.patch_overlap * radial_delta,
+  };
 
   patch.is_cartesian = false;
 
@@ -1089,8 +1083,21 @@ static inline auto make_patch(const PatchPiece &p, const PatchParams &par)
   case PatchPiece::cartesian:
     patch.name = "Cartesian";
     patch.ncells = {par.angular_cells, par.angular_cells, par.angular_cells};
-    patch.is_cartesian = true;
+
+    patch.xmin = {
+        -1.0 - par.patch_overlap * angular_delta,
+        -1.0 - par.patch_overlap * angular_delta,
+        -1.0 - par.patch_overlap * angular_delta,
+    };
+
+    patch.xmax = {
+        1.0 + par.patch_overlap * angular_delta,
+        1.0 + par.patch_overlap * angular_delta,
+        1.0 + par.patch_overlap * angular_delta,
+    };
+
     patch.faces = {{mx, my, mz}, {px, py, pz}};
+    patch.is_cartesian = true;
     break;
 
   case PatchPiece::plus_x:

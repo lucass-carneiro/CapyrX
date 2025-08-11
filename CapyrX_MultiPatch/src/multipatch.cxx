@@ -66,17 +66,58 @@ extern "C" CCTK_INT MultiPatch1_GetBoundarySpecification2(
   return 0;
 }
 
-#define GLOBAL2LOCAL_KERNEL(global2local_func)                                 \
-  for (int n = 0; n < npoints; ++n) {                                          \
-    const svec_t global_coords{globalsx[n], globalsy[n], globalsz[n]};         \
-    const auto g2l{global2local_func(p, global_coords)};                       \
-    const auto patch{std::get<0>(g2l)};                                        \
-    const auto local_coords{std::get<1>(g2l)};                                 \
-    patches[n] = patch;                                                        \
-    localsx[n] = local_coords(0);                                              \
-    localsy[n] = local_coords(1);                                              \
-    localsz[n] = local_coords(2);                                              \
+template <CapyrX::MultiPatch::PatchSystems sys>
+static inline void global2local_kernel(const CCTK_INT npoints,
+                                       const CCTK_REAL *restrict const globalsx,
+                                       const CCTK_REAL *restrict const globalsy,
+                                       const CCTK_REAL *restrict const globalsz,
+                                       CCTK_INT *restrict const patches,
+                                       CCTK_REAL *restrict const localsx,
+                                       CCTK_REAL *restrict const localsy,
+                                       CCTK_REAL *restrict const localsz) {
+
+  using namespace CapyrX::MultiPatch;
+
+  DECLARE_CCTK_PARAMETERS;
+
+  for (int n = 0; n < npoints; ++n) {
+    const svec_t global_coords{globalsx[n], globalsy[n], globalsz[n]};
+
+    std_tuple<int, svec_t> g2l{};
+
+    if constexpr (sys == PatchSystems::cartesian) {
+      Cartesian::PatchParams p{
+          .ncells_i = cartesian_ncells_i,
+          .ncells_j = cartesian_ncells_j,
+          .ncells_k = cartesian_ncells_k,
+
+          .xmin = cartesian_xmin,
+          .ymin = cartesian_xmin,
+          .zmin = cartesian_xmin,
+
+          .xmax = cartesian_xmax,
+          .ymax = cartesian_xmax,
+          .zmax = cartesian_xmax,
+      };
+      g2l = Cartesian::global2local(p, global_coords);
+    } else if constexpr (sys == PatchSystems::cubed_spehre) {
+      CubedSphere::PatchParams p{
+          .angular_cells = cubed_sphere_angular_cells + 2 * patch_overlap,
+          .radial_cells = cubed_sphere_radial_cells + 2 * patch_overlap,
+          .inner_boundary = cubed_sphere_inner_boundary_radius,
+          .outer_boundary = cubed_sphere_outer_boundary_radius,
+          .patch_overlap = patch_overlap};
+      g2l = CubedSphere::global2local(p, global_coords);
+    }
+
+    const auto patch{std::get<0>(g2l)};
+    const auto local_coords{std::get<1>(g2l)};
+    patches[n] = patch;
+    localsx[n] = local_coords(0);
+    localsy[n] = local_coords(1);
+    localsz[n] = local_coords(2);
   }
+}
 
 extern "C" void MultiPatch1_GlobalToLocal2(
     const CCTK_INT npoints, const CCTK_REAL *restrict const globalsx,
@@ -97,31 +138,16 @@ extern "C" void MultiPatch1_GlobalToLocal2(
     break;
 
   case PatchSystems::cartesian: {
-    Cartesian::PatchParams p{
-        .ncells_i = cartesian_ncells_i,
-        .ncells_j = cartesian_ncells_j,
-        .ncells_k = cartesian_ncells_k,
-
-        .xmin = cartesian_xmin,
-        .ymin = cartesian_xmin,
-        .zmin = cartesian_xmin,
-
-        .xmax = cartesian_xmax,
-        .ymax = cartesian_xmax,
-        .zmax = cartesian_xmax,
-    };
-    GLOBAL2LOCAL_KERNEL(Cartesian::global2local);
+    global2local_kernel<PatchSystems::cartesian>(npoints, globalsx, globalsy,
+                                                 globalsz, patches, localsx,
+                                                 localsy, localsz);
     break;
   }
 
   case PatchSystems::cubed_spehre: {
-    CubedSphere::PatchParams p{
-        .angular_cells = cubed_sphere_angular_cells + 2 * patch_overlap,
-        .radial_cells = cubed_sphere_radial_cells + 2 * patch_overlap,
-        .inner_boundary = cubed_sphere_inner_boundary_radius,
-        .outer_boundary = cubed_sphere_outer_boundary_radius,
-        .patch_overlap = patch_overlap};
-    GLOBAL2LOCAL_KERNEL(CubedSphere::global2local);
+    global2local_kernel<PatchSystems::cubed_spehre>(npoints, globalsx, globalsy,
+                                                    globalsz, patches, localsx,
+                                                    localsy, localsz);
     break;
   }
 

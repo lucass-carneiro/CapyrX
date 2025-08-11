@@ -21,7 +21,8 @@ CarpetX::blocking_factor_z = 1
 
 CarpetX::max_num_levels = 1
 
-CarpetX::ghost_size = 2
+CarpetX::ghost_size          = 2
+CarpetX::interpolation_order = 3
 
 CapyrX_MultiPatch::verbose        =  yes
 CapyrX_MultiPatch::patch_system   = "Cubed sphere"
@@ -31,6 +32,7 @@ CapyrX_MultiPatch::cubed_sphere_inner_boundary_radius = 1.0
 CapyrX_MultiPatch::cubed_sphere_outer_boundary_radius = 4.0
 CapyrX_MultiPatch::cubed_sphere_angular_cells         = 40
 CapyrX_MultiPatch::cubed_sphere_radial_cells          = 40
+CapyrX_MultiPatch::patch_overlap                      = 7
                                                                         
 CapyrX_TestMultiPatch::test_data = "standing wave"
 

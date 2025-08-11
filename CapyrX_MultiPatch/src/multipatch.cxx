@@ -346,10 +346,6 @@ extern "C" void CapyrX_MultiPatch_Coordinates_Setup(CCTK_ARGUMENTS) {
         .outer_boundary = cubed_sphere_outer_boundary_radius,
         .patch_overlap = patch_overlap};
 
-    if (verbose && patch_overlap != 0) {
-      CCTK_VINFO("Using %i cells of patch overlaps", patch_overlap);
-    }
-
     COORDINATE_SETUP_KERNEL(CubedSphere::d2local_dglobal2);
     break;
   }

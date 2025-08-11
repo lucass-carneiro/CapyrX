@@ -25,6 +25,11 @@ INT test_seed "Integer seed for random generator in unit tests"
   0:* :: "Positive"
 } 100
 
+INT patch_overlap "How many grid points of overlap to add between patches"
+{
+  0:* :: "Positive"
+} 0
+
 # Cartesian patch system
 
 INT cartesian_ncells_i "Number of cells in i direction"

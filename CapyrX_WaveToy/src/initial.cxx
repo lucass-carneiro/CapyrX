@@ -75,11 +75,12 @@ extern "C" void CapyrX_WaveToy_Initial(CCTK_ARGUMENTS) {
             Dy(p.I) = 0.0;
             Dz(p.I) = 0.0;
           } else {
-            phi(p.I) = quad_gauss::phi(sigma, R0, x0, y0, z0, x, y, z);
-            Pi(p.I) = quad_gauss::Pi(sigma, R0, x0, y0, z0, x, y, z);
-            Dx(p.I) = quad_gauss::Dx(sigma, R0, x0, y0, z0, x, y, z);
-            Dy(p.I) = quad_gauss::Dy(sigma, R0, x0, y0, z0, x, y, z);
-            Dz(p.I) = quad_gauss::Dz(sigma, R0, x0, y0, z0, x, y, z);
+            phi(p.I) =
+                quad_gauss::phi(amplitude, sigma, R0, x0, y0, z0, x, y, z);
+            Pi(p.I) = quad_gauss::Pi(amplitude, sigma, R0, x0, y0, z0, x, y, z);
+            Dx(p.I) = quad_gauss::Dx(amplitude, sigma, R0, x0, y0, z0, x, y, z);
+            Dy(p.I) = quad_gauss::Dy(amplitude, sigma, R0, x0, y0, z0, x, y, z);
+            Dz(p.I) = quad_gauss::Dz(amplitude, sigma, R0, x0, y0, z0, x, y, z);
           }
         });
 

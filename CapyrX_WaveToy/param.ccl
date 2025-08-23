@@ -7,6 +7,11 @@ KEYWORD initial_condition "Initial condition"
   "Quadrupolar Gaussian" :: "Gaussian with a quadrupole moment that can be placed anywhere on the grid"
 } "standing wave"
 
+CCTK_REAL dissipation_epsilon "Kreiss-Oliger dissipation strength"
+{
+  0.0:0.33 :: ""
+} 0.15
+
 CCTK_REAL amplitude "Initial amplitude for gaussian and wave initial data"
 {
   *:* :: ""

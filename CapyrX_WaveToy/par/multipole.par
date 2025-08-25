@@ -10,22 +10,24 @@ ActiveThorns = "
 "
 
 ###### Settings ######
-$itlast       = 1024
-$out_every_it = 1
+$itlast       = 4096
+$out_every_it = 16
 
-$r0 = 1.0
-$rf = 10.0
+$r0 = 2.0
+$rf = 20.0
 
-$radial_cells  = 80
-$angular_cells = 27
+$radial_cells  = 170
+$angular_cells = 31
 
 $cfl = 0.25
 
 $wave_k = 0.50
 
 $interp_order  = 3
-$ghost_size    = 2
+$ghost_size    = 3
 $patch_overlap = 7
+
+$diss_eps = 0.1
 ######################
 
 $dx = 2.0 / $angular_cells
@@ -44,8 +46,9 @@ CarpetX::blocking_factor_y = 1
 CarpetX::blocking_factor_z = 1
 
 # Time integration
-ODESolvers::method = "RK4"
-CarpetX::dtfac     = $cfl
+ODESolvers::verbose = yes
+ODESolvers::method  = "RK4"
+CarpetX::dtfac      = $cfl
 
 # Grid
 CapyrX_MultiPatch::verbose      =  yes
@@ -62,10 +65,11 @@ CarpetX::ghost_size          = $ghost_size
 CarpetX::interpolation_order = $interp_order
 
 # Initial data
-CapyrX_WaveToy::initial_condition = "Quadrupolar Gaussian"
-CapyrX_WaveToy::amplitude         = 10.0
-CapyrX_WaveToy::gaussian_width    = $r0 / 4.0
-CapyrX_WaveToy::quad_gaussian_R0  = $r0 / 2.0
+CapyrX_WaveToy::initial_condition   = "Quadrupolar Gaussian"
+CapyrX_WaveToy::amplitude           = 10.0
+CapyrX_WaveToy::gaussian_width      = $r0 / 8.0
+CapyrX_WaveToy::quad_gaussian_R0    = $r0 / 2.5
+CapyrX_WaveToy::dissipation_epsilon = $diss_eps
 
 # Boundary conditions
 CarpetX::boundary_x       = "dirichlet"
@@ -76,19 +80,20 @@ CarpetX::boundary_upper_y = "dirichlet"
 CarpetX::boundary_upper_z = "dirichlet"
 
 # Multipole extraction
-Multipole::verbose   = yes
-Multipole::nradii    = 1
-Multipole::radius[0] = 2.0
-Multipole::ntheta    = 128
-Multipole::nphi      = 128
-Multipole::variables = "
-    Capyrx_WaveToy::phi
-"
-# WeylScal4::Psi4r{sw=-2 cmplx='WeylScal4::Psi4i' name='Psi4'}
-
+Multipole::verbose           = yes
 Multipole::out_every         = $out_every_it
 Multipole::l_max             = 4
 Multipole::interpolator_pars = "order=3"
+Multipole::nradii            = 4
+Multipole::radius[0]         = 4.0
+Multipole::radius[1]         = 6.0
+Multipole::radius[2]         = 8.0
+Multipole::radius[3]         = 10.0
+Multipole::ntheta            = 256
+Multipole::nphi              = 256
+Multipole::variables = "
+    Capyrx_WaveToy::phi
+"
 
 # Termination
 Cactus::terminate   = "iteration"

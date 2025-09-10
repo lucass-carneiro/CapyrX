@@ -37,9 +37,9 @@ struct PatchParams {
  *  1. The index of the patch owning the local coordinates.
  *  2. The local coordinates.
  */
-CCTK_HOST CCTK_DEVICE auto
-global2local(const PatchParams &p,
-             const svec_t &global_coords) -> std_tuple<int, svec_t>;
+CCTK_HOST CCTK_DEVICE auto global2local(const PatchParams &p,
+                                        const svec_t &global_coords)
+    -> std_tuple<int, svec_t>;
 
 /**
  * Transforms patch local coordinates to global coordinates
@@ -81,9 +81,9 @@ CCTK_HOST CCTK_DEVICE auto local2global(const PatchParams &p, int patch,
  * In code, \f$J^{i}_{\phantom{i}j}\f$ is acessed by calling `J(i)(j)` on a
  * `jac_t` type object.
  */
-CCTK_HOST CCTK_DEVICE auto
-dlocal_dglobal(const PatchParams &p, int patch,
-               const svec_t &local_coords) -> std_tuple<svec_t, jac_t>;
+CCTK_HOST CCTK_DEVICE auto dlocal_dglobal(const PatchParams &p, int patch,
+                                          const svec_t &local_coords)
+    -> std_tuple<svec_t, jac_t>;
 
 /**
  * Computes Jacobian derivative components.
@@ -124,8 +124,8 @@ auto make_system(const PatchParams &p) -> PatchSystem;
 /**
  * Runs patch system unit tests
  */
-auto unit_test(std::size_t repetitions, std::size_t seed,
-               const PatchParams &p) -> bool;
+auto unit_test(std::size_t repetitions, std::size_t seed, const PatchParams &p)
+    -> bool;
 
 } // namespace CapyrX::MultiPatch::Cartesian
 

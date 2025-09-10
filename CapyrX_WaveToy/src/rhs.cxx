@@ -8,7 +8,7 @@
 
 namespace CapyrX::WaveToy {
 
-static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_DEVICE
     CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
     c4o_1_0_0(const Loop::PointDesc &p,
               const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
@@ -18,7 +18,7 @@ static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
   return num * den;
 }
 
-static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE c4o_0_1_0(
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_DEVICE c4o_0_1_0(
     const Loop::PointDesc &p, const Loop::GF3D2<const CCTK_REAL> &gf) noexcept
     -> CCTK_REAL {
   const auto num{gf(-2 * p.DI[1] + p.I) - 8 * gf(-p.DI[1] + p.I) +
@@ -27,7 +27,7 @@ static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE c4o_0_1_0(
   return num * den;
 }
 
-static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE c4o_0_0_1(
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_DEVICE c4o_0_0_1(
     const Loop::PointDesc &p, const Loop::GF3D2<const CCTK_REAL> &gf) noexcept
     -> CCTK_REAL {
   const auto num{gf(-2 * p.DI[2] + p.I) - 8 * gf(-p.DI[2] + p.I) +
@@ -56,8 +56,8 @@ extern "C" void CapyrX_WaveToy_RHS(CCTK_ARGUMENTS) {
   using namespace CapyrX::MultiPatch::GlobalDerivatives;
 
   grid.loop_int_device<0, 0, 0>(
-      grid.nghostzones, [=] CCTK_HOST CCTK_DEVICE(
-                            const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+      grid.nghostzones,
+      [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
         const LocalFirstDerivatives lPi{c4o_1_0_0(p, Pi), c4o_0_1_0(p, Pi),
                                         c4o_0_0_1(p, Pi)};
 

@@ -4,6 +4,10 @@
 
 #include <cctk.h>
 
+#ifdef __CUDACC__
+#include <nvtx3/nvToolsExt.h>
+#endif
+
 #include <map>
 
 namespace CapyrX::MultiPatch {
@@ -29,8 +33,8 @@ using PointList = std::array<std::vector<CCTK_REAL>, dim>;
 } // namespace CapyrX::MultiPatch
 
 // See https://stackoverflow.com/a/2595226
-static constexpr inline auto hash_combine(std::size_t h1,
-                                          std::size_t h2) -> std::size_t {
+static constexpr inline auto hash_combine(std::size_t h1, std::size_t h2)
+    -> std::size_t {
   return h1 ^ (h2 + 0x9e3779b9 + (h1 << 6) + (h1 >> 2));
 }
 
@@ -72,6 +76,11 @@ extern "C" void
 MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
                         const CCTK_INT nvars_,
                         const CCTK_INT *restrict const varinds_) {
+#ifdef __CUDACC__
+  const nvtxRangeId_t range =
+      nvtxRangeStartA("CapyrX::MultiPatch1_Interpolate");
+#endif
+
   // Step 0: Check input
 
   // Function Input checking
@@ -209,7 +218,9 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
           }
         });
 #pragma omp critical
-        { source_mapping[location] = std::move(source_points); }
+        {
+          source_mapping[location] = std::move(source_points);
+        }
       });
 
   // Step 2: Interpolate to these coordinates
@@ -264,7 +275,9 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
     pos += length;
 
 #pragma omp critical
-    { result_mapping[location] = std::move(result_values); }
+    {
+      result_mapping[location] = std::move(result_values);
+    }
   }
   assert(pos == results.at(0).size());
 
@@ -312,6 +325,10 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
       assert(pos == result_values.at(0).size());
     }
   });
+
+#ifdef __CUDACC__
+  nvtxRangeEnd(range);
+#endif
 }
 
 } // namespace CapyrX::MultiPatch

@@ -8,9 +8,9 @@
 
 namespace CapyrX::MultiPatch::Cartesian {
 
-CCTK_HOST CCTK_DEVICE auto
-global2local(const PatchParams &,
-             const svec_t &global_coords) -> std_tuple<int, svec_t> {
+CCTK_HOST CCTK_DEVICE auto global2local(const PatchParams &,
+                                        const svec_t &global_coords)
+    -> std_tuple<int, svec_t> {
   return std_make_tuple(0, global_coords);
 }
 
@@ -20,9 +20,9 @@ CCTK_HOST CCTK_DEVICE auto local2global(const PatchParams &p, int patch,
   return std::get<0>(x_dx);
 }
 
-CCTK_HOST CCTK_DEVICE auto
-dlocal_dglobal(const PatchParams &p, int patch,
-               const svec_t &local_coords) -> std_tuple<svec_t, jac_t> {
+CCTK_HOST CCTK_DEVICE auto dlocal_dglobal(const PatchParams &p, int patch,
+                                          const svec_t &local_coords)
+    -> std_tuple<svec_t, jac_t> {
   const auto x_dx_ddx{d2local_dglobal2(p, patch, local_coords)};
   return std_make_tuple(std::get<0>(x_dx_ddx), std::get<1>(x_dx_ddx));
 }

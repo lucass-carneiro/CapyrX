@@ -12,6 +12,10 @@
 
 #include <loop_device.hxx>
 
+#ifdef __CUDACC__
+#include <nvtx3/nvToolsExt.h>
+#endif
+
 #include <cmath>
 
 namespace CapyrX::MultiPatch {
@@ -68,12 +72,14 @@ extern "C" CCTK_INT MultiPatch1_GetBoundarySpecification2(
 }
 
 template <CapyrX::MultiPatch::PatchSystems sys>
-CCTK_HOST CCTK_DEVICE static inline void global2local_kernel(
-    const CCTK_INT npoints, const CCTK_REAL *restrict const globalsx,
-    const CCTK_REAL *restrict const globalsy,
-    const CCTK_REAL *restrict const globalsz, CCTK_INT *restrict const patches,
-    CCTK_REAL *restrict const localsx, CCTK_REAL *restrict const localsy,
-    CCTK_REAL *restrict const localsz) {
+static inline void global2local_kernel(const CCTK_INT npoints,
+                                       const CCTK_REAL *restrict const globalsx,
+                                       const CCTK_REAL *restrict const globalsy,
+                                       const CCTK_REAL *restrict const globalsz,
+                                       CCTK_INT *restrict const patches,
+                                       CCTK_REAL *restrict const localsx,
+                                       CCTK_REAL *restrict const localsy,
+                                       CCTK_REAL *restrict const localsz) {
 
   using namespace CapyrX::MultiPatch;
 
@@ -124,6 +130,12 @@ extern "C" void MultiPatch1_GlobalToLocal2(
     const CCTK_REAL *restrict const globalsz, CCTK_INT *restrict const patches,
     CCTK_REAL *restrict const localsx, CCTK_REAL *restrict const localsy,
     CCTK_REAL *restrict const localsz) {
+
+#ifdef __CUDACC__
+  const nvtxRangeId_t range =
+      nvtxRangeStartA("CapyrX::MultiPatch1_GlobalToLocal2");
+#endif
+
   DECLARE_CCTK_PARAMETERS;
 
   switch (g_patch_system->id_tag) {
@@ -155,15 +167,21 @@ extern "C" void MultiPatch1_GlobalToLocal2(
         "MultiPatch1_GlobalToLocal2 called for an unknown patch system");
     break;
   }
+
+#ifdef __CUDACC__
+  nvtxRangeEnd(range);
+#endif
 }
 
 template <CapyrX::MultiPatch::PatchSystems sys>
-CCTK_HOST CCTK_DEVICE static inline void local2global_kernel(
-    const CCTK_INT npoints, const CCTK_INT *restrict const patches,
-    const CCTK_REAL *restrict const localsx,
-    const CCTK_REAL *restrict const localsy,
-    const CCTK_REAL *restrict const localsz, CCTK_REAL *restrict const globalsx,
-    CCTK_REAL *restrict const globalsy, CCTK_REAL *restrict const globalsz) {
+static inline void local2global_kernel(const CCTK_INT npoints,
+                                       const CCTK_INT *restrict const patches,
+                                       const CCTK_REAL *restrict const localsx,
+                                       const CCTK_REAL *restrict const localsy,
+                                       const CCTK_REAL *restrict const localsz,
+                                       CCTK_REAL *restrict const globalsx,
+                                       CCTK_REAL *restrict const globalsy,
+                                       CCTK_REAL *restrict const globalsz) {
   using namespace CapyrX::MultiPatch;
 
   DECLARE_CCTK_PARAMETERS;
@@ -211,6 +229,12 @@ extern "C" void MultiPatch1_LocalToGlobal2(
     const CCTK_REAL *restrict const localsy,
     const CCTK_REAL *restrict const localsz, CCTK_REAL *restrict const globalsx,
     CCTK_REAL *restrict const globalsy, CCTK_REAL *restrict const globalsz) {
+
+#ifdef __CUDACC__
+  const nvtxRangeId_t range =
+      nvtxRangeStartA("CapyrX::MultiPatch1_LocalToGlobal2");
+#endif
+
   DECLARE_CCTK_PARAMETERS;
 
   switch (g_patch_system->id_tag) {
@@ -242,6 +266,10 @@ extern "C" void MultiPatch1_LocalToGlobal2(
         "MultiPatch1_LocalToGlobal2 called for an unknown patch system");
     break;
   }
+
+#ifdef __CUDACC__
+  nvtxRangeEnd(range);
+#endif
 }
 
 extern "C" int CapyrX_MultiPatch_Setup() {
@@ -357,6 +385,11 @@ extern "C" int CapyrX_MultiPatch_Setup() {
       })
 
 extern "C" void CapyrX_MultiPatch_Coordinates_Setup(CCTK_ARGUMENTS) {
+#ifdef __CUDACC__
+  const nvtxRangeId_t range =
+      nvtxRangeStartA("CapyrX::CapyrX_MultiPatch_Coordinates_Setup");
+#endif
+
   DECLARE_CCTK_ARGUMENTSX_CapyrX_MultiPatch_Coordinates_Setup;
   DECLARE_CCTK_PARAMETERS;
 
@@ -401,6 +434,10 @@ extern "C" void CapyrX_MultiPatch_Coordinates_Setup(CCTK_ARGUMENTS) {
     CCTK_VERROR("Unable to setup coordinates for unknown patch system");
     break;
   }
+
+#ifdef __CUDACC__
+  nvtxRangeEnd(range);
+#endif
 }
 
 extern "C" void CapyrX_MultiPatch_Check_Parameters(CCTK_ARGUMENTS) {

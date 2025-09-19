@@ -1,13 +1,18 @@
-# Interface definition for thorn MultiPatchWaveToy2
+# Interface definition for thorn CapyrX_WaveToy_SecondOrder
+# The implementatio will follow 
+# https://github.com/EinsteinToolkit/CarpetX/blob/main/WaveToyX/
 
-IMPLEMENTS: MultiPatchWaveToy2
+IMPLEMENTS: CapyrX_WaveToy_SecondOrder
 
 INHERITS: CoordinatesX MultiPatch
 
 USES INCLUDE HEADER: loop_device.hxx
-USES INCLUDE HEADER: vect.hxx
 USES INCLUDE HEADER: global_derivatives.hxx
-USES INCLUDE HEADER: local_derivatives.hxx
+
+INCLUDES HEADER: gaussian.hxx IN gaussian.hxx
+INCLUDES HEADER: standing_wave.hxx IN standing_wave.hxx
+INCLUDES HEADER: quad_gaussian.hxx IN quad_gaussian.hxx
+INCLUDES HEADER: local_derivatives.hxx IN local_derivatives.hxx
 
 
 

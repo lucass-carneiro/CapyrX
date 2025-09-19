@@ -1,0 +1,58 @@
+# Schedule definitions for thorn CapyrX_WaveToy_SecondOrder
+
+STORAGE: state rhs energy error
+
+# Sync
+SCHEDULE CapyrX_WaveToy_SecondOrder_Sync IN ODESolvers_PostStep
+{
+  LANG: C
+  OPTIONS: global
+  SYNC: state
+} "Sync the scalar wave state"
+
+
+
+# Init
+SCHEDULE CapyrX_WaveToy_SecondOrder_Initial AT initial
+{
+  LANG: C
+  READS: CoordinatesX::vertex_coords(everywhere)
+  WRITES: state(everywhere)
+} "Initialize scalar wave state"
+
+
+
+# Step
+SCHEDULE CapyrX_WaveToy_SecondOrder_RHS IN ODESolvers_RHS
+{
+  LANG: C
+  READS: state(everywhere)
+  READS: MultiPatch::vertex_Jacobians(everywhere)
+  READS: MultiPatch::vertex_dJacobians(everywhere)
+  WRITES: rhs(interior)
+} "Calculate scalar wave RHS"
+
+
+
+# Energy
+SCHEDULE CapyrX_WaveToy_SecondOrder_Energy AT analysis
+{
+  LANG: C
+  READS: state(everywhere)
+  READS: MultiPatch::vertex_Jacobians(everywhere)
+  READS: MultiPatch::vertex_dJacobians(everywhere)
+  WRITES: energy(interior)
+} "Calculate the energy density of the scalar wave equation"
+
+
+
+# Evolution error
+if (CCTK_EQUALS(initial_condition, "standing wave") || CCTK_EQUALS(initial_condition, "Gaussian"))
+{
+  SCHEDULE CapyrX_WaveToy_SecondOrder_Error AT analysis
+  {
+    LANG: C
+    READS: CoordinatesX::vertex_coords(everywhere) state(everywhere)
+    WRITES: error(everywhere)
+  } "Calculate error in scalar wave evolution"
+}

@@ -8,10 +8,9 @@
 
 namespace CapyrX::WaveToy {
 
-static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_DEVICE
-    CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
-    c4o_1_0_0(const Loop::PointDesc &p,
-              const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_DEVICE c4o_1_0_0(
+    const Loop::PointDesc &p, const Loop::GF3D2<const CCTK_REAL> &gf) noexcept
+    -> CCTK_REAL {
   const auto num{gf(-2 * p.DI[0] + p.I) - 8 * gf(-p.DI[0] + p.I) +
                  8 * gf(p.DI[0] + p.I) - gf(2 * p.DI[0] + p.I)};
   const auto den{1.0 / (12 * p.DX[0])};

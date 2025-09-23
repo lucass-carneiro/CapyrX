@@ -87,14 +87,14 @@ struct JacobianDerivatives {
 };
 
 static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
-project_first(const LocalFirstDerivatives &lfd,
-              const Jacobians &jac) -> GlobalFirstDerivatives {
+project_first(const LocalFirstDerivatives &lfd, const Jacobians &jac)
+    -> GlobalFirstDerivatives {
 
   // Recover local derivatives
-  const auto [dgf_da, dgf_db, dgf_dc] = lfd;
+  const auto &[dgf_da, dgf_db, dgf_dc] = lfd;
 
   // Recover Jacobians
-  const auto [da_dx, da_dy, da_dz, db_dx, db_dy, db_dz, dc_dx, dc_dy, dc_dz] =
+  const auto &[da_dx, da_dy, da_dz, db_dx, db_dy, db_dz, dc_dx, dc_dy, dc_dz] =
       jac;
 
   // Project
@@ -111,18 +111,18 @@ project_second(const LocalFirstDerivatives &lfd,
                const JacobianDerivatives &djac) -> GlobalSecondDerivatives {
 
   // Recover local derivatives
-  const auto [dgf_da, dgf_db, dgf_dc] = lfd;
+  const auto &[dgf_da, dgf_db, dgf_dc] = lfd;
 
-  const auto [d2gf_dada, d2gf_dadb, d2gf_dadc, d2gf_dbdb, d2gf_dbdc,
-              d2gf_dcdc] = lsd;
+  const auto &[d2gf_dada, d2gf_dadb, d2gf_dadc, d2gf_dbdb, d2gf_dbdc,
+               d2gf_dcdc] = lsd;
 
   // Recover Jacobians
-  const auto [da_dx, da_dy, da_dz, db_dx, db_dy, db_dz, dc_dx, dc_dy, dc_dz] =
+  const auto &[da_dx, da_dy, da_dz, db_dx, db_dy, db_dz, dc_dx, dc_dy, dc_dz] =
       jac;
 
-  const auto [d2a_dxdx, d2a_dxdy, d2a_dxdz, d2a_dydy, d2a_dydz, d2a_dzdz,
-              d2b_dxdx, d2b_dxdy, d2b_dxdz, d2b_dydy, d2b_dydz, d2b_dzdz,
-              d2c_dxdx, d2c_dxdy, d2c_dxdz, d2c_dydy, d2c_dydz, d2c_dzdz] =
+  const auto &[d2a_dxdx, d2a_dxdy, d2a_dxdz, d2a_dydy, d2a_dydz, d2a_dzdz,
+               d2b_dxdx, d2b_dxdy, d2b_dxdz, d2b_dydy, d2b_dydz, d2b_dzdz,
+               d2c_dxdx, d2c_dxdy, d2c_dxdz, d2c_dydy, d2c_dydz, d2c_dzdz] =
       djac;
 
   // Project

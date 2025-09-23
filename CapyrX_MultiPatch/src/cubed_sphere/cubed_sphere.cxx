@@ -117,17 +117,6 @@ CCTK_HOST CCTK_DEVICE auto global2local(const PatchParams &par,
         pow(r0 - r1, 2);
     break;
 
-  case PatchPiece::minus_x:
-    local_coords(0) = -(z / x);
-    local_coords(1) = y / x;
-    local_coords(2) =
-        (pow(r0, 2) - pow(r1, 2) + pow(y, 2) + pow(z, 2) +
-         sqrt(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
-              4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
-              4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)))) /
-        pow(r0 - r1, 2);
-    break;
-
   case PatchPiece::plus_y:
     local_coords(0) = z / y;
     local_coords(1) = -(x / y);
@@ -136,6 +125,17 @@ CCTK_HOST CCTK_DEVICE auto global2local(const PatchParams &par,
          sqrt(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
               4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
               4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2)))) /
+        pow(r0 - r1, 2);
+    break;
+
+  case PatchPiece::minus_x:
+    local_coords(0) = -(z / x);
+    local_coords(1) = y / x;
+    local_coords(2) =
+        (pow(r0, 2) - pow(r1, 2) + pow(y, 2) + pow(z, 2) +
+         sqrt(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+              4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+              4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)))) /
         pow(r0 - r1, 2);
     break;
 
@@ -218,18 +218,6 @@ CCTK_HOST CCTK_DEVICE auto local2global(const PatchParams &par, int patch,
         (sqrt(2) * sqrt(2 + pow(a, 2) * (1 + c) + pow(b, 2) * (1 + c)));
     break;
 
-  case PatchPiece::minus_x:
-    global_coords(0) =
-        -((r0 - c * r0 + r1 + c * r1) /
-          (sqrt(2) * sqrt(2 + pow(a, 2) * (1 + c) + pow(b, 2) * (1 + c))));
-    global_coords(1) =
-        -((b * (r0 - c * r0 + r1 + c * r1)) /
-          (sqrt(2) * sqrt(2 + pow(a, 2) * (1 + c) + pow(b, 2) * (1 + c))));
-    global_coords(2) =
-        (a * (r0 - c * r0 + r1 + c * r1)) /
-        (sqrt(2) * sqrt(2 + pow(a, 2) * (1 + c) + pow(b, 2) * (1 + c)));
-    break;
-
   case PatchPiece::plus_y:
     global_coords(0) =
         -((b * (r0 - c * r0 + r1 + c * r1)) /
@@ -237,6 +225,18 @@ CCTK_HOST CCTK_DEVICE auto local2global(const PatchParams &par, int patch,
     global_coords(1) =
         (r0 - c * r0 + r1 + c * r1) /
         (sqrt(2) * sqrt(2 + pow(a, 2) * (1 + c) + pow(b, 2) * (1 + c)));
+    global_coords(2) =
+        (a * (r0 - c * r0 + r1 + c * r1)) /
+        (sqrt(2) * sqrt(2 + pow(a, 2) * (1 + c) + pow(b, 2) * (1 + c)));
+    break;
+
+  case PatchPiece::minus_x:
+    global_coords(0) =
+        -((r0 - c * r0 + r1 + c * r1) /
+          (sqrt(2) * sqrt(2 + pow(a, 2) * (1 + c) + pow(b, 2) * (1 + c))));
+    global_coords(1) =
+        -((b * (r0 - c * r0 + r1 + c * r1)) /
+          (sqrt(2) * sqrt(2 + pow(a, 2) * (1 + c) + pow(b, 2) * (1 + c))));
     global_coords(2) =
         (a * (r0 - c * r0 + r1 + c * r1)) /
         (sqrt(2) * sqrt(2 + pow(a, 2) * (1 + c) + pow(b, 2) * (1 + c)));
@@ -465,121 +465,6 @@ cubed_sphere_jacs(const PatchParams &par, int patch,
         pow(r0 - r1, 2);
     break;
 
-  case PatchPiece::minus_x:
-    J(0)(0) = z / pow(x, 2);
-    J(0)(1) = 0;
-    J(0)(2) = -(1 / x);
-    J(1)(0) = -(y / pow(x, 2));
-    J(1)(1) = 1 / x;
-    J(1)(2) = 0;
-    J(2)(0) = (4 * x) /
-              sqrt(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
-                   4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
-                   4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)));
-    J(2)(1) =
-        (2 * y *
-         (1 +
-          (2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2)) /
-              sqrt(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
-                   4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
-                   4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2))))) /
-        pow(r0 - r1, 2);
-    J(2)(2) =
-        (2 * z *
-         (1 +
-          (2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2)) /
-              sqrt(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
-                   4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
-                   4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2))))) /
-        pow(r0 - r1, 2);
-
-    dJ(0)(0, 0) = (-2 * z) / pow(x, 3);
-    dJ(0)(0, 1) = 0;
-    dJ(0)(0, 2) = pow(x, -2);
-    dJ(0)(1, 0) = 0;
-    dJ(0)(1, 1) = 0;
-    dJ(0)(1, 2) = 0;
-    dJ(0)(2, 0) = pow(x, -2);
-    dJ(0)(2, 1) = 0;
-    dJ(0)(2, 2) = 0;
-    dJ(1)(0, 0) = (2 * y) / pow(x, 3);
-    dJ(1)(0, 1) = -pow(x, -2);
-    dJ(1)(0, 2) = 0;
-    dJ(1)(1, 0) = -pow(x, -2);
-    dJ(1)(1, 1) = 0;
-    dJ(1)(1, 2) = 0;
-    dJ(1)(2, 0) = 0;
-    dJ(1)(2, 1) = 0;
-    dJ(1)(2, 2) = 0;
-    dJ(2)(0, 0) =
-        (4 * (pow(y, 2) + pow(z, 2)) *
-         (4 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2))) /
-        pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
-                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
-                4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
-            1.5);
-    dJ(2)(0, 1) =
-        (-8 * x * y * (2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2))) /
-        pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
-                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
-                4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
-            1.5);
-    dJ(2)(0, 2) =
-        (-8 * x * z * (2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2))) /
-        pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
-                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
-                4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
-            1.5);
-    dJ(2)(1, 0) =
-        (-8 * x * y * (2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2))) /
-        pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
-                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
-                4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
-            1.5);
-    dJ(2)(1, 1) =
-        (2 -
-         (4 * pow(y, 2) * pow(2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2), 2)) /
-             pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
-                     4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
-                     4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
-                 1.5) +
-         (2 * (2 * r0 * (r0 - r1) + 3 * pow(y, 2) + pow(z, 2))) /
-             sqrt(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
-                  4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
-                  4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)))) /
-        pow(r0 - r1, 2);
-    dJ(2)(1, 2) =
-        (16 * (-pow(r0, 2) + pow(x, 2)) * y * z) /
-        pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
-                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
-                4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
-            1.5);
-    dJ(2)(2, 0) =
-        (-8 * x * z * (2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2))) /
-        pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
-                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
-                4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
-            1.5);
-    dJ(2)(2, 1) =
-        (16 * (-pow(r0, 2) + pow(x, 2)) * y * z) /
-        pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
-                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
-                4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
-            1.5);
-    dJ(2)(2, 2) =
-        (2 -
-         (4 * pow(z, 2) * pow(2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2), 2)) /
-             pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
-                     4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
-                     4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
-                 1.5) +
-         (2 * (2 * r0 * (r0 - r1) + pow(y, 2) + 3 * pow(z, 2))) /
-             sqrt(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
-                  4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
-                  4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)))) /
-        pow(r0 - r1, 2);
-    break;
-
   case PatchPiece::plus_y:
     J(0)(0) = 0;
     J(0)(1) = -(z / pow(y, 2));
@@ -692,6 +577,121 @@ cubed_sphere_jacs(const PatchParams &par, int patch,
              sqrt(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
                   4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
                   4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2)))) /
+        pow(r0 - r1, 2);
+    break;
+
+  case PatchPiece::minus_x:
+    J(0)(0) = z / pow(x, 2);
+    J(0)(1) = 0;
+    J(0)(2) = -(1 / x);
+    J(1)(0) = -(y / pow(x, 2));
+    J(1)(1) = 1 / x;
+    J(1)(2) = 0;
+    J(2)(0) = (4 * x) /
+              sqrt(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                   4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                   4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)));
+    J(2)(1) =
+        (2 * y *
+         (1 +
+          (2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2)) /
+              sqrt(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                   4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                   4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2))))) /
+        pow(r0 - r1, 2);
+    J(2)(2) =
+        (2 * z *
+         (1 +
+          (2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2)) /
+              sqrt(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                   4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                   4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2))))) /
+        pow(r0 - r1, 2);
+
+    dJ(0)(0, 0) = (-2 * z) / pow(x, 3);
+    dJ(0)(0, 1) = 0;
+    dJ(0)(0, 2) = pow(x, -2);
+    dJ(0)(1, 0) = 0;
+    dJ(0)(1, 1) = 0;
+    dJ(0)(1, 2) = 0;
+    dJ(0)(2, 0) = pow(x, -2);
+    dJ(0)(2, 1) = 0;
+    dJ(0)(2, 2) = 0;
+    dJ(1)(0, 0) = (2 * y) / pow(x, 3);
+    dJ(1)(0, 1) = -pow(x, -2);
+    dJ(1)(0, 2) = 0;
+    dJ(1)(1, 0) = -pow(x, -2);
+    dJ(1)(1, 1) = 0;
+    dJ(1)(1, 2) = 0;
+    dJ(1)(2, 0) = 0;
+    dJ(1)(2, 1) = 0;
+    dJ(1)(2, 2) = 0;
+    dJ(2)(0, 0) =
+        (4 * (pow(y, 2) + pow(z, 2)) *
+         (4 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2))) /
+        pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
+            1.5);
+    dJ(2)(0, 1) =
+        (-8 * x * y * (2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2))) /
+        pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
+            1.5);
+    dJ(2)(0, 2) =
+        (-8 * x * z * (2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2))) /
+        pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
+            1.5);
+    dJ(2)(1, 0) =
+        (-8 * x * y * (2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2))) /
+        pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
+            1.5);
+    dJ(2)(1, 1) =
+        (2 -
+         (4 * pow(y, 2) * pow(2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2), 2)) /
+             pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                     4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                     4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
+                 1.5) +
+         (2 * (2 * r0 * (r0 - r1) + 3 * pow(y, 2) + pow(z, 2))) /
+             sqrt(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                  4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                  4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)))) /
+        pow(r0 - r1, 2);
+    dJ(2)(1, 2) =
+        (16 * (-pow(r0, 2) + pow(x, 2)) * y * z) /
+        pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
+            1.5);
+    dJ(2)(2, 0) =
+        (-8 * x * z * (2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2))) /
+        pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
+            1.5);
+    dJ(2)(2, 1) =
+        (16 * (-pow(r0, 2) + pow(x, 2)) * y * z) /
+        pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
+            1.5);
+    dJ(2)(2, 2) =
+        (2 -
+         (4 * pow(z, 2) * pow(2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2), 2)) /
+             pow(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                     4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                     4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)),
+                 1.5) +
+         (2 * (2 * r0 * (r0 - r1) + pow(y, 2) + 3 * pow(z, 2))) /
+             sqrt(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+                  4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+                  4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)))) /
         pow(r0 - r1, 2);
     break;
 

@@ -10,7 +10,7 @@
 namespace CapyrX::WaveToy::gauss {
 
 template <typename T>
-static inline auto CCTK_HOST CCTK_DEVICE phi(T W, T A, T t, T x, T y,
+static inline auto CCTK_HOST CCTK_DEVICE phi(T A, T W, T t, T x, T y,
                                              T z) noexcept -> T {
   using std::sqrt, std::cosh, std::sinh;
 
@@ -29,7 +29,7 @@ static inline auto CCTK_HOST CCTK_DEVICE phi(T W, T A, T t, T x, T y,
 }
 
 template <typename T>
-static inline auto CCTK_HOST CCTK_DEVICE Pi(T W, T A, T t, T x, T y,
+static inline auto CCTK_HOST CCTK_DEVICE Pi(T A, T W, T t, T x, T y,
                                             T z) noexcept -> T {
   using std::sqrt, std::cosh, std::sinh;
 
@@ -52,7 +52,7 @@ static inline auto CCTK_HOST CCTK_DEVICE Pi(T W, T A, T t, T x, T y,
 }
 
 template <typename T>
-static inline auto CCTK_HOST CCTK_DEVICE Dx(T W, T A, T t, T x, T y,
+static inline auto CCTK_HOST CCTK_DEVICE Dx(T A, T W, T t, T x, T y,
                                             T z) noexcept -> T {
   using std::sqrt, std::cosh, std::sinh;
 
@@ -78,7 +78,7 @@ static inline auto CCTK_HOST CCTK_DEVICE Dx(T W, T A, T t, T x, T y,
 }
 
 template <typename T>
-static inline auto CCTK_HOST CCTK_DEVICE Dy(T W, T A, T t, T x, T y,
+static inline auto CCTK_HOST CCTK_DEVICE Dy(T A, T W, T t, T x, T y,
                                             T z) noexcept -> T {
   using std::sqrt, std::cosh, std::sinh;
 
@@ -104,7 +104,7 @@ static inline auto CCTK_HOST CCTK_DEVICE Dy(T W, T A, T t, T x, T y,
 }
 
 template <typename T>
-static inline auto CCTK_HOST CCTK_DEVICE Dz(T W, T A, T t, T x, T y,
+static inline auto CCTK_HOST CCTK_DEVICE Dz(T A, T W, T t, T x, T y,
                                             T z) noexcept -> T {
   using std::sqrt, std::cosh, std::sinh;
 
@@ -130,7 +130,7 @@ static inline auto CCTK_HOST CCTK_DEVICE Dz(T W, T A, T t, T x, T y,
 }
 
 template <typename T>
-static inline auto CCTK_HOST CCTK_DEVICE dPidx(T W, T A, T t, T x, T y,
+static inline auto CCTK_HOST CCTK_DEVICE dPidx(T A, T W, T t, T x, T y,
                                                T z) noexcept -> T {
   using std::sqrt, std::cosh, std::sinh;
 
@@ -154,7 +154,7 @@ static inline auto CCTK_HOST CCTK_DEVICE dPidx(T W, T A, T t, T x, T y,
 }
 
 template <typename T>
-static inline auto CCTK_HOST CCTK_DEVICE dPidy(T W, T A, T t, T x, T y,
+static inline auto CCTK_HOST CCTK_DEVICE dPidy(T A, T W, T t, T x, T y,
                                                T z) noexcept -> T {
   using std::sqrt, std::cosh, std::sinh;
 
@@ -178,7 +178,7 @@ static inline auto CCTK_HOST CCTK_DEVICE dPidy(T W, T A, T t, T x, T y,
 }
 
 template <typename T>
-static inline auto CCTK_HOST CCTK_DEVICE dPidz(T W, T A, T t, T x, T y,
+static inline auto CCTK_HOST CCTK_DEVICE dPidz(T A, T W, T t, T x, T y,
                                                T z) noexcept -> T {
   using std::sqrt, std::cosh, std::sinh;
 
@@ -202,7 +202,7 @@ static inline auto CCTK_HOST CCTK_DEVICE dPidz(T W, T A, T t, T x, T y,
 }
 
 template <typename T>
-static inline auto CCTK_HOST CCTK_DEVICE dDxdx(T W, T A, T t, T x, T y,
+static inline auto CCTK_HOST CCTK_DEVICE dDxdx(T A, T W, T t, T x, T y,
                                                T z) noexcept -> T {
   using std::sqrt, std::cosh, std::sinh;
 
@@ -250,7 +250,7 @@ static inline auto CCTK_HOST CCTK_DEVICE dDxdx(T W, T A, T t, T x, T y,
 }
 
 template <typename T>
-static inline auto CCTK_HOST CCTK_DEVICE dDydy(T W, T A, T t, T x, T y,
+static inline auto CCTK_HOST CCTK_DEVICE dDydy(T A, T W, T t, T x, T y,
                                                T z) noexcept -> T {
   using std::sqrt, std::cosh, std::sinh;
 
@@ -306,7 +306,7 @@ static inline auto CCTK_HOST CCTK_DEVICE dDydy(T W, T A, T t, T x, T y,
 }
 
 template <typename T>
-static inline auto CCTK_HOST CCTK_DEVICE dDzdz(T W, T A, T t, T x, T y,
+static inline auto CCTK_HOST CCTK_DEVICE dDzdz(T A, T W, T t, T x, T y,
                                                T z) noexcept -> T {
   using std::sqrt, std::cosh, std::sinh;
 

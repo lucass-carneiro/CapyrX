@@ -10,7 +10,7 @@
 namespace CapyrX::WaveToy_SecondOrder::gauss {
 
 template <typename T>
-static inline auto CCTK_DEVICE u(T W, T A, T t, T x, T y, T z) noexcept -> T {
+static inline auto CCTK_DEVICE u(T A, T W, T t, T x, T y, T z) noexcept -> T {
   using std::sqrt, std::cosh, std::sinh;
 
   const auto r{sqrt(x * x + y * y + z * z)};
@@ -28,7 +28,7 @@ static inline auto CCTK_DEVICE u(T W, T A, T t, T x, T y, T z) noexcept -> T {
 }
 
 template <typename T>
-static inline auto CCTK_DEVICE rho(T W, T A, T t, T x, T y, T z) noexcept -> T {
+static inline auto CCTK_DEVICE rho(T A, T W, T t, T x, T y, T z) noexcept -> T {
   using std::sqrt, std::cosh, std::sinh;
 
   const auto r{sqrt(x * x + y * y + z * z)};

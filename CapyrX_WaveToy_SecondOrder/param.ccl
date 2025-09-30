@@ -7,10 +7,23 @@ KEYWORD initial_condition "Initial condition"
   "Quadrupolar Gaussian" :: "Gaussian with a quadrupole moment that can be placed anywhere on the grid"
 } "standing wave"
 
+BOOLEAN add_dissipation "Add Kreiss-Oliger dissipation to scalar field RHS"
+{
+} "yes"
+
 CCTK_REAL dissipation_epsilon "Kreiss-Oliger dissipation strength"
 {
   0.0:0.33 :: ""
-} 0.15
+} 0.01
+
+BOOLEAN use_newradx "Use radiative boundary conditions for scalar field"
+{
+} "yes"
+
+CCTK_REAL rad_power "Rad. power parameter for NewRadX"
+{
+  0.0:* :: ""
+} 1.0
 
 CCTK_REAL amplitude "Initial amplitude for gaussian and wave initial data"
 {

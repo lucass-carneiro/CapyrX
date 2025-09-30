@@ -9,14 +9,14 @@ ActiveThorns = "
 "
 
 ###### Settings ######
-$final_time = 80.0
-$out_every_time = 1.0
+$final_time     = 10.0
+$out_every_time = 0.5
 
-$r0 = 1.0
-$rf = 5.0
+$r0 = 0.5
+$rf = 2.0
 
-$radial_cells  = 40
-$angular_cells = 20
+$radial_cells  = 80
+$angular_cells = 40
 
 $cfl = 0.25
 
@@ -25,7 +25,7 @@ $wave_k = 0.50
 $add_dissipation = yes
 $use_newradx     = yes
 
-$diss_eps  = 0.0
+$diss_eps  = 0.1
 $rad_power = 1.0
 ######################
 
@@ -73,10 +73,10 @@ CapyrX_WaveToy_SecondOrder::dissipation_epsilon = $diss_eps
 CapyrX_WaveToy_SecondOrder::rad_power           = $rad_power
 
 # Initial data
-CapyrX_WaveToy_SecondOrder::initial_condition = "gaussian"
+CapyrX_WaveToy_SecondOrder::initial_condition = "Quadrupolar gaussian"
 CapyrX_WaveToy_SecondOrder::amplitude         = 1.0
-CapyrX_WaveToy_SecondOrder::gaussian_width    = 1.0 / 4.0
-CapyrX_WaveToy_SecondOrder::quad_gaussian_R0  = 0.5
+CapyrX_WaveToy_SecondOrder::gaussian_width    = 1.0 / 3.0
+CapyrX_WaveToy_SecondOrder::quad_gaussian_R0  = 0.0
 CapyrX_WaveToy_SecondOrder::wave_kz           = $wave_k
 
 # Boundary conditions

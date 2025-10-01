@@ -42,10 +42,10 @@ extern "C" void CapyrX_WaveToy_SecondOrder_RHS(CCTK_ARGUMENTS) {
       });
 
   if (use_newradx) {
-    NewRadX::NewRadX_Apply(cctkGH, u, u_rhs, vcoordx, vcoordy, vcoordz, 0.0,
+    NewRadX::NewRadX_Apply(cctkGH, u, u_rhs, NEWRADX_MULTIPATCH_QUANTITIES, 0.0,
                            1.0, rad_power);
-    NewRadX::NewRadX_Apply(cctkGH, rho, rho_rhs, vcoordx, vcoordy, vcoordz, 0.0,
-                           1.0, rad_power + 1.0);
+    NewRadX::NewRadX_Apply(cctkGH, rho, rho_rhs, NEWRADX_MULTIPATCH_QUANTITIES,
+                           0.0, 1.0, rad_power + 1.0);
   }
 
   if (add_dissipation) {

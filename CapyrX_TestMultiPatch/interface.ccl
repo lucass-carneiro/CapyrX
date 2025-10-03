@@ -1,0 +1,27 @@
+# Interface definition for thorn CapyrX_TestMultiPatch
+
+IMPLEMENTS: CapyrX_TestMultiPatch
+
+INHERITS: CoordinatesX MultiPatch
+
+USES INCLUDE HEADER: loop_device.hxx
+USES INCLUDE HEADER: global_derivatives.hxx
+
+CCTK_REAL test_data TYPE=gf TAGS='dependents="error" dirichlet_values={1138.0 1138.0 1138.0}'
+{
+    u
+} "Test grid functions"
+
+CCTK_REAL error TYPE=gf
+{
+  interp
+  dfdx
+  dfdy
+  dfdz
+  d2fdx2
+  d2fdy2
+  d2fdz2
+  d2fdxy
+  d2fdxz
+  d2fdyz
+} "Test grid function error"

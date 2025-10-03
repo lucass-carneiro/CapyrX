@@ -1,0 +1,71 @@
+# Parameter definitions for thorn CapyrX_WaveToy_SecondOrder
+
+KEYWORD initial_condition "Initial condition"
+{
+  "standing wave" :: "Standing wave"
+  "Gaussian" :: "Gaussian"
+  "Quadrupolar Gaussian" :: "Gaussian with a quadrupole moment that can be placed anywhere on the grid"
+} "standing wave"
+
+BOOLEAN add_dissipation "Add Kreiss-Oliger dissipation to scalar field RHS"
+{
+} "yes"
+
+CCTK_REAL dissipation_epsilon "Kreiss-Oliger dissipation strength"
+{
+  0.0:0.33 :: ""
+} 0.01
+
+BOOLEAN use_newradx "Use radiative boundary conditions for scalar field"
+{
+} "yes"
+
+CCTK_REAL rad_power "Rad. power parameter for NewRadX"
+{
+  0.0:* :: ""
+} 1.0
+
+CCTK_REAL amplitude "Initial amplitude for gaussian and wave initial data"
+{
+  *:* :: ""
+} 1.0
+
+CCTK_REAL wave_kx "kx wave number for wave initial data"
+{
+  *:* :: ""
+} 1.0
+
+CCTK_REAL wave_ky "ky wave number for wave initial data"
+{
+  *:* :: ""
+} 1.0
+
+CCTK_REAL wave_kz "kz wave number for wave initial data"
+{
+  *:* :: ""
+} 1.0
+
+CCTK_REAL gaussian_width "width of Gaussian"
+{
+  (0:* :: ""
+} 1.0
+
+CCTK_REAL quad_gaussian_R0 "quadrupolar Gaussian R0"
+{
+  *:* :: ""
+} 1.0
+
+CCTK_REAL quad_gaussian_x0 "quadrupolar Gaussian x0"
+{
+  *:* :: ""
+} 0.0
+
+CCTK_REAL quad_gaussian_y0 "quadrupolar Gaussian y0"
+{
+  *:* :: ""
+} 0.0
+
+CCTK_REAL quad_gaussian_z0 "quadrupolar Gaussian z0"
+{
+  *:* :: ""
+} 0.0

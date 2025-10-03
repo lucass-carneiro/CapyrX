@@ -1,0 +1,4 @@
+# Configuration definitions for thorn CapyrX_GlobalDerivatives
+
+REQUIRES Loop
+PROVIDES CapyrX_GlobalDerivatives {}

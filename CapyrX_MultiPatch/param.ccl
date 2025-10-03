@@ -1,0 +1,100 @@
+# Parameter definitions for thorn CapyrX_MultiPatch
+
+KEYWORD patch_system "Patch system"
+{
+  "none" :: "disable multi-patch systems"
+  "Cartesian" :: "Cartesian coordinates"
+  "Cubed sphere" :: "Cartesian cube surrounded with 6 spherical-like patches"
+} "none"
+
+BOOLEAN verbose "Enable verbose output"
+{
+} no
+
+CCTK_BOOLEAN run_unit_tests "Wether or not to perform tests on the coordinate transformation routines"
+{
+} no
+
+INT test_repetitions "How many times to repeat each test"
+{
+  1:* :: "Greater or equal 1"
+} 100
+
+INT test_seed "Integer seed for random generator in unit tests"
+{
+  0:* :: "Positive"
+} 100
+
+INT patch_overlap "How many grid points of overlap to add between patches"
+{
+  0:* :: "Positive"
+} 0
+
+# Cartesian patch system
+
+INT cartesian_ncells_i "Number of cells in i direction"
+{
+  0:* :: ""
+} 20
+
+INT cartesian_ncells_j "Number of cells in j direction"
+{
+  0:* :: ""
+} 20
+
+INT cartesian_ncells_k "Number of cells in k direction"
+{
+  0:* :: ""
+} 20
+
+REAL cartesian_xmin "xmin"
+{
+  *:* :: ""
+} -1.0
+
+REAL cartesian_ymin "ymin"
+{
+  *:* :: ""
+} -1.0
+
+REAL cartesian_zmin "zmin"
+{
+  *:* :: ""
+} -1.0
+
+REAL cartesian_xmax "xmax"
+{
+  *:* :: ""
+} +1.0
+
+REAL cartesian_ymax "ymax"
+{
+  *:* :: ""
+} +1.0
+
+REAL cartesian_zmax "zmax"
+{
+  *:* :: ""
+} +1.0
+
+# Cubed Sphere patch system
+
+REAL cubed_sphere_inner_boundary_radius  "Half of the length of the side of the central cartesian cube"
+{
+  0:* :: "Positive"
+} 1.0
+
+REAL cubed_sphere_outer_boundary_radius "Radius where the outer boundaries of the cake will be placed."
+{
+  0:* :: "Positive"
+} 4.0
+
+INT cubed_sphere_angular_cells "Number of cells in the angular direction"
+{
+  0:* :: "Positive"
+} 20
+
+INT cubed_sphere_radial_cells "Number of cells in the radial direction" 
+{
+  0:* :: "Positive"
+} 20

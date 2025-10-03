@@ -1,0 +1,50 @@
+# Schedule definitions for thorn CapyrX_TestMultiPatch
+
+STORAGE: test_data
+STORAGE: error
+
+SCHEDULE CapyrX_TestMultiPatch_write_test_data AT initial
+{
+  LANG: C
+  READS: CoordinatesX::vertex_coords(interior)
+  WRITES: test_data(interior)
+} "Fill test data"
+
+SCHEDULE CapyrX_TestMultiPatch_sync AS TestMultiPatch_sync_test_data AT initial AFTER TestMultiPatch_write_test_data
+{
+  LANG: C
+  OPTIONS: global
+  SYNC: test_data
+} "Synchronizes grid functions"
+
+SCHEDULE CapyrX_TestMultiPatch_compute_interp_error AT initial AFTER TestMultiPatch_sync_test_data
+{
+  LANG: C
+  READS: test_data(everywhere) CoordinatesX::vertex_coords(everywhere)
+  WRITES: interp(everywhere)
+} "Compute interpolation error"
+
+SCHEDULE CapyrX_TestMultiPatch_compute_deriv_error AT initial AFTER TestMultiPatch_compute_interp_error
+{
+  LANG: C
+  READS: test_data(everywhere)
+  READS: CoordinatesX::vertex_coords(everywhere)
+  READS: MultiPatch::vertex_Jacobians(everywhere)
+  READS: MultiPatch::vertex_dJacobians(everywhere)
+  WRITES: dfdx(interior)
+  WRITES: dfdy(interior)
+  WRITES: dfdz(interior)
+  WRITES: d2fdx2(interior)
+  WRITES: d2fdy2(interior)
+  WRITES: d2fdz2(interior)
+  WRITES: d2fdxy(interior)
+  WRITES: d2fdxz(interior)
+  WRITES: d2fdyz(interior)
+} "Compute derivative error"
+
+SCHEDULE CapyrX_TestMultiPatch_sync AS CapyrX_TestMultiPatch_sync_error AT initial AFTER TestMultiPatch_compute_deriv_error
+{
+  LANG: C
+  OPTIONS: global
+  SYNC: error
+} "Synchronizes grid functions"

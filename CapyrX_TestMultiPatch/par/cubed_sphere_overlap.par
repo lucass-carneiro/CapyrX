@@ -1,0 +1,60 @@
+ActiveThorns = "
+    CarpetX
+    IOUtil
+    CoordinatesX
+    CapyrX_MultiPatch
+    CapyrX_TestMultiPatch
+"
+ 
+Cactus::presync_mode = "mixed-error"
+Cactus::cctk_show_schedule = yes
+
+Cactus::terminate = "iteration"
+Cactus::cctk_itlast = 0
+
+CarpetX::verbose = yes
+CarpetX::poison_undefined_values = yes
+
+CarpetX::blocking_factor_x = 1
+CarpetX::blocking_factor_y = 1
+CarpetX::blocking_factor_z = 1
+
+CarpetX::max_num_levels = 1
+
+CarpetX::ghost_size          = 2
+CarpetX::interpolation_order = 3
+
+CapyrX_MultiPatch::verbose        =  yes
+CapyrX_MultiPatch::patch_system   = "Cubed sphere"
+CapyrX_MultiPatch::run_unit_tests = yes
+
+CapyrX_MultiPatch::cubed_sphere_inner_boundary_radius = 1.0
+CapyrX_MultiPatch::cubed_sphere_outer_boundary_radius = 4.0
+CapyrX_MultiPatch::cubed_sphere_angular_cells         = 40
+CapyrX_MultiPatch::cubed_sphere_radial_cells          = 40
+CapyrX_MultiPatch::patch_overlap                      = 7
+                                                                        
+CapyrX_TestMultiPatch::test_data = "standing wave"
+
+CarpetX::boundary_x       = "dirichlet"
+CarpetX::boundary_y       = "dirichlet"
+CarpetX::boundary_z       = "dirichlet"
+CarpetX::boundary_upper_x = "dirichlet"
+CarpetX::boundary_upper_y = "dirichlet"
+CarpetX::boundary_upper_z = "dirichlet"
+
+IO::out_dir = $parfile
+IO::out_every = 2
+
+CarpetX::out_tsv = yes
+CarpetX::out_tsv_vars = "
+  CoordinatesX::vertex_coords
+  CapyrX_TestMultiPatch::test_data
+  CapyrX_TestMultiPatch::error
+"
+
+CarpetX::out_silo_vars = "
+  CoordinatesX::vertex_coords
+  CapyrX_TestMultiPatch::test_data
+  CapyrX_TestMultiPatch::error
+"

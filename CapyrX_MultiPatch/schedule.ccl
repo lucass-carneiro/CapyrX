@@ -1,0 +1,37 @@
+# Schedule definitions for thorn CapyrX_MultiPatch
+
+STORAGE: vertex_Jacobians
+STORAGE: vertex_dJacobians
+
+SCHEDULE CapyrX_MultiPatch_Setup AT startup BEFORE Driver_Startup
+{
+  LANG: C
+} "Initialize multi-patch system"
+
+if (!CCTK_EQUALS(patch_system, "none"))
+{
+  SCHEDULE CapyrX_MultiPatch_Coordinates_Setup AT basegrid AFTER CoordinatesX_Setup
+  {
+    LANG: C
+    WRITES: CoordinatesX::vertex_coords(everywhere)
+    WRITES: CoordinatesX::cell_coords(everywhere)
+    WRITES: CoordinatesX::cell_volume(everywhere)
+    WRITES: vertex_Jacobians(everywhere)
+    WRITES: vertex_dJacobians(everywhere)
+  } "Set multipatch coordinate grid functions"
+
+  SCHEDULE CapyrX_MultiPatch_Check_Parameters AT paramcheck
+  {
+    LANG: C
+    OPTIONS: meta
+  } "Check multipatch parameters"
+
+  if (run_unit_tests)
+  {
+    SCHEDULE CapyrX_MultiPatch_Run_Unit_Tests AT wragh
+    {
+      LANG: C
+      OPTIONS: meta
+    } "Perform Cartesian patch system tests"
+  }
+}

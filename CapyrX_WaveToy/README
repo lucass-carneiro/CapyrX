@@ -1,0 +1,12 @@
+Cactus Code Thorn CapyrX_TestMultipatch
+Author(s)    : Lucas Timotheo Sanches <lsanches@lsu.edu>
+               
+
+Maintainer(s): Lucas Timotheo Sanches <lsanches@lsu.edu>
+
+Licence      : LGPL
+--------------------------------------------------------------------------
+
+1. Purpose
+
+Solve the scalar wave equation using MultiPatch grids

@@ -1,0 +1,3 @@
+# Configuration definitions for thorn CapyrX_WaveToy
+
+REQUIRES Loop CapyrX_GlobalDerivatives

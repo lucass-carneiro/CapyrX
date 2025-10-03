@@ -1,0 +1,3 @@
+# Configuration definitions for thorn CapyrX_WaveToy_SecondOrder
+
+REQUIRES Loop CapyrX_GlobalDerivatives

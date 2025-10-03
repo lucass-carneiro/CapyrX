@@ -1,0 +1,48 @@
+# Interface definition for thorn CapyrX_WaveToy
+# The implementatio will follow Eqs. (14)-(16) of 
+# http://arxiv.org/abs/gr-qc/0512001v1
+
+IMPLEMENTS: CapyrX_WaveToy
+
+INHERITS: CoordinatesX MultiPatch
+
+USES INCLUDE HEADER: loop_device.hxx
+USES INCLUDE HEADER: global_derivatives.hxx
+
+INCLUDES HEADER: gaussian.hxx IN gaussian.hxx
+INCLUDES HEADER: standing_wave.hxx IN standing_wave.hxx
+INCLUDES HEADER: quad_gaussian.hxx IN quad_gaussian.hxx
+
+USES INCLUDE HEADER: newradx.hxx
+
+CCTK_REAL state TYPE=gf TAGS='rhs="rhs" dependents="energy error" dirichlet_values={0.0 0.0 0.0 0.0 0.0}'
+{
+  phi
+  Pi
+  Dx
+  Dy
+  Dz
+} "Scalar wave equation state vector"
+
+CCTK_REAL rhs TYPE=gf TAGS='checkpoint="no"'
+{
+  phi_rhs
+  Pi_rhs
+  Dx_rhs
+  Dy_rhs
+  Dz_rhs
+} "RHS of scalar wave equation"
+
+CCTK_REAL error TYPE=gf TAGS='checkpoint="no"'
+{
+  phi_error
+  Pi_error
+  Dx_error
+  Dy_error
+  Dz_error
+} "Error in scalar wave evolution"
+
+CCTK_REAL energy TYPE=gf TAGS='checkpoint="no"'
+{
+  energy
+} "Scalar wave equation energy density"

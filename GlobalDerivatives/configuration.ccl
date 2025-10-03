@@ -1,4 +1,0 @@
-# Configuration definitions for thorn GlobalDerivatives
-
-REQUIRES Loop
-PROVIDES GlobalDerivatives {}

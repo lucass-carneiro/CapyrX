@@ -1,0 +1,117 @@
+ActiveThorns = "
+    CarpetX
+    IOUtil
+    Multipole
+    TimerReport
+    ODESolvers
+    CoordinatesX
+    CapyrX_MultiPatch
+    CapyrX_WaveToy
+"
+
+###### Settings ######
+$itlast       = 4096
+$out_every_it = 16
+
+$r0 = 2.0
+$rf = 20.0
+
+$radial_cells  = 170
+$angular_cells = 31
+
+$cfl = 0.25
+
+$wave_k = 0.50
+
+$interp_order  = 3
+$ghost_size    = 3
+$patch_overlap = 7
+
+$diss_eps = 0.1
+######################
+
+$dx = 2.0 / $angular_cells
+$dt = $cfl * $dx
+
+# Misc options
+Cactus::presync_mode = "mixed-error"
+Cactus::cctk_show_schedule = yes
+
+CarpetX::verbose = yes
+CarpetX::poison_undefined_values = yes
+
+# Block distribution
+CarpetX::blocking_factor_x = 1
+CarpetX::blocking_factor_y = 1
+CarpetX::blocking_factor_z = 1
+
+# Time integration
+ODESolvers::verbose = yes
+ODESolvers::method  = "RK4"
+CarpetX::dtfac      = $cfl
+
+# Grid
+CapyrX_MultiPatch::verbose      =  yes
+CapyrX_MultiPatch::patch_system = "Cubed sphere"
+
+CapyrX_MultiPatch::cubed_sphere_inner_boundary_radius = $r0
+CapyrX_MultiPatch::cubed_sphere_outer_boundary_radius = $rf
+CapyrX_MultiPatch::cubed_sphere_angular_cells         = $angular_cells
+CapyrX_MultiPatch::cubed_sphere_radial_cells          = $radial_cells
+
+CapyrX_MultiPatch::patch_overlap = $patch_overlap
+
+CarpetX::ghost_size          = $ghost_size
+CarpetX::interpolation_order = $interp_order
+
+# Initial data
+CapyrX_WaveToy::initial_condition   = "Quadrupolar Gaussian"
+CapyrX_WaveToy::amplitude           = 10.0
+CapyrX_WaveToy::gaussian_width      = $r0 / 8.0
+CapyrX_WaveToy::quad_gaussian_R0    = $r0 / 2.5
+CapyrX_WaveToy::dissipation_epsilon = $diss_eps
+
+# Boundary conditions
+CarpetX::boundary_x       = "dirichlet"
+CarpetX::boundary_y       = "dirichlet"
+CarpetX::boundary_z       = "dirichlet"
+CarpetX::boundary_upper_x = "dirichlet"
+CarpetX::boundary_upper_y = "dirichlet"
+CarpetX::boundary_upper_z = "dirichlet"
+
+# Multipole extraction
+Multipole::verbose           = yes
+Multipole::out_every         = $out_every_it
+Multipole::l_max             = 4
+Multipole::interpolator_pars = "order=3"
+Multipole::nradii            = 4
+Multipole::radius[0]         = 4.0
+Multipole::radius[1]         = 6.0
+Multipole::radius[2]         = 8.0
+Multipole::radius[3]         = 10.0
+Multipole::ntheta            = 256
+Multipole::nphi              = 256
+Multipole::variables = "
+    Capyrx_WaveToy::phi
+"
+
+# Termination
+Cactus::terminate   = "iteration"
+Cactus::cctk_itlast = $itlast
+
+# Output
+IO::out_dir = $parfile
+IO::out_every = $out_every_it
+
+CarpetX::out_tsv = no
+CarpetX::out_tsv_vars = ""
+
+CarpetX::out_silo_vars = "
+    Capyrx_WaveToy::state
+    Capyrx_WaveToy::energy
+"
+
+TimerReport::out_every = $out_every_it
+TimerReport::out_filename = "TimerReport"
+TimerReport::output_schedule_timers = no
+TimerReport::n_top_timers = 200

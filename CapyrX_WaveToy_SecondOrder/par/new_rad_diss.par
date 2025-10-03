@@ -1,0 +1,111 @@
+ActiveThorns = "
+    CarpetX
+    IOUtil
+    TimerReport
+    ODESolvers
+    CoordinatesX
+    CapyrX_MultiPatch
+    CapyrX_WaveToy_SecondOrder
+"
+
+###### Settings ######
+$final_time     = 10.0
+$out_every_time = 0.1
+
+$r0 = 0.5
+$rf = 2.0
+
+$radial_cells  = 80
+$angular_cells = 40
+
+$cfl = 0.25
+
+$wave_k = 0.50
+
+$add_dissipation = yes
+$use_newradx     = yes
+
+$diss_eps  = 0.2
+$rad_power = 1.0
+######################
+
+$dt = min($cfl * 2.0 / $radial_cells, $cfl * 2.0 / $angular_cells)
+
+$itlast       = ceil($final_time / $dt)
+$out_every_it = ceil($out_every_time / $dt)
+
+# Misc options
+Cactus::presync_mode = "mixed-error"
+Cactus::cctk_show_schedule = yes
+
+CarpetX::verbose = yes
+CarpetX::poison_undefined_values = no
+
+# Block distribution
+CarpetX::blocking_factor_x = 1
+CarpetX::blocking_factor_y = 1
+CarpetX::blocking_factor_z = 1
+
+# Time integration
+ODESolvers::method = "RK4"
+CarpetX::dtfac      = $cfl
+
+# Grid
+CapyrX_MultiPatch::verbose        =  yes
+CapyrX_MultiPatch::patch_system   = "Cubed sphere"
+
+CapyrX_MultiPatch::cubed_sphere_inner_boundary_radius = $r0
+CapyrX_MultiPatch::cubed_sphere_outer_boundary_radius = $rf
+CapyrX_MultiPatch::cubed_sphere_angular_cells         = $angular_cells
+CapyrX_MultiPatch::cubed_sphere_radial_cells          = $radial_cells
+
+# We are using 5 point stencils
+CarpetX::ghost_size = 3
+
+# We are restricted to this becase we have no patch overlaps
+CarpetX::interpolation_order = 1
+
+# Dissipation and NewRadX
+CapyrX_WaveToy_SecondOrder::add_dissipation = $add_dissipation
+CapyrX_WaveToy_SecondOrder::use_newradx     = $use_newradx
+
+CapyrX_WaveToy_SecondOrder::dissipation_epsilon = $diss_eps
+CapyrX_WaveToy_SecondOrder::rad_power           = $rad_power
+
+# Initial data
+CapyrX_WaveToy_SecondOrder::initial_condition = "Quadrupolar gaussian"
+CapyrX_WaveToy_SecondOrder::amplitude         = 1.0
+CapyrX_WaveToy_SecondOrder::gaussian_width    = 1.0 / 3.0
+CapyrX_WaveToy_SecondOrder::quad_gaussian_R0  = 0.0
+CapyrX_WaveToy_SecondOrder::wave_kz           = $wave_k
+
+# Boundary conditions
+CarpetX::boundary_x       = "neumann"
+CarpetX::boundary_y       = "neumann"
+CarpetX::boundary_z       = "neumann"
+CarpetX::boundary_upper_x = "neumann"
+CarpetX::boundary_upper_y = "neumann"
+CarpetX::boundary_upper_z = "neumann"
+
+# Termination
+Cactus::terminate   = "iteration"
+Cactus::cctk_itlast = $itlast
+
+# Output
+IO::out_dir = $parfile
+IO::out_every = $out_every_it
+
+CarpetX::out_tsv = no
+CarpetX::out_tsv_vars = ""
+
+CarpetX::out_silo_vars = "
+    CoordinatesX::vertex_coords
+    CapyrX_WaveToy_SecondOrder::state
+    CapyrX_WaveToy_SecondOrder::energy
+    CapyrX_WaveToy_SecondOrder::error
+"
+
+TimerReport::out_every = 1
+TimerReport::out_filename = "TimerReport"
+TimerReport::output_schedule_timers = no
+TimerReport::n_top_timers = 100

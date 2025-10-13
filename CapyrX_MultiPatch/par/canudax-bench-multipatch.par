@@ -1,0 +1,115 @@
+# Settings
+#################################
+$itlast       = 4
+
+$inner_radius = 0.25
+$outer_radius = 1.25
+$radial_cells = 128
+$anguar_cells = 128
+#################################
+
+ActiveThorns = "
+  ADMBaseX
+  CanudaX_BSSNMoL
+  CapyrX_MultiPatch
+  CarpetX
+  CoordinatesX
+  IOUtil
+  ODESolvers
+  TimerReport
+  TmunuBaseX
+"
+
+# Driver
+Cactus::cctk_show_schedule       = yes
+Cactus::presync_mode             = "mixed-error"
+
+CarpetX::verbose                 = yes
+CarpetX::poison_undefined_values = no
+CarpetX::out_performance         = no
+CarpetX::out_metadata            = no
+
+# Run Termination
+Cactus::terminate   = "iteration"
+Cactus::cctk_itlast = $itlast
+
+# Initial data
+ADMBaseX::initial_data = "Cartesian Minkowski"
+ADMBaseX::initial_lapse = "one"
+ADMBaseX::initial_shift = "zero"
+
+# Grid setup
+CapyrX_MultiPatch::verbose       =  yes
+CapyrX_MultiPatch::patch_system  = "Cubed sphere"
+CapyrX_MultiPatch::patch_overlap = 1
+
+CapyrX_MultiPatch::cubed_sphere_inner_boundary_radius = $inner_radius
+CapyrX_MultiPatch::cubed_sphere_outer_boundary_radius = $outer_radius
+CapyrX_MultiPatch::cubed_sphere_radial_cells          = $radial_cells
+CapyrX_MultiPatch::cubed_sphere_angular_cells         = $anguar_cells
+
+CarpetX::blocking_factor_x = 2
+CarpetX::blocking_factor_y = 2
+CarpetX::blocking_factor_z = 2
+
+CarpetX::ghost_size = 3
+
+CarpetX::interpolation_order = 1
+CarpetX::prolongation_type   = "ddf"
+CarpetX::prolongation_order  = 5
+
+# Boundary conditions
+CarpetX::boundary_x       = "neumann"
+CarpetX::boundary_y       = "neumann"
+CarpetX::boundary_z       = "neumann"
+CarpetX::boundary_upper_x = "neumann"
+CarpetX::boundary_upper_y = "neumann"
+CarpetX::boundary_upper_z = "neumann"
+
+# Time Integration
+CarpetX::dtfac      = 0.25
+ODESolvers::verbose = yes
+ODESolvers::method  = "RK4"
+
+# Spacetime evolution
+CanudaX_BSSNMoL::calculate_constraints              = yes
+CanudaX_BSSNMoL::calculate_constraints_every        = 1
+CanudaX_BSSNMoL::slicing_condition                  = "1+log" #geodesic to freeze lapse
+CanudaX_BSSNMoL::kappa_alpha                        = 2.0
+CanudaX_BSSNMoL::impose_conf_fac_floor_at_initial   = yes
+CanudaX_BSSNMoL::conf_fac_floor                     = 1.0d-10
+CanudaX_BSSNMoL::precollapsed_lapse                 = no
+CanudaX_BSSNMoL::zeta_alpha                         = 1    #set to 0 to freeze lapse
+CanudaX_BSSNMoL::zeta_beta                          = 1    #set to 0 to freeze shift
+CanudaX_BSSNMoL::eta_beta                           = 1    #set to 0 to freeze shift
+CanudaX_BSSNMoL::beta_Gamma                         = 0.75 #set to 0 to freeze shift
+CanudaX_BSSNMoL::chi_gamma                          = 0.667
+CanudaX_BSSNMoL::beta_Alp                           = 1
+CanudaX_BSSNMoL::eta_transition                     = no
+CanudaX_BSSNMoL::moving_eta_transition              = no
+CanudaX_BSSNMoL::eta_beta_dynamic                   = no
+CanudaX_BSSNMoL::eps_r                              = 1e-5
+CanudaX_BSSNMoL::reset_dethh                        = yes
+CanudaX_BSSNMoL::make_aa_tracefree                  = yes
+CanudaX_BSSNMoL::stress_energy_state                = no
+CanudaX_BSSNMoL::derivs_order                       = 4
+CanudaX_BSSNMoL::use_advection_stencils             = yes
+CanudaX_BSSNMoL::add_KO_dissipation                 = yes
+CanudaX_BSSNMoL::diss_eps                           = 0.20
+CanudaX_BSSNMoL::diss_order                         = 5
+CanudaX_BSSNMoL::use_local_error_estimate           = no
+CanudaX_BSSNMoL::boundary_conditions                = "radiative"
+
+# Output
+IO::out_dir   = $parfile
+IO::out_every = -1
+
+
+# Timer output
+TimerReport::out_every                  = $itlast
+TimerReport::out_filename               = "TimerReport"
+TimerReport::n_top_timers               = 200
+TImerReport::output_all_timers          = yes
+TimerReport::output_all_timers_readable = yes
+TimerReport::output_all_timers_together = yes
+TimerReport::output_schedule_timers     = yes

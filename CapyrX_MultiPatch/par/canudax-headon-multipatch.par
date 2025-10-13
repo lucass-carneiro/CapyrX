@@ -1,0 +1,239 @@
+ActiveThorns = "
+  ADMBaseX
+  BoxInBox
+  CanudaX_BSSNMoL
+  CanudaX_NPScalars
+  CapyrX_MultiPatch
+  CarpetX
+  CoordinatesX
+  IOUtil
+  Multipole
+  ODESolvers
+  SystemTopology
+  TimerReport
+  TmunuBaseX
+  TwoPuncturesX
+"
+
+###### Settings ######
+$itlast      = 100000000
+$final_time  = 300.0
+$max_runtime = 3 * 24 * 60 - 10 # minutes
+
+$out_every   = 128
+$wave_every  = 32
+$timer_every = 128
+$norms_every = 32
+
+$dtfac = 0.5
+
+$r0 = 50.0
+$rf = 200.0 + $r0
+$nr = 100
+$na = 50
+
+$bh_mass = 0.5
+$bh_sep  = 2.0
+
+$diss_eps      = 0.15
+
+$patch_overlap = 0
+$interp_order  = 1
+$interp_opts   = "order=1"
+######################
+
+# Misc options
+Cactus::presync_mode       = "mixed-error"
+Cactus::cctk_show_schedule = yes
+
+CarpetX::verbose                 = yes
+CarpetX::poison_undefined_values = no
+
+# Block distribution
+CarpetX::blocking_factor_x = 2
+CarpetX::blocking_factor_y = 2
+CarpetX::blocking_factor_z = 2
+
+# Termination
+Cactus::terminate       = "any"
+Cactus::cctk_final_time = $final_time
+Cactus::max_runtime     = $max_runtime
+Cactus::cctk_itlast     = $itlast
+
+# Time integration
+ODESolvers::verbose = yes
+ODESolvers::method  = "RK4"
+CarpetX::dtfac      = $dtfac
+
+# Grid
+CapyrX_MultiPatch::verbose       =  yes
+CapyrX_MultiPatch::patch_system  = "Cubed sphere"
+CapyrX_MultiPatch::patch_overlap = $patch_overlap
+
+CapyrX_MultiPatch::cubed_sphere_inner_boundary_radius = $r0
+CapyrX_MultiPatch::cubed_sphere_outer_boundary_radius = $rf
+CapyrX_MultiPatch::cubed_sphere_radial_cells          = $nr
+CapyrX_MultiPatch::cubed_sphere_angular_cells         = $na
+
+
+CarpetX::ghost_size          = 3
+CarpetX::interpolation_order = $interp_order
+
+# Boundary
+CarpetX::boundary_x       = "neumann"
+CarpetX::boundary_y       = "neumann"
+CarpetX::boundary_z       = "neumann"
+CarpetX::boundary_upper_x = "neumann"
+CarpetX::boundary_upper_y = "neumann"
+CarpetX::boundary_upper_z = "neumann"
+
+# Mesh refinement
+CarpetX::max_num_levels = 6
+CarpetX::regrid_every   = 0
+
+# Note: All positions and radi in BoxInBox are given in
+# local coordinatess [-1, 1]. We have to transform
+# desired final grid positions and sizes to local coordinates
+BoxInBox::num_regions  = 2
+
+BoxInBox::shape_1      = "cube"
+BoxInBox::num_levels_1 = 6
+BoxInBox::position_x_1 = ($bh_sep / 2.0) / ($r0 / 2.0) # Plus puncture
+BoxInBox::position_y_1 = 0.0
+BoxInBox::position_z_1 = 0.0
+BoxInBox::radius_1     = [
+  -1.0,
+  0.7,
+  0.5,
+  0.3,
+  0.1,
+  (3.0 * $bh_mass) / $r0
+]
+
+BoxInBox::shape_2      = "cube"
+BoxInBox::num_levels_2 = 6
+BoxInBox::position_x_2 = -($bh_sep / 2.0) / ($r0 / 2.0) # Plus puncture
+BoxInBox::position_y_2 = 0.0
+BoxInBox::position_z_2 = 0.0
+BoxInBox::radius_2     = [
+  -1.0,
+  0.7,
+  0.5,
+  0.3,
+  0.1,
+  (3.0 * $bh_mass) / $r0
+]
+
+CarpetX::prolongation_type  = "ddf"
+CarpetX::prolongation_order = 5
+
+# Initial data
+ADMBaseX::initial_data  = "TwoPunctures"
+ADMBaseX::initial_lapse = "TwoPunctures-averaged"
+
+TwoPuncturesX::par_b       = $bh_sep
+TwoPuncturesX::par_m_plus  = $bh_mass
+TwoPuncturesX::par_m_minus = $bh_mass
+
+TwoPuncturesX::grid_setup_method = "evaluation"
+TwoPuncturesX::give_bare_mass    = yes
+TwoPuncturesX::TP_epsilon        = 1.0e-6
+TwoPuncturesX::TP_Tiny           = 1.0e-10
+
+TwoPuncturesX::npoints_A     = 40
+TwoPuncturesX::npoints_B     = 40
+TwoPuncturesX::npoints_phi   = 36
+TwoPuncturesX::Newton_maxit  = 12
+TwoPuncturesX::Newton_tol    = 1.0e-10
+
+TwoPuncturesX::keep_u_around = no
+TwoPuncturesX::verbose       = no
+
+# Evolution
+CanudaX_BSSNMoL::calculate_constraints              = yes
+CanudaX_BSSNMoL::calculate_constraints_every        = 64
+CanudaX_BSSNMoL::slicing_condition                  = "1+log" #geodesic to freeze lapse
+CanudaX_BSSNMoL::kappa_alpha                        = 2.0
+CanudaX_BSSNMoL::impose_conf_fac_floor_at_initial   = yes
+CanudaX_BSSNMoL::conf_fac_floor                     = 1.0d-04
+CanudaX_BSSNMoL::precollapsed_lapse                 = no
+CanudaX_BSSNMoL::zeta_alpha                         = 1
+CanudaX_BSSNMoL::zeta_beta                          = 1
+CanudaX_BSSNMoL::eta_beta                           = 1
+CanudaX_BSSNMoL::beta_Gamma                         = 0.750
+CanudaX_BSSNMoL::chi_gamma                          = 0.667
+CanudaX_BSSNMoL::beta_Alp                           = 1
+CanudaX_BSSNMoL::eta_transition                     = no
+CanudaX_BSSNMoL::moving_eta_transition              = no
+CanudaX_BSSNMoL::eta_beta_dynamic                   = no
+CanudaX_BSSNMoL::eps_r                              = 1e-5
+
+CanudaX_BSSNMoL::reset_dethh                        = yes
+CanudaX_BSSNMoL::make_aa_tracefree                  = yes
+CanudaX_BSSNMoL::stress_energy_state                = no
+
+CanudaX_BSSNMoL::derivs_order                       = 4
+CanudaX_BSSNMoL::use_advection_stencils             = yes
+CanudaX_BSSNMoL::add_KO_dissipation                 = yes
+CanudaX_BSSNMoL::diss_eps                           = $diss_eps
+CanudaX_BSSNMoL::diss_order                         = 5
+
+CanudaX_BSSNMoL::use_local_error_estimate           = no
+CanudaX_BSSNMoL::boundary_conditions                = "radiative"
+
+# Wave extraction
+CanudaX_NPScalars::NP_order           = 4
+CanudaX_NPScalars::calculate_NP_every = $wave_every
+
+Multipole::out_every = $wave_every
+Multipole::verbose   = yes
+
+Multipole::nradii    = 2
+Multipole::l_max     = 2
+
+Multipole::radius[0] = 40.0
+Multipole::radius[1] = 60.0
+
+Multipole::ntheta    = 256
+Multipole::nphi      = 256
+
+Multipole::variables = "
+  CanudaX_NPScalars::psi4re{sw=-2 cmplx='CanudaX_NPScalars::psi4im' name='NP_Psi4'}
+"
+Multipole::integration_method = Simpson
+Multipole::interpolator_pars  = $interp_opts
+
+# Output
+IO::out_dir   = $parfile
+IO::out_every = $out_every
+
+CarpetX::out_metadata    = no
+CarpetX::out_performance = no
+
+CarpetX::out_silo_vars = "
+  CanudaX_BSSNMoL::alpha
+  CanudaX_BSSNMoL::ham
+  CanudaX_BSSNMoL::mom
+  CanudaX_NPScalars::psi4re
+  CanudaX_NPScalars::psi4im
+"
+
+CarpetX::out_norm_every         = $norms_every
+CarpetX::out_norm_omit_unstable = false
+CarpetX::out_norm_vars = "
+  CanudaX_BSSNMoL::alpha
+  CanudaX_BSSNMoL::beta
+  CanudaX_BSSNMoL::hmetric
+  CanudaX_BSSNMoL::hcurv
+  CanudaX_BSSNMoL::trk
+  CanudaX_BSSNMoL::gammat
+  CanudaX_BSSNMoL::ham
+  CanudaX_BSSNMoL::mom
+"
+
+# Timers
+TimerReport::out_every              = $timer_every
+TimerReport::out_filename           = "TimerReport"
+TimerReport::output_schedule_timers = yes
+TimerReport::n_top_timers           = 200
+

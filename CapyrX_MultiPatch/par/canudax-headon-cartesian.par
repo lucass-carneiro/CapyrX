@@ -241,7 +241,7 @@ IO::checkpoint_every_walltime_hours = 1.0
 IO::checkpoint_on_terminate = yes
 CarpetX::checkpoint_method = "openpmd"
 
-IO::recover_dir = "checkpoints_$parfile"
+IO::recover_dir = $parfile
 IO::recover = "autoprobe"
 CarpetX::recover_method = "openpmd"
 

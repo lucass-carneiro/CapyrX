@@ -17,7 +17,7 @@ ActiveThorns = "
 ###### Settings ######
 $itlast      = 100000000
 $final_time  = 300.0
-$max_runtime = 24 * 60 - 10 # minutes
+$max_runtime = 60 #24 * 60 - 10 # minutes
 
 $out_every   = 128
 $wave_every  = 32
@@ -235,15 +235,15 @@ CarpetX::out_norm_vars = "
   CanudaX_BSSNMoL::mom
 "
 
-IO::checkpoint_dir = $parfile
-IO::checkpoint_ID = yes
-IO::checkpoint_every_walltime_hours = 1.0
-IO::checkpoint_on_terminate = yes
-CarpetX::checkpoint_method = "openpmd"
-
-IO::recover_dir = $parfile
-IO::recover = "autoprobe"
-CarpetX::recover_method = "openpmd"
+# Checkpoint and recovery
+IO::checkpoint_dir                  = "../checkpoints_$parfile"
+IO::recover_dir                     = "../checkpoints_$parfile"
+IO::checkpoint_ID                   = yes
+IO::checkpoint_every_walltime_hours = 6
+IO::checkpoint_on_terminate         = yes
+IO::recover                         = "autoprobe"
+CarpetX::checkpoint_method          = "openpmd"
+CarpetX::recover_method             = "openpmd"
 
 # Timers
 TimerReport::out_every              = $timer_every

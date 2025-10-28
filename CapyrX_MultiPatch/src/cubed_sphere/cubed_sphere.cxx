@@ -1097,7 +1097,21 @@ static inline auto make_patch(const PatchPiece &p, const PatchParams &par)
     };
 
     patch.faces = {{mx, my, mz}, {px, py, pz}};
-    patch.is_cartesian = true;
+    
+    /* 
+     * Even though this is the central Cartesian patch, we cannot set the
+     * is_cartesian flag to true here. This is because, in this patch system,
+     * all patches have coordinate extent in [-1, 1], even the Cartesian patch.
+     * Because of this, as far as Carpetx is concearned, this makes it a non
+     * cartesian patch. If we were to set this to true, we would have all
+     * sorts of visualization bugs and lord knows what else. This should prob.
+     * be changed, as doing no extra work when a patch is cartesian is actually
+     * an optimization. This would mean changing the whole coordinate system,
+     * as jacobians would change. It would also mean that whenever local
+     * coordinates are used in parameter files (like when placing mesh
+     * refinement boxes) changes would be needed.
+     */
+    //patch.is_cartesian = true;
     break;
 
   case PatchPiece::plus_x:

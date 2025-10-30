@@ -3,11 +3,13 @@ ActiveThorns = "
   BoxInBox
   CanudaX_BSSNMoL
   CanudaX_NPScalars
+  CapyrX_MultiPatch
   CarpetX
   CoordinatesX
   IOUtil
   Multipole
   ODESolvers
+  PunctureTracker
   SystemTopology
   TimerReport
   TmunuBaseX
@@ -17,7 +19,7 @@ ActiveThorns = "
 ###### Settings ######
 $itlast      = 100000000
 $final_time  = 300.0
-$max_runtime = 60 #24 * 60 - 10 # minutes
+$max_runtime = 24 * 60 - 10 # minutes
 
 $out_every   = 128
 $wave_every  = 32
@@ -26,17 +28,19 @@ $norms_every = 32
 
 $dtfac = 0.5
 
-$rf = 200.0
-$num_cells = 200
+$rf = 400.0
+$num_cells = 100
 
-$bh_mass = 0.5
-$bh_sep  = 2.0
+$bh_mass = 1.0
+$bh_sep  = 4.0
 
-$diss_eps      = 0.15
+$diss_eps      = 0.20
 
-$patch_overlap = 0
-$interp_order  = 1
-$interp_opts   = "order=1"
+$interp_order  = 3
+$interp_opts   = "order=3"
+
+$fd_order   = 6
+$num_ghosts = 4
 ######################
 
 # Misc options
@@ -51,9 +55,9 @@ CarpetX::blocking_factor_x = 4
 CarpetX::blocking_factor_y = 4
 CarpetX::blocking_factor_z = 4
 
-CarpetX::max_grid_size_x = 2048
-CarpetX::max_grid_size_y = 2048
-CarpetX::max_grid_size_z = 2048
+CarpetX::max_grid_size_x = 4096
+CarpetX::max_grid_size_y = 4096
+CarpetX::max_grid_size_z = 4096
 
 # Termination
 Cactus::terminate       = "any"
@@ -63,23 +67,25 @@ Cactus::cctk_itlast     = $itlast
 
 # Time integration
 ODESolvers::verbose = yes
-ODESolvers::method  = "RK4"
+ODESolvers::method  = "RK3"
 CarpetX::dtfac      = $dtfac
 
 # Grid
-CarpetX::xmin = -$rf
-CarpetX::ymin = -$rf
-CarpetX::zmin = -$rf
+Capyrx_MultiPatch::patch_system = "Cartesian"
 
-CarpetX::xmax = $rf
-CarpetX::ymax = $rf
-CarpetX::zmax = $rf
+CapyrX_MultiPatch::cartesian_xmin = -$rf
+CapyrX_MultiPatch::cartesian_ymin = -$rf
+CapyrX_MultiPatch::cartesian_zmin = -$rf
 
-CarpetX::ncells_x = $num_cells
-CarpetX::ncells_y = $num_cells
-CarpetX::ncells_z = $num_cells
+CapyrX_MultiPatch::cartesian_xmax = $rf
+CapyrX_MultiPatch::cartesian_ymax = $rf
+CapyrX_MultiPatch::cartesian_zmax = $rf
 
-CarpetX::ghost_size          = 3
+CapyrX_MultiPatch::cartesian_ncells_i = $num_cells
+CapyrX_MultiPatch::cartesian_ncells_j = $num_cells
+CapyrX_MultiPatch::cartesian_ncells_k = $num_cells
+
+CarpetX::ghost_size          = $num_ghosts
 CarpetX::interpolation_order = $interp_order
 
 # Boundary
@@ -91,40 +97,43 @@ CarpetX::boundary_upper_y = "neumann"
 CarpetX::boundary_upper_z = "neumann"
 
 # Mesh refinement
-CarpetX::max_num_levels = 6
+CarpetX::max_num_levels = 9
 CarpetX::regrid_every   = 0
 
-# Note: All positions and radi in BoxInBox are given in
-# local coordinatess [-1, 1]. We have to transform
-# desired final grid positions and sizes to local coordinates
 BoxInBox::num_regions  = 2
 
 BoxInBox::shape_1      = "cube"
-BoxInBox::num_levels_1 = 7
-BoxInBox::position_x_1 = ($bh_sep / 2.0) # Plus puncture
+BoxInBox::num_levels_1 = 9
+BoxInBox::position_x_1 = $bh_sep
 BoxInBox::position_y_1 = 0.0
 BoxInBox::position_z_1 = 0.0
 BoxInBox::radius_1     = [
   -1.0,
-  140.0,
+  200.0,
   100.0,
-  60.0,
-  20.0,
-  3.0 * $bh_mass
+  50.0,
+  24.0,
+  10.0,
+  4.0,
+  2.0,
+  1.0
 ]
 
 BoxInBox::shape_2      = "cube"
-BoxInBox::num_levels_2 = 7
-BoxInBox::position_x_2 = -($bh_sep / 2.0) # Plus puncture
+BoxInBox::num_levels_2 = 9
+BoxInBox::position_x_2 = -$bh_sep
 BoxInBox::position_y_2 = 0.0
 BoxInBox::position_z_2 = 0.0
 BoxInBox::radius_2     = [
   -1.0,
-  140.0,
+  200.0,
   100.0,
-  60.0,
-  20.0,
-  3.0 * $bh_mass
+  50.0,
+  24.0,
+  10.0,
+  4.0,
+  2.0,
+  1.0
 ]
 
 CarpetX::prolongation_type  = "ddf"
@@ -150,7 +159,7 @@ TwoPuncturesX::Newton_maxit  = 12
 TwoPuncturesX::Newton_tol    = 1.0e-10
 
 TwoPuncturesX::keep_u_around = no
-TwoPuncturesX::verbose       = no
+TwoPuncturesX::verbose       = yes
 
 # Evolution
 CanudaX_BSSNMoL::calculate_constraints              = yes
@@ -175,27 +184,40 @@ CanudaX_BSSNMoL::reset_dethh                        = yes
 CanudaX_BSSNMoL::make_aa_tracefree                  = yes
 CanudaX_BSSNMoL::stress_energy_state                = no
 
-CanudaX_BSSNMoL::derivs_order                       = 4
+CanudaX_BSSNMoL::derivs_order                       = $fd_order
 CanudaX_BSSNMoL::use_advection_stencils             = yes
 CanudaX_BSSNMoL::add_KO_dissipation                 = yes
 CanudaX_BSSNMoL::diss_eps                           = $diss_eps
-CanudaX_BSSNMoL::diss_order                         = 5
+CanudaX_BSSNMoL::diss_order                         = $fd_order + 1
 
 CanudaX_BSSNMoL::use_local_error_estimate           = no
 CanudaX_BSSNMoL::boundary_conditions                = "radiative"
 
+# Puncture tracking
+PunctureTracker::verbose      = yes
+PunctureTracker::interp_order = $interp_order
+
+PunctureTracker::track    [0] = yes
+PunctureTracker::initial_x[0] = $bh_sep
+
+PunctureTracker::track    [1] = yes
+PunctureTracker::initial_x[1] = $bh_sep
+
 # Wave extraction
-CanudaX_NPScalars::NP_order           = 4
+CanudaX_NPScalars::NP_order           = $fd_order
 CanudaX_NPScalars::calculate_NP_every = $wave_every
 
 Multipole::out_every = $wave_every
 Multipole::verbose   = yes
 
-Multipole::nradii    = 2
+Multipole::nradii    = 5
 Multipole::l_max     = 2
 
-Multipole::radius[0] = 40.0
-Multipole::radius[1] = 60.0
+Multipole::radius[0] = 150.0
+Multipole::radius[1] = 200.0
+Multipole::radius[2] = 250.0
+Multipole::radius[3] = 300.0
+Multipole::radius[4] = 350.0
 
 Multipole::ntheta    = 256
 Multipole::nphi      = 256
@@ -212,6 +234,11 @@ IO::out_every = $out_every
 
 CarpetX::out_metadata    = no
 CarpetX::out_performance = no
+
+CarpetX::out_tsv_vars = "
+  PunctureTracker::pt_loc
+  PunctureTracker::pt_vel
+"
 
 CarpetX::out_silo_vars = "
   CanudaX_BSSNMoL::alpha
@@ -236,8 +263,8 @@ CarpetX::out_norm_vars = "
 "
 
 # Checkpoint and recovery
-IO::checkpoint_dir                  = "../checkpoints_$parfile"
-IO::recover_dir                     = "../checkpoints_$parfile"
+IO::checkpoint_dir                  = "checkpoints_$parfile"
+IO::recover_dir                     = "checkpoints_$parfile"
 IO::checkpoint_ID                   = yes
 IO::checkpoint_every_walltime_hours = 6
 IO::checkpoint_on_terminate         = yes

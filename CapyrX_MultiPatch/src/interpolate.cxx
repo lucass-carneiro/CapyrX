@@ -1,6 +1,7 @@
 #include "multipatch.hxx"
 
 #include "../../../CarpetX/CarpetX/src/schedule.hxx"
+#include "../../../CarpetX/CarpetX/src/timer.hxx"
 
 #include <cctk.h>
 
@@ -80,6 +81,9 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
   const nvtxRangeId_t range =
       nvtxRangeStartA("CapyrX::MultiPatch1_Interpolate");
 #endif
+
+  static CarpetX::Timer timer("CapyrX::MultiPatch1_Interpolate");
+  CarpetX::Interval interval(timer);
 
   // Step 0: Check input
 

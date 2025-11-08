@@ -6,6 +6,8 @@
 #include "cartesian/cartesian.hxx"
 #include "cubed_sphere/cubed_sphere.hxx"
 
+#include "../../../CarpetX/CarpetX/src/timer.hxx"
+
 #include <cctk.h>
 #include <cctk_Arguments.h>
 #include <cctk_Parameters.h>
@@ -136,6 +138,9 @@ extern "C" void MultiPatch1_GlobalToLocal2(
       nvtxRangeStartA("CapyrX::MultiPatch1_GlobalToLocal2");
 #endif
 
+  static CarpetX::Timer timer("CapyrX::MultiPatch1_GlobalToLocal2");
+  CarpetX::Interval interval(timer);
+
   DECLARE_CCTK_PARAMETERS;
 
   switch (g_patch_system->id_tag) {
@@ -235,6 +240,9 @@ extern "C" void MultiPatch1_LocalToGlobal2(
       nvtxRangeStartA("CapyrX::MultiPatch1_LocalToGlobal2");
 #endif
 
+  static CarpetX::Timer timer("CapyrX::MultiPatch1_LocalToGlobal2");
+  CarpetX::Interval interval(timer);
+
   DECLARE_CCTK_PARAMETERS;
 
   switch (g_patch_system->id_tag) {
@@ -273,6 +281,14 @@ extern "C" void MultiPatch1_LocalToGlobal2(
 }
 
 extern "C" int CapyrX_MultiPatch_Setup() {
+#ifdef __CUDACC__
+  const nvtxRangeId_t range =
+      nvtxRangeStartA("CapyrX::CapyrX_MultiPatch_Setup");
+#endif
+
+  static CarpetX::Timer timer("CapyrX::CapyrX_MultiPatch_Setup");
+  CarpetX::Interval interval(timer);
+
   DECLARE_CCTK_PARAMETERS;
 
   if (CCTK_EQUALS(patch_system, "none")) {
@@ -389,6 +405,9 @@ extern "C" void CapyrX_MultiPatch_Coordinates_Setup(CCTK_ARGUMENTS) {
   const nvtxRangeId_t range =
       nvtxRangeStartA("CapyrX::CapyrX_MultiPatch_Coordinates_Setup");
 #endif
+
+  static CarpetX::Timer timer("CapyrX::CapyrX_MultiPatch_Coordinates_Setup");
+  CarpetX::Interval interval(timer);
 
   DECLARE_CCTK_ARGUMENTSX_CapyrX_MultiPatch_Coordinates_Setup;
   DECLARE_CCTK_PARAMETERS;

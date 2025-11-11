@@ -406,9 +406,6 @@ extern "C" void CapyrX_MultiPatch_Coordinates_Setup(CCTK_ARGUMENTS) {
       nvtxRangeStartA("CapyrX::CapyrX_MultiPatch_Coordinates_Setup");
 #endif
 
-  static CarpetX::Timer timer("CapyrX::CapyrX_MultiPatch_Coordinates_Setup");
-  CarpetX::Interval interval(timer);
-
   DECLARE_CCTK_ARGUMENTSX_CapyrX_MultiPatch_Coordinates_Setup;
   DECLARE_CCTK_PARAMETERS;
 

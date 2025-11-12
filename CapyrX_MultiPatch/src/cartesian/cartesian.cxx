@@ -27,12 +27,26 @@ CCTK_HOST CCTK_DEVICE auto dlocal_dglobal(const PatchParams &p, int patch,
   return std_make_tuple(std::get<0>(x_dx_ddx), std::get<1>(x_dx_ddx));
 }
 
+// TODO: Jacobians cant be all zero! fix this crap
 CCTK_HOST CCTK_DEVICE auto d2local_dglobal2(const PatchParams &, int,
                                             const svec_t &local_coords)
     -> std_tuple<svec_t, jac_t, djac_t> {
   using namespace Arith;
-  return std_make_tuple(local_coords, zero<vec<vec<CCTK_REAL, dim>, dim> >()(),
-                        zero<vec<smat<CCTK_REAL, dim>, dim> >()());
+
+  jac_t J{};
+  J(0)(0) = 1.0;
+  J(0)(1) = 0.0;
+  J(0)(2) = 0.0;
+  J(1)(0) = 0.0;
+  J(1)(1) = 1.0;
+  J(1)(2) = 0.0;
+  J(2)(0) = 0.0;
+  J(2)(1) = 0.0;
+  J(2)(2) = 1.0;
+
+  const auto dJ = zero<vec<smat<CCTK_REAL, dim>, dim> >()();
+
+  return std_make_tuple(local_coords, J, dJ);
 }
 
 auto make_system(const PatchParams &p) -> PatchSystem {

@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       158,          7]
-NotebookDataLength[     24144,        500]
-NotebookOptionsPosition[     22407,        458]
-NotebookOutlinePosition[     23005,        478]
-CellTagsIndexPosition[     22962,        475]
+NotebookDataLength[     24163,        500]
+NotebookOptionsPosition[     22426,        458]
+NotebookOutlinePosition[     23024,        478]
+CellTagsIndexPosition[     22981,        475]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -43,7 +43,7 @@ Cell[BoxData[
     "<>", "\"\<cubed_sphere_07.mx\>\""}], "]"}], ";"}]], "Input",
  CellChangeTimes->{{3.922451951284555*^9, 3.922452003940855*^9}, {
   3.967572887069792*^9, 3.9675729075986347`*^9}},
- CellLabel->"In[3]:=",ExpressionUUID->"7663b759-d36e-4a4a-8ceb-718b7aacf9fc"]
+ CellLabel->"In[2]:=",ExpressionUUID->"7663b759-d36e-4a4a-8ceb-718b7aacf9fc"]
 }, Open  ]],
 
 Cell[CellGroupData[{
@@ -156,7 +156,7 @@ Cell[BoxData[{
   3.855782288904591*^9}, {3.855782389103546*^9, 3.855782398562379*^9}, {
   3.8557828590539713`*^9, 3.8557828620334387`*^9}, {3.855783361844849*^9, 
   3.855783364954023*^9}, {3.8570482885572577`*^9, 3.857048291718378*^9}},
- CellLabel->"In[4]:=",ExpressionUUID->"b0caefbf-4efd-4dec-bbed-6cb54483c02f"]
+ CellLabel->"In[3]:=",ExpressionUUID->"b0caefbf-4efd-4dec-bbed-6cb54483c02f"]
 }, Closed]],
 
 Cell[CellGroupData[{
@@ -361,7 +361,7 @@ Cell[BoxData[
    3.857049587056033*^9, 3.857049592154598*^9}, {3.858067432589407*^9, 
    3.858067457620775*^9}, {3.9675729192763577`*^9, 3.967572924187549*^9}, {
    3.967572960119616*^9, 3.9675730006467953`*^9}},
- CellLabel->"In[13]:=",ExpressionUUID->"7c539802-9fb4-42ba-8475-b4674e9add84"]
+ CellLabel->"In[7]:=",ExpressionUUID->"7c539802-9fb4-42ba-8475-b4674e9add84"]
 }, Closed]],
 
 Cell[CellGroupData[{
@@ -375,12 +375,12 @@ Cell[CellGroupData[{
 
 Cell[BoxData["manip"], "Input",
  CellChangeTimes->{{3.967573047028123*^9, 3.9675730476322737`*^9}},
- CellLabel->"In[15]:=",ExpressionUUID->"678850ff-a253-46ea-bf66-864fc705cbcc"],
+ CellLabel->"In[8]:=",ExpressionUUID->"678850ff-a253-46ea-bf66-864fc705cbcc"],
 
 Cell[BoxData[
  TagBox[
   StyleBox[
-   DynamicModuleBox[{$CellContext`cval$$ = -1, Typeset`show$$ = True, 
+   DynamicModuleBox[{$CellContext`cval$$ = 1., Typeset`show$$ = True, 
     Typeset`bookmarkList$$ = {}, Typeset`bookmarkMode$$ = "Menu", 
     Typeset`animator$$, Typeset`animvar$$ = 1, Typeset`name$$ = 
     "\"untitled\"", Typeset`specs$$ = {{
@@ -449,8 +449,8 @@ $CellContext`Rf, $CellContext`c],
    Deployed->True,
    StripOnInput->False],
   Manipulate`InterpretManipulate[1]]], "Output",
- CellChangeTimes->{3.967573048047296*^9},
- CellLabel->"Out[15]=",ExpressionUUID->"cd45f229-024a-4316-9457-7a4ff9285bd0"]
+ CellChangeTimes->{3.967573048047296*^9, 3.973079441532449*^9},
+ CellLabel->"Out[8]=",ExpressionUUID->"4be69dde-1f4d-4554-aa50-6b5680218068"]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]]
@@ -491,13 +491,13 @@ Cell[2092, 64, 4324, 94, 784, "Input",ExpressionUUID->"b0caefbf-4efd-4dec-bbed-6
 }, Closed]],
 Cell[CellGroupData[{
 Cell[6453, 163, 264, 4, 37, "Subsection",ExpressionUUID->"e8c9fab4-ce89-49de-a119-c39fff2e2d62"],
-Cell[6720, 169, 11760, 194, 711, "Input",ExpressionUUID->"7c539802-9fb4-42ba-8475-b4674e9add84"]
+Cell[6720, 169, 11759, 194, 679, "Input",ExpressionUUID->"7c539802-9fb4-42ba-8475-b4674e9add84"]
 }, Closed]],
 Cell[CellGroupData[{
-Cell[18517, 368, 179, 3, 37, "Subsection",ExpressionUUID->"2aa2c3d4-7256-4585-9e70-402c4904e2db"],
+Cell[18516, 368, 179, 3, 37, "Subsection",ExpressionUUID->"2aa2c3d4-7256-4585-9e70-402c4904e2db"],
 Cell[CellGroupData[{
-Cell[18721, 375, 178, 2, 40, "Input",ExpressionUUID->"678850ff-a253-46ea-bf66-864fc705cbcc"],
-Cell[18902, 379, 3453, 73, 724, "Output",ExpressionUUID->"cd45f229-024a-4316-9457-7a4ff9285bd0"]
+Cell[18720, 375, 177, 2, 40, "Input",ExpressionUUID->"678850ff-a253-46ea-bf66-864fc705cbcc"],
+Cell[18900, 379, 3474, 73, 724, "Output",ExpressionUUID->"4be69dde-1f4d-4554-aa50-6b5680218068"]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]]

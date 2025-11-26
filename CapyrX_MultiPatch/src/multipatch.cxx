@@ -387,7 +387,6 @@ extern "C" int CapyrX_MultiPatch_Setup() {
                                                                                \
         const auto &x{std::get<0>(d2J_tuple)};                                 \
         const auto &J{std::get<1>(d2J_tuple)};                                 \
-        const auto &dJ{std::get<2>(d2J_tuple)};                                \
                                                                                \
         const auto detJ{J(0)(0) * (J(1)(1) * J(2)(2) - J(1)(2) * J(2)(1)) +    \
                         J(0)(1) * (J(1)(2) * J(2)(0) - J(1)(0) * J(2)(2)) +    \

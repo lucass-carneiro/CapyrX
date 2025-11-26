@@ -21,19 +21,19 @@ struct PatchParams {
   CCTK_INT patch_overlap{0};
 };
 
-CCTK_HOST CCTK_DEVICE auto global2local(const PatchParams &par,
-                                        const svec_t &global_coords)
+CCTK_DEVICE auto global2local(const PatchParams &par,
+                              const svec_t &global_coords)
     -> std_tuple<int, svec_t>;
 
-CCTK_HOST CCTK_DEVICE auto local2global(const PatchParams &par, int patch,
-                                        const svec_t &local_coords) -> svec_t;
+CCTK_DEVICE auto local2global(const PatchParams &par, int patch,
+                              const svec_t &local_coords) -> svec_t;
 
-CCTK_HOST CCTK_DEVICE auto dlocal_dglobal(const PatchParams &par, int patch,
-                                          const svec_t &local_coords)
+CCTK_DEVICE auto dlocal_dglobal(const PatchParams &par, int patch,
+                                const svec_t &local_coords)
     -> std_tuple<svec_t, jac_t>;
 
-CCTK_HOST CCTK_DEVICE auto d2local_dglobal2(const PatchParams &par, int patch,
-                                            const svec_t &local_coords)
+CCTK_DEVICE auto d2local_dglobal2(const PatchParams &par, int patch,
+                                  const svec_t &local_coords)
     -> std_tuple<svec_t, jac_t, djac_t>;
 
 auto make_system(const PatchParams &par) -> PatchSystem;

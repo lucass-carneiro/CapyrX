@@ -8,28 +8,26 @@
 
 namespace CapyrX::MultiPatch::Cartesian {
 
-CCTK_HOST CCTK_DEVICE auto global2local(const PatchParams &,
-                                        const svec_t &global_coords)
+CCTK_DEVICE auto global2local(const PatchParams &, const svec_t &global_coords)
     -> std_tuple<int, svec_t> {
   return std_make_tuple(0, global_coords);
 }
 
-CCTK_HOST CCTK_DEVICE auto local2global(const PatchParams &p, int patch,
-                                        const svec_t &local_coords) -> svec_t {
+CCTK_DEVICE auto local2global(const PatchParams &p, int patch,
+                              const svec_t &local_coords) -> svec_t {
   const auto x_dx{dlocal_dglobal(p, patch, local_coords)};
   return std::get<0>(x_dx);
 }
 
-CCTK_HOST CCTK_DEVICE auto dlocal_dglobal(const PatchParams &p, int patch,
-                                          const svec_t &local_coords)
+CCTK_DEVICE auto dlocal_dglobal(const PatchParams &p, int patch,
+                                const svec_t &local_coords)
     -> std_tuple<svec_t, jac_t> {
   const auto x_dx_ddx{d2local_dglobal2(p, patch, local_coords)};
   return std_make_tuple(std::get<0>(x_dx_ddx), std::get<1>(x_dx_ddx));
 }
 
-// TODO: Jacobians cant be all zero! fix this crap
-CCTK_HOST CCTK_DEVICE auto d2local_dglobal2(const PatchParams &, int,
-                                            const svec_t &local_coords)
+CCTK_DEVICE auto d2local_dglobal2(const PatchParams &, int,
+                                  const svec_t &local_coords)
     -> std_tuple<svec_t, jac_t, djac_t> {
   using namespace Arith;
 
@@ -78,7 +76,6 @@ static inline auto isapprox(fp_type x, fp_type y, fp_type atol = 0.0) -> bool {
 auto unit_test(std::size_t repetitions, std::size_t seed,
                const PatchParams &par) -> bool {
   using real_dist = std::uniform_real_distribution<CCTK_REAL>;
-  using int_dist = std::uniform_int_distribution<CCTK_INT>;
 
   std::mt19937 engine{static_cast<unsigned long>(seed)};
 

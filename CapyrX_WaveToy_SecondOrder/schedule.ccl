@@ -43,7 +43,6 @@ SCHEDULE CapyrX_WaveToy_SecondOrder_Energy AT analysis
   READS: MultiPatch::vertex_Jacobians(everywhere)
   READS: MultiPatch::vertex_dJacobians(everywhere)
   WRITES: energy(interior)
-  SYNC: energy
 } "Calculate the energy density of the scalar wave equation"
 
 
@@ -56,6 +55,5 @@ if (CCTK_EQUALS(initial_condition, "standing wave") || CCTK_EQUALS(initial_condi
     LANG: C
     READS: CoordinatesX::vertex_coords(interior) state(interior)
     WRITES: error(interior)
-    SYNC: error
   } "Calculate error in scalar wave evolution"
 }

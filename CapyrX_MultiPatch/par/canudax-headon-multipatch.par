@@ -9,6 +9,7 @@ ActiveThorns = "
   IOUtil
   Multipole
   ODESolvers
+  PunctureTracker
   SystemTopology
   TimerReport
   TmunuBaseX
@@ -18,28 +19,37 @@ ActiveThorns = "
 ###### Settings ######
 $itlast      = 100000000
 $final_time  = 300.0
-$max_runtime = 3 * 24 * 60 - 10 # minutes
+$max_runtime = 1 * 24 * 60 # minutes
 
-$out_every   = 128
-$wave_every  = 32
-$timer_every = 128
-$norms_every = 32
+$out_every         = 256
+$out_silo_every    = 1280
+$timer_every       = 256
+$constraints_every = 256
+$wave_every        = 256
+$norms_every       = 256
+$regrid_every      = 256
 
 $dtfac = 0.5
 
-$r0 = 50.0
-$rf = 200.0 + $r0
-$nr = 100
-$na = 50
+$nr = 80
+$na = 80
+$r0 = 40.0
+$rf = 120.0
 
-$bh_mass = 0.5
-$bh_sep  = 2.0
+$bh_mass = 1.0
+$bh_sep  = 4.0
 
-$diss_eps      = 0.15
+$fd_order   = 4
+$ghost_size = 3
+
+$diss_order = 5
+$diss_eps = 0.20
 
 $patch_overlap = 0
 $interp_order  = 1
 $interp_opts   = "order=1"
+
+$bh_sep = $bh_sep
 ######################
 
 # Misc options
@@ -50,9 +60,9 @@ CarpetX::verbose                 = yes
 CarpetX::poison_undefined_values = no
 
 # Block distribution
-CarpetX::blocking_factor_x = 2
-CarpetX::blocking_factor_y = 2
-CarpetX::blocking_factor_z = 2
+CarpetX::blocking_factor_x = 8
+CarpetX::blocking_factor_y = 8
+CarpetX::blocking_factor_z = 8
 
 # Termination
 Cactus::terminate       = "any"
@@ -76,7 +86,7 @@ CapyrX_MultiPatch::cubed_sphere_radial_cells          = $nr
 CapyrX_MultiPatch::cubed_sphere_angular_cells         = $na
 
 
-CarpetX::ghost_size          = 3
+CarpetX::ghost_size          = $ghost_size
 CarpetX::interpolation_order = $interp_order
 
 # Boundary
@@ -89,7 +99,7 @@ CarpetX::boundary_upper_z = "neumann"
 
 # Mesh refinement
 CarpetX::max_num_levels = 6
-CarpetX::regrid_every   = 0
+CarpetX::regrid_every   = $regrid_every
 
 # Note: All positions and radi in BoxInBox are given in
 # local coordinatess [-1, 1]. We have to transform
@@ -98,30 +108,30 @@ BoxInBox::num_regions  = 2
 
 BoxInBox::shape_1      = "cube"
 BoxInBox::num_levels_1 = 6
-BoxInBox::position_x_1 = ($bh_sep / 2.0) / ($r0 / 2.0) # Plus puncture
+BoxInBox::position_x_1 = $bh_sep
 BoxInBox::position_y_1 = 0.0
 BoxInBox::position_z_1 = 0.0
 BoxInBox::radius_1     = [
   -1.0,
-  0.7,
-  0.5,
-  0.3,
-  0.1,
-  (3.0 * $bh_mass) / $r0
+  20.0,
+  10.0,
+  4.0,
+  2.0,
+  1.0
 ]
 
 BoxInBox::shape_2      = "cube"
 BoxInBox::num_levels_2 = 6
-BoxInBox::position_x_2 = -($bh_sep / 2.0) / ($r0 / 2.0) # Plus puncture
+BoxInBox::position_x_2 = -$bh_sep
 BoxInBox::position_y_2 = 0.0
 BoxInBox::position_z_2 = 0.0
 BoxInBox::radius_2     = [
   -1.0,
-  0.7,
-  0.5,
-  0.3,
-  0.1,
-  (3.0 * $bh_mass) / $r0
+  20.0,
+  10.0,
+  4.0,
+  2.0,
+  1.0
 ]
 
 CarpetX::prolongation_type  = "ddf"
@@ -140,19 +150,34 @@ TwoPuncturesX::give_bare_mass    = yes
 TwoPuncturesX::TP_epsilon        = 1.0e-6
 TwoPuncturesX::TP_Tiny           = 1.0e-10
 
-TwoPuncturesX::npoints_A     = 40
-TwoPuncturesX::npoints_B     = 40
-TwoPuncturesX::npoints_phi   = 36
+TwoPuncturesX::npoints_A     = 48
+TwoPuncturesX::npoints_B     = 48
+TwoPuncturesX::npoints_phi   = 48
 TwoPuncturesX::Newton_maxit  = 12
 TwoPuncturesX::Newton_tol    = 1.0e-10
 
 TwoPuncturesX::keep_u_around = no
-TwoPuncturesX::verbose       = no
+TwoPuncturesX::verbose       = yes
+
+# Puncture tracking
+PunctureTracker::verbose          = yes
+PunctureTracker::track_boxes      = yes
+PunctureTracker::interp_order     = $interp_order
+
+PunctureTracker::track        [0] = yes
+PunctureTracker::initial_x    [0] = $bh_sep
+PunctureTracker::initial_y    [0] = 0.0
+PunctureTracker::initial_z    [0] = 0.0
+
+PunctureTracker::track        [1] = yes
+PunctureTracker::initial_x    [1] = -$bh_sep
+PunctureTracker::initial_y    [1] = 0.0
+PunctureTracker::initial_z    [1] = 0.0
 
 # Evolution
 CanudaX_BSSNMoL::calculate_constraints              = yes
-CanudaX_BSSNMoL::calculate_constraints_every        = 64
-CanudaX_BSSNMoL::slicing_condition                  = "1+log" #geodesic to freeze lapse
+CanudaX_BSSNMoL::calculate_constraints_every        = $constraints_every
+CanudaX_BSSNMoL::slicing_condition                  = "1+log"
 CanudaX_BSSNMoL::kappa_alpha                        = 2.0
 CanudaX_BSSNMoL::impose_conf_fac_floor_at_initial   = yes
 CanudaX_BSSNMoL::conf_fac_floor                     = 1.0d-04
@@ -172,27 +197,31 @@ CanudaX_BSSNMoL::reset_dethh                        = yes
 CanudaX_BSSNMoL::make_aa_tracefree                  = yes
 CanudaX_BSSNMoL::stress_energy_state                = no
 
-CanudaX_BSSNMoL::derivs_order                       = 4
+CanudaX_BSSNMoL::derivs_order                       = $fd_order
 CanudaX_BSSNMoL::use_advection_stencils             = yes
 CanudaX_BSSNMoL::add_KO_dissipation                 = yes
 CanudaX_BSSNMoL::diss_eps                           = $diss_eps
-CanudaX_BSSNMoL::diss_order                         = 5
+CanudaX_BSSNMoL::diss_order                         = $diss_order
 
 CanudaX_BSSNMoL::use_local_error_estimate           = no
 CanudaX_BSSNMoL::boundary_conditions                = "radiative"
 
 # Wave extraction
-CanudaX_NPScalars::NP_order           = 4
+CanudaX_NPScalars::NP_order           = $fd_order
 CanudaX_NPScalars::calculate_NP_every = $wave_every
 
 Multipole::out_every = $wave_every
 Multipole::verbose   = yes
 
-Multipole::nradii    = 2
-Multipole::l_max     = 2
+Multipole::nradii    = 6
+Multipole::l_max     = 4
 
-Multipole::radius[0] = 40.0
-Multipole::radius[1] = 60.0
+Multipole::radius[0] = 20.0
+Multipole::radius[1] = 40.0
+Multipole::radius[2] = 50.0
+Multipole::radius[3] = 60.0
+Multipole::radius[4] = 80.0
+Multipole::radius[5] = 100.0
 
 Multipole::ntheta    = 256
 Multipole::nphi      = 256
@@ -210,7 +239,8 @@ IO::out_every = $out_every
 CarpetX::out_metadata    = no
 CarpetX::out_performance = no
 
-CarpetX::out_silo_vars = "
+CarpetX::out_silo_every = $out_silo_every
+CarpetX::out_silo_vars  = "
   CanudaX_BSSNMoL::alpha
   CanudaX_BSSNMoL::ham
   CanudaX_BSSNMoL::mom
@@ -231,9 +261,27 @@ CarpetX::out_norm_vars = "
   CanudaX_BSSNMoL::mom
 "
 
+CarpetX::out_tsv_vars = "
+  PunctureTracker::pt_loc
+  PunctureTracker::pt_vel
+"
+
+# Checkpoint and recovery
+IO::checkpoint_dir                  = "checkpoints_$parfile"
+IO::recover_dir                     = "checkpoints_$parfile"
+IO::checkpoint_ID                   = no
+IO::checkpoint_every_walltime_hours = 6
+IO::checkpoint_on_terminate         = yes
+IO::recover                         = "autoprobe"
+CarpetX::checkpoint_method          = "openpmd"
+CarpetX::recover_method             = "openpmd"
+
 # Timers
-TimerReport::out_every              = $timer_every
-TimerReport::out_filename           = "TimerReport"
-TimerReport::output_schedule_timers = yes
-TimerReport::n_top_timers           = 200
+TimerReport::out_every                  = $timer_every
+TimerReport::out_filename               = "TimerReport"
+TimerReport::n_top_timers               = 200
+TImerReport::output_all_timers          = yes
+TimerReport::output_all_timers_readable = yes
+TimerReport::output_all_timers_together = yes
+TimerReport::output_schedule_timers     = yes
 

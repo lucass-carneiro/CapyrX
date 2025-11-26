@@ -9,7 +9,7 @@ KEYWORD initial_condition "Initial condition"
 
 BOOLEAN add_dissipation "Add Kreiss-Oliger dissipation to scalar field RHS"
 {
-} "yes"
+} "no"
 
 CCTK_REAL dissipation_epsilon "Kreiss-Oliger dissipation strength"
 {
@@ -18,7 +18,7 @@ CCTK_REAL dissipation_epsilon "Kreiss-Oliger dissipation strength"
 
 BOOLEAN use_newradx "Use radiative boundary conditions for scalar field"
 {
-} "yes"
+} "no"
 
 CCTK_REAL rad_power "Rad. power parameter for NewRadX"
 {

@@ -20,8 +20,8 @@ enum class PatchPiece : int {
   unknown = 7
 };
 
-static inline CCTK_HOST CCTK_DEVICE auto
-get_owner_patch(const PatchParams &par, const svec_t &global_coords)
+static inline CCTK_DEVICE auto get_owner_patch(const PatchParams &par,
+                                               const svec_t &global_coords)
     -> PatchPiece {
   using std::distance;
   using std::fabs;
@@ -81,8 +81,8 @@ get_owner_patch(const PatchParams &par, const svec_t &global_coords)
   return PatchPiece::unknown;
 }
 
-CCTK_HOST CCTK_DEVICE auto global2local(const PatchParams &par,
-                                        const svec_t &global_coords)
+CCTK_DEVICE auto global2local(const PatchParams &par,
+                              const svec_t &global_coords)
     -> std_tuple<int, svec_t> {
   using std::pow;
   using std::sqrt;
@@ -101,9 +101,9 @@ CCTK_HOST CCTK_DEVICE auto global2local(const PatchParams &par,
   switch (patch) {
 
   case PatchPiece::cartesian:
-    local_coords(0) = x / r0;
-    local_coords(1) = y / r0;
-    local_coords(2) = z / r0;
+    local_coords(0) = x;
+    local_coords(1) = y;
+    local_coords(2) = z;
     break;
 
   case PatchPiece::plus_x:
@@ -182,8 +182,8 @@ CCTK_HOST CCTK_DEVICE auto global2local(const PatchParams &par,
   return std_make_tuple(static_cast<int>(patch), local_coords);
 }
 
-CCTK_HOST CCTK_DEVICE auto local2global(const PatchParams &par, int patch,
-                                        const svec_t &local_coords) -> svec_t {
+CCTK_DEVICE auto local2global(const PatchParams &par, int patch,
+                              const svec_t &local_coords) -> svec_t {
   using std::pow;
   using std::sqrt;
 
@@ -201,9 +201,9 @@ CCTK_HOST CCTK_DEVICE auto local2global(const PatchParams &par, int patch,
   switch (static_cast<PatchPiece>(patch)) {
 
   case PatchPiece::cartesian:
-    global_coords(0) = a * r0;
-    global_coords(1) = b * r0;
-    global_coords(2) = c * r0;
+    global_coords(0) = a;
+    global_coords(1) = b;
+    global_coords(2) = c;
     break;
 
   case PatchPiece::plus_x:
@@ -290,9 +290,10 @@ CCTK_HOST CCTK_DEVICE auto local2global(const PatchParams &par, int patch,
   return global_coords;
 }
 
-static inline CCTK_HOST CCTK_DEVICE auto
-cubed_sphere_jacs(const PatchParams &par, int patch,
-                  const svec_t &global_coords) -> std_tuple<jac_t, djac_t> {
+static inline CCTK_DEVICE auto cubed_sphere_jacs(const PatchParams &par,
+                                                 int patch,
+                                                 const svec_t &global_coords)
+    -> std_tuple<jac_t, djac_t> {
   using std::pow;
   using std::sqrt;
 
@@ -311,15 +312,15 @@ cubed_sphere_jacs(const PatchParams &par, int patch,
   switch (static_cast<PatchPiece>(patch)) {
 
   case PatchPiece::cartesian:
-    J(0)(0) = 1 / r0;
+    J(0)(0) = 1;
     J(0)(1) = 0;
     J(0)(2) = 0;
     J(1)(0) = 0;
-    J(1)(1) = 1 / r0;
+    J(1)(1) = 1;
     J(1)(2) = 0;
     J(2)(0) = 0;
     J(2)(1) = 0;
-    J(2)(2) = 1 / r0;
+    J(2)(2) = 1;
 
     dJ(0)(0, 0) = 0;
     dJ(0)(0, 1) = 0;
@@ -1028,15 +1029,15 @@ cubed_sphere_jacs(const PatchParams &par, int patch,
   return std_make_tuple(J, dJ);
 }
 
-CCTK_HOST CCTK_DEVICE auto dlocal_dglobal(const PatchParams &par, int patch,
-                                          const svec_t &local_coords)
+CCTK_DEVICE auto dlocal_dglobal(const PatchParams &par, int patch,
+                                const svec_t &local_coords)
     -> std_tuple<svec_t, jac_t> {
   const auto data{d2local_dglobal2(par, patch, local_coords)};
   return std_make_tuple(std::get<0>(data), std::get<1>(data));
 }
 
-CCTK_HOST CCTK_DEVICE auto d2local_dglobal2(const PatchParams &par, int patch,
-                                            const svec_t &local_coords)
+CCTK_DEVICE auto d2local_dglobal2(const PatchParams &par, int patch,
+                                  const svec_t &local_coords)
     -> std_tuple<svec_t, jac_t, djac_t> {
   const auto local_to_global_result{local2global(par, patch, local_coords)};
   const auto jacobian_results{
@@ -1048,6 +1049,8 @@ CCTK_HOST CCTK_DEVICE auto d2local_dglobal2(const PatchParams &par, int patch,
 
 static inline auto make_patch(const PatchPiece &p, const PatchParams &par)
     -> Patch {
+
+  // Setup data for the most common patch type: Non-cartesian
   Patch patch{};
 
   patch.ncells = {par.angular_cells, par.angular_cells, par.radial_cells};
@@ -1085,33 +1088,21 @@ static inline auto make_patch(const PatchPiece &p, const PatchParams &par)
     patch.ncells = {par.angular_cells, par.angular_cells, par.angular_cells};
 
     patch.xmin = {
-        -1.0 - par.patch_overlap * angular_delta,
-        -1.0 - par.patch_overlap * angular_delta,
-        -1.0 - par.patch_overlap * angular_delta,
+        -par.inner_boundary - par.patch_overlap * angular_delta,
+        -par.inner_boundary - par.patch_overlap * angular_delta,
+        -par.inner_boundary - par.patch_overlap * angular_delta,
     };
 
     patch.xmax = {
-        1.0 + par.patch_overlap * angular_delta,
-        1.0 + par.patch_overlap * angular_delta,
-        1.0 + par.patch_overlap * angular_delta,
+        par.inner_boundary + par.patch_overlap * angular_delta,
+        par.inner_boundary + par.patch_overlap * angular_delta,
+        par.inner_boundary + par.patch_overlap * angular_delta,
     };
 
     patch.faces = {{mx, my, mz}, {px, py, pz}};
-    
-    /* 
-     * Even though this is the central Cartesian patch, we cannot set the
-     * is_cartesian flag to true here. This is because, in this patch system,
-     * all patches have coordinate extent in [-1, 1], even the Cartesian patch.
-     * Because of this, as far as Carpetx is concearned, this makes it a non
-     * cartesian patch. If we were to set this to true, we would have all
-     * sorts of visualization bugs and lord knows what else. This should prob.
-     * be changed, as doing no extra work when a patch is cartesian is actually
-     * an optimization. This would mean changing the whole coordinate system,
-     * as jacobians would change. It would also mean that whenever local
-     * coordinates are used in parameter files (like when placing mesh
-     * refinement boxes) changes would be needed.
-     */
-    //patch.is_cartesian = true;
+
+    patch.is_cartesian = true;
+
     break;
 
   case PatchPiece::plus_x:

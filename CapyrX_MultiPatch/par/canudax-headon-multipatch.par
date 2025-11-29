@@ -48,8 +48,6 @@ $diss_eps = 0.20
 $patch_overlap = 0
 $interp_order  = 1
 $interp_opts   = "order=1"
-
-$bh_sep = $bh_sep
 ######################
 
 # Misc options

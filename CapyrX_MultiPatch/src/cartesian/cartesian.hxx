@@ -37,7 +37,8 @@ struct PatchParams {
  *  1. The index of the patch owning the local coordinates.
  *  2. The local coordinates.
  */
-CCTK_DEVICE auto global2local(const PatchParams &p, const svec_t &global_coords)
+CCTK_HOST CCTK_DEVICE auto global2local(const PatchParams &p,
+                                        const svec_t &global_coords)
     -> std_tuple<int, svec_t>;
 
 /**
@@ -54,8 +55,8 @@ CCTK_DEVICE auto global2local(const PatchParams &p, const svec_t &global_coords)
  * Returns:
  * An svec_t object containing the transformd global coordinates.
  */
-CCTK_DEVICE auto local2global(const PatchParams &p, int patch,
-                              const svec_t &local_coords) -> svec_t;
+CCTK_HOST CCTK_DEVICE auto local2global(const PatchParams &p, int patch,
+                                        const svec_t &local_coords) -> svec_t;
 
 /**
  * Coordinate transformation's Jacobian components.
@@ -80,8 +81,8 @@ CCTK_DEVICE auto local2global(const PatchParams &p, int patch,
  * In code, \f$J^{i}_{\phantom{i}j}\f$ is acessed by calling `J(i)(j)` on a
  * `jac_t` type object.
  */
-CCTK_DEVICE auto dlocal_dglobal(const PatchParams &p, int patch,
-                                const svec_t &local_coords)
+CCTK_HOST CCTK_DEVICE auto dlocal_dglobal(const PatchParams &p, int patch,
+                                          const svec_t &local_coords)
     -> std_tuple<svec_t, jac_t>;
 
 /**
@@ -111,8 +112,8 @@ CCTK_DEVICE auto dlocal_dglobal(const PatchParams &p, int patch,
  * \mathrm{d}x^k}\f] In code, \f$J^{i}_{\phantom{i}jk}\f$ is acessed by
  * calling `J(i)(j,k)` on a `djac_t` type object.
  */
-CCTK_DEVICE auto d2local_dglobal2(const PatchParams &p, int patch,
-                                  const svec_t &local_coords)
+CCTK_HOST CCTK_DEVICE auto d2local_dglobal2(const PatchParams &p, int patch,
+                                            const svec_t &local_coords)
     -> std_tuple<svec_t, jac_t, djac_t>;
 
 /**

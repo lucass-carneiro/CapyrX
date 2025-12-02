@@ -20,8 +20,8 @@ enum class PatchPiece : int {
   unknown = 7
 };
 
-static inline CCTK_DEVICE auto get_owner_patch(const PatchParams &par,
-                                               const svec_t &global_coords)
+static inline CCTK_HOST CCTK_DEVICE auto
+get_owner_patch(const PatchParams &par, const svec_t &global_coords)
     -> PatchPiece {
   using std::distance;
   using std::fabs;
@@ -81,8 +81,8 @@ static inline CCTK_DEVICE auto get_owner_patch(const PatchParams &par,
   return PatchPiece::unknown;
 }
 
-CCTK_DEVICE auto global2local(const PatchParams &par,
-                              const svec_t &global_coords)
+CCTK_HOST CCTK_DEVICE auto global2local(const PatchParams &par,
+                                        const svec_t &global_coords)
     -> std_tuple<int, svec_t> {
   using std::pow;
   using std::sqrt;
@@ -182,8 +182,8 @@ CCTK_DEVICE auto global2local(const PatchParams &par,
   return std_make_tuple(static_cast<int>(patch), local_coords);
 }
 
-CCTK_DEVICE auto local2global(const PatchParams &par, int patch,
-                              const svec_t &local_coords) -> svec_t {
+CCTK_HOST CCTK_DEVICE auto local2global(const PatchParams &par, int patch,
+                                        const svec_t &local_coords) -> svec_t {
   using std::pow;
   using std::sqrt;
 
@@ -290,10 +290,9 @@ CCTK_DEVICE auto local2global(const PatchParams &par, int patch,
   return global_coords;
 }
 
-static inline CCTK_DEVICE auto cubed_sphere_jacs(const PatchParams &par,
-                                                 int patch,
-                                                 const svec_t &global_coords)
-    -> std_tuple<jac_t, djac_t> {
+static inline CCTK_HOST CCTK_DEVICE auto
+cubed_sphere_jacs(const PatchParams &par, int patch,
+                  const svec_t &global_coords) -> std_tuple<jac_t, djac_t> {
   using std::pow;
   using std::sqrt;
 
@@ -1029,15 +1028,15 @@ static inline CCTK_DEVICE auto cubed_sphere_jacs(const PatchParams &par,
   return std_make_tuple(J, dJ);
 }
 
-CCTK_DEVICE auto dlocal_dglobal(const PatchParams &par, int patch,
-                                const svec_t &local_coords)
+CCTK_HOST CCTK_DEVICE auto dlocal_dglobal(const PatchParams &par, int patch,
+                                          const svec_t &local_coords)
     -> std_tuple<svec_t, jac_t> {
   const auto data{d2local_dglobal2(par, patch, local_coords)};
   return std_make_tuple(std::get<0>(data), std::get<1>(data));
 }
 
-CCTK_DEVICE auto d2local_dglobal2(const PatchParams &par, int patch,
-                                  const svec_t &local_coords)
+CCTK_HOST CCTK_DEVICE auto d2local_dglobal2(const PatchParams &par, int patch,
+                                            const svec_t &local_coords)
     -> std_tuple<svec_t, jac_t, djac_t> {
   const auto local_to_global_result{local2global(par, patch, local_coords)};
   const auto jacobian_results{

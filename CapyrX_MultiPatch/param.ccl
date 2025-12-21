@@ -5,6 +5,7 @@ KEYWORD patch_system "Patch system"
   "none" :: "disable multi-patch systems"
   "Cartesian" :: "Cartesian coordinates"
   "Cubed sphere" :: "Cartesian cube surrounded with 6 spherical-like patches"
+  "Thornburg06" :: "Six spherical patches with inner and outer spherical boundaries"
 } "none"
 
 BOOLEAN verbose "Enable verbose output"
@@ -77,24 +78,24 @@ REAL cartesian_zmax "zmax"
   *:* :: ""
 } +1.0
 
-# Cubed Sphere patch system
+# Cubed Sphere and Thornburg06 patch systems
 
-REAL cubed_sphere_inner_boundary_radius  "Half of the length of the side of the central cartesian cube"
+REAL inner_boundary_radius  "For the Cubed sphere system, this is half of the length of the side of the central cartesian cube. For the Thornburg06 system, this is the inner spherical radius"
 {
   0:* :: "Positive"
 } 1.0
 
-REAL cubed_sphere_outer_boundary_radius "Radius where the outer boundaries of the cake will be placed."
+REAL outer_boundary_radius "Outer boundary radius for both the Cubed sphere and Thornburg06 system"
 {
   0:* :: "Positive"
 } 4.0
 
-INT cubed_sphere_angular_cells "Number of cells in the angular direction"
+INT angular_cells "Number of cells in the angular direction, for both the Cubed sphere and Thornburg06 systems"
 {
   0:* :: "Positive"
 } 20
 
-INT cubed_sphere_radial_cells "Number of cells in the radial direction" 
+INT radial_cells "Number of cells in the radial direction, for both the Cubed sphere and Thornburg06 systems" 
 {
   0:* :: "Positive"
 } 20

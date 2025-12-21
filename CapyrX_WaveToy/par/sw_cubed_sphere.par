@@ -45,10 +45,10 @@ ODESolvers::method = "RK4"
 CapyrX_MultiPatch::verbose        =  yes
 CapyrX_MultiPatch::patch_system   = "Cubed sphere"
 
-CapyrX_MultiPatch::cubed_sphere_inner_boundary_radius = $r0
-CapyrX_MultiPatch::cubed_sphere_outer_boundary_radius = $rf
-CapyrX_MultiPatch::cubed_sphere_angular_cells         = $angular_cells
-CapyrX_MultiPatch::cubed_sphere_radial_cells          = $radial_cells
+CapyrX_MultiPatch::inner_boundary_radius = $r0
+CapyrX_MultiPatch::outer_boundary_radius = $rf
+CapyrX_MultiPatch::angular_cells         = $angular_cells
+CapyrX_MultiPatch::radial_cells          = $radial_cells
 
 CapyrX_WaveToy::initial_condition = "standing wave"
 CapyrX_WaveToy::wave_kx = $wave_k

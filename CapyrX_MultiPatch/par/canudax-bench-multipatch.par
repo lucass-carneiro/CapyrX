@@ -43,10 +43,10 @@ CapyrX_MultiPatch::verbose       =  yes
 CapyrX_MultiPatch::patch_system  = "Cubed sphere"
 CapyrX_MultiPatch::patch_overlap = 1
 
-CapyrX_MultiPatch::cubed_sphere_inner_boundary_radius = $inner_radius
-CapyrX_MultiPatch::cubed_sphere_outer_boundary_radius = $outer_radius
-CapyrX_MultiPatch::cubed_sphere_radial_cells          = $radial_cells
-CapyrX_MultiPatch::cubed_sphere_angular_cells         = $anguar_cells
+CapyrX_MultiPatch::inner_boundary_radius = $inner_radius
+CapyrX_MultiPatch::outer_boundary_radius = $outer_radius
+CapyrX_MultiPatch::radial_cells          = $radial_cells
+CapyrX_MultiPatch::angular_cells         = $anguar_cells
 
 CarpetX::blocking_factor_x = 2
 CarpetX::blocking_factor_y = 2

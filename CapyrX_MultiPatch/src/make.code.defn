@@ -8,4 +8,5 @@ SRCS =						    \
 # Subdirectories containing source files
 SUBDIRS =        \
 	cartesian    \
-	cubed_sphere
+	cubed_sphere \
+	thornburg06

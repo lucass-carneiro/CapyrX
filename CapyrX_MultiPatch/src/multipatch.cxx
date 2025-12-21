@@ -5,6 +5,7 @@
 
 #include "cartesian/cartesian.hxx"
 #include "cubed_sphere/cubed_sphere.hxx"
+#include "thornburg06/thornburg06.hxx"
 
 #include "../../../CarpetX/CarpetX/src/timer.hxx"
 
@@ -109,12 +110,21 @@ static inline void global2local_kernel(const CCTK_INT npoints,
       g2l = Cartesian::global2local(p, global_coords);
     } else if constexpr (sys == PatchSystems::cubed_spehre) {
       const CubedSphere::PatchParams p{
-          .angular_cells = cubed_sphere_angular_cells + 2 * patch_overlap,
-          .radial_cells = cubed_sphere_radial_cells + 2 * patch_overlap,
-          .inner_boundary = cubed_sphere_inner_boundary_radius,
-          .outer_boundary = cubed_sphere_outer_boundary_radius,
+          .angular_cells = angular_cells + 2 * patch_overlap,
+          .radial_cells = radial_cells + 2 * patch_overlap,
+          .inner_boundary = inner_boundary_radius,
+          .outer_boundary = outer_boundary_radius,
           .patch_overlap = patch_overlap};
       g2l = CubedSphere::global2local(p, global_coords);
+    } else if constexpr (sys == PatchSystems::thornburg06) {
+      // TODO: Propper parameter names
+      const Thornburg06::PatchParams p{
+          .angular_cells = angular_cells + 2 * patch_overlap,
+          .radial_cells = radial_cells + 2 * patch_overlap,
+          .inner_boundary = inner_boundary_radius,
+          .outer_boundary = outer_boundary_radius,
+          .patch_overlap = patch_overlap};
+      g2l = Thornburg06::global2local(p, global_coords);
     }
 
     const auto patch{std::get<0>(g2l)};
@@ -167,6 +177,13 @@ extern "C" void MultiPatch1_GlobalToLocal2(
     break;
   }
 
+  case PatchSystems::thornburg06: {
+    global2local_kernel<PatchSystems::thornburg06>(npoints, globalsx, globalsy,
+                                                   globalsz, patches, localsx,
+                                                   localsy, localsz);
+    break;
+  }
+
   default:
     CCTK_VERROR(
         "MultiPatch1_GlobalToLocal2 called for an unknown patch system");
@@ -214,12 +231,21 @@ static inline void local2global_kernel(const CCTK_INT npoints,
       global_vars = Cartesian::local2global(p, patch, local_coords);
     } else if constexpr (sys == PatchSystems::cubed_spehre) {
       const CubedSphere::PatchParams p{
-          .angular_cells = cubed_sphere_angular_cells + 2 * patch_overlap,
-          .radial_cells = cubed_sphere_radial_cells + 2 * patch_overlap,
-          .inner_boundary = cubed_sphere_inner_boundary_radius,
-          .outer_boundary = cubed_sphere_outer_boundary_radius,
+          .angular_cells = angular_cells + 2 * patch_overlap,
+          .radial_cells = radial_cells + 2 * patch_overlap,
+          .inner_boundary = inner_boundary_radius,
+          .outer_boundary = outer_boundary_radius,
           .patch_overlap = patch_overlap};
       global_vars = CubedSphere::local2global(p, patch, local_coords);
+    } else if constexpr (sys == PatchSystems::thornburg06) {
+      // TODO: Propper parameter names
+      const Thornburg06::PatchParams p{
+          .angular_cells = angular_cells + 2 * patch_overlap,
+          .radial_cells = radial_cells + 2 * patch_overlap,
+          .inner_boundary = inner_boundary_radius,
+          .outer_boundary = outer_boundary_radius,
+          .patch_overlap = patch_overlap};
+      global_vars = Thornburg06::local2global(p, patch, local_coords);
     }
 
     globalsx[i] = global_vars(0);
@@ -269,6 +295,13 @@ extern "C" void MultiPatch1_LocalToGlobal2(
     break;
   }
 
+  case PatchSystems::thornburg06: {
+    local2global_kernel<PatchSystems::thornburg06>(npoints, patches, localsx,
+                                                   localsy, localsz, globalsx,
+                                                   globalsy, globalsz);
+    break;
+  }
+
   default:
     CCTK_VERROR(
         "MultiPatch1_LocalToGlobal2 called for an unknown patch system");
@@ -312,14 +345,25 @@ extern "C" int CapyrX_MultiPatch_Setup() {
     g_patch_system = std::make_unique<PatchSystem>(Cartesian::make_system(p));
 
   } else if (CCTK_EQUALS(patch_system, "Cubed sphere")) {
-    CubedSphere::PatchParams p{
-        .angular_cells = cubed_sphere_angular_cells + 2 * patch_overlap,
-        .radial_cells = cubed_sphere_radial_cells + 2 * patch_overlap,
-        .inner_boundary = cubed_sphere_inner_boundary_radius,
-        .outer_boundary = cubed_sphere_outer_boundary_radius,
-        .patch_overlap = patch_overlap};
+    CubedSphere::PatchParams p{.angular_cells =
+                                   angular_cells + 2 * patch_overlap,
+                               .radial_cells = radial_cells + 2 * patch_overlap,
+                               .inner_boundary = inner_boundary_radius,
+                               .outer_boundary = outer_boundary_radius,
+                               .patch_overlap = patch_overlap};
 
     g_patch_system = std::make_unique<PatchSystem>(CubedSphere::make_system(p));
+
+  } else if (CCTK_EQUALS(patch_system, "Thornburg06")) {
+    // TODO: Propper parameter names
+    const Thornburg06::PatchParams p{
+        .angular_cells = angular_cells + 2 * patch_overlap,
+        .radial_cells = radial_cells + 2 * patch_overlap,
+        .inner_boundary = inner_boundary_radius,
+        .outer_boundary = outer_boundary_radius,
+        .patch_overlap = patch_overlap};
+
+    g_patch_system = std::make_unique<PatchSystem>(Thornburg06::make_system(p));
 
   } else {
     CCTK_VERROR("Unbable to setup unknown patch system \"%s\"", patch_system);
@@ -435,13 +479,25 @@ extern "C" void CapyrX_MultiPatch_Coordinates_Setup(CCTK_ARGUMENTS) {
 
   case PatchSystems::cubed_spehre: {
     CubedSphere::PatchParams par{
-        .angular_cells = cubed_sphere_angular_cells + 2 * patch_overlap,
-        .radial_cells = cubed_sphere_radial_cells + 2 * patch_overlap,
-        .inner_boundary = cubed_sphere_inner_boundary_radius,
-        .outer_boundary = cubed_sphere_outer_boundary_radius,
+        .angular_cells = angular_cells + 2 * patch_overlap,
+        .radial_cells = radial_cells + 2 * patch_overlap,
+        .inner_boundary = inner_boundary_radius,
+        .outer_boundary = outer_boundary_radius,
         .patch_overlap = patch_overlap};
 
     COORDINATE_SETUP_KERNEL(CubedSphere::d2local_dglobal2);
+    break;
+  }
+
+  case PatchSystems::thornburg06: {
+    // TODO: Propper parameter names
+    const Thornburg06::PatchParams par{
+        .angular_cells = angular_cells + 2 * patch_overlap,
+        .radial_cells = radial_cells + 2 * patch_overlap,
+        .inner_boundary = inner_boundary_radius,
+        .outer_boundary = outer_boundary_radius,
+        .patch_overlap = patch_overlap};
+    COORDINATE_SETUP_KERNEL(Thornburg06::d2local_dglobal2);
     break;
   }
 
@@ -459,16 +515,16 @@ extern "C" void CapyrX_MultiPatch_Check_Parameters(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTSX_CapyrX_MultiPatch_Check_Parameters;
   DECLARE_CCTK_PARAMETERS;
 
-  const auto cubed_sphere_radius_condition{
-      cubed_sphere_outer_boundary_radius >
-          4.0 * cubed_sphere_inner_boundary_radius ||
-      ((cubed_sphere_outer_boundary_radius -
-        4.0 * cubed_sphere_inner_boundary_radius) < 1.0e-8)};
+  if (CCTK_Equals(patch_system, "Cubed sphere")) {
+    const auto cubed_sphere_radius_condition{
+        outer_boundary_radius > 4.0 * inner_boundary_radius ||
+        ((outer_boundary_radius - 4.0 * inner_boundary_radius) < 1.0e-8)};
 
-  if (!cubed_sphere_radius_condition) {
-    CCTK_VERROR("When using the \"Cubed sphere\" patch system, please make "
-                "sure that that cubed_sphere_outer_boundary_radius >= 4 * "
-                "cubed_sphere_inner_boundary_radius.");
+    if (!cubed_sphere_radius_condition) {
+      CCTK_VERROR("When using the \"Cubed sphere\" patch system, please make "
+                  "sure that that outer_boundary_radius >= 4 * "
+                  "inner_boundary_radius.");
+    }
   }
 }
 
@@ -506,10 +562,10 @@ extern "C" void CapyrX_MultiPatch_Run_Unit_Tests(CCTK_ARGUMENTS) {
 
   } else if (CCTK_EQUALS(patch_system, "Cubed sphere")) {
     CubedSphere::PatchParams par{
-        .angular_cells = cubed_sphere_angular_cells + 2 * patch_overlap,
-        .radial_cells = cubed_sphere_radial_cells + 2 * patch_overlap,
-        .inner_boundary = cubed_sphere_inner_boundary_radius,
-        .outer_boundary = cubed_sphere_outer_boundary_radius,
+        .angular_cells = angular_cells + 2 * patch_overlap,
+        .radial_cells = radial_cells + 2 * patch_overlap,
+        .inner_boundary = inner_boundary_radius,
+        .outer_boundary = outer_boundary_radius,
         .patch_overlap = patch_overlap};
 
     const auto pass{CubedSphere::unit_test(test_repetitions, test_seed, par)};
@@ -519,6 +575,20 @@ extern "C" void CapyrX_MultiPatch_Run_Unit_Tests(CCTK_ARGUMENTS) {
                  patch_system);
     }
 
+  } else if (CCTK_EQUALS(patch_system, "Thornburg06")) {
+    Thornburg06::PatchParams par{
+        .angular_cells = angular_cells + 2 * patch_overlap,
+        .radial_cells = radial_cells + 2 * patch_overlap,
+        .inner_boundary = inner_boundary_radius,
+        .outer_boundary = outer_boundary_radius,
+        .patch_overlap = patch_overlap};
+
+    const auto pass{Thornburg06::unit_test(test_repetitions, test_seed, par)};
+
+    if (pass) {
+      CCTK_VINFO("Unit tests for patch \"%s\" have \033[1;32mPASSED\033[0m",
+                 patch_system);
+    }
   } else {
     CCTK_VERROR("Cannot run unit tests for unknown patch system \"%s\"",
                 patch_system);

@@ -1,8 +1,4 @@
-# Quadrupolar gaussian
-# No mesh refinement
-# No overlap
-# No dissipation
-# Dirichlet boundaries
+# Gaussian on the Thornburg06 system
 
 ActiveThorns = "
     CapyrX_MultiPatch
@@ -16,23 +12,20 @@ ActiveThorns = "
 "
 
 ###### Settings ######
-$final_time     = 10.0
-$out_every_time = 0.5
+$itlast       = 4096
+$out_every_it = 16
 
-$r0 = 2.0
-$rf = 8.0
+$r0 = 1.0
+$rf = 9.0
 
-$radial_cells  = 60
+$radial_cells  = 40
 $angular_cells = 40
 
 $cfl = 0.25
+
+$diss_eps  = 0.2
+$rad_power = 1.0
 ######################
-
-$dx = 2.0 * $r0 / ($angular_cells)
-$dt = $cfl * $dx
-
-$itlast       = ceil($final_time / $dt)
-$out_every_it = ceil($out_every_time / $dt)
 
 # Misc options
 Cactus::presync_mode = "mixed-error"
@@ -52,23 +45,30 @@ CarpetX::dtfac      = $cfl
 
 # Grid
 CapyrX_MultiPatch::verbose        =  yes
-CapyrX_MultiPatch::patch_system   = "Cubed sphere"
+CapyrX_MultiPatch::patch_system   = "Thornburg06"
 
 CapyrX_MultiPatch::inner_boundary_radius = $r0
 CapyrX_MultiPatch::outer_boundary_radius = $rf
 CapyrX_MultiPatch::angular_cells         = $angular_cells
 CapyrX_MultiPatch::radial_cells          = $radial_cells
 
-CarpetX::ghost_size = 2
+CarpetX::ghost_size = 3
 
 # We are restricted to this becase we have no patch overlaps
 CarpetX::interpolation_order = 1
+
+# Dissipation and NewRadX
+CapyrX_WaveToy_SecondOrder::add_dissipation = yes
+CapyrX_WaveToy_SecondOrder::use_newradx     = no
+
+CapyrX_WaveToy_SecondOrder::dissipation_epsilon = $diss_eps
+CapyrX_WaveToy_SecondOrder::rad_power           = $rad_power
 
 # Initial data
 CapyrX_WaveToy_SecondOrder::initial_condition = "Quadrupolar Gaussian"
 CapyrX_WaveToy_SecondOrder::amplitude         = 1.0
 CapyrX_WaveToy_SecondOrder::gaussian_width    = 1.0 / 2.0
-CapyrX_WaveToy_SecondOrder::quad_gaussian_R0  = $r0 / 4.5
+CapyrX_WaveToy_SecondOrder::quad_gaussian_R0  = 4 * $r0
 
 # Boundary conditions
 CarpetX::boundary_x       = "dirichlet"

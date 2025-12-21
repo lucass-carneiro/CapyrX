@@ -27,10 +27,10 @@ CapyrX_MultiPatch::verbose        =  yes
 CapyrX_MultiPatch::patch_system   = "Cubed sphere"
 CapyrX_MultiPatch::run_unit_tests = yes
 
-CapyrX_MultiPatch::cubed_sphere_inner_boundary_radius = 1.0
-CapyrX_MultiPatch::cubed_sphere_outer_boundary_radius = 4.0
-CapyrX_MultiPatch::cubed_sphere_angular_cells         = 40
-CapyrX_MultiPatch::cubed_sphere_radial_cells          = 40
+CapyrX_MultiPatch::inner_boundary_radius = 1.0
+CapyrX_MultiPatch::outer_boundary_radius = 4.0
+CapyrX_MultiPatch::angular_cells         = 40
+CapyrX_MultiPatch::radial_cells          = 40
                                                                         
 CapyrX_TestMultiPatch::test_data = "standing wave"
 

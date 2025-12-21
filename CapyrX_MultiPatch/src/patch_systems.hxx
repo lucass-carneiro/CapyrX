@@ -6,7 +6,12 @@ namespace CapyrX::MultiPatch {
 /**
  * Tag for identifying patch systems.
  */
-enum class PatchSystems : int { none = 0, cartesian, cubed_spehre };
+enum class PatchSystems : int {
+  none = 0,
+  cartesian,
+  cubed_spehre,
+  thornburg06
+};
 
 } // namespace CapyrX::MultiPatch
 

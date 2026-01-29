@@ -157,9 +157,9 @@ extern "C" void MultiPatch1_GlobalToLocal2(
 
   case PatchSystems::none:
     if (verbose) {
-      CCTK_VWARN(
-          CCTK_WARN_ALERT,
-          "MultiPatch1_GlobalToLocal2 called with no active patch system");
+      CCTK_VWARN(CCTK_WARN_ALERT,
+                 "MultiPatch1_GlobalToLocal2 called with no active patch "
+                 "system. This should not have happened");
     }
     break;
 
@@ -238,7 +238,6 @@ static inline void local2global_kernel(const CCTK_INT npoints,
           .patch_overlap = patch_overlap};
       global_vars = CubedSphere::local2global(p, patch, local_coords);
     } else if constexpr (sys == PatchSystems::thornburg06) {
-      // TODO: Propper parameter names
       const Thornburg06::PatchParams p{
           .angular_cells = angular_cells + 2 * patch_overlap,
           .radial_cells = radial_cells + 2 * patch_overlap,
@@ -275,9 +274,9 @@ extern "C" void MultiPatch1_LocalToGlobal2(
 
   case PatchSystems::none:
     if (verbose) {
-      CCTK_VWARN(
-          CCTK_WARN_ALERT,
-          "MultiPatch1_LocalToGlobal2 called with no active patch system");
+      CCTK_VWARN(CCTK_WARN_ALERT,
+                 "MultiPatch1_LocalToGlobal2 called with no active patch "
+                 "system. This should not have happened.");
     }
     break;
 
@@ -355,7 +354,6 @@ extern "C" int CapyrX_MultiPatch_Setup() {
     g_patch_system = std::make_unique<PatchSystem>(CubedSphere::make_system(p));
 
   } else if (CCTK_EQUALS(patch_system, "Thornburg06")) {
-    // TODO: Propper parameter names
     const Thornburg06::PatchParams p{
         .angular_cells = angular_cells + 2 * patch_overlap,
         .radial_cells = radial_cells + 2 * patch_overlap,
@@ -376,72 +374,80 @@ extern "C" int CapyrX_MultiPatch_Setup() {
   return 0;
 }
 
-#define COORDINATE_SETUP_KERNEL(d2local_dglobal2_func)                         \
-  grid.loop_all_device<0, 0, 0>(                                               \
-      grid.nghostzones, [=] CCTK_HOST CCTK_DEVICE(                             \
-                            const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE { \
-        const svec_t a{p.x, p.y, p.z};                                         \
-                                                                               \
-        const auto d2J_tuple{d2local_dglobal2_func(par, p.patch, a)};          \
-                                                                               \
-        const auto &x{std::get<0>(d2J_tuple)};                                 \
-        const auto &J{std::get<1>(d2J_tuple)};                                 \
-        const auto &dJ{std::get<2>(d2J_tuple)};                                \
-                                                                               \
-        vcoordx(p.I) = x(0);                                                   \
-        vcoordy(p.I) = x(1);                                                   \
-        vcoordz(p.I) = x(2);                                                   \
-                                                                               \
-        vJ_da_dx(p.I) = J(0)(0);                                               \
-        vJ_da_dy(p.I) = J(0)(1);                                               \
-        vJ_da_dz(p.I) = J(0)(2);                                               \
-        vJ_db_dx(p.I) = J(1)(0);                                               \
-        vJ_db_dy(p.I) = J(1)(1);                                               \
-        vJ_db_dz(p.I) = J(1)(2);                                               \
-        vJ_dc_dx(p.I) = J(2)(0);                                               \
-        vJ_dc_dy(p.I) = J(2)(1);                                               \
-        vJ_dc_dz(p.I) = J(2)(2);                                               \
-                                                                               \
-        vdJ_d2a_dxdx(p.I) = dJ(0)(0, 0);                                       \
-        vdJ_d2a_dxdy(p.I) = dJ(0)(0, 1);                                       \
-        vdJ_d2a_dxdz(p.I) = dJ(0)(0, 2);                                       \
-        vdJ_d2a_dydy(p.I) = dJ(0)(1, 1);                                       \
-        vdJ_d2a_dydz(p.I) = dJ(0)(1, 2);                                       \
-        vdJ_d2a_dzdz(p.I) = dJ(0)(2, 2);                                       \
-        vdJ_d2b_dxdx(p.I) = dJ(1)(0, 0);                                       \
-        vdJ_d2b_dxdy(p.I) = dJ(1)(0, 1);                                       \
-        vdJ_d2b_dxdz(p.I) = dJ(1)(0, 2);                                       \
-        vdJ_d2b_dydy(p.I) = dJ(1)(1, 1);                                       \
-        vdJ_d2b_dydz(p.I) = dJ(1)(1, 2);                                       \
-        vdJ_d2b_dzdz(p.I) = dJ(1)(2, 2);                                       \
-        vdJ_d2c_dxdx(p.I) = dJ(2)(0, 0);                                       \
-        vdJ_d2c_dxdy(p.I) = dJ(2)(0, 1);                                       \
-        vdJ_d2c_dxdz(p.I) = dJ(2)(0, 2);                                       \
-        vdJ_d2c_dydy(p.I) = dJ(2)(1, 1);                                       \
-        vdJ_d2c_dydz(p.I) = dJ(2)(1, 2);                                       \
-        vdJ_d2c_dzdz(p.I) = dJ(2)(2, 2);                                       \
-      });                                                                      \
-                                                                               \
-  grid.loop_all_device<1, 1, 1>(                                               \
-      grid.nghostzones, [=] CCTK_HOST CCTK_DEVICE(                             \
-                            const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE { \
-        const svec_t a{p.x, p.y, p.z};                                         \
-                                                                               \
-        const auto d2J_tuple{d2local_dglobal2_func(par, p.patch, a)};          \
-                                                                               \
-        const auto &x{std::get<0>(d2J_tuple)};                                 \
-        const auto &J{std::get<1>(d2J_tuple)};                                 \
-                                                                               \
-        const auto detJ{J(0)(0) * (J(1)(1) * J(2)(2) - J(1)(2) * J(2)(1)) +    \
-                        J(0)(1) * (J(1)(2) * J(2)(0) - J(1)(0) * J(2)(2)) +    \
-                        J(0)(2) * (J(1)(0) * J(2)(1) - J(1)(1) * J(2)(0))};    \
-                                                                               \
-        ccoordx(p.I) = x(0);                                                   \
-        ccoordy(p.I) = x(1);                                                   \
-        ccoordz(p.I) = x(2);                                                   \
-                                                                               \
-        cvol(p.I) = (p.dx * p.dy * p.dz) * detJ;                               \
-      })
+template <typename PatchParameters, typename JacSecDerivFunc>
+static inline void
+coordinate_setup_kernel(cGH *cctkGH, PatchParameters par,
+                        JacSecDerivFunc d2local_dglobal2_func) {
+  DECLARE_CCTK_ARGUMENTSX_CapyrX_MultiPatch_Coordinates_Setup;
+
+  using namespace Loop;
+
+  grid.loop_all_device<0, 0, 0>(
+      grid.nghostzones, [=] CCTK_HOST CCTK_DEVICE(
+                            const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+        const svec_t a{p.x, p.y, p.z};
+
+        const auto d2J_tuple{d2local_dglobal2_func(par, p.patch, a)};
+
+        const auto &x{std::get<0>(d2J_tuple)};
+        const auto &J{std::get<1>(d2J_tuple)};
+        const auto &dJ{std::get<2>(d2J_tuple)};
+
+        vcoordx(p.I) = x(0);
+        vcoordy(p.I) = x(1);
+        vcoordz(p.I) = x(2);
+
+        vJ_da_dx(p.I) = J(0)(0);
+        vJ_da_dy(p.I) = J(0)(1);
+        vJ_da_dz(p.I) = J(0)(2);
+        vJ_db_dx(p.I) = J(1)(0);
+        vJ_db_dy(p.I) = J(1)(1);
+        vJ_db_dz(p.I) = J(1)(2);
+        vJ_dc_dx(p.I) = J(2)(0);
+        vJ_dc_dy(p.I) = J(2)(1);
+        vJ_dc_dz(p.I) = J(2)(2);
+
+        vdJ_d2a_dxdx(p.I) = dJ(0)(0, 0);
+        vdJ_d2a_dxdy(p.I) = dJ(0)(0, 1);
+        vdJ_d2a_dxdz(p.I) = dJ(0)(0, 2);
+        vdJ_d2a_dydy(p.I) = dJ(0)(1, 1);
+        vdJ_d2a_dydz(p.I) = dJ(0)(1, 2);
+        vdJ_d2a_dzdz(p.I) = dJ(0)(2, 2);
+        vdJ_d2b_dxdx(p.I) = dJ(1)(0, 0);
+        vdJ_d2b_dxdy(p.I) = dJ(1)(0, 1);
+        vdJ_d2b_dxdz(p.I) = dJ(1)(0, 2);
+        vdJ_d2b_dydy(p.I) = dJ(1)(1, 1);
+        vdJ_d2b_dydz(p.I) = dJ(1)(1, 2);
+        vdJ_d2b_dzdz(p.I) = dJ(1)(2, 2);
+        vdJ_d2c_dxdx(p.I) = dJ(2)(0, 0);
+        vdJ_d2c_dxdy(p.I) = dJ(2)(0, 1);
+        vdJ_d2c_dxdz(p.I) = dJ(2)(0, 2);
+        vdJ_d2c_dydy(p.I) = dJ(2)(1, 1);
+        vdJ_d2c_dydz(p.I) = dJ(2)(1, 2);
+        vdJ_d2c_dzdz(p.I) = dJ(2)(2, 2);
+      });
+
+  grid.loop_all_device<1, 1, 1>(
+      grid.nghostzones, [=] CCTK_HOST CCTK_DEVICE(
+                            const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+        const svec_t a{p.x, p.y, p.z};
+
+        const auto d2J_tuple{d2local_dglobal2_func(par, p.patch, a)};
+
+        const auto &x{std::get<0>(d2J_tuple)};
+        const auto &J{std::get<1>(d2J_tuple)};
+
+        const auto detJ{J(0)(0) * (J(1)(1) * J(2)(2) - J(1)(2) * J(2)(1)) +
+                        J(0)(1) * (J(1)(2) * J(2)(0) - J(1)(0) * J(2)(2)) +
+                        J(0)(2) * (J(1)(0) * J(2)(1) - J(1)(1) * J(2)(0))};
+
+        ccoordx(p.I) = x(0);
+        ccoordy(p.I) = x(1);
+        ccoordz(p.I) = x(2);
+
+        cvol(p.I) = (p.dx * p.dy * p.dz) * detJ;
+      });
+}
 
 extern "C" void CapyrX_MultiPatch_Coordinates_Setup(CCTK_ARGUMENTS) {
 #ifdef __CUDACC__
@@ -449,7 +455,6 @@ extern "C" void CapyrX_MultiPatch_Coordinates_Setup(CCTK_ARGUMENTS) {
       nvtxRangeStartA("CapyrX::CapyrX_MultiPatch_Coordinates_Setup");
 #endif
 
-  DECLARE_CCTK_ARGUMENTSX_CapyrX_MultiPatch_Coordinates_Setup;
   DECLARE_CCTK_PARAMETERS;
 
   using namespace Loop;
@@ -473,7 +478,7 @@ extern "C" void CapyrX_MultiPatch_Coordinates_Setup(CCTK_ARGUMENTS) {
         .ymax = cartesian_xmax,
         .zmax = cartesian_xmax,
     };
-    COORDINATE_SETUP_KERNEL(Cartesian::d2local_dglobal2);
+    coordinate_setup_kernel(cctkGH, par, Cartesian::d2local_dglobal2);
     break;
   }
 
@@ -485,19 +490,18 @@ extern "C" void CapyrX_MultiPatch_Coordinates_Setup(CCTK_ARGUMENTS) {
         .outer_boundary = outer_boundary_radius,
         .patch_overlap = patch_overlap};
 
-    COORDINATE_SETUP_KERNEL(CubedSphere::d2local_dglobal2);
+    coordinate_setup_kernel(cctkGH, par, CubedSphere::d2local_dglobal2);
     break;
   }
 
   case PatchSystems::thornburg06: {
-    // TODO: Propper parameter names
     const Thornburg06::PatchParams par{
         .angular_cells = angular_cells + 2 * patch_overlap,
         .radial_cells = radial_cells + 2 * patch_overlap,
         .inner_boundary = inner_boundary_radius,
         .outer_boundary = outer_boundary_radius,
         .patch_overlap = patch_overlap};
-    COORDINATE_SETUP_KERNEL(Thornburg06::d2local_dglobal2);
+    coordinate_setup_kernel(cctkGH, par, Thornburg06::d2local_dglobal2);
     break;
   }
 
@@ -532,8 +536,10 @@ extern "C" void CapyrX_MultiPatch_Run_Unit_Tests(CCTK_ARGUMENTS) {
   DECLARE_CCTK_PARAMETERS;
 
   if (verbose && !CCTK_EQUALS(patch_system, "none")) {
-    CCTK_VINFO("Running unit tests for patch \"%s\"", patch_system);
+    CCTK_VINFO("Running internal unit tests for patch \"%s\"", patch_system);
   }
+
+  bool pass = false;
 
   if (CCTK_EQUALS(patch_system, "none")) {
     return;
@@ -553,12 +559,7 @@ extern "C" void CapyrX_MultiPatch_Run_Unit_Tests(CCTK_ARGUMENTS) {
         .zmax = cartesian_xmax,
     };
 
-    const auto pass{Cartesian::unit_test(test_repetitions, test_seed, par)};
-
-    if (pass) {
-      CCTK_VINFO("Unit tests for patch \"%s\" have \033[1;32mPASSED\033[0m",
-                 patch_system);
-    }
+    pass = Cartesian::unit_test(test_repetitions, test_seed, par);
 
   } else if (CCTK_EQUALS(patch_system, "Cubed sphere")) {
     CubedSphere::PatchParams par{
@@ -568,12 +569,7 @@ extern "C" void CapyrX_MultiPatch_Run_Unit_Tests(CCTK_ARGUMENTS) {
         .outer_boundary = outer_boundary_radius,
         .patch_overlap = patch_overlap};
 
-    const auto pass{CubedSphere::unit_test(test_repetitions, test_seed, par)};
-
-    if (pass) {
-      CCTK_VINFO("Unit tests for patch \"%s\" have \033[1;32mPASSED\033[0m",
-                 patch_system);
-    }
+    pass = CubedSphere::unit_test(test_repetitions, test_seed, par);
 
   } else if (CCTK_EQUALS(patch_system, "Thornburg06")) {
     Thornburg06::PatchParams par{
@@ -583,14 +579,19 @@ extern "C" void CapyrX_MultiPatch_Run_Unit_Tests(CCTK_ARGUMENTS) {
         .outer_boundary = outer_boundary_radius,
         .patch_overlap = patch_overlap};
 
-    const auto pass{Thornburg06::unit_test(test_repetitions, test_seed, par)};
+    pass = Thornburg06::unit_test(test_repetitions, test_seed, par);
 
-    if (pass) {
-      CCTK_VINFO("Unit tests for patch \"%s\" have \033[1;32mPASSED\033[0m",
-                 patch_system);
-    }
   } else {
-    CCTK_VERROR("Cannot run unit tests for unknown patch system \"%s\"",
+    CCTK_VERROR(
+        "Cannot run internal unit tests for unknown patch system \"%s\"",
+        patch_system);
+  }
+
+  if (pass) {
+    CCTK_VINFO("Internal unit tests for patch \"%s\" have PASSED",
+               patch_system);
+  } else {
+    CCTK_VERROR("Internal unit tests for patch \"%s\" have FAILED",
                 patch_system);
   }
 }

@@ -24,34 +24,26 @@ CarpetX::max_num_levels = 1
 CarpetX::ghost_size = 2
 
 CapyrX_MultiPatch::verbose        =  yes
-CapyrX_MultiPatch::patch_system   = "Cubed sphere"
+CapyrX_MultiPatch::patch_system   = "Cartesian"
 CapyrX_MultiPatch::run_unit_tests = yes
-
-CapyrX_MultiPatch::inner_boundary_radius = 1.0
-CapyrX_MultiPatch::outer_boundary_radius = 4.0
-CapyrX_MultiPatch::angular_cells         = 40
-CapyrX_MultiPatch::radial_cells          = 40
                                                                         
-CapyrX_TestMultiPatch::test_data = "standing wave"
+CapyrX_TestMultiPatch::test_data = "parabola"
 
-CarpetX::boundary_x       = "dirichlet"
-CarpetX::boundary_y       = "dirichlet"
-CarpetX::boundary_z       = "dirichlet"
+CarpetX::boundary_x = "dirichlet"
+CarpetX::boundary_y = "dirichlet"
+CarpetX::boundary_z = "dirichlet"
 CarpetX::boundary_upper_x = "dirichlet"
 CarpetX::boundary_upper_y = "dirichlet"
 CarpetX::boundary_upper_z = "dirichlet"
 
 IO::out_dir = $parfile
-IO::out_every = 2
+IO::out_every = 1
 
-CarpetX::out_tsv = yes
+CarpetX::out_performance = no
+CarpetX::out_metadata = no
+
+CarpetX::out_tsv = no
 CarpetX::out_tsv_vars = "
-  CoordinatesX::vertex_coords
-  CapyrX_TestMultiPatch::test_data
-  CapyrX_TestMultiPatch::error
-"
-
-CarpetX::out_silo_vars = "
   CoordinatesX::vertex_coords
   CapyrX_TestMultiPatch::test_data
   CapyrX_TestMultiPatch::error

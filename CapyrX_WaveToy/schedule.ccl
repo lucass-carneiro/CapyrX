@@ -13,7 +13,7 @@ SCHEDULE CapyrX_WaveToy_Sync IN ODESolvers_PostStep
 
 
 # Init
-SCHEDULE CapyrX_WaveToy_Initial AT initial
+SCHEDULE CapyrX_WaveToy_Initial IN ODESolvers_Initial
 {
   LANG: C
   READS: CoordinatesX::vertex_coords(everywhere)
@@ -27,11 +27,23 @@ SCHEDULE CapyrX_WaveToy_RHS IN ODESolvers_RHS
 {
   LANG: C
   READS: state(everywhere)
+  READS: ADMBaseX::metric(everywhere)
+  READS: ADMBaseX::lapse(everywhere)
+  READS: ADMBaseX::shift(everywhere)
   READS: MultiPatch::vertex_Jacobians(everywhere)
   WRITES: rhs(interior)
 } "Calculate scalar wave RHS"
 
-
+if (add_dissipation)
+{
+  SCHEDULE CapyrX_WaveToy_Dissipation IN ODESolvers_RHS AFTER CapyrX_WaveToy_RHS
+  {
+    LANG: C
+    READS: state(everywhere)
+    READS: rhs(interior)
+    WRITES: rhs(interior)
+  } "Calculate scalar wave RHS"
+}
 
 # Energy
 SCHEDULE CapyrX_WaveToy_Energy AT analysis

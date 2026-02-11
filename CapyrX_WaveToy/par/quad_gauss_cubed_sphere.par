@@ -1,8 +1,7 @@
 ActiveThorns = "
-    BoxInBox
+    ADMBaseX
     CarpetX
     IOUtil
-    TimerReport
     ODESolvers
     CoordinatesX
     CapyrX_MultiPatch
@@ -10,26 +9,17 @@ ActiveThorns = "
 "
 
 ###### Settings ######
-$final_time = 1.0
-$out_every_time = 0.1
+$final_time = 20.0
+$out_every  = 32
 
-$r0 = 10.0
+$r0 = 5.0
 $rf = 4.0 * $r0
 
-$radial_cells = 40
 $angular_cells = 40
+$radial_cells  = 3 * $angular_cells / 2
 
 $cfl = 0.25
-
-$wave_k = 0.50
 ######################
-
-$nlevels = 3
-$dx = 2.0 / ($angular_cells * 2**($nlevels - 1))
-$dt = $cfl * $dx
-
-$itlast       = ceil($final_time / $dt)
-$out_every_it = ceil($out_every_time / $dt)
 
 # Misc options
 Cactus::presync_mode = "mixed-error"
@@ -39,12 +29,13 @@ CarpetX::verbose = yes
 CarpetX::poison_undefined_values = yes
 
 # Block distribution
-CarpetX::blocking_factor_x = 1
-CarpetX::blocking_factor_y = 1
-CarpetX::blocking_factor_z = 1
+CarpetX::blocking_factor_x = 2
+CarpetX::blocking_factor_y = 2
+CarpetX::blocking_factor_z = 2
 
 # Time integration
-ODESolvers::method = "RK4"
+ODESolvers::method  = "RK4"
+ODESolvers::verbose = yes
 CarpetX::dtfac      = $cfl
 
 # Grid
@@ -56,56 +47,40 @@ CapyrX_MultiPatch::outer_boundary_radius = $rf
 CapyrX_MultiPatch::angular_cells         = $angular_cells
 CapyrX_MultiPatch::radial_cells          = $radial_cells
 
-# We are using 5 point stencils
+# We are using 5 point stencils + dissipation
 CarpetX::ghost_size = 3
 
 # We are restricted to this becase we have no patch overlaps
 CarpetX::interpolation_order = 1
 
-# Mesh refinement
-CarpetX::max_num_levels         = $nlevels
-CarpetX::regrid_every           = 128
-CarpetX::regrid_error_threshold = 1.0e-5
-
-BoxInBox::num_regions  = 1
-BoxInBox::shape_1      = "cube"
-BoxInBox::num_levels_1 = $nlevels
-BoxInBox::position_x_1 = 0.0
-BoxInBox::position_y_1 = 0.0
-BoxInBox::position_z_1 = 0.0
-BoxInBox::radius_1     = [-1.0, 0.8, 0.5]
-
 # Initial data
-CapyrX_WaveToy::initial_condition = "Quadrupolar Gaussian"
-CapyrX_WaveToy::amplitude         = 1.0
-CapyrX_WaveToy::gaussian_width    = 1.0 / 2.0
-CapyrX_WaveToy::quad_gaussian_R0  = $r0 / 4.5
+CapyrX_WaveToy::initial_condition   = "Quadrupolar Gaussian"
+CapyrX_WaveToy::amplitude           = 1.0
+CapyrX_WaveToy::gaussian_width      = 1.0 / 2.0
+CapyrX_WaveToy::quad_gaussian_R0    = $r0 / 4.5
+CapyrX_WaveToy::add_dissipation     = yes
+CapyrX_WaveToy::dissipation_epsilon = 0.2
 
 # Boundary conditions
-CarpetX::boundary_x = "dirichlet"
-CarpetX::boundary_y = "dirichlet"
-CarpetX::boundary_z = "dirichlet"
-CarpetX::boundary_upper_x = "dirichlet"
-CarpetX::boundary_upper_y = "dirichlet"
-CarpetX::boundary_upper_z = "dirichlet"
+CarpetX::boundary_x = "linear extrapolation"
+CarpetX::boundary_y = "linear extrapolation"
+CarpetX::boundary_z = "linear extrapolation"
+CarpetX::boundary_upper_x = "linear extrapolation"
+CarpetX::boundary_upper_y = "linear extrapolation"
+CarpetX::boundary_upper_z = "linear extrapolation"
 
 # Termination
-Cactus::terminate   = "iteration"
-Cactus::cctk_itlast = $itlast
+Cactus::terminate       = "time"
+Cactus::cctk_final_time = $final_time
 
 # Output
 IO::out_dir = $parfile
-IO::out_every = $out_every_it
+IO::out_every = $out_every
 
-CarpetX::out_tsv = no
-CarpetX::out_tsv_vars = ""
+CarpetX::out_metadata = no
+CarpetX::out_performance = no
 
 CarpetX::out_silo_vars = "
     Capyrx_WaveToy::state
     Capyrx_WaveToy::energy
 "
-
-TimerReport::out_every = 1
-TimerReport::out_filename = "TimerReport"
-TimerReport::output_schedule_timers = no
-TimerReport::n_top_timers = 100

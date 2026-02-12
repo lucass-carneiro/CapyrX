@@ -8,14 +8,13 @@ INHERITS: CoordinatesX MultiPatch ADMBaseX
 
 USES INCLUDE HEADER: loop_device.hxx
 USES INCLUDE HEADER: global_derivatives.hxx
+USES INCLUDE HEADER: newradx.hxx
 
 INCLUDES HEADER: gaussian.hxx IN gaussian.hxx
 INCLUDES HEADER: standing_wave.hxx IN standing_wave.hxx
 INCLUDES HEADER: quad_gaussian.hxx IN quad_gaussian.hxx
 
-USES INCLUDE HEADER: newradx.hxx
-
-CCTK_REAL state TYPE=gf TAGS='rhs="rhs" dependents="energy error" dirichlet_values={0.0 0.0 0.0 0.0 0.0}'
+CCTK_REAL state TYPE=gf TAGS='rhs="rhs" dependents="energy error"'
 {
   phi
   Pi

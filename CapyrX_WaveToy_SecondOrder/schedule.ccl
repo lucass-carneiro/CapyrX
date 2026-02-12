@@ -27,13 +27,33 @@ SCHEDULE CapyrX_WaveToy_SecondOrder_RHS IN ODESolvers_RHS
 {
   LANG: C
   READS: state(everywhere)
-  READS: CoordinatesX::vertex_coords(everywhere)
   READS: MultiPatch::vertex_Jacobians(everywhere)
   READS: MultiPatch::vertex_dJacobians(everywhere)
   WRITES: rhs(interior)
 } "Calculate scalar wave RHS"
 
+if (add_dissipation)
+{
+  SCHEDULE CapyrX_WaveToy_SecondOrder_Dissipation IN ODESolvers_RHS AFTER CapyrX_WaveToy_SecondOrder_RHS
+  {
+    LANG: C
+    READS: state(everywhere)
+    READS: rhs(interior)
+    WRITES: rhs(interior)
+  } "Calculate scalar wave RHS"
+}
 
+if (use_newradx)
+{
+  SCHEDULE CapyrX_WaveToy_SecondOrder_Apply_NewaradX IN ODESolvers_RHS AFTER CapyrX_WaveToy_SecondOrder_Dissipation
+  {
+    LANG: C
+    READS: CoordinatesX::vertex_coords(interior)
+    READS: MultiPatch::vertex_Jacobians(interior)
+    READS: state(interior)
+    WRITES: rhs(interior)
+  } "Apply NewRadX boundary condition"
+}
 
 # Energy
 SCHEDULE CapyrX_WaveToy_SecondOrder_Energy AT analysis

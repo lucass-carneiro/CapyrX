@@ -16,6 +16,15 @@ CCTK_REAL dissipation_epsilon "Kreiss-Oliger dissipation strength"
   0.0:0.33 :: ""
 } 0.15
 
+BOOLEAN use_newradx "Use radiative boundary conditions"
+{
+} "no"
+
+CCTK_REAL rad_power "Rad. power parameter for NewRadX"
+{
+  0.0:* :: ""
+} 1.0
+
 CCTK_REAL amplitude "Initial amplitude for gaussian and wave initial data"
 {
   *:* :: ""

@@ -13,23 +13,19 @@ ActiveThorns = "
     IOUtil
     ODESolvers
     SystemTopology
-    TimerReport
 "
 
 ###### Settings ######
-$itlast       = 4096
-$out_every_it = 64
+$final_time = 16.0
+$out_every = 32
 
 $r0 = 2.0
-$rf = 8.0
+$rf = 4.0 * $r0
 
-$radial_cells  = 60
 $angular_cells = 40
+$radial_cells  = 3 * $angular_cells / 2
 
 $cfl = 0.25
-
-$diss_eps  = 0.2
-$rad_power = 1.0
 ######################
 
 # Misc options
@@ -45,7 +41,8 @@ CarpetX::blocking_factor_y = 1
 CarpetX::blocking_factor_z = 1
 
 # Time integration
-ODESolvers::method = "RK4"
+ODESolvers::method  = "RK4"
+ODESolvers::verbose = yes
 CarpetX::dtfac      = $cfl
 
 # Grid
@@ -65,9 +62,6 @@ CarpetX::interpolation_order = 1
 # Dissipation and NewRadX
 CapyrX_WaveToy_SecondOrder::add_dissipation = yes
 CapyrX_WaveToy_SecondOrder::use_newradx     = yes
-
-CapyrX_WaveToy_SecondOrder::dissipation_epsilon = $diss_eps
-CapyrX_WaveToy_SecondOrder::rad_power           = $rad_power
 
 # Initial data
 CapyrX_WaveToy_SecondOrder::initial_condition = "Gaussian"
@@ -109,22 +103,17 @@ BoxInBox::radius_2     = [
 ]
 
 # Termination
-Cactus::terminate   = "iteration"
-Cactus::cctk_itlast = $itlast
+Cactus::terminate       = "time"
+Cactus::cctk_final_time = $final_time
 
 # Output
 IO::out_dir = $parfile
-IO::out_every = $out_every_it
+IO::out_every = $out_every
 
-CarpetX::out_tsv = no
-CarpetX::out_tsv_vars = ""
+CarpetX::out_metadata    = no
+CarpetX::out_performance = no
 
 CarpetX::out_silo_vars = "
     CapyrX_WaveToy_SecondOrder::state
     CapyrX_WaveToy_SecondOrder::energy
 "
-
-TimerReport::out_every = $itlast
-TimerReport::out_filename = "TimerReport"
-TimerReport::output_schedule_timers = no
-TimerReport::n_top_timers = 100

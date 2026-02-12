@@ -33,8 +33,6 @@ d_xx(const Loop::PointDesc &p, const Loop::GF3D2<const CCTK_REAL> &gf) noexcept
   const auto Im1dx = p.I - 1 * p.DI[dir];
   const auto Ip1dx = p.I + 1 * p.DI[dir];
   const auto Ip2dx = p.I + 2 * p.DI[dir];
-  const auto Ip3dx = p.I + 3 * p.DI[dir];
-  const auto Ip4dx = p.I + 4 * p.DI[dir];
 
   return invdxsq / 12.0 *
          (16 * gf(Im1dx) - gf(Im2dx) + 16 * gf(Ip1dx) - gf(Ip2dx) -

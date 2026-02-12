@@ -45,6 +45,20 @@ if (add_dissipation)
   } "Calculate scalar wave RHS"
 }
 
+if (use_newradx)
+{
+  SCHEDULE CapyrX_WaveToy_ApplyNewRadX IN ODESolvers_RHS AFTER CapyrX_WaveToy_Dissipation
+  {
+    LANG: C
+    READS: CoordinatesX::vertex_coords(interior)
+    READS: MultiPatch::vertex_Jacobians(interior)
+    READS: state(interior)
+    WRITES: rhs(interior)
+  } "Apply NewRadX boundary condition"
+}
+
+
+
 # Energy
 SCHEDULE CapyrX_WaveToy_Energy AT analysis
 {

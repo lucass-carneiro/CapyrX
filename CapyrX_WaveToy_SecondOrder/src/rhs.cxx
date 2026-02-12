@@ -38,31 +38,37 @@ extern "C" void CapyrX_WaveToy_SecondOrder_RHS(CCTK_ARGUMENTS) {
         const auto d2ux{project_second(lu, l2u, jac, djac)};
 
         rho_rhs(p.I) = d2ux.dxdx + d2ux.dydy + d2ux.dzdz;
-
         u_rhs(p.I) = rho(p.I);
       });
+}
 
-  if (use_newradx) {
-    NewRadX::NewRadX_Apply(cctkGH, u, u_rhs, NEWRADX_MULTIPATCH_QUANTITIES, 0.0,
-                           1.0, rad_power);
-    NewRadX::NewRadX_Apply(cctkGH, rho, rho_rhs, NEWRADX_MULTIPATCH_QUANTITIES,
-                           0.0, 1.0, rad_power + 1.0);
-  }
+extern "C" void CapyrX_WaveToy_SecondOrder_Dissipation(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTSX_CapyrX_WaveToy_SecondOrder_Dissipation;
+  DECLARE_CCTK_PARAMETERS;
 
-  if (add_dissipation) {
-    grid.loop_int_device<0, 0, 0>(
-        grid.nghostzones,
-        [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-          const auto diss_u{diss_5<0>(p, u) + diss_5<1>(p, u) +
-                            diss_5<2>(p, u)};
+  grid.loop_int_device<0, 0, 0>(
+      grid.nghostzones,
+      [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+        const auto diss_u{diss_5<0>(p, u) + diss_5<1>(p, u) + diss_5<2>(p, u)};
 
-          const auto diss_rho{diss_5<0>(p, rho) + diss_5<1>(p, rho) +
-                              diss_5<2>(p, rho)};
+        const auto diss_rho{diss_5<0>(p, rho) + diss_5<1>(p, rho) +
+                            diss_5<2>(p, rho)};
 
-          u_rhs(p.I) += dissipation_epsilon * diss_u;
-          rho_rhs(p.I) += dissipation_epsilon * diss_rho;
-        });
-  }
+        u_rhs(p.I) += dissipation_epsilon * diss_u;
+        rho_rhs(p.I) += dissipation_epsilon * diss_rho;
+      });
+}
+
+extern "C" void CapyrX_WaveToy_SecondOrder_Apply_NewaradX(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTSX_CapyrX_WaveToy_SecondOrder_Apply_NewaradX;
+  DECLARE_CCTK_PARAMETERS;
+
+  using namespace NewRadX;
+
+  NewRadX::NewRadX_Apply(cctkGH, u, u_rhs, NEWRADX_MULTIPATCH_QUANTITIES, 0.0,
+                         1.0, rad_power);
+  NewRadX::NewRadX_Apply(cctkGH, rho, rho_rhs, NEWRADX_MULTIPATCH_QUANTITIES,
+                         0.0, 1.0, rad_power + 1.0);
 }
 
 extern "C" void CapyrX_WaveToy_SecondOrder_Sync(CCTK_ARGUMENTS) {

@@ -15,7 +15,7 @@ $out_every  = 32
 $r0 = 5.0
 $rf = 4.0 * $r0
 
-$angular_cells = 40
+$angular_cells = 20
 $radial_cells  = 3 * $angular_cells / 2
 
 $cfl = 0.25
@@ -29,9 +29,9 @@ CarpetX::verbose = yes
 CarpetX::poison_undefined_values = yes
 
 # Block distribution
-CarpetX::blocking_factor_x = 2
-CarpetX::blocking_factor_y = 2
-CarpetX::blocking_factor_z = 2
+CarpetX::blocking_factor_x = 1
+CarpetX::blocking_factor_y = 1
+CarpetX::blocking_factor_z = 1
 
 # Time integration
 ODESolvers::method  = "RK4"

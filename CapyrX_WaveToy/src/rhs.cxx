@@ -5,6 +5,7 @@
 
 #include <loop_device.hxx>
 #include <global_derivatives.hxx>
+#include <newradx.hxx>
 
 namespace CapyrX::WaveToy {
 
@@ -245,6 +246,27 @@ extern "C" void CapyrX_WaveToy_Dissipation(CCTK_ARGUMENTS) {
         Dy_rhs(p.I) += diss_Dy;
         Dz_rhs(p.I) += diss_Dz;
       });
+}
+
+extern "C" void CapyrX_WaveToy_ApplyNewRadX(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTSX_CapyrX_WaveToy_ApplyNewRadX;
+  DECLARE_CCTK_PARAMETERS;
+
+  using namespace NewRadX;
+
+  NewRadX_Apply(cctkGH, phi, phi_rhs, NEWRADX_MULTIPATCH_QUANTITIES, 0.0, 1.0,
+                rad_power);
+  NewRadX_Apply(cctkGH, Pi, Pi_rhs, NEWRADX_MULTIPATCH_QUANTITIES, 0.0, 1.0,
+                rad_power);
+
+  NewRadX_Apply(cctkGH, Dx, Dx_rhs, NEWRADX_MULTIPATCH_QUANTITIES, 0.0, 1.0,
+                rad_power);
+
+  NewRadX_Apply(cctkGH, Dy, Dy_rhs, NEWRADX_MULTIPATCH_QUANTITIES, 0.0, 1.0,
+                rad_power);
+
+  NewRadX_Apply(cctkGH, Dz, Dz_rhs, NEWRADX_MULTIPATCH_QUANTITIES, 0.0, 1.0,
+                rad_power);
 }
 
 extern "C" void CapyrX_WaveToy_Sync(CCTK_ARGUMENTS) {

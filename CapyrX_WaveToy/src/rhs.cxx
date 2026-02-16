@@ -266,6 +266,7 @@ extern "C" void CapyrX_WaveToy_ApplyNewRadX(CCTK_ARGUMENTS) {
 
   NewRadX_Apply(cctkGH, phi, phi_rhs, NEWRADX_MULTIPATCH_QUANTITIES, 0.0, 1.0,
                 rad_power);
+
   NewRadX_Apply(cctkGH, Pi, Pi_rhs, NEWRADX_MULTIPATCH_QUANTITIES, 0.0, 1.0,
                 rad_power);
 

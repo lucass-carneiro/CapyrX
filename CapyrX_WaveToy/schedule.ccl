@@ -39,6 +39,7 @@ if (add_dissipation)
   SCHEDULE CapyrX_WaveToy_Dissipation IN ODESolvers_RHS AFTER CapyrX_WaveToy_RHS
   {
     LANG: C
+    READS: MultiPatch::vertex_Jacobians(everywhere)
     READS: state(everywhere)
     READS: rhs(interior)
     WRITES: rhs(interior)

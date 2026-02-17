@@ -375,6 +375,19 @@ extern "C" int CapyrX_MultiPatch_Setup() {
 }
 
 template <PatchSystems sys, typename PatchParameters>
+static inline CCTK_HOST CCTK_DEVICE auto
+d2local_dglobal2_dispatch(const PatchParameters &par, int patch,
+                          const svec_t &a)
+    -> std_tuple<svec_t, jac_t, djac_t> {
+  if constexpr (sys == PatchSystems::cartesian)
+    return Cartesian::d2local_dglobal2(par, patch, a);
+  else if constexpr (sys == PatchSystems::cubed_spehre)
+    return CubedSphere::d2local_dglobal2(par, patch, a);
+  else if constexpr (sys == PatchSystems::thornburg06)
+    return Thornburg06::d2local_dglobal2(par, patch, a);
+}
+
+template <PatchSystems sys, typename PatchParameters>
 static inline void coordinate_setup_kernel(cGH *cctkGH, PatchParameters par) {
   DECLARE_CCTK_ARGUMENTSX_CapyrX_MultiPatch_Coordinates_Setup;
 
@@ -385,13 +398,8 @@ static inline void coordinate_setup_kernel(cGH *cctkGH, PatchParameters par) {
                             const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
         const svec_t a{p.x, p.y, p.z};
 
-        std_tuple<svec_t, jac_t, djac_t> d2J_tuple{};
-        if constexpr (sys == PatchSystems::cartesian)
-          d2J_tuple = Cartesian::d2local_dglobal2(par, p.patch, a);
-        else if constexpr (sys == PatchSystems::cubed_spehre)
-          d2J_tuple = CubedSphere::d2local_dglobal2(par, p.patch, a);
-        else if constexpr (sys == PatchSystems::thornburg06)
-          d2J_tuple = Thornburg06::d2local_dglobal2(par, p.patch, a);
+        const auto d2J_tuple{
+            d2local_dglobal2_dispatch<sys>(par, p.patch, a)};
 
         const auto &x{std::get<0>(d2J_tuple)};
         const auto &J{std::get<1>(d2J_tuple)};
@@ -436,13 +444,8 @@ static inline void coordinate_setup_kernel(cGH *cctkGH, PatchParameters par) {
                             const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
         const svec_t a{p.x, p.y, p.z};
 
-        std_tuple<svec_t, jac_t, djac_t> d2J_tuple{};
-        if constexpr (sys == PatchSystems::cartesian)
-          d2J_tuple = Cartesian::d2local_dglobal2(par, p.patch, a);
-        else if constexpr (sys == PatchSystems::cubed_spehre)
-          d2J_tuple = CubedSphere::d2local_dglobal2(par, p.patch, a);
-        else if constexpr (sys == PatchSystems::thornburg06)
-          d2J_tuple = Thornburg06::d2local_dglobal2(par, p.patch, a);
+        const auto d2J_tuple{
+            d2local_dglobal2_dispatch<sys>(par, p.patch, a)};
 
         const auto &x{std::get<0>(d2J_tuple)};
         const auto &J{std::get<1>(d2J_tuple)};

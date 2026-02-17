@@ -374,10 +374,8 @@ extern "C" int CapyrX_MultiPatch_Setup() {
   return 0;
 }
 
-template <typename PatchParameters, typename JacSecDerivFunc>
-static inline void
-coordinate_setup_kernel(cGH *cctkGH, PatchParameters par,
-                        JacSecDerivFunc d2local_dglobal2_func) {
+template <PatchSystems sys, typename PatchParameters>
+static inline void coordinate_setup_kernel(cGH *cctkGH, PatchParameters par) {
   DECLARE_CCTK_ARGUMENTSX_CapyrX_MultiPatch_Coordinates_Setup;
 
   using namespace Loop;
@@ -387,7 +385,13 @@ coordinate_setup_kernel(cGH *cctkGH, PatchParameters par,
                             const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
         const svec_t a{p.x, p.y, p.z};
 
-        const auto d2J_tuple{d2local_dglobal2_func(par, p.patch, a)};
+        std_tuple<svec_t, jac_t, djac_t> d2J_tuple{};
+        if constexpr (sys == PatchSystems::cartesian)
+          d2J_tuple = Cartesian::d2local_dglobal2(par, p.patch, a);
+        else if constexpr (sys == PatchSystems::cubed_spehre)
+          d2J_tuple = CubedSphere::d2local_dglobal2(par, p.patch, a);
+        else if constexpr (sys == PatchSystems::thornburg06)
+          d2J_tuple = Thornburg06::d2local_dglobal2(par, p.patch, a);
 
         const auto &x{std::get<0>(d2J_tuple)};
         const auto &J{std::get<1>(d2J_tuple)};
@@ -432,7 +436,13 @@ coordinate_setup_kernel(cGH *cctkGH, PatchParameters par,
                             const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
         const svec_t a{p.x, p.y, p.z};
 
-        const auto d2J_tuple{d2local_dglobal2_func(par, p.patch, a)};
+        std_tuple<svec_t, jac_t, djac_t> d2J_tuple{};
+        if constexpr (sys == PatchSystems::cartesian)
+          d2J_tuple = Cartesian::d2local_dglobal2(par, p.patch, a);
+        else if constexpr (sys == PatchSystems::cubed_spehre)
+          d2J_tuple = CubedSphere::d2local_dglobal2(par, p.patch, a);
+        else if constexpr (sys == PatchSystems::thornburg06)
+          d2J_tuple = Thornburg06::d2local_dglobal2(par, p.patch, a);
 
         const auto &x{std::get<0>(d2J_tuple)};
         const auto &J{std::get<1>(d2J_tuple)};
@@ -478,7 +488,7 @@ extern "C" void CapyrX_MultiPatch_Coordinates_Setup(CCTK_ARGUMENTS) {
         .ymax = cartesian_xmax,
         .zmax = cartesian_xmax,
     };
-    coordinate_setup_kernel(cctkGH, par, Cartesian::d2local_dglobal2);
+    coordinate_setup_kernel<PatchSystems::cartesian>(cctkGH, par);
     break;
   }
 
@@ -490,7 +500,7 @@ extern "C" void CapyrX_MultiPatch_Coordinates_Setup(CCTK_ARGUMENTS) {
         .outer_boundary = outer_boundary_radius,
         .patch_overlap = patch_overlap};
 
-    coordinate_setup_kernel(cctkGH, par, CubedSphere::d2local_dglobal2);
+    coordinate_setup_kernel<PatchSystems::cubed_spehre>(cctkGH, par);
     break;
   }
 
@@ -501,7 +511,7 @@ extern "C" void CapyrX_MultiPatch_Coordinates_Setup(CCTK_ARGUMENTS) {
         .inner_boundary = inner_boundary_radius,
         .outer_boundary = outer_boundary_radius,
         .patch_overlap = patch_overlap};
-    coordinate_setup_kernel(cctkGH, par, Thornburg06::d2local_dglobal2);
+    coordinate_setup_kernel<PatchSystems::thornburg06>(cctkGH, par);
     break;
   }
 

@@ -1,0 +1,86 @@
+ActiveThorns = "
+    ADMBaseX
+    CarpetX
+    IOUtil
+    ODESolvers
+    CoordinatesX
+    CapyrX_MultiPatch
+    CapyrX_WaveToy
+"
+
+###### Settings ######
+$itlast    = 128
+$out_every = 16
+
+$r0 = 5.0
+$rf = 4.0 * $r0
+
+$angular_cells = 20
+$radial_cells  = 3 * $angular_cells / 2
+
+$cfl = 0.25
+######################
+
+# Misc options
+Cactus::presync_mode = "mixed-error"
+Cactus::cctk_show_schedule = yes
+
+CarpetX::verbose = yes
+CarpetX::poison_undefined_values = yes
+
+# Block distribution
+CarpetX::blocking_factor_x = 1
+CarpetX::blocking_factor_y = 1
+CarpetX::blocking_factor_z = 1
+
+# Time integration
+ODESolvers::method  = "RK4"
+ODESolvers::verbose = yes
+CarpetX::dtfac      = $cfl
+
+# Grid
+CapyrX_MultiPatch::verbose        =  yes
+CapyrX_MultiPatch::patch_system   = "Cubed sphere"
+
+CapyrX_MultiPatch::inner_boundary_radius = $r0
+CapyrX_MultiPatch::outer_boundary_radius = $rf
+CapyrX_MultiPatch::angular_cells         = $angular_cells
+CapyrX_MultiPatch::radial_cells          = $radial_cells
+
+# We are using 5 point stencils + dissipation
+CarpetX::ghost_size = 3
+
+# We are restricted to this becase we have no patch overlaps
+CarpetX::interpolation_order = 1
+
+# Initial data
+CapyrX_WaveToy::initial_condition   = "Quadrupolar Gaussian"
+CapyrX_WaveToy::amplitude           = 1.0
+CapyrX_WaveToy::gaussian_width      = 1.0 / 2.0
+CapyrX_WaveToy::quad_gaussian_R0    = $r0 / 4.5
+CapyrX_WaveToy::add_dissipation     = yes
+CapyrX_WaveToy::dissipation_epsilon = 0.2
+
+# Boundary conditions
+CarpetX::boundary_x = "linear extrapolation"
+CarpetX::boundary_y = "linear extrapolation"
+CarpetX::boundary_z = "linear extrapolation"
+CarpetX::boundary_upper_x = "linear extrapolation"
+CarpetX::boundary_upper_y = "linear extrapolation"
+CarpetX::boundary_upper_z = "linear extrapolation"
+
+# Termination
+Cactus::terminate   = "iteration"
+Cactus::cctk_itlast = $itlast
+
+# Output
+IO::out_dir = $parfile
+IO::out_every = $out_every
+
+CarpetX::out_metadata = no
+CarpetX::out_performance = no
+
+CarpetX::out_tsv_vars = "
+    Capyrx_WaveToy::state
+    Capyrx_WaveToy::energy
+"

@@ -1,0 +1,90 @@
+ActiveThorns = "
+    ADMBaseX
+    CarpetX
+    IOUtil
+    ODESolvers
+    CoordinatesX
+    CapyrX_MultiPatch
+    CapyrX_WaveToy
+"
+
+###### Settings ######
+$itlast       = 8
+$out_every_it = 1
+
+$r0 = 1.0
+$rf = 4.0 * $r0
+
+$radial_cells  = 40
+$angular_cells = 40
+
+$cfl = 0.25
+
+$wave_k = 0.50
+
+$interp_order  = 3
+$ghost_size    = 2
+$patch_overlap = 7
+######################
+
+# Misc options
+Cactus::presync_mode = "mixed-error"
+Cactus::cctk_show_schedule = yes
+
+CarpetX::verbose = yes
+CarpetX::poison_undefined_values = yes
+
+# Block distribution
+CarpetX::blocking_factor_x = 1
+CarpetX::blocking_factor_y = 1
+CarpetX::blocking_factor_z = 1
+
+# Time integration
+ODESolvers::method = "RK4"
+CarpetX::dtfac     = $cfl
+
+# Grid
+CapyrX_MultiPatch::verbose      =  yes
+CapyrX_MultiPatch::patch_system = "Cubed sphere"
+
+CapyrX_MultiPatch::inner_boundary_radius = $r0
+CapyrX_MultiPatch::outer_boundary_radius = $rf
+CapyrX_MultiPatch::angular_cells         = $angular_cells
+CapyrX_MultiPatch::radial_cells          = $radial_cells
+
+CapyrX_MultiPatch::patch_overlap = $patch_overlap
+
+CarpetX::ghost_size          = $ghost_size
+CarpetX::interpolation_order = $interp_order
+
+# Initial data
+CapyrX_WaveToy::initial_condition = "Quadrupolar Gaussian"
+CapyrX_WaveToy::amplitude         = 1.0
+CapyrX_WaveToy::gaussian_width    = $r0 / 4.0
+CapyrX_WaveToy::quad_gaussian_R0  = $r0 / 2.0
+
+# Boundary conditions
+CarpetX::boundary_x       = "dirichlet"
+CarpetX::boundary_y       = "dirichlet"
+CarpetX::boundary_z       = "dirichlet"
+CarpetX::boundary_upper_x = "dirichlet"
+CarpetX::boundary_upper_y = "dirichlet"
+CarpetX::boundary_upper_z = "dirichlet"
+
+# Termination
+Cactus::terminate   = "iteration"
+Cactus::cctk_itlast = $itlast
+
+# Output
+IO::out_dir = $parfile
+IO::out_every = $out_every_it
+
+CarpetX::out_metadata = no
+CarpetX::out_performance = no
+
+CarpetX::out_tsv = no
+CarpetX::out_tsv_vars = "
+    Capyrx_WaveToy::state
+    Capyrx_WaveToy::energy
+"
+

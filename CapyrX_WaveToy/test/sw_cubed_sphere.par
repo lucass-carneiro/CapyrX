@@ -1,0 +1,82 @@
+ActiveThorns = "
+    ADMBaseX
+    CarpetX
+    IOUtil
+    ODESolvers
+    CoordinatesX
+    CapyrX_MultiPatch
+    CapyrX_WaveToy
+"
+
+###### Settings ######
+$itlast       = 128
+$out_every_it = 16
+
+$r0 = 0.25
+$rf = 4.0 * $r0
+
+$radial_cells = 20
+$angular_cells = 10
+
+$cfl = 0.25
+
+$wave_k = 0.50
+######################
+
+Cactus::presync_mode = "mixed-error"
+Cactus::cctk_show_schedule = yes
+
+CarpetX::verbose = yes
+CarpetX::poison_undefined_values = yes
+
+CarpetX::blocking_factor_x = 1
+CarpetX::blocking_factor_y = 1
+CarpetX::blocking_factor_z = 1
+
+CarpetX::max_num_levels = 1
+
+ODESolvers::method = "RK4"
+
+CapyrX_MultiPatch::verbose        =  yes
+CapyrX_MultiPatch::patch_system   = "Cubed sphere"
+
+CapyrX_MultiPatch::inner_boundary_radius = $r0
+CapyrX_MultiPatch::outer_boundary_radius = $rf
+CapyrX_MultiPatch::angular_cells         = $angular_cells
+CapyrX_MultiPatch::radial_cells          = $radial_cells
+
+CapyrX_WaveToy::initial_condition = "standing wave"
+CapyrX_WaveToy::wave_kx = $wave_k
+CapyrX_WaveToy::wave_ky = $wave_k
+CapyrX_WaveToy::wave_kz = $wave_k
+
+CarpetX::boundary_x = "dirichlet"
+CarpetX::boundary_y = "dirichlet"
+CarpetX::boundary_z = "dirichlet"
+CarpetX::boundary_upper_x = "dirichlet"
+CarpetX::boundary_upper_y = "dirichlet"
+CarpetX::boundary_upper_z = "dirichlet"
+
+# We are using 5 point stencils
+CarpetX::ghost_size = 2
+
+# We are restricted to this becase we have no patch overlaps
+CarpetX::interpolation_order = 1
+
+# Time integration
+CarpetX::dtfac      = $cfl
+Cactus::terminate   = "iteration"
+Cactus::cctk_itlast = $itlast
+
+IO::out_dir = $parfile
+IO::out_every = $out_every_it
+
+CarpetX::out_performance = no
+CarpetX::out_metadata = no
+
+CarpetX::out_tsv_vars = "
+    Capyrx_WaveToy::state
+    Capyrx_WaveToy::energy
+    Capyrx_WaveToy::error
+"
+

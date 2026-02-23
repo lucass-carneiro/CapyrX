@@ -221,9 +221,12 @@ extern "C" void CapyrX_WaveToy_Dissipation(CCTK_ARGUMENTS) {
       grid.nghostzones,
       [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
         const CCTK_REAL jac_norms[3] = {
-            fmax(fmax(vJ_da_dx(p.I), vJ_da_dy(p.I)), vJ_da_dz(p.I)),
-            fmax(fmax(vJ_db_dx(p.I), vJ_db_dy(p.I)), vJ_db_dz(p.I)),
-            fmax(fmax(vJ_dc_dx(p.I), vJ_dc_dy(p.I)), vJ_dc_dz(p.I))};
+            sqrt(vJ_da_dx(p.I) * vJ_da_dx(p.I) + vJ_da_dy(p.I) * vJ_da_dy(p.I) +
+                 vJ_da_dz(p.I) * vJ_da_dz(p.I)),
+            sqrt(vJ_db_dx(p.I) * vJ_db_dx(p.I) + vJ_db_dy(p.I) * vJ_db_dy(p.I) +
+                 vJ_db_dz(p.I) * vJ_db_dz(p.I)),
+            sqrt(vJ_dc_dx(p.I) * vJ_dc_dx(p.I) + vJ_dc_dy(p.I) * vJ_dc_dy(p.I) +
+                 vJ_dc_dz(p.I) * vJ_dc_dz(p.I))};
 
         const auto diss_phi{dissipation_epsilon *
                             (jac_norms[0] * diss_5<0>(p, phi) +

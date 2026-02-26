@@ -18,7 +18,7 @@
 # Cactus Flesh
 !TARGET   = $ROOT
 !TYPE     = git
-!URL      = git@bitbucket.org:cactuscode/cactus
+!URL      = https://bitbucket.org/cactuscode/cactus
 !NAME     = flesh
 !CHECKOUT = .clang-format CONTRIBUTORS COPYRIGHT doc lib Makefile README.md src
 
@@ -26,7 +26,7 @@
 # Simulation Factory
 !TARGET   = $ROOT
 !TYPE     = git
-!URL      = git@bitbucket.org:simfactory/simfactory2
+!URL      = https://bitbucket.org/simfactory/simfactory2
 !REPO_PATH = $1
 !NAME     = simfactory2
 !CHECKOUT = ./simfactory
@@ -180,7 +180,7 @@ Numerical/AEILocalInterp
 # CarpetX thorns
 !TARGET   = $ARR
 !TYPE     = git
-!URL      = git@github.com:EinsteinToolkit/CarpetX
+!URL      = https://github.com/:EinsteinToolkit/CarpetX
 !REPO_PATH = $2
 !CHECKOUT =
 CarpetX/ADMBaseX
@@ -221,7 +221,7 @@ CarpetX/WaveToyX
 # SpacetimeX thorns
 !TARGET   = $ARR
 !TYPE     = git
-!URL      = git@github.com:EinsteinToolkit/SpacetimeX
+!URL      = https://github.com/:EinsteinToolkit/SpacetimeX
 !REPO_PATH= $2
 !CHECKOUT =
 SpacetimeX/AHFinderDirect
@@ -245,7 +245,7 @@ SpacetimeX/Z4c
 # CanudaX -- Lean
 !TARGET    = $ARR
 !TYPE      = git
-!URL       = git@bitbucket.org:canuda/canudax_lean
+!URL       = https://bitbucket.org/canuda/canudax_lean
 !REPO_BRANCH = master
 !REPO_PATH = $2
 !CHECKOUT =

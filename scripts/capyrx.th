@@ -180,7 +180,7 @@ Numerical/AEILocalInterp
 # CarpetX thorns
 !TARGET   = $ARR
 !TYPE     = git
-!URL      = https://github.com/:EinsteinToolkit/CarpetX
+!URL      = https://github.com/EinsteinToolkit/CarpetX
 !REPO_PATH = $2
 !CHECKOUT =
 CarpetX/ADMBaseX
@@ -221,7 +221,7 @@ CarpetX/WaveToyX
 # SpacetimeX thorns
 !TARGET   = $ARR
 !TYPE     = git
-!URL      = https://github.com/:EinsteinToolkit/SpacetimeX
+!URL      = https://github.com/EinsteinToolkit/SpacetimeX
 !REPO_PATH= $2
 !CHECKOUT =
 SpacetimeX/AHFinderDirect

@@ -9,8 +9,8 @@
 namespace CapyrX::WaveToy::quad_gauss {
 
 template <typename T>
-static inline auto phi(T A, T sigma, T R0, T x0, T y0, T z0, T x, T y,
-                       T z) noexcept -> T {
+static inline auto CCTK_DEVICE phi(T A, T sigma, T R0, T x0, T y0, T z0, T x,
+                                   T y, T z) noexcept -> T {
   using std::sqrt, std::pow, std::exp;
   return (A * (x - x0 + y - y0) * (x - x0 - y + y0) *
           (pow(x - x0, 2) + pow(y - y0, 2) - 2 * z * z0 + pow(z0, 2))) /
@@ -22,15 +22,15 @@ static inline auto phi(T A, T sigma, T R0, T x0, T y0, T z0, T x, T y,
 }
 
 template <typename T>
-static inline auto Pi(T A, T sigma, T R0, T x0, T y0, T z0, T x, T y,
-                      T z) noexcept -> T {
+static inline auto CCTK_DEVICE Pi(T A, T sigma, T R0, T x0, T y0, T z0, T x,
+                                  T y, T z) noexcept -> T {
   using std::sqrt, std::pow, std::exp;
   return 0;
 }
 
 template <typename T>
-static inline auto Dx(T A, T sigma, T R0, T x0, T y0, T z0, T x, T y,
-                      T z) noexcept -> T {
+static inline auto CCTK_DEVICE Dx(T A, T sigma, T R0, T x0, T y0, T z0, T x,
+                                  T y, T z) noexcept -> T {
   using std::sqrt, std::pow, std::exp;
   return (2 * A * (x - x0) * (x - x0 + y - y0) * (x - x0 - y + y0)) /
              (exp(pow(R0 - sqrt(pow(x - x0, 2) + pow(y - y0, 2) +
@@ -83,8 +83,8 @@ static inline auto Dx(T A, T sigma, T R0, T x0, T y0, T z0, T x, T y,
 }
 
 template <typename T>
-static inline auto Dy(T A, T sigma, T R0, T x0, T y0, T z0, T x, T y,
-                      T z) noexcept -> T {
+static inline auto CCTK_DEVICE Dy(T A, T sigma, T R0, T x0, T y0, T z0, T x,
+                                  T y, T z) noexcept -> T {
   using std::sqrt, std::pow, std::exp;
   return (2 * A * (y - y0) * (x - x0 + y - y0) * (x - x0 - y + y0)) /
              (exp(pow(R0 - sqrt(pow(x - x0, 2) + pow(y - y0, 2) +
@@ -137,8 +137,8 @@ static inline auto Dy(T A, T sigma, T R0, T x0, T y0, T z0, T x, T y,
 }
 
 template <typename T>
-static inline auto Dz(T A, T sigma, T R0, T x0, T y0, T z0, T x, T y,
-                      T z) noexcept -> T {
+static inline auto CCTK_DEVICE Dz(T A, T sigma, T R0, T x0, T y0, T z0, T x,
+                                  T y, T z) noexcept -> T {
   using std::sqrt, std::pow, std::exp;
   return (-2 * A * (x - x0 + y - y0) * (x - x0 - y + y0) * z0) /
              (exp(pow(R0 - sqrt(pow(x - x0, 2) + pow(y - y0, 2) +
@@ -168,29 +168,29 @@ static inline auto Dz(T A, T sigma, T R0, T x0, T y0, T z0, T x, T y,
 }
 
 template <typename T>
-static inline auto dPidx(T A, T sigma, T R0, T x0, T y0, T z0, T x, T y,
-                         T z) noexcept -> T {
+static inline auto CCTK_DEVICE dPidx(T A, T sigma, T R0, T x0, T y0, T z0, T x,
+                                     T y, T z) noexcept -> T {
   using std::sqrt, std::pow, std::exp;
   return 0;
 }
 
 template <typename T>
-static inline auto dPidy(T A, T sigma, T R0, T x0, T y0, T z0, T x, T y,
-                         T z) noexcept -> T {
+static inline auto CCTK_DEVICE dPidy(T A, T sigma, T R0, T x0, T y0, T z0, T x,
+                                     T y, T z) noexcept -> T {
   using std::sqrt, std::pow, std::exp;
   return 0;
 }
 
 template <typename T>
-static inline auto dPidz(T A, T sigma, T R0, T x0, T y0, T z0, T x, T y,
-                         T z) noexcept -> T {
+static inline auto CCTK_DEVICE dPidz(T A, T sigma, T R0, T x0, T y0, T z0, T x,
+                                     T y, T z) noexcept -> T {
   using std::sqrt, std::pow, std::exp;
   return 0;
 }
 
 template <typename T>
-static inline auto dDxdx(T A, T sigma, T R0, T x0, T y0, T z0, T x, T y,
-                         T z) noexcept -> T {
+static inline auto CCTK_DEVICE dDxdx(T A, T sigma, T R0, T x0, T y0, T z0, T x,
+                                     T y, T z) noexcept -> T {
   using std::sqrt, std::pow, std::exp;
   return (-8 * A * pow(x - x0, 2) * (x - x0 + y - y0) * (x - x0 - y + y0)) /
              (exp(pow(R0 - sqrt(pow(x - x0, 2) + pow(y - y0, 2) +
@@ -379,8 +379,8 @@ static inline auto dDxdx(T A, T sigma, T R0, T x0, T y0, T z0, T x, T y,
 }
 
 template <typename T>
-static inline auto dDydy(T A, T sigma, T R0, T x0, T y0, T z0, T x, T y,
-                         T z) noexcept -> T {
+static inline auto CCTK_DEVICE dDydy(T A, T sigma, T R0, T x0, T y0, T z0, T x,
+                                     T y, T z) noexcept -> T {
   using std::sqrt, std::pow, std::exp;
   return (-8 * A * pow(y - y0, 2) * (x - x0 + y - y0) * (x - x0 - y + y0)) /
              (exp(pow(R0 - sqrt(pow(x - x0, 2) + pow(y - y0, 2) +
@@ -569,8 +569,8 @@ static inline auto dDydy(T A, T sigma, T R0, T x0, T y0, T z0, T x, T y,
 }
 
 template <typename T>
-static inline auto dDzdz(T A, T sigma, T R0, T x0, T y0, T z0, T x, T y,
-                         T z) noexcept -> T {
+static inline auto CCTK_DEVICE dDzdz(T A, T sigma, T R0, T x0, T y0, T z0, T x,
+                                     T y, T z) noexcept -> T {
   using std::sqrt, std::pow, std::exp;
   return (8 * A * (x - x0 + y - y0) * (x - x0 - y + y0) * (z - z0) * z0) /
              (exp(pow(R0 - sqrt(pow(x - x0, 2) + pow(y - y0, 2) +

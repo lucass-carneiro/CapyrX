@@ -57,6 +57,7 @@ extern "C" void CapyrX_WaveToy_RHS(CCTK_ARGUMENTS) {
 
   using namespace Loop;
   using namespace CapyrX::MultiPatch::GlobalDerivatives;
+  using std::sqrt, std::pow;
 
   grid.loop_int_device<
       0, 0, 0>(grid.nghostzones, [=] CCTK_DEVICE(
@@ -216,6 +217,7 @@ extern "C" void CapyrX_WaveToy_Dissipation(CCTK_ARGUMENTS) {
   DECLARE_CCTK_PARAMETERS;
 
   using namespace Loop;
+  using std::sqrt;
 
   grid.loop_int_device<0, 0, 0>(
       grid.nghostzones,

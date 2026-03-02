@@ -19,8 +19,8 @@ extern "C" void CapyrX_WaveToy_Initial(CCTK_ARGUMENTS) {
 
   if (CCTK_EQUALS(initial_condition, "standing wave")) {
     grid.loop_all_device<0, 0, 0>(
-        grid.nghostzones, [=] CCTK_HOST CCTK_DEVICE(
-                              const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
           const auto t{cctk_time};
           const auto x{vcoordx(p.I)};
           const auto y{vcoordy(p.I)};
@@ -35,8 +35,8 @@ extern "C" void CapyrX_WaveToy_Initial(CCTK_ARGUMENTS) {
 
   } else if (CCTK_EQUALS(initial_condition, "Gaussian")) {
     grid.loop_all_device<0, 0, 0>(
-        grid.nghostzones, [=] CCTK_HOST CCTK_DEVICE(
-                              const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
           const auto t{cctk_time};
           const auto x{vcoordx(p.I)};
           const auto y{vcoordy(p.I)};
@@ -58,8 +58,8 @@ extern "C" void CapyrX_WaveToy_Initial(CCTK_ARGUMENTS) {
     const auto z0{quad_gaussian_z0};
 
     grid.loop_all_device<0, 0, 0>(
-        grid.nghostzones, [=] CCTK_HOST CCTK_DEVICE(
-                              const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
           using std::sqrt;
           const auto x{vcoordx(p.I)};
           const auto y{vcoordy(p.I)};

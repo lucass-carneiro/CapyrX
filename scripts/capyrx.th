@@ -216,6 +216,15 @@ CarpetX/TmunuBaseX
 CarpetX/WaveToyX
 
 
+# SpaceTimeX thorns
+!TARGET   = $ARR
+!TYPE     = git
+!URL      = https://github.com/einsteintoolkit/spacetimex.git
+!REPO_PATH= $2
+!CHECKOUT =
+SpacetimeX/NewRadX
+
+
 # CapyrX thorns
 !TARGET   = $ARR
 !TYPE     = ignore
@@ -225,4 +234,5 @@ CapyrX/CapyrX_MultiPatch
 CapyrX/CapyrX_TestMultiPatch
 CapyrX/CapyrX_WaveToy
 CapyrX/CapyrX_WaveToy_SecondOrder
+
 

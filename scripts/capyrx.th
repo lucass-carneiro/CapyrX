@@ -197,8 +197,6 @@ CarpetX/HydroBaseX
 CarpetX/Loop
 CarpetX/MovingBoxToy
 CarpetX/ODESolvers
-#CarpetX/PDESolvers
-#CarpetX/PoissonX
 CarpetX/SIMDWaveToyX
 CarpetX/SpacetimeWaveToyX
 CarpetX/StaggeredWaveToyX
@@ -216,41 +214,6 @@ CarpetX/TestProlongate
 CarpetX/TestSymmetries
 CarpetX/TmunuBaseX
 CarpetX/WaveToyX
-
-
-# SpacetimeX thorns
-!TARGET   = $ARR
-!TYPE     = git
-!URL      = https://github.com/EinsteinToolkit/SpacetimeX
-!REPO_PATH= $2
-!CHECKOUT =
-SpacetimeX/AHFinderDirect
-SpacetimeX/BrillLindquist
-SpacetimeX/Cowling
-SpacetimeX/Multipole
-SpacetimeX/NewRadX
-SpacetimeX/TestNewRadX
-SpacetimeX/Punctures
-SpacetimeX/PunctureTracker
-SpacetimeX/SphericalHarmonics
-SpacetimeX/SphericalSurface
-SpacetimeX/StaticTrumpet
-SpacetimeX/TwoPuncturesX
-SpacetimeX/Weyl
-SpacetimeX/WeylScal4
-SpacetimeX/Z4c
-
-
-# CanudaX -- Lean
-!TARGET    = $ARR
-!TYPE      = git
-!URL       = https://bitbucket.org/canuda/canudax_lean
-!REPO_BRANCH = master
-!REPO_PATH = $2
-!CHECKOUT =
-CanudaX_Lean/CanudaX_BSSNMoL
-CanudaX_Lean/CanudaX_ExactID
-CanudaX_Lean/CanudaX_NPScalars
 
 
 # CapyrX thorns

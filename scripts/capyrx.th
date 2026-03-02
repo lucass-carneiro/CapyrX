@@ -217,11 +217,12 @@ CarpetX/WaveToyX
 
 
 # SpaceTimeX thorns
-!TARGET   = $ARR
-!TYPE     = git
-!URL      = https://github.com/einsteintoolkit/spacetimex.git
-!REPO_PATH= $2
-!CHECKOUT =
+!TARGET      = $ARR
+!TYPE        = git
+!URL         = https://github.com/einsteintoolkit/spacetimex.git
+!REPO_PATH   = $2
+!REPO_BRANCH = features/NewRadX-multipatch
+!CHECKOUT    =
 SpacetimeX/NewRadX
 
 

@@ -225,7 +225,6 @@ CarpetX/WaveToyX
 !REPO_PATH= $2
 !CHECKOUT =
 SpacetimeX/AHFinderDirect
-SpacetimeX/AHFinderX
 SpacetimeX/BrillLindquist
 SpacetimeX/Cowling
 SpacetimeX/Multipole

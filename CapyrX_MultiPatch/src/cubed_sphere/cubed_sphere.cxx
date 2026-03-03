@@ -70,7 +70,8 @@ get_owner_patch(const PatchParams &par, const svec_t &global_coords)
   }
 
 // We don't know where we are. This is unexpected
-#ifndef __CUDACC__
+#if !defined(__CUDACC__) && !defined(__HIP_PLATFORM_AMD__) &&                  \
+    !defined(__HIP_PLATFORM_HCC__) && !defined(__INTEL_LLVM_COMPILER)
   CCTK_VINFO("Coordinate triplet (%.16f, %.16f, %.16f) cannot be located "
              "within the simulation domain",
              x, y, z);
@@ -171,7 +172,8 @@ CCTK_HOST CCTK_DEVICE auto global2local(const PatchParams &par,
     break;
 
   default:
-#ifndef __CUDACC__
+#if !defined(__CUDACC__) && !defined(__HIP_PLATFORM_AMD__) &&                  \
+    !defined(__HIP_PLATFORM_HCC__) && !defined(__INTEL_LLVM_COMPILER)
     CCTK_VERROR("Unable to compute global2local: Unknown patch piece");
 #else
     assert(false);
@@ -279,7 +281,8 @@ CCTK_HOST CCTK_DEVICE auto local2global(const PatchParams &par, int patch,
     break;
 
   default:
-#ifndef __CUDACC__
+#if !defined(__CUDACC__) && !defined(__HIP_PLATFORM_AMD__) &&                  \
+    !defined(__HIP_PLATFORM_HCC__) && !defined(__INTEL_LLVM_COMPILER)
     CCTK_VERROR("Unable to compute local2global: Unknown patch piece");
 #else
     assert(false);
@@ -1017,7 +1020,8 @@ cubed_sphere_jacs(const PatchParams &par, int patch,
     break;
 
   default:
-#ifndef __CUDACC__
+#if !defined(__CUDACC__) && !defined(__HIP_PLATFORM_AMD__) &&                  \
+    !defined(__HIP_PLATFORM_HCC__) && !defined(__INTEL_LLVM_COMPILER)
     CCTK_VERROR("Unable to compute jacobians: Unknown patch piece");
 #else
     assert(false);
@@ -1135,7 +1139,8 @@ static inline auto make_patch(const PatchPiece &p, const PatchParams &par)
     break;
 
   default:
-#ifndef __CUDACC__
+#if !defined(__CUDACC__) && !defined(__HIP_PLATFORM_AMD__) &&                  \
+    !defined(__HIP_PLATFORM_HCC__) && !defined(__INTEL_LLVM_COMPILER)
     CCTK_VERROR("Unable to create patch. Unknown patch piece");
 #else
     assert(false);

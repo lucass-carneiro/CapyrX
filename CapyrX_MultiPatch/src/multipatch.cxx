@@ -21,6 +21,12 @@
 
 #include <cmath>
 
+#ifdef __SYCL_COMPILER_VERSION
+#define CAPYRX_EXTERNAL SYCL_EXTERNAL
+#else
+#define CAPYRX_EXTERNAL
+#endif
+
 namespace CapyrX::MultiPatch {
 
 std::unique_ptr<PatchSystem> g_patch_system{nullptr};
@@ -375,10 +381,9 @@ extern "C" int CapyrX_MultiPatch_Setup() {
 }
 
 template <PatchSystems sys, typename PatchParameters>
-static inline CCTK_HOST CCTK_DEVICE auto
+static inline CAPYRX_EXTERNAL CCTK_HOST CCTK_DEVICE auto
 d2local_dglobal2_dispatch(const PatchParameters &par, int patch,
-                          const svec_t &a)
-    -> std_tuple<svec_t, jac_t, djac_t> {
+                          const svec_t &a) -> std_tuple<svec_t, jac_t, djac_t> {
   if constexpr (sys == PatchSystems::cartesian)
     return Cartesian::d2local_dglobal2(par, patch, a);
   else if constexpr (sys == PatchSystems::cubed_spehre)
@@ -398,8 +403,7 @@ static inline void coordinate_setup_kernel(cGH *cctkGH, PatchParameters par) {
                             const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
         const svec_t a{p.x, p.y, p.z};
 
-        const auto d2J_tuple{
-            d2local_dglobal2_dispatch<sys>(par, p.patch, a)};
+        const auto d2J_tuple{d2local_dglobal2_dispatch<sys>(par, p.patch, a)};
 
         const auto &x{std::get<0>(d2J_tuple)};
         const auto &J{std::get<1>(d2J_tuple)};
@@ -444,8 +448,7 @@ static inline void coordinate_setup_kernel(cGH *cctkGH, PatchParameters par) {
                             const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
         const svec_t a{p.x, p.y, p.z};
 
-        const auto d2J_tuple{
-            d2local_dglobal2_dispatch<sys>(par, p.patch, a)};
+        const auto d2J_tuple{d2local_dglobal2_dispatch<sys>(par, p.patch, a)};
 
         const auto &x{std::get<0>(d2J_tuple)};
         const auto &J{std::get<1>(d2J_tuple)};

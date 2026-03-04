@@ -750,9 +750,10 @@ auto unit_test(std::size_t repetitions, std::size_t seed,
 
   // Patch owner
   {
-    const svec_t global_coords{
-        par.inner_boundary + (par.outer_boundary - par.inner_boundary) / 2.0,
-        0.0, 0.0};
+    const svec_t global_coords{par.inner_boundary +
+                                   (par.outer_boundary - par.inner_boundary) /
+                                       CCTK_REAL{2.0},
+                               CCTK_REAL{0.0}, CCTK_REAL{0.0}};
     const auto owner{get_owner_patch(par, global_coords)};
 
     if (owner != PatchPiece::plus_x) {

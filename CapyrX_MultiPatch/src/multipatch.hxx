@@ -7,7 +7,7 @@
 #include <vector>
 #include <memory>
 
-#ifdef __SYCL_COMPILER_VERSION
+#ifdef SYCL_LANGUAGE_VERSION
 #define CAPYRX_EXTERNAL external SYCL_EXTERNAL
 #else
 #define CAPYRX_EXTERNAL

@@ -3,20 +3,17 @@
 Patch System Description
 ########################
 
-.. doxygenvariable:: MultiPatch::the_patch_system
+.. doxygenvariable:: CapyrX::MultiPatch::g_patch_system
    :project: CapyrX
 
-.. doxygenvariable:: MultiPatch::dim
+.. doxygenvariable:: CapyrX::MultiPatch::dim
    :project: CapyrX
 
-.. doxygenstruct:: MultiPatch::PatchSystem
+.. doxygenstruct:: CapyrX::MultiPatch::PatchSystem
    :project: CapyrX
 
-.. doxygenstruct:: MultiPatch::Patch
+.. doxygenstruct:: CapyrX::MultiPatch::Patch
    :project: CapyrX
 
-.. doxygenstruct:: MultiPatch::PatchFace
-   :project: CapyrX
-
-.. doxygenstruct:: MultiPatch::PatchTransformations
+.. doxygenstruct:: CapyrX::MultiPatch::PatchFace
    :project: CapyrX

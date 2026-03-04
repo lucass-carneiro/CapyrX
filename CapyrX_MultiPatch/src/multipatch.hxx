@@ -8,7 +8,7 @@
 #include <memory>
 
 #ifdef SYCL_LANGUAGE_VERSION
-#define CAPYRX_EXTERNAL external SYCL_EXTERNAL
+#define CAPYRX_EXTERNAL extern SYCL_EXTERNAL
 #else
 #define CAPYRX_EXTERNAL
 #endif

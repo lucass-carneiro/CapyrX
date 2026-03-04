@@ -7,6 +7,12 @@
 #include <vector>
 #include <memory>
 
+#ifdef __SYCL_COMPILER_VERSION
+#define CAPYRX_EXTERNAL external SYCL_EXTERNAL
+#else
+#define CAPYRX_EXTERNAL
+#endif
+
 namespace CapyrX::MultiPatch {
 
 /**

@@ -21,12 +21,6 @@
 
 #include <cmath>
 
-#ifdef __SYCL_COMPILER_VERSION
-#define CAPYRX_EXTERNAL SYCL_EXTERNAL
-#else
-#define CAPYRX_EXTERNAL
-#endif
-
 namespace CapyrX::MultiPatch {
 
 std::unique_ptr<PatchSystem> g_patch_system{nullptr};
@@ -381,7 +375,7 @@ extern "C" int CapyrX_MultiPatch_Setup() {
 }
 
 template <PatchSystems sys, typename PatchParameters>
-static inline CAPYRX_EXTERNAL CCTK_HOST CCTK_DEVICE auto
+static inline CCTK_HOST CCTK_DEVICE auto
 d2local_dglobal2_dispatch(const PatchParameters &par, int patch,
                           const svec_t &a) -> std_tuple<svec_t, jac_t, djac_t> {
   if constexpr (sys == PatchSystems::cartesian)

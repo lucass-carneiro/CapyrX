@@ -17,9 +17,9 @@ jobs:
   download-build-test:
     strategy:
       matrix:
-        accelerator: [oneapi] #[cpu, cuda, rocm, oneapi]
-        real-precision: [real64] #[real32, real64]
-        mode: [optimize] #[debug, optimize]
+        accelerator: [cpu, cuda, rocm, oneapi]
+        real-precision: [real32, real64]
+        mode: [debug, optimize]
         exclude:
           - {accelerator: rocm, real-precision: real32}
           - {accelerator: oneapi, real-precision: real32}

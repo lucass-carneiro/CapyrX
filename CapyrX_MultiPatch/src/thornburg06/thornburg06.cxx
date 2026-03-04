@@ -589,15 +589,15 @@ static inline auto make_patch(const PatchPiece &p, const PatchParams &par)
   const CCTK_REAL radial_delta = 2.0 / par.radial_cells;
 
   patch.xmin = {
-      -1.0 - par.patch_overlap * angular_delta,
-      -1.0 - par.patch_overlap * angular_delta,
-      -1.0 - par.patch_overlap * radial_delta,
+      CCTK_REAL{-1.0} - par.patch_overlap * angular_delta,
+      CCTK_REAL{-1.0} - par.patch_overlap * angular_delta,
+      CCTK_REAL{-1.0} - par.patch_overlap * radial_delta,
   };
 
   patch.xmax = {
-      1.0 + par.patch_overlap * angular_delta,
-      1.0 + par.patch_overlap * angular_delta,
-      1.0 + par.patch_overlap * radial_delta,
+      CCTK_REAL{1.0} + par.patch_overlap * angular_delta,
+      CCTK_REAL{1.0} + par.patch_overlap * angular_delta,
+      CCTK_REAL{1.0} + par.patch_overlap * radial_delta,
   };
 
   patch.is_cartesian = false;

@@ -581,12 +581,15 @@ CCTK_HOST CCTK_DEVICE auto d2local_dglobal2(const PatchParams &par, int patch,
 static inline auto make_patch(const PatchPiece &p, const PatchParams &par)
     -> Patch {
 
-  Patch patch{};
-
-  patch.ncells = {par.angular_cells, par.angular_cells, par.radial_cells};
-
+  const auto twice_overlap = 2 * par.patch_overlap;
   const CCTK_REAL angular_delta = 2.0 / par.angular_cells;
   const CCTK_REAL radial_delta = 2.0 / par.radial_cells;
+
+  Patch patch{};
+
+  patch.ncells = {par.angular_cells + twice_overlap,
+                  par.angular_cells + twice_overlap,
+                  par.radial_cells + twice_overlap};
 
   patch.xmin = {
       CCTK_REAL{-1.0} - par.patch_overlap * angular_delta,

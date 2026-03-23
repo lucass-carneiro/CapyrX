@@ -1,4 +1,5 @@
 ActiveThorns = "
+    ADMBaseX
     CarpetX
     IOUtil
     TimerReport
@@ -22,7 +23,7 @@ $cfl = 0.25
 
 $wave_k = 0.50
 
-$interp_order  = 3
+$interp_order  = 4
 $ghost_size    = 2
 $patch_overlap = 7
 ######################

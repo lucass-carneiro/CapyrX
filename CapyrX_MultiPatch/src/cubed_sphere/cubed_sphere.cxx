@@ -1056,6 +1056,7 @@ static inline auto make_patch(const PatchPiece &p, const PatchParams &par)
   const auto twice_overlap = 2 * par.patch_overlap;
   const CCTK_REAL angular_delta = 2.0 / par.angular_cells;
   const CCTK_REAL radial_delta = 2.0 / par.radial_cells;
+  const CCTK_REAL cart_delta = 2.0 * par.inner_boundary / par.angular_cells;
 
   // Setup data for the most common patch type: Non-cartesian
   Patch patch{};
@@ -1091,18 +1092,20 @@ static inline auto make_patch(const PatchPiece &p, const PatchParams &par)
 
   case PatchPiece::cartesian:
     patch.name = "Cartesian";
-    patch.ncells = {par.angular_cells, par.angular_cells, par.angular_cells};
+    patch.ncells = {par.angular_cells + twice_overlap,
+                    par.angular_cells + twice_overlap,
+                    par.angular_cells + twice_overlap};
 
     patch.xmin = {
-        -par.inner_boundary - par.patch_overlap * angular_delta,
-        -par.inner_boundary - par.patch_overlap * angular_delta,
-        -par.inner_boundary - par.patch_overlap * angular_delta,
+        -par.inner_boundary - par.patch_overlap * cart_delta,
+        -par.inner_boundary - par.patch_overlap * cart_delta,
+        -par.inner_boundary - par.patch_overlap * cart_delta,
     };
 
     patch.xmax = {
-        par.inner_boundary + par.patch_overlap * angular_delta,
-        par.inner_boundary + par.patch_overlap * angular_delta,
-        par.inner_boundary + par.patch_overlap * angular_delta,
+        par.inner_boundary + par.patch_overlap * cart_delta,
+        par.inner_boundary + par.patch_overlap * cart_delta,
+        par.inner_boundary + par.patch_overlap * cart_delta,
     };
 
     patch.faces = {{mx, my, mz}, {px, py, pz}};

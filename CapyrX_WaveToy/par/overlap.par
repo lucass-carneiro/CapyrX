@@ -14,9 +14,9 @@ $itlast       = 256
 $out_every_it = 16
 
 $r0 = 1.0
-$rf = 4.0 * $r0
+$rf = 4.0
 
-$radial_cells  = 40
+$radial_cells  = 60
 $angular_cells = 40
 
 $cfl = 0.25

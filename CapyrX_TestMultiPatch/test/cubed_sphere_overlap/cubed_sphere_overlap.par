@@ -32,7 +32,7 @@ CapyrX_MultiPatch::inner_boundary_radius = 1.0
 CapyrX_MultiPatch::outer_boundary_radius = 4.0
 CapyrX_MultiPatch::angular_cells         = 40
 CapyrX_MultiPatch::radial_cells          = 40
-CapyrX_MultiPatch::patch_overlap                      = 7
+CapyrX_MultiPatch::patch_overlap         = 7
                                                                         
 CapyrX_TestMultiPatch::test_data = "standing wave"
 

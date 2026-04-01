@@ -6,6 +6,7 @@
 #include "cartesian/cartesian.hxx"
 #include "cubed_sphere/cubed_sphere.hxx"
 #include "thornburg06/thornburg06.hxx"
+#include "two_cubes/two_cubes.hxx"
 
 #include "../../../CarpetX/CarpetX/src/timer.hxx"
 
@@ -100,12 +101,12 @@ static inline void global2local_kernel(const CCTK_INT npoints,
           .ncells_k = cartesian_ncells_k,
 
           .xmin = cartesian_xmin,
-          .ymin = cartesian_xmin,
-          .zmin = cartesian_xmin,
+          .ymin = cartesian_ymin,
+          .zmin = cartesian_zmin,
 
           .xmax = cartesian_xmax,
-          .ymax = cartesian_xmax,
-          .zmax = cartesian_xmax,
+          .ymax = cartesian_ymax,
+          .zmax = cartesian_zmax,
       };
       g2l = Cartesian::global2local(p, global_coords);
     } else if constexpr (sys == PatchSystems::cubed_spehre) {
@@ -116,13 +117,29 @@ static inline void global2local_kernel(const CCTK_INT npoints,
                                        .patch_overlap = patch_overlap};
       g2l = CubedSphere::global2local(p, global_coords);
     } else if constexpr (sys == PatchSystems::thornburg06) {
-      // TODO: Propper parameter names
       const Thornburg06::PatchParams p{.angular_cells = angular_cells,
                                        .radial_cells = radial_cells,
                                        .inner_boundary = inner_boundary_radius,
                                        .outer_boundary = outer_boundary_radius,
                                        .patch_overlap = patch_overlap};
       g2l = Thornburg06::global2local(p, global_coords);
+    } else if constexpr (sys == PatchSystems::two_cubes) {
+      const TwoCubes::PatchParams p{.ncells_x = cartesian_ncells_i,
+                                    .ncells_y = cartesian_ncells_j,
+                                    .ncells_z = cartesian_ncells_k,
+
+                                    .xmin = cartesian_xmin,
+                                    .ymin = cartesian_ymin,
+                                    .zmin = cartesian_zmin,
+
+                                    .xmax = cartesian_xmax,
+                                    .ymax = cartesian_ymax,
+                                    .zmax = cartesian_zmax,
+
+                                    .bend = two_cubes_bend,
+
+                                    .patch_overlap = patch_overlap};
+      g2l = TwoCubes::global2local(p, global_coords);
     }
 
     const auto patch{std::get<0>(g2l)};
@@ -179,6 +196,13 @@ extern "C" void MultiPatch1_GlobalToLocal2(
     global2local_kernel<PatchSystems::thornburg06>(npoints, globalsx, globalsy,
                                                    globalsz, patches, localsx,
                                                    localsy, localsz);
+    break;
+  }
+
+  case PatchSystems::two_cubes: {
+    global2local_kernel<PatchSystems::two_cubes>(npoints, globalsx, globalsy,
+                                                 globalsz, patches, localsx,
+                                                 localsy, localsz);
     break;
   }
 
@@ -241,6 +265,23 @@ static inline void local2global_kernel(const CCTK_INT npoints,
                                        .outer_boundary = outer_boundary_radius,
                                        .patch_overlap = patch_overlap};
       global_vars = Thornburg06::local2global(p, patch, local_coords);
+    } else if constexpr (sys == PatchSystems::two_cubes) {
+      const TwoCubes::PatchParams p{.ncells_x = cartesian_ncells_i,
+                                    .ncells_y = cartesian_ncells_j,
+                                    .ncells_z = cartesian_ncells_k,
+
+                                    .xmin = cartesian_xmin,
+                                    .ymin = cartesian_ymin,
+                                    .zmin = cartesian_zmin,
+
+                                    .xmax = cartesian_xmax,
+                                    .ymax = cartesian_ymax,
+                                    .zmax = cartesian_zmax,
+
+                                    .bend = two_cubes_bend,
+
+                                    .patch_overlap = patch_overlap};
+      global_vars = TwoCubes::local2global(p, patch, local_coords);
     }
 
     globalsx[i] = global_vars(0);
@@ -357,6 +398,25 @@ extern "C" int CapyrX_MultiPatch_Setup() {
 
     g_patch_system = std::make_unique<PatchSystem>(Thornburg06::make_system(p));
 
+  } else if (CCTK_EQUALS(patch_system, "TwoCubes")) {
+    const TwoCubes::PatchParams p{.ncells_x = cartesian_ncells_i,
+                                  .ncells_y = cartesian_ncells_j,
+                                  .ncells_z = cartesian_ncells_k,
+
+                                  .xmin = cartesian_xmin,
+                                  .ymin = cartesian_ymin,
+                                  .zmin = cartesian_zmin,
+
+                                  .xmax = cartesian_xmax,
+                                  .ymax = cartesian_ymax,
+                                  .zmax = cartesian_zmax,
+
+                                  .bend = two_cubes_bend,
+
+                                  .patch_overlap = patch_overlap};
+
+    g_patch_system = std::make_unique<PatchSystem>(TwoCubes::make_system(p));
+
   } else {
     CCTK_VERROR("Unbable to setup unknown patch system \"%s\"", patch_system);
   }
@@ -372,12 +432,15 @@ template <PatchSystems sys, typename PatchParameters>
 static inline CCTK_HOST CCTK_DEVICE auto
 d2local_dglobal2_dispatch(const PatchParameters &par, int patch,
                           const svec_t &a) -> std_tuple<svec_t, jac_t, djac_t> {
-  if constexpr (sys == PatchSystems::cartesian)
+  if constexpr (sys == PatchSystems::cartesian) {
     return Cartesian::d2local_dglobal2(par, patch, a);
-  else if constexpr (sys == PatchSystems::cubed_spehre)
+  } else if constexpr (sys == PatchSystems::cubed_spehre) {
     return CubedSphere::d2local_dglobal2(par, patch, a);
-  else if constexpr (sys == PatchSystems::thornburg06)
+  } else if constexpr (sys == PatchSystems::thornburg06) {
     return Thornburg06::d2local_dglobal2(par, patch, a);
+  } else if constexpr (sys == PatchSystems::two_cubes) {
+    return TwoCubes::d2local_dglobal2(par, patch, a);
+  }
 }
 
 template <PatchSystems sys, typename PatchParameters>
@@ -507,6 +570,26 @@ extern "C" void CapyrX_MultiPatch_Coordinates_Setup(CCTK_ARGUMENTS) {
     break;
   }
 
+  case PatchSystems::two_cubes: {
+    const TwoCubes::PatchParams par{.ncells_x = cartesian_ncells_i,
+                                    .ncells_y = cartesian_ncells_j,
+                                    .ncells_z = cartesian_ncells_k,
+
+                                    .xmin = cartesian_xmin,
+                                    .ymin = cartesian_ymin,
+                                    .zmin = cartesian_zmin,
+
+                                    .xmax = cartesian_xmax,
+                                    .ymax = cartesian_ymax,
+                                    .zmax = cartesian_zmax,
+
+                                    .bend = two_cubes_bend,
+
+                                    .patch_overlap = patch_overlap};
+    coordinate_setup_kernel<PatchSystems::two_cubes>(cctkGH, par);
+    break;
+  }
+
   default:
     CCTK_VERROR("Unable to setup coordinates for unknown patch system");
     break;
@@ -580,6 +663,24 @@ extern "C" void CapyrX_MultiPatch_Run_Unit_Tests(CCTK_ARGUMENTS) {
                                  .patch_overlap = patch_overlap};
 
     pass = Thornburg06::unit_test(test_repetitions, test_seed, par);
+
+  } else if (CCTK_EQUALS(patch_system, "TwoCubes")) {
+    const TwoCubes::PatchParams par{.ncells_x = cartesian_ncells_i,
+                                    .ncells_y = cartesian_ncells_j,
+                                    .ncells_z = cartesian_ncells_k,
+
+                                    .xmin = cartesian_xmin,
+                                    .ymin = cartesian_ymin,
+                                    .zmin = cartesian_zmin,
+
+                                    .xmax = cartesian_xmax,
+                                    .ymax = cartesian_ymax,
+                                    .zmax = cartesian_zmax,
+
+                                    .bend = two_cubes_bend,
+
+                                    .patch_overlap = patch_overlap};
+    pass = TwoCubes::unit_test(test_repetitions, test_seed, par);
 
   } else {
     CCTK_VERROR(

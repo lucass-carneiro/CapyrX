@@ -6,6 +6,7 @@ KEYWORD patch_system "Patch system"
   "Cartesian" :: "Cartesian coordinates"
   "Cubed sphere" :: "Cartesian cube surrounded with 6 spherical-like patches"
   "Thornburg06" :: "Six spherical patches with inner and outer spherical boundaries"
+  "TwoCubes" :: "Two touching cubes. Used for debugging"
 } "none"
 
 BOOLEAN verbose "Enable verbose output"
@@ -99,3 +100,10 @@ INT radial_cells "Number of cells in the radial direction, for both the Cubed sp
 {
   0:* :: "Positive"
 } 20
+
+# Twwo cubes patch system
+
+REAL two_cubes_bend  "Bend in the two cubes patch"
+{
+  0:* :: "Positive"
+} 0.0

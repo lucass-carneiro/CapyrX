@@ -1,0 +1,91 @@
+# Gaussian
+# No mesh refinement
+# No dissipation
+# With NewRadX boundaries
+# Overlap
+
+ActiveThorns = "
+    CapyrX_MultiPatch
+    CapyrX_WaveToy_SecondOrder
+    CarpetX
+    CoordinatesX
+    IOUtil
+    ODESolvers
+    SystemTopology
+"
+
+###### Settings ######
+$final_time = 16.0
+$out_every = 32
+
+$r0 = 2.0
+$rf = 8.0
+
+$angular_cells = 40
+$radial_cells  = 60
+
+$cfl = 0.25
+######################
+
+# Misc options
+Cactus::presync_mode = "mixed-error"
+Cactus::cctk_show_schedule = yes
+
+CarpetX::verbose = yes
+CarpetX::poison_undefined_values = no
+
+# Block distribution
+CarpetX::blocking_factor_x = 1
+CarpetX::blocking_factor_y = 1
+CarpetX::blocking_factor_z = 1
+
+# Time integration
+ODESolvers::method  = "RK4"
+ODESolvers::verbose = yes
+CarpetX::dtfac      = $cfl
+
+# Grid
+CapyrX_MultiPatch::verbose        =  yes
+CapyrX_MultiPatch::patch_system   = "Cubed sphere"
+
+CapyrX_MultiPatch::inner_boundary_radius = $r0
+CapyrX_MultiPatch::outer_boundary_radius = $rf
+CapyrX_MultiPatch::angular_cells         = $angular_cells
+CapyrX_MultiPatch::radial_cells          = $radial_cells
+
+CarpetX::ghost_size               = 3
+CarpetX::interpolation_order      = 1
+CapyrX_MultiPatch::patch_overlap  = 0 #2 * CarpetX::ghost_size
+
+# Dissipation and NewRadX
+CapyrX_WaveToy_SecondOrder::add_dissipation = no
+CapyrX_WaveToy_SecondOrder::use_newradx     = yes
+
+# Initial data
+CapyrX_WaveToy_SecondOrder::initial_condition = "Gaussian"
+CapyrX_WaveToy_SecondOrder::amplitude         = 0.1
+CapyrX_WaveToy_SecondOrder::gaussian_width    = 1.0 / 2.0
+
+# Boundary conditions
+CarpetX::boundary_x       = "neumann"
+CarpetX::boundary_y       = "neumann"
+CarpetX::boundary_z       = "neumann"
+CarpetX::boundary_upper_x = "neumann"
+CarpetX::boundary_upper_y = "neumann"
+CarpetX::boundary_upper_z = "neumann"
+
+# Termination
+Cactus::terminate       = "time"
+Cactus::cctk_final_time = $final_time
+
+# Output
+IO::out_dir = $parfile
+IO::out_every = $out_every
+
+CarpetX::out_metadata    = no
+CarpetX::out_performance = no
+
+CarpetX::out_silo_vars = "
+    CapyrX_WaveToy_SecondOrder::state
+    CapyrX_WaveToy_SecondOrder::energy
+"

@@ -3,6 +3,7 @@
 STORAGE: test_data
 STORAGE: error
 
+# Interp error test
 SCHEDULE CapyrX_TestMultiPatch_write_test_data AT initial
 {
   LANG: C
@@ -47,4 +48,19 @@ SCHEDULE CapyrX_TestMultiPatch_sync AS CapyrX_TestMultiPatch_sync_error AT initi
   LANG: C
   OPTIONS: global
   SYNC: error
+} "Synchronizes grid functions"
+
+# Coloring test
+SCHEDULE CapyrX_TestMultiPatch_write_color AT initial
+{
+  LANG: C
+  READS: CoordinatesX::vertex_coords(everywhere)
+  WRITES: color(everywhere)
+} "Fill patch colors"
+
+SCHEDULE CapyrX_TestMultiPatch_sync AS CapyrX_TestMultiPatch_sync_color AT initial AFTER CapyrX_TestMultiPatch_write_color
+{
+  LANG: C
+  OPTIONS: global
+  SYNC: color
 } "Synchronizes grid functions"

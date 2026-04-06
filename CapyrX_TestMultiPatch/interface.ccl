@@ -25,3 +25,8 @@ CCTK_REAL error TYPE=gf
   d2fdxz
   d2fdyz
 } "Test grid function error"
+
+CCTK_REAL color TYPE=gf
+{
+    color
+} "Patch colors, for testing interpolation sources and targets"

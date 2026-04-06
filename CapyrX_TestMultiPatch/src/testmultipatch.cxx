@@ -11,8 +11,8 @@ namespace CapyrX::TestMultiPatch {
 
 static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
 standing_wave(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
-              CCTK_REAL t, CCTK_REAL x, CCTK_REAL y,
-              CCTK_REAL z) noexcept -> CCTK_REAL {
+              CCTK_REAL t, CCTK_REAL x, CCTK_REAL y, CCTK_REAL z) noexcept
+    -> CCTK_REAL {
   using std::cos, std::sin, std::sqrt;
 
   const auto pi{acos(-1.0)};
@@ -24,8 +24,8 @@ standing_wave(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
 
 static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
 standing_wave_dx(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
-                 CCTK_REAL t, CCTK_REAL x, CCTK_REAL y,
-                 CCTK_REAL z) noexcept -> CCTK_REAL {
+                 CCTK_REAL t, CCTK_REAL x, CCTK_REAL y, CCTK_REAL z) noexcept
+    -> CCTK_REAL {
   using std::cos, std::sin, std::sqrt;
 
   const auto pi{acos(-1.0)};
@@ -37,8 +37,8 @@ standing_wave_dx(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
 
 static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
 standing_wave_dy(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
-                 CCTK_REAL t, CCTK_REAL x, CCTK_REAL y,
-                 CCTK_REAL z) noexcept -> CCTK_REAL {
+                 CCTK_REAL t, CCTK_REAL x, CCTK_REAL y, CCTK_REAL z) noexcept
+    -> CCTK_REAL {
   using std::cos, std::sin, std::sqrt;
 
   const auto pi{acos(-1.0)};
@@ -50,8 +50,8 @@ standing_wave_dy(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
 
 static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
 standing_wave_dz(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
-                 CCTK_REAL t, CCTK_REAL x, CCTK_REAL y,
-                 CCTK_REAL z) noexcept -> CCTK_REAL {
+                 CCTK_REAL t, CCTK_REAL x, CCTK_REAL y, CCTK_REAL z) noexcept
+    -> CCTK_REAL {
   using std::cos, std::sin, std::sqrt;
 
   const auto pi{acos(-1.0)};
@@ -63,8 +63,8 @@ standing_wave_dz(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
 
 static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
 standing_wave_dx2(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
-                  CCTK_REAL t, CCTK_REAL x, CCTK_REAL y,
-                  CCTK_REAL z) noexcept -> CCTK_REAL {
+                  CCTK_REAL t, CCTK_REAL x, CCTK_REAL y, CCTK_REAL z) noexcept
+    -> CCTK_REAL {
   using std::cos, std::sin, std::sqrt;
 
   const auto pi{acos(-1.0)};
@@ -76,8 +76,8 @@ standing_wave_dx2(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
 
 static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
 standing_wave_dy2(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
-                  CCTK_REAL t, CCTK_REAL x, CCTK_REAL y,
-                  CCTK_REAL z) noexcept -> CCTK_REAL {
+                  CCTK_REAL t, CCTK_REAL x, CCTK_REAL y, CCTK_REAL z) noexcept
+    -> CCTK_REAL {
   using std::cos, std::sin, std::sqrt;
 
   const auto pi{acos(-1.0)};
@@ -89,8 +89,8 @@ standing_wave_dy2(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
 
 static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
 standing_wave_dz2(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
-                  CCTK_REAL t, CCTK_REAL x, CCTK_REAL y,
-                  CCTK_REAL z) noexcept -> CCTK_REAL {
+                  CCTK_REAL t, CCTK_REAL x, CCTK_REAL y, CCTK_REAL z) noexcept
+    -> CCTK_REAL {
   using std::cos, std::sin, std::sqrt;
 
   const auto pi{acos(-1.0)};
@@ -102,8 +102,8 @@ standing_wave_dz2(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
 
 static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
 standing_wave_dxy(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
-                  CCTK_REAL t, CCTK_REAL x, CCTK_REAL y,
-                  CCTK_REAL z) noexcept -> CCTK_REAL {
+                  CCTK_REAL t, CCTK_REAL x, CCTK_REAL y, CCTK_REAL z) noexcept
+    -> CCTK_REAL {
   using std::cos, std::sin, std::sqrt;
 
   const auto pi{acos(-1.0)};
@@ -115,8 +115,8 @@ standing_wave_dxy(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
 
 static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
 standing_wave_dxz(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
-                  CCTK_REAL t, CCTK_REAL x, CCTK_REAL y,
-                  CCTK_REAL z) noexcept -> CCTK_REAL {
+                  CCTK_REAL t, CCTK_REAL x, CCTK_REAL y, CCTK_REAL z) noexcept
+    -> CCTK_REAL {
   using std::cos, std::sin, std::sqrt;
 
   const auto pi{acos(-1.0)};
@@ -128,8 +128,8 @@ standing_wave_dxz(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
 
 static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
 standing_wave_dyz(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
-                  CCTK_REAL t, CCTK_REAL x, CCTK_REAL y,
-                  CCTK_REAL z) noexcept -> CCTK_REAL {
+                  CCTK_REAL t, CCTK_REAL x, CCTK_REAL y, CCTK_REAL z) noexcept
+    -> CCTK_REAL {
   using std::cos, std::sin, std::sqrt;
 
   const auto pi{acos(-1.0)};
@@ -199,27 +199,27 @@ static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
   return num * den;
 }
 
-static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
-c4o_0_1_0(const Loop::PointDesc &p,
-          const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE c4o_0_1_0(
+    const Loop::PointDesc &p, const Loop::GF3D2<const CCTK_REAL> &gf) noexcept
+    -> CCTK_REAL {
   const auto num{gf(-2 * p.DI[1] + p.I) - 8 * gf(-p.DI[1] + p.I) +
                  8 * gf(p.DI[1] + p.I) - gf(2 * p.DI[1] + p.I)};
   const auto den{1.0 / (12 * p.DX[1])};
   return num * den;
 }
 
-static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
-c4o_0_0_1(const Loop::PointDesc &p,
-          const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE c4o_0_0_1(
+    const Loop::PointDesc &p, const Loop::GF3D2<const CCTK_REAL> &gf) noexcept
+    -> CCTK_REAL {
   const auto num{gf(-2 * p.DI[2] + p.I) - 8 * gf(-p.DI[2] + p.I) +
                  8 * gf(p.DI[2] + p.I) - gf(2 * p.DI[2] + p.I)};
   const auto den{1.0 / (12 * p.DX[2])};
   return num * den;
 }
 
-static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
-c4o_2_0_0(const Loop::PointDesc &p,
-          const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE c4o_2_0_0(
+    const Loop::PointDesc &p, const Loop::GF3D2<const CCTK_REAL> &gf) noexcept
+    -> CCTK_REAL {
   const auto num{-30 * gf(p.I) - gf(-2 * p.DI[0] + p.I) +
                  16 * gf(-p.DI[0] + p.I) + 16 * gf(p.DI[0] + p.I) -
                  gf(2 * p.DI[0] + p.I)};
@@ -227,9 +227,9 @@ c4o_2_0_0(const Loop::PointDesc &p,
   return num * den;
 }
 
-static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
-c4o_1_1_0(const Loop::PointDesc &p,
-          const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE c4o_1_1_0(
+    const Loop::PointDesc &p, const Loop::GF3D2<const CCTK_REAL> &gf) noexcept
+    -> CCTK_REAL {
   const auto num{
       gf(-2 * p.DI[0] - 2 * p.DI[1] + p.I) -
       8 * gf(-p.DI[0] - 2 * p.DI[1] + p.I) +
@@ -247,9 +247,9 @@ c4o_1_1_0(const Loop::PointDesc &p,
   return num * den;
 }
 
-static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
-c4o_1_0_1(const Loop::PointDesc &p,
-          const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE c4o_1_0_1(
+    const Loop::PointDesc &p, const Loop::GF3D2<const CCTK_REAL> &gf) noexcept
+    -> CCTK_REAL {
   const auto num{
       gf(-2 * p.DI[0] - 2 * p.DI[2] + p.I) -
       8 * gf(-p.DI[0] - 2 * p.DI[2] + p.I) +
@@ -267,9 +267,9 @@ c4o_1_0_1(const Loop::PointDesc &p,
   return num * den;
 }
 
-static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
-c4o_0_2_0(const Loop::PointDesc &p,
-          const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE c4o_0_2_0(
+    const Loop::PointDesc &p, const Loop::GF3D2<const CCTK_REAL> &gf) noexcept
+    -> CCTK_REAL {
   const auto num{-30 * gf(p.I) - gf(-2 * p.DI[1] + p.I) +
                  16 * gf(-p.DI[1] + p.I) + 16 * gf(p.DI[1] + p.I) -
                  gf(2 * p.DI[1] + p.I)};
@@ -277,9 +277,9 @@ c4o_0_2_0(const Loop::PointDesc &p,
   return num * den;
 }
 
-static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
-c4o_0_1_1(const Loop::PointDesc &p,
-          const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE c4o_0_1_1(
+    const Loop::PointDesc &p, const Loop::GF3D2<const CCTK_REAL> &gf) noexcept
+    -> CCTK_REAL {
   const auto num{
       gf(-2 * p.DI[1] - 2 * p.DI[2] + p.I) -
       8 * gf(-p.DI[1] - 2 * p.DI[2] + p.I) +
@@ -297,9 +297,9 @@ c4o_0_1_1(const Loop::PointDesc &p,
   return num * den;
 }
 
-static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
-c4o_0_0_2(const Loop::PointDesc &p,
-          const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE c4o_0_0_2(
+    const Loop::PointDesc &p, const Loop::GF3D2<const CCTK_REAL> &gf) noexcept
+    -> CCTK_REAL {
   const auto num{-30 * gf(p.I) - gf(-2 * p.DI[2] + p.I) +
                  16 * gf(-p.DI[2] + p.I) + 16 * gf(p.DI[2] + p.I) -
                  gf(2 * p.DI[2] + p.I)};
@@ -470,6 +470,26 @@ extern "C" void CapyrX_TestMultiPatch_compute_deriv_error(CCTK_ARGUMENTS) {
           d2fdyz(p.I) = fabs(true_d2fdyz - second_derivs.dydz);
         });
   }
+}
+
+extern "C" void CapyrX_TestMultiPatch_write_color(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTSX_CapyrX_TestMultiPatch_write_color;
+  DECLARE_CCTK_PARAMETERS;
+
+  grid.loop_int_device<0, 0, 0>(
+      grid.nghostzones,
+      [=] CCTK_DEVICE(const Loop::PointDesc &p)
+          CCTK_ATTRIBUTE_ALWAYS_INLINE { color(p.I) = 3 * p.patch + 1; });
+
+  grid.loop_bnd_device<0, 0, 0>(
+      grid.nghostzones,
+      [=] CCTK_DEVICE(const Loop::PointDesc &p)
+          CCTK_ATTRIBUTE_ALWAYS_INLINE { color(p.I) = 3 * p.patch + 2; });
+  grid.loop_ghosts_device<0, 0, 0>(
+      grid.nghostzones,
+      [=] CCTK_DEVICE(const Loop::PointDesc &p)
+
+          CCTK_ATTRIBUTE_ALWAYS_INLINE { color(p.I) = 3 * p.patch + 3; });
 }
 
 extern "C" void CapyrX_TestMultiPatch_sync(CCTK_ARGUMENTS) {

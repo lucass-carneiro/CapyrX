@@ -1,5 +1,6 @@
 #include "multipatch.hxx"
 
+#include "../../../CarpetX/CarpetX/src/interp.hxx"
 #include "../../../CarpetX/CarpetX/src/schedule.hxx"
 #include "../../../CarpetX/CarpetX/src/timer.hxx"
 
@@ -10,6 +11,7 @@
 #endif
 
 #include <map>
+#include <optional>
 
 namespace CapyrX::MultiPatch {
 
@@ -72,6 +74,25 @@ template <> struct hash<MultiPatch::Location> {
 } // namespace std
 
 namespace CapyrX::MultiPatch {
+
+struct InterpolationCache {
+  // Epoch at which this cache was built. 0 = never built.
+  CCTK_INT epoch{0};
+
+  // Ghost-zone coordinate mapping: Location -> (x,y,z) point lists.
+  std::map<Location, PointList> source_mapping;
+
+  // Flat coordinate arrays fed to InterpolationSetup.
+  PointList coords;
+
+  // The CarpetX interpolation setup (particle container + distribution).
+  std::optional<CarpetX::InterpolationSetup> setup;
+
+  // Per-patch outer-boundary policy for InterpolateFromSetup.
+  std::vector<Arith::vect<Arith::vect<bool, 3>, 2> > policy;
+};
+
+static InterpolationCache g_interp_cache;
 
 extern "C" void
 MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
@@ -177,98 +198,136 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
     // TODO: Check centerings table
   }
 
-  // Step 1: Find coordinates where we need to interpolate
-  std::map<Location, PointList> source_mapping{};
+  // Step 1: Rebuild the interpolation cache if the AMR epoch has changed.
 
-  CarpetX::active_levels_t().loop_parallel(
-      [&](int patch, int level, int index, int component, const cGH *cctkGH) {
-        const Loop::GridDescBase grid(cctkGH);
-        const std::array<int, dim> centering{0, 0, 0};
-        const Loop::GF3D2layout layout(cctkGH, centering);
+  const CCTK_INT current_epoch = GetEpoch();
 
-        const auto &current_patch{g_patch_system->patches.at(patch)};
-        const auto &patch_faces{current_patch.faces};
+  if (current_epoch != g_interp_cache.epoch) {
+    CCTK_VINFO("Interpolation cache out of date (cache epoch = %d. Current "
+               "epoch = %d). Rebuilding",
+               current_epoch, g_interp_cache.epoch);
 
-        const Location location{patch, level, index, component};
+    // Collect ghost-zone coordinates
+    g_interp_cache.source_mapping.clear();
 
-        const std::array<Loop::GF3D2<const CCTK_REAL>, dim> vcoords{
-            Loop::GF3D2<const CCTK_REAL>(
-                layout, static_cast<const CCTK_REAL *>(CCTK_VarDataPtr(
-                            cctkGH, 0, "CoordinatesX::vcoordx"))),
-            Loop::GF3D2<const CCTK_REAL>(
-                layout, static_cast<const CCTK_REAL *>(CCTK_VarDataPtr(
-                            cctkGH, 0, "CoordinatesX::vcoordy"))),
-            Loop::GF3D2<const CCTK_REAL>(
-                layout, static_cast<const CCTK_REAL *>(CCTK_VarDataPtr(
-                            cctkGH, 0, "CoordinatesX::vcoordz")))};
+    CarpetX::active_levels_t().loop_parallel([&](int patch, int level,
+                                                 int index, int component,
+                                                 const cGH *cctkGH) {
+      const Loop::GridDescBase grid(cctkGH);
+      const std::array<int, dim> centering{0, 0, 0};
+      const Loop::GF3D2layout layout(cctkGH, centering);
 
-        PointList source_points;
+      const auto &current_patch{g_patch_system->patches.at(patch)};
+      const auto &patch_faces{current_patch.faces};
 
-        // Note: This includes symmetry points
-        grid.loop_bnd<0, 0, 0>(grid.nghostzones, [&](const Loop::PointDesc &p) {
-          // Skip outer boundaries
-          for (int d = 0; d < dim; ++d) {
-            if (p.NI[d] < 0 && patch_faces[0][d].is_outer_boundary) {
-              return;
-            }
+      const Location location{patch, level, index, component};
 
-            if (p.NI[d] > 0 && patch_faces[1][d].is_outer_boundary) {
-              return;
-            }
+      const std::array<Loop::GF3D2<const CCTK_REAL>, dim> vcoords{
+          Loop::GF3D2<const CCTK_REAL>(
+              layout, static_cast<const CCTK_REAL *>(
+                          CCTK_VarDataPtr(cctkGH, 0, "CoordinatesX::vcoordx"))),
+          Loop::GF3D2<const CCTK_REAL>(
+              layout, static_cast<const CCTK_REAL *>(
+                          CCTK_VarDataPtr(cctkGH, 0, "CoordinatesX::vcoordy"))),
+          Loop::GF3D2<const CCTK_REAL>(
+              layout, static_cast<const CCTK_REAL *>(CCTK_VarDataPtr(
+                          cctkGH, 0, "CoordinatesX::vcoordz")))};
+
+      PointList source_points;
+
+      // Note: This includes symmetry points
+      grid.loop_bnd<0, 0, 0>(grid.nghostzones, [&](const Loop::PointDesc &p) {
+        // Skip outer boundaries
+        for (int d = 0; d < dim; ++d) {
+          if (p.NI[d] < 0 && patch_faces[0][d].is_outer_boundary) {
+            return;
           }
 
-          for (int d = 0; d < dim; ++d) {
-            source_points[d].push_back(vcoords[d](p.I));
+          if (p.NI[d] > 0 && patch_faces[1][d].is_outer_boundary) {
+            return;
           }
-        });
-#pragma omp critical
-        {
-          source_mapping[location] = std::move(source_points);
+        }
+
+        for (int d = 0; d < dim; ++d) {
+          source_points[d].push_back(vcoords[d](p.I));
         }
       });
+#pragma omp critical
+      {
+        g_interp_cache.source_mapping[location] = std::move(source_points);
+      }
+    });
 
-  // Step 2: Interpolate to these coordinates
-
-  // Gather all coordinates
-  PointList coords{};
-  for (const auto &[location, point_list] : source_mapping) {
-    for (int d = 0; d < dim; ++d) {
-      coords[d].insert(coords[d].end(), point_list[d].begin(),
-                       point_list[d].end());
+    // Flatten into coordinate arrays
+    g_interp_cache.coords = {};
+    for (const auto &[location, point_list] : g_interp_cache.source_mapping) {
+      for (int d = 0; d < dim; ++d) {
+        g_interp_cache.coords[d].insert(g_interp_cache.coords[d].end(),
+                                        point_list[d].begin(),
+                                        point_list[d].end());
+      }
     }
+
+    assert(g_interp_cache.coords[0].size() == g_interp_cache.coords[1].size() &&
+           g_interp_cache.coords[0].size() == g_interp_cache.coords[2].size() &&
+           g_interp_cache.coords[1].size() == g_interp_cache.coords[2].size());
+
+    // Build InterpolationSetup (expensive — skipped when epoch is unchanged)
+    const std::size_t npoints_cache = g_interp_cache.coords[0].size();
+    g_interp_cache.setup.emplace(cctkGH, static_cast<CCTK_INT>(npoints_cache),
+                                 g_interp_cache.coords[0].data(),
+                                 g_interp_cache.coords[1].data(),
+                                 g_interp_cache.coords[2].data());
+
+    // Build per-patch outer-boundary policy
+    const int npatches = cctkGH->cctk_npatches;
+    g_interp_cache.policy.resize(npatches);
+
+    static const bool have_boundary_spec =
+        CCTK_IsFunctionAliased("MultiPatch_GetBoundarySpecification2");
+
+    if (have_boundary_spec) {
+      std::array<CCTK_INT, 2 * dim> spec;
+      for (int p = 0; p < npatches; ++p) {
+        MultiPatch_GetBoundarySpecification2(p, 2 * dim, spec.data());
+        for (int f = 0; f < 2; ++f)
+          for (int d = 0; d < dim; ++d)
+            g_interp_cache.policy[p][f][d] = !spec[2 * d + f];
+      }
+    } else {
+      for (int p = 0; p < npatches; ++p)
+        for (int f = 0; f < 2; ++f)
+          for (int d = 0; d < dim; ++d)
+            g_interp_cache.policy[p][f][d] = true;
+    }
+
+    g_interp_cache.epoch = current_epoch;
   }
 
-  assert(coords[0].size() == coords[1].size() &&
-         coords[0].size() == coords[2].size() &&
-         coords[1].size() == coords[2].size());
+  // Step 2: Interpolate using the cached setup.
 
   const std::size_t nvars = varinds.size();
-  const std::size_t npoints = coords[0].size();
+  const std::size_t npoints = g_interp_cache.coords[0].size();
 
   const std::vector<CCTK_INT> operations(nvars, 0);
 
-  // Allocate memory for values
   std::vector<std::vector<CCTK_REAL> > results(nvars);
   std::vector<CCTK_REAL *> resultptrs(nvars);
-
-  results.reserve(nvars);
-  resultptrs.reserve(nvars);
 
   for (size_t n = 0; n < nvars; ++n) {
     results.at(n).resize(npoints);
     resultptrs.at(n) = results.at(n).data();
   }
 
-  // Interpolate
-  InterpolateMultipatch(cctkGH, npoints, coords[0].data(), coords[1].data(),
-                        coords[2].data(), varinds.size(), varinds.data(),
-                        operations.data(), resultptrs.data());
+  CarpetX::InterpolateFromSetup(*g_interp_cache.setup, nvars, varinds.data(),
+                                operations.data(), g_interp_cache.policy,
+                                resultptrs.data());
 
   // Scatter interpolated values
   std::map<Location, std::vector<std::vector<CCTK_REAL> > > result_mapping;
 
   std::size_t pos = 0;
-  for (const auto &[location, source_points] : source_mapping) {
+  for (const auto &[location, source_points] : g_interp_cache.source_mapping) {
     const std::size_t length = source_points[0].size();
     std::vector<std::vector<CCTK_REAL> > result_values(nvars);
     for (std::size_t n = 0; n < nvars; ++n)

@@ -66,17 +66,8 @@ PROVIDES FUNCTION MultiPatch_LocalToGlobal2 \
   WITH MultiPatch1_LocalToGlobal2 \
   LANGUAGE C
 
-void FUNCTION InterpolateMultipatch( \
-  CCTK_POINTER_TO_CONST IN cctkGH, \
-  CCTK_INT IN npoints, \
-  CCTK_REAL ARRAY IN coordsx, \
-  CCTK_REAL ARRAY IN coordsy, \
-  CCTK_REAL ARRAY IN coordsz, \
-  CCTK_INT IN nvars, \
-  CCTK_INT ARRAY IN varinds, \
-  CCTK_INT ARRAY IN operations, \
-  CCTK_POINTER IN resultptrs)
-REQUIRES FUNCTION InterpolateMultipatch
+CCTK_INT FUNCTION GetEpoch()
+USES FUNCTION GetEpoch
 
 void FUNCTION MultiPatch_Interpolate( \
   CCTK_POINTER_TO_CONST IN cctkGH, \

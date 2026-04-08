@@ -12,6 +12,7 @@ ActiveThorns = "
     IOUtil
     ODESolvers
     SystemTopology
+    TimerReport
 "
 
 ###### Settings ######
@@ -53,9 +54,9 @@ CapyrX_MultiPatch::outer_boundary_radius = $rf
 CapyrX_MultiPatch::angular_cells         = $angular_cells
 CapyrX_MultiPatch::radial_cells          = $radial_cells
 
-CarpetX::ghost_size               = 3
-CarpetX::interpolation_order      = 1
-CapyrX_MultiPatch::patch_overlap  = 0 #2 * CarpetX::ghost_size
+CarpetX::ghost_size               = 2
+CarpetX::interpolation_order      = 4
+CapyrX_MultiPatch::patch_overlap  = 2
 
 # Dissipation and NewRadX
 CapyrX_WaveToy_SecondOrder::add_dissipation = no
@@ -63,7 +64,7 @@ CapyrX_WaveToy_SecondOrder::use_newradx     = yes
 
 # Initial data
 CapyrX_WaveToy_SecondOrder::initial_condition = "Gaussian"
-CapyrX_WaveToy_SecondOrder::amplitude         = 0.1
+CapyrX_WaveToy_SecondOrder::amplitude         = 1.0
 CapyrX_WaveToy_SecondOrder::gaussian_width    = 1.0 / 2.0
 
 # Boundary conditions
@@ -89,3 +90,8 @@ CarpetX::out_silo_vars = "
     CapyrX_WaveToy_SecondOrder::state
     CapyrX_WaveToy_SecondOrder::energy
 "
+
+TimerReport::out_every = $out_every
+TimerReport::out_filename = "TimerReport"
+TimerReport::output_schedule_timers = no
+TimerReport::n_top_timers = 100

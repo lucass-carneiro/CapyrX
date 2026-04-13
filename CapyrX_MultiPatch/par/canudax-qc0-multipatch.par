@@ -205,6 +205,7 @@ CanudaX_BSSNMoL::use_advection_stencils           = yes
 CanudaX_BSSNMoL::add_KO_dissipation               = yes
 CanudaX_BSSNMoL::diss_eps                         = $diss_eps
 CanudaX_BSSNMoL::diss_order                       = $diss_order
+CanudaX_BSSNMoL::taper_KO_at_boundary             = yes
 
 CanudaX_BSSNMoL::use_local_error_estimate         = no
 CanudaX_BSSNMoL::boundary_conditions              = "radiative"

@@ -205,7 +205,7 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
   if (current_epoch != g_interp_cache.epoch) {
     CCTK_VINFO("Interpolation cache out of date (cache epoch = %d. Current "
                "epoch = %d). Rebuilding",
-               g_interp_cache.epoch, current_epoch);
+               current_epoch, g_interp_cache.epoch);
 
     // Collect ghost-zone coordinates
     g_interp_cache.source_mapping.clear();

@@ -18,12 +18,12 @@ ActiveThorns = "
 "
 
 #################### Settings ####################
-$itlast      = 100000000
+$itlast      = 4 #100000000
 $final_time  = 300.0
 $max_runtime = 1 * 24 * 60 - 30 # minutes
 
 $out_every         = 64
-$out_silo_every    = 1024
+$out_silo_every    = 512
 $timer_every       = 64
 $constraints_every = 64
 $wave_every        = 64
@@ -32,11 +32,11 @@ $regrid_every      = 64
 
 $dtfac = 0.4
 
-$r0 = 64.0
-$rf = 200.0
+$r0 = 4.0
+$rf = 44.0
 
-$nr = ceil($rf - $r0)
-$na = ceil($r0 * 2)
+$nr = 320
+$na = 64
 
 $bh_sep  = 1.168642873
 $bh_mass = 0.453
@@ -48,7 +48,7 @@ $ghost_size = 3
 $diss_order = 5
 $diss_eps = 0.32
 
-$patch_overlap = 11
+$patch_overlap = 2
 $interp_order  = 4
 $interp_opts   = "order=4"
 ##################################################
@@ -103,37 +103,29 @@ CarpetX::boundary_upper_y = "neumann"
 CarpetX::boundary_upper_z = "neumann"
 
 # Mesh refinement
-CarpetX::max_num_levels = 7
+CarpetX::max_num_levels = 3
 CarpetX::regrid_every   = $regrid_every
 
 BoxInBox::num_regions  = 2
 
 BoxInBox::shape_1      = "cube"
-BoxInBox::num_levels_1 = 7
+BoxInBox::num_levels_1 = 3
 BoxInBox::position_x_1 = $bh_sep
 BoxInBox::position_y_1 = 0.0
 BoxInBox::position_z_1 = 0.0
 BoxInBox::radius_1     = [
   -1.0,
-  32.0,
-  16.0,
-  8.0,
-  4.0,
   2.0,
   1.0
 ]
 
 BoxInBox::shape_2      = "cube"
-BoxInBox::num_levels_2 = 7
+BoxInBox::num_levels_2 = 3
 BoxInBox::position_x_2 = -$bh_sep
 BoxInBox::position_y_2 = 0.0
 BoxInBox::position_z_2 = 0.0
 BoxInBox::radius_2     = [
   -1.0,
-  32.0,
-  16.0,
-  8.0,
-  4.0,
   2.0,
   1.0
 ]
@@ -205,7 +197,6 @@ CanudaX_BSSNMoL::use_advection_stencils           = yes
 CanudaX_BSSNMoL::add_KO_dissipation               = yes
 CanudaX_BSSNMoL::diss_eps                         = $diss_eps
 CanudaX_BSSNMoL::diss_order                       = $diss_order
-CanudaX_BSSNMoL::taper_KO_at_boundary             = yes
 
 CanudaX_BSSNMoL::use_local_error_estimate         = no
 CanudaX_BSSNMoL::boundary_conditions              = "radiative"
@@ -220,12 +211,12 @@ Multipole::verbose   = yes
 Multipole::nradii = 6
 Multipole::l_max  = 4
 
-Multipole::radius[0] = 25.0
-Multipole::radius[1] = 50.0
-Multipole::radius[2] = 100.0
-Multipole::radius[3] = 125.0
-Multipole::radius[4] = 150.0
-Multipole::radius[5] = 175.0
+Multipole::radius[0] = 2.0
+Multipole::radius[1] = 4.0
+Multipole::radius[2] = 8.0
+Multipole::radius[3] = 16.0
+Multipole::radius[4] = 32.0
+Multipole::radius[5] = 40.0
 
 Multipole::ntheta = 256
 Multipole::nphi   = 256
@@ -280,7 +271,7 @@ CarpetX::out_tsv_vars = "
 # Checkpoint and recovery
 IO::checkpoint_dir                  = "checkpoints_$parfile"
 IO::recover_dir                     = "checkpoints_$parfile"
-IO::checkpoint_ID                   = no
+IO::checkpoint_ID                   = yes
 IO::checkpoint_every_walltime_hours = 12
 IO::checkpoint_on_terminate         = yes
 IO::recover                         = "autoprobe"

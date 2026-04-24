@@ -20,6 +20,12 @@ PROVIDES FUNCTION MultiPatch_GetSystemSpecification \
   LANGUAGE C
 
 # Overall size of the domain
+CCTK_INT FUNCTION MultiPatch_PatchIsCartesian(CCTK_INT IN patch)
+PROVIDES FUNCTION MultiPatch_PatchIsCartesian \
+  WITH MultiPatch1_PatchIsCartesian \
+  LANGUAGE C
+
+# Overall size of the domain
 CCTK_INT FUNCTION MultiPatch_GetPatchSpecification2( \
   CCTK_INT IN patch, \
   CCTK_INT OUT is_cartesian, \
@@ -40,6 +46,7 @@ PROVIDES FUNCTION MultiPatch_GetBoundarySpecification2 \
     WITH MultiPatch1_GetBoundarySpecification2 \
     LANGUAGE C
 
+# Coordinate transformations
 void FUNCTION MultiPatch_GlobalToLocal2( \
   CCTK_INT IN npoints, \
   CCTK_REAL ARRAY IN globalsx, \

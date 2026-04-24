@@ -665,8 +665,8 @@ auto make_system(const PatchParams &par) -> PatchSystem {
                                  make_patch(PatchPiece::minus_x, par),
                                  make_patch(PatchPiece::plus_y, par),
                                  make_patch(PatchPiece::minus_y, par),
-                                 make_patch(PatchPiece::minus_z, par),
-                                 make_patch(PatchPiece::plus_z, par)}};
+                                 make_patch(PatchPiece::plus_z, par),
+                                 make_patch(PatchPiece::minus_z, par)}};
 }
 
 template <typename fp_type>

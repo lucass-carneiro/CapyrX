@@ -1078,6 +1078,7 @@ static inline auto make_patch(const PatchPiece &p, const PatchParams &par)
   };
 
   patch.is_cartesian = false;
+  patch.c_is_radial = true;
 
   PatchFace ob{true, -1};
   PatchFace co{false, static_cast<int>(PatchPiece::cartesian)};
@@ -1111,6 +1112,7 @@ static inline auto make_patch(const PatchPiece &p, const PatchParams &par)
     patch.faces = {{mx, my, mz}, {px, py, pz}};
 
     patch.is_cartesian = true;
+    patch.c_is_radial = false;
 
     break;
 

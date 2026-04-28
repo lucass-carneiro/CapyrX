@@ -19,10 +19,16 @@ PROVIDES FUNCTION MultiPatch_GetSystemSpecification \
   WITH MultiPatch1_GetSystemSpecification \
   LANGUAGE C
 
-# Overall size of the domain
+# Determine if a patch is cartesian
 CCTK_INT FUNCTION MultiPatch_PatchIsCartesian(CCTK_INT IN patch)
 PROVIDES FUNCTION MultiPatch_PatchIsCartesian \
   WITH MultiPatch1_PatchIsCartesian \
+  LANGUAGE C
+
+# Determine if the third local coordinate (c) of a patch is radial
+CCTK_INT FUNCTION MultiPatch_cIsRadial(CCTK_INT IN patch)
+PROVIDES FUNCTION MultiPatch_cIsRadial \
+  WITH MultiPatch1_cIsRadial \
   LANGUAGE C
 
 # Overall size of the domain

@@ -38,6 +38,12 @@ extern "C" CCTK_INT MultiPatch1_PatchIsCartesian(const CCTK_INT ipatch) {
   return static_cast<CCTK_INT>(patch.is_cartesian);
 }
 
+extern "C" CCTK_INT MultiPatch1_cIsRadial(const CCTK_INT ipatch) {
+  assert(ipatch >= 0 && ipatch < g_patch_system->patches.size());
+  const auto &patch{g_patch_system->patches.at(ipatch)};
+  return static_cast<CCTK_INT>(patch.c_is_radial);
+}
+
 extern "C" CCTK_INT MultiPatch1_GetPatchSpecification(
     const CCTK_INT ipatch, CCTK_INT *restrict const is_cartesian,
     const CCTK_INT size, CCTK_INT *restrict const ncells,

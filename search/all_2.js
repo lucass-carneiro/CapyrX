@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['globalfirstderivatives_0',['GlobalFirstDerivatives',['../structCapyrX_1_1MultiPatch_1_1GlobalDerivatives_1_1GlobalFirstDerivatives.html',1,'CapyrX::MultiPatch::GlobalDerivatives']]],
-  ['globalsecondderivatives_1',['GlobalSecondDerivatives',['../structCapyrX_1_1MultiPatch_1_1GlobalDerivatives_1_1GlobalSecondDerivatives.html',1,'CapyrX::MultiPatch::GlobalDerivatives']]]
+  ['faces_0',['faces',['../structCapyrX_1_1MultiPatch_1_1Patch.html#a507845eaa97d9318609bce3621860ba8',1,'CapyrX::MultiPatch::Patch']]]
 ];

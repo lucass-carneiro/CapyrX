@@ -1,5 +1,7 @@
 var searchData=
 [
-  ['name_0',['name',['../structCapyrX_1_1MultiPatch_1_1Patch.html#ad2f959b4f80017ced0b225e5a1fefbb6',1,'CapyrX::MultiPatch::Patch::name'],['../structCapyrX_1_1MultiPatch_1_1PatchSystem.html#aafe0f321131d9604eec171fb6ff4108e',1,'CapyrX::MultiPatch::PatchSystem::name']]],
-  ['ncells_1',['ncells',['../structCapyrX_1_1MultiPatch_1_1Patch.html#a8f50a949022f5dd7f122e5fda6ce5021',1,'CapyrX::MultiPatch::Patch']]]
+  ['less_3c_20multipatch_3a_3alocation_20_3e_0',['less&lt; MultiPatch::Location &gt;',['../structstd_1_1less_3_01MultiPatch_1_1Location_01_4.html',1,'std']]],
+  ['localfirstderivatives_1',['LocalFirstDerivatives',['../structCapyrX_1_1MultiPatch_1_1GlobalDerivatives_1_1LocalFirstDerivatives.html',1,'CapyrX::MultiPatch::GlobalDerivatives']]],
+  ['localsecondderivatives_2',['LocalSecondDerivatives',['../structCapyrX_1_1MultiPatch_1_1GlobalDerivatives_1_1LocalSecondDerivatives.html',1,'CapyrX::MultiPatch::GlobalDerivatives']]],
+  ['location_3',['Location',['../structCapyrX_1_1MultiPatch_1_1Location.html',1,'CapyrX::MultiPatch']]]
 ];

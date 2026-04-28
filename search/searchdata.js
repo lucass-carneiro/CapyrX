@@ -1,8 +1,8 @@
 var indexSectionsWithContent =
 {
-  0: "efghijlnopx",
+  0: "cefghijlnopx",
   1: "eghjlp",
-  2: "finopx"
+  2: "cfinopx"
 };
 
 var indexSectionNames =

@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['patches_0',['patches',['../structCapyrX_1_1MultiPatch_1_1PatchSystem.html#a35eb01d5acf73bf0a5b6cb6a771fb8e7',1,'CapyrX::MultiPatch::PatchSystem']]]
+  ['other_5fpatch_0',['other_patch',['../structCapyrX_1_1MultiPatch_1_1PatchFace.html#a12a53cafe683a9be5179a93dc9590dca',1,'CapyrX::MultiPatch::PatchFace']]]
 ];

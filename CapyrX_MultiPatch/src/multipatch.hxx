@@ -66,6 +66,11 @@ struct Patch {
   bool is_cartesian{false};
 
   /**
+   * Wether or not the third local coordinate (c) of a patch a radial direction.
+   */
+  bool c_is_radial{false};
+
+  /**
    * Store the 6 faces of a patch, repreenting its connection with other patches
    */
   faces_t faces{};

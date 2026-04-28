@@ -604,6 +604,7 @@ static inline auto make_patch(const PatchPiece &p, const PatchParams &par)
   };
 
   patch.is_cartesian = false;
+  patch.c_is_radial = true;
 
   PatchFace ob{true, -1};
   PatchFace px{false, static_cast<int>(PatchPiece::plus_x)};

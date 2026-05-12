@@ -319,9 +319,9 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
     resultptrs.at(n) = results.at(n).data();
   }
 
-  CarpetX::InterpolateFromSetup(*g_interp_cache.setup, nvars, varinds.data(),
-                                operations.data(), g_interp_cache.policy,
-                                resultptrs.data());
+  CarpetX::InterpolateUsingSetup(*g_interp_cache.setup, nvars, varinds.data(),
+                                 operations.data(), g_interp_cache.policy,
+                                 resultptrs.data());
 
   // Scatter interpolated values
   std::map<Location, std::vector<std::vector<CCTK_REAL> > > result_mapping;

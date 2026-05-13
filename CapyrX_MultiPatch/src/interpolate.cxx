@@ -12,6 +12,7 @@
 
 #include <map>
 #include <optional>
+#include <unordered_map>
 
 namespace CapyrX::MultiPatch {
 
@@ -75,9 +76,14 @@ template <> struct hash<MultiPatch::Location> {
 
 namespace CapyrX::MultiPatch {
 
+struct ComponentSlice {
+  std::size_t offset;
+  std::size_t length;
+};
+
 struct InterpolationCache {
-  // Epoch at which this cache was built. 0 = never built.
-  CCTK_INT epoch{0};
+  // Epoch at which this cache was built. -1 = never built.
+  CCTK_INT epoch{-1};
 
   // Ghost-zone coordinate mapping: Location -> (x,y,z) point lists.
   std::map<Location, PointList> source_mapping;
@@ -90,6 +96,13 @@ struct InterpolationCache {
 
   // Per-patch outer-boundary policy for InterpolateFromSetup.
   std::vector<Arith::vect<Arith::vect<bool, 3>, 2> > policy;
+
+  // Per-Location (offset, length) into the flat coords/results arrays.
+  // Built once per epoch alongside source_mapping; avoids scatter copy.
+  std::unordered_map<Location, ComponentSlice> slices;
+
+  // Result buffer reused across calls; resized only on epoch change.
+  std::vector<std::vector<CCTK_REAL> > results;
 };
 
 static InterpolationCache g_interp_cache;
@@ -258,9 +271,14 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
       }
     });
 
-    // Flatten into coordinate arrays
+    // Flatten into coordinate arrays and record per-Location slices.
     g_interp_cache.coords = {};
+    g_interp_cache.slices.clear();
+    std::size_t flat_offset = 0;
     for (const auto &[location, point_list] : g_interp_cache.source_mapping) {
+      const std::size_t length = point_list[0].size();
+      g_interp_cache.slices[location] = {flat_offset, length};
+      flat_offset += length;
       for (int d = 0; d < dim; ++d) {
         g_interp_cache.coords[d].insert(g_interp_cache.coords[d].end(),
                                         point_list[d].begin(),
@@ -274,6 +292,8 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
 
     // Build InterpolationSetup (expensive — skipped when epoch is unchanged)
     const std::size_t npoints_cache = g_interp_cache.coords[0].size();
+    for (auto &r : g_interp_cache.results)
+      r.resize(npoints_cache);
     g_interp_cache.setup.emplace(cctkGH, static_cast<CCTK_INT>(npoints_cache),
                                  g_interp_cache.coords[0].data(),
                                  g_interp_cache.coords[1].data(),
@@ -311,7 +331,8 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
 
   const std::vector<CCTK_INT> operations(nvars, 0);
 
-  std::vector<std::vector<CCTK_REAL> > results(nvars);
+  auto &results = g_interp_cache.results;
+  results.resize(nvars);
   std::vector<CCTK_REAL *> resultptrs(nvars);
 
   for (size_t n = 0; n < nvars; ++n) {
@@ -319,29 +340,9 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
     resultptrs.at(n) = results.at(n).data();
   }
 
-  CarpetX::InterpolateUsingSetup(*g_interp_cache.setup, nvars, varinds.data(),
-                                 operations.data(), g_interp_cache.policy,
-                                 resultptrs.data());
-
-  // Scatter interpolated values
-  std::map<Location, std::vector<std::vector<CCTK_REAL> > > result_mapping;
-
-  std::size_t pos = 0;
-  for (const auto &[location, source_points] : g_interp_cache.source_mapping) {
-    const std::size_t length = source_points[0].size();
-    std::vector<std::vector<CCTK_REAL> > result_values(nvars);
-    for (std::size_t n = 0; n < nvars; ++n)
-      result_values.at(n).insert(result_values.at(n).begin(),
-                                 results.at(n).data() + pos,
-                                 results.at(n).data() + pos + length);
-    pos += length;
-
-#pragma omp critical
-    {
-      result_mapping[location] = std::move(result_values);
-    }
-  }
-  assert(pos == results.at(0).size());
+  CarpetX::InterpolateUsingSetup(cctkGH, *g_interp_cache.setup, nvars,
+                                 varinds.data(), operations.data(),
+                                 g_interp_cache.policy, resultptrs.data());
 
   // Step 3: Write back results
   CarpetX::active_levels_t().loop_parallel([&](int patch, int level, int index,
@@ -355,12 +356,9 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
     const auto &patch_faces{current_patch.faces};
 
     const Location location{patch, level, index, component};
-    const std::vector<std::vector<CCTK_REAL> > &result_values =
-        result_mapping.at(location);
+    const ComponentSlice &slice = g_interp_cache.slices.at(location);
 
     for (std::size_t n = 0; n < nvars; ++n) {
-      const std::vector<CCTK_REAL> &result_values_n = result_values.at(n);
-
       const Loop::GF3D2<CCTK_REAL> var(
           layout,
           static_cast<CCTK_REAL *>(CCTK_VarDataPtrI(cctkGH, 0, varinds.at(n))));
@@ -380,11 +378,11 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
           }
         }
 
-        var(p.I) = result_values_n[pos];
+        var(p.I) = results[n][slice.offset + pos];
 
         pos++;
       });
-      assert(pos == result_values.at(0).size());
+      assert(pos == slice.length);
     }
   });
 

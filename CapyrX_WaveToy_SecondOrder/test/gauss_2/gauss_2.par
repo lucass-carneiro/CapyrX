@@ -86,7 +86,7 @@ IO::out_every = $out_every
 CarpetX::out_metadata    = no
 CarpetX::out_performance = no
 
-CarpetX::out_silo_vars = "
+CarpetX::out_tsv_vars = "
     CapyrX_WaveToy_SecondOrder::state
     CapyrX_WaveToy_SecondOrder::energy
 "

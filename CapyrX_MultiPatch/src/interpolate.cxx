@@ -340,9 +340,9 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
     resultptrs.at(n) = results.at(n).data();
   }
 
-  CarpetX::InterpolateUsingSetup(cctkGH, *g_interp_cache.setup, nvars,
-                                 varinds.data(), operations.data(),
-                                 g_interp_cache.policy, resultptrs.data());
+  g_interp_cache.setup.value().Interpolate(
+      cctkGH, nvars, varinds.data(), operations.data(), g_interp_cache.policy,
+      resultptrs.data());
 
   // Step 3: Write back results
   CarpetX::active_levels_t().loop_parallel([&](int patch, int level, int index,

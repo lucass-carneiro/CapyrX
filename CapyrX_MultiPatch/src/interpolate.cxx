@@ -341,6 +341,34 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
       cctkGH, nvars, varinds.data(), operations.data(), g_interp_cache.policy,
       resultptrs.data());
 
+  // Diagnostic: count NaN values in the interpolated results. Non-zero means
+  // source data in neighboring patches contains NaN (e.g. their interior cells
+  // were not yet filled before MultiPatch_Interpolate ran, or
+  // poison_undefined_values=yes is leaving interior ghosts uninitialized).
+  {
+    static bool g_nan_result_reported = false;
+    if (!g_nan_result_reported && nvars > 0 && npoints > 0) {
+      std::size_t n_nan = 0;
+      for (std::size_t n = 0; n < nvars; ++n)
+        for (std::size_t p = 0; p < npoints; ++p)
+          if (std::isnan(results[n][p])) ++n_nan;
+      if (n_nan > 0) {
+        g_nan_result_reported = true;
+        CCTK_VINFO("MultiPatch1_Interpolate: %zu NaN values in interpolated "
+                   "results (out of %zu points × %zu vars = %zu total). "
+                   "Source patches may have poisoned interior/ghost cells. "
+                   "Angular ghost cells filled from NaN will leave corner "
+                   "Neumann sources invalid even after MultiPatch.",
+                   n_nan, npoints, nvars, npoints * nvars);
+      } else {
+        CCTK_VINFO("MultiPatch1_Interpolate: all %zu interpolated values "
+                   "are non-NaN (%zu pts × %zu vars)",
+                   npoints * nvars, npoints, nvars);
+        g_nan_result_reported = true; // suppress future reports once clean
+      }
+    }
+  }
+
   // Step 3: Write back results
   {
     CarpetX::active_levels_t().loop_parallel([&](int patch, int level,
@@ -363,18 +391,27 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
       const Location location{patch, level, index, component};
       const ComponentSlice &slice = g_interp_cache.slices.at(location);
 
+      // Count ghost cells skipped due to outer boundary (includes pure outer
+      // cells and corner cells at the outer+interpatch intersection).
+      // Corner cells are NOT filled here and require a 2nd BC pass in
+      // SyncGroupsByDirI after this function returns.
+      int n_outer_skipped = 0;
       for (std::size_t n = 0; n < nvars; n++) {
         std::size_t pos = 0;
 
         // Note: This includes symmetry points
         grid.loop_bnd<0, 0, 0>(grid.nghostzones, [&](const Loop::PointDesc &p) {
-          // Skip outer boundaries
+          // Skip outer boundaries (pure outer ghost cells and corner cells at
+          // the outer+interpatch face intersection). Corner cells must be
+          // filled by the 2nd BC pass in SyncGroupsByDirI.
           for (int d = 0; d < dim; ++d) {
             if (p.NI[d] < 0 && patch_faces[0][d].is_outer_boundary) {
+              if (n == 0) ++n_outer_skipped;
               return;
             }
 
             if (p.NI[d] > 0 && patch_faces[1][d].is_outer_boundary) {
+              if (n == 0) ++n_outer_skipped;
               return;
             }
           }
@@ -384,6 +421,19 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
           pos++;
         });
         assert(pos == slice.length);
+      }
+      // Report once globally: a non-zero count confirms corner cells exist
+      // and were left unfilled (outer+interpatch intersection).
+      {
+        static bool g_skip_reported = false;
+        if (n_outer_skipped > 0 && component == 0 && !g_skip_reported) {
+          g_skip_reported = true;
+          CCTK_VINFO("MultiPatch1_Interpolate [patch %d level %d]: "
+                     "skipped %d outer-boundary ghost cells including "
+                     "corner cells at outer+interpatch face intersections; "
+                     "these are filled by the 2nd BC pass in SyncGroupsByDirI",
+                     patch, level, n_outer_skipped);
+        }
       }
     });
   }

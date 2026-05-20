@@ -51,6 +51,7 @@ if (use_newradx)
     READS: CoordinatesX::vertex_coords(everywhere)
     READS: MultiPatch::vertex_Jacobians(everywhere)
     READS: state(everywhere)
+    READS: rhs(interior)
     WRITES: rhs(interior)
   } "Apply NewRadX boundary condition"
 }

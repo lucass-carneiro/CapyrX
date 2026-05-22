@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['hash_3c_20multipatch_3a_3alocation_20_3e_0',['hash&lt; MultiPatch::Location &gt;',['../structstd_1_1hash_3_01MultiPatch_1_1Location_01_4.html',1,'std']]]
+  ['globalfirstderivatives_0',['GlobalFirstDerivatives',['../structCapyrX_1_1MultiPatch_1_1GlobalDerivatives_1_1GlobalFirstDerivatives.html',1,'CapyrX::MultiPatch::GlobalDerivatives']]],
+  ['globalsecondderivatives_1',['GlobalSecondDerivatives',['../structCapyrX_1_1MultiPatch_1_1GlobalDerivatives_1_1GlobalSecondDerivatives.html',1,'CapyrX::MultiPatch::GlobalDerivatives']]]
 ];

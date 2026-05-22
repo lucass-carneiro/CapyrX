@@ -272,45 +272,53 @@ CCTK_HOST CCTK_DEVICE auto d2local_dglobal2(const PatchParams &par, int patch,
 static inline auto make_patch(const PatchPiece &p, const PatchParams &par)
     -> Patch {
 
-  const auto twice_overlap = 2 * par.patch_overlap;
-  const CCTK_REAL dx{(par.xmax - par.xmin) / par.ncells_x};
-  const CCTK_REAL dy{(par.ymax - par.ymin) / par.ncells_y};
-  const CCTK_REAL dz{(par.zmax - par.zmin) / par.ncells_z};
+  const auto dx{(par.xmax - par.xmin) / par.ncells_x};
 
-  PatchFace ob{true, -1};
-  PatchFace lc{false, static_cast<int>(PatchPiece::left)};
-  PatchFace rc{false, static_cast<int>(PatchPiece::right)};
+  const PatchFace ob{true, -1};
+  const PatchFace lc{false, static_cast<int>(PatchPiece::left)};
+  const PatchFace rc{false, static_cast<int>(PatchPiece::right)};
 
   // Common patch data
   Patch patch{};
 
-  patch.ncells = {par.ncells_x + twice_overlap, par.ncells_y + twice_overlap,
-                  par.ncells_z + twice_overlap};
-
-  patch.xmin = {
-      CCTK_REAL{-1.0} - par.patch_overlap * dx,
-      CCTK_REAL{-1.0} - par.patch_overlap * dy,
-      CCTK_REAL{-1.0} - par.patch_overlap * dz,
-  };
-
-  patch.xmax = {CCTK_REAL{1.0} + par.patch_overlap * dx,
-                CCTK_REAL{1.0} + par.patch_overlap * dy,
-                CCTK_REAL{1.0} + par.patch_overlap * dz};
+  patch.ncells = {par.ncells_x + par.patch_overlap, par.ncells_y, par.ncells_z};
 
   patch.is_cartesian = false;
 
   // Specific patch data
   switch (p) {
 
-  case PatchPiece::left:
+  case PatchPiece::left: {
     patch.name = "Left";
-    patch.faces = {{ob, ob, ob}, {rc, ob, ob}};
-    break;
 
-  case PatchPiece::right:
-    patch.name = "Right";
-    patch.faces = {{lc, ob, ob}, {ob, ob, ob}};
+    patch.faces = {{ob, ob, ob}, {rc, ob, ob}};
+
+    patch.xmin = {
+        CCTK_REAL{-1.0},
+        CCTK_REAL{-1.0},
+        CCTK_REAL{-1.0},
+    };
+
+    patch.xmax = {CCTK_REAL{1.0} + par.patch_overlap * dx, CCTK_REAL{1.0},
+                  CCTK_REAL{1.0}};
     break;
+  }
+
+  case PatchPiece::right: {
+    patch.name = "Right";
+
+    patch.faces = {{lc, ob, ob}, {ob, ob, ob}};
+
+    patch.xmin = {
+        CCTK_REAL{-1.0} - par.patch_overlap * dx,
+        CCTK_REAL{-1.0},
+        CCTK_REAL{-1.0},
+    };
+
+    patch.xmax = {CCTK_REAL{1.0}, CCTK_REAL{1.0}, CCTK_REAL{1.0}};
+
+    break;
+  }
 
   default:
 #if !defined(__CUDACC__) && !defined(__HIP_PLATFORM_AMD__) &&                  \

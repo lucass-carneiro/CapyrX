@@ -1,5 +1,6 @@
 #include "multipatch.hxx"
 
+#include "../../../CarpetX/CarpetX/src/interp.hxx"
 #include "../../../CarpetX/CarpetX/src/schedule.hxx"
 #include "../../../CarpetX/CarpetX/src/timer.hxx"
 
@@ -9,7 +10,9 @@
 #include <nvtx3/nvToolsExt.h>
 #endif
 
-#include <map>
+#include <optional>
+#include <unordered_map>
+#include <utility>
 
 namespace CapyrX::MultiPatch {
 
@@ -18,15 +21,6 @@ struct Location {
   int level{0};
   int index{0};
   int component{0};
-};
-
-struct point_location {
-  int patch{0};
-  int level{0};
-  int component{0};
-  int i{0};
-  int j{0};
-  int k{0};
 };
 
 using PointList = std::array<std::vector<CCTK_REAL>, dim>;
@@ -51,15 +45,6 @@ template <> struct equal_to<MultiPatch::Location> {
   }
 };
 
-template <> struct less<MultiPatch::Location> {
-  bool operator()(const MultiPatch::Location &x,
-                  const MultiPatch::Location &y) const {
-    return std::less<std::array<int, 4> >()(
-        std::array<int, 4>{x.patch, x.level, x.index, x.component},
-        std::array<int, 4>{y.patch, y.level, y.index, y.component});
-  }
-};
-
 template <> struct hash<MultiPatch::Location> {
   std::size_t operator()(const MultiPatch::Location &x) const {
     return hash_combine(hash_combine(hash_combine(std::hash<int>()(x.patch),
@@ -72,6 +57,39 @@ template <> struct hash<MultiPatch::Location> {
 } // namespace std
 
 namespace CapyrX::MultiPatch {
+
+struct ComponentSlice {
+  std::size_t offset;
+  std::size_t length;
+};
+
+struct InterpolationCache {
+  // Epoch at which this cache was built. -1 = never built.
+  CCTK_INT epoch{-1};
+
+  // Ghost-zone source points in deterministic insertion order.
+  std::vector<std::pair<Location, PointList> > ordered_components;
+  // O(1) slot lookup used during the parallel fill phase.
+  std::unordered_map<Location, std::size_t> component_index;
+
+  // Flat coordinate arrays fed to InterpolationSetup.
+  PointList coords;
+
+  // The CarpetX interpolation setup (particle container + distribution).
+  std::optional<CarpetX::InterpolationSetup> setup;
+
+  // Per-patch outer-boundary policy for InterpolateFromSetup.
+  std::vector<Arith::vect<Arith::vect<bool, 3>, 2> > policy;
+
+  // Per-Location (offset, length) into the flat coords/results arrays.
+  // Built once per epoch alongside ordered_components; avoids scatter copy.
+  std::unordered_map<Location, ComponentSlice> slices;
+
+  // Result buffer reused across calls; resized only on epoch change.
+  std::vector<std::vector<CCTK_REAL> > results;
+};
+
+static InterpolationCache g_interp_cache;
 
 extern "C" void
 MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
@@ -177,19 +195,36 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
     // TODO: Check centerings table
   }
 
-  // Step 1: Find coordinates where we need to interpolate
-  std::map<Location, PointList> source_mapping{};
+  // Step 1: Rebuild the interpolation cache if the AMR epoch has changed.
 
-  CarpetX::active_levels_t().loop_parallel(
-      [&](int patch, int level, int index, int component, const cGH *cctkGH) {
+  const CCTK_INT current_epoch = GetEpoch();
+
+  if (current_epoch != g_interp_cache.epoch) {
+    CCTK_VINFO("Interpolation cache out of date (cache epoch = %d. Current "
+               "epoch = %d). Rebuilding",
+               g_interp_cache.epoch, current_epoch);
+
+    // Collect ghost-zone coordinates.
+    // Serial pass: assign each component a fixed slot so the parallel fill
+    // phase can write without any synchronisation.
+    g_interp_cache.ordered_components.clear();
+    g_interp_cache.component_index.clear();
+    CarpetX::active_levels_t().loop_serially(
+        [&](int patch, int level, int index, int component, const cGH *) {
+          const Location location{patch, level, index, component};
+          g_interp_cache.component_index[location] =
+              g_interp_cache.ordered_components.size();
+          g_interp_cache.ordered_components.emplace_back(location, PointList{});
+        });
+
+    // Parallel pass: each component writes to its pre-assigned slot.
+    {
+      CarpetX::active_levels_t().loop_parallel([&](int patch, int level,
+                                                   int index, int component,
+                                                   const cGH *cctkGH) {
         const Loop::GridDescBase grid(cctkGH);
         const std::array<int, dim> centering{0, 0, 0};
         const Loop::GF3D2layout layout(cctkGH, centering);
-
-        const auto &current_patch{g_patch_system->patches.at(patch)};
-        const auto &patch_faces{current_patch.faces};
-
-        const Location location{patch, level, index, component};
 
         const std::array<Loop::GF3D2<const CCTK_REAL>, dim> vcoords{
             Loop::GF3D2<const CCTK_REAL>(
@@ -201,6 +236,12 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
             Loop::GF3D2<const CCTK_REAL>(
                 layout, static_cast<const CCTK_REAL *>(CCTK_VarDataPtr(
                             cctkGH, 0, "CoordinatesX::vcoordz")))};
+
+        const auto &current_patch{g_patch_system->patches.at(patch)};
+        const auto &patch_faces{current_patch.faces};
+
+        const Location location{patch, level, index, component};
+        const std::size_t slot = g_interp_cache.component_index.at(location);
 
         PointList source_points;
 
@@ -221,114 +262,194 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
             source_points[d].push_back(vcoords[d](p.I));
           }
         });
-#pragma omp critical
-        {
-          source_mapping[location] = std::move(source_points);
-        }
+        g_interp_cache.ordered_components[slot].second =
+            std::move(source_points);
       });
-
-  // Step 2: Interpolate to these coordinates
-
-  // Gather all coordinates
-  PointList coords{};
-  for (const auto &[location, point_list] : source_mapping) {
-    for (int d = 0; d < dim; ++d) {
-      coords[d].insert(coords[d].end(), point_list[d].begin(),
-                       point_list[d].end());
     }
+
+    // Flatten into coordinate arrays and record per-Location slices.
+    g_interp_cache.coords = {};
+    g_interp_cache.slices.clear();
+    std::size_t flat_offset = 0;
+    for (const auto &[location, point_list] :
+         g_interp_cache.ordered_components) {
+      const std::size_t length = point_list[0].size();
+      g_interp_cache.slices[location] = {flat_offset, length};
+      flat_offset += length;
+      for (int d = 0; d < dim; ++d) {
+        g_interp_cache.coords[d].insert(g_interp_cache.coords[d].end(),
+                                        point_list[d].begin(),
+                                        point_list[d].end());
+      }
+    }
+
+    assert(g_interp_cache.coords[0].size() == g_interp_cache.coords[1].size() &&
+           g_interp_cache.coords[0].size() == g_interp_cache.coords[2].size() &&
+           g_interp_cache.coords[1].size() == g_interp_cache.coords[2].size());
+
+    // Build InterpolationSetup (expensive — skipped when epoch is unchanged)
+    const std::size_t npoints_cache = g_interp_cache.coords[0].size();
+    for (auto &r : g_interp_cache.results)
+      r.resize(npoints_cache);
+    g_interp_cache.setup.emplace(cctkGH, static_cast<CCTK_INT>(npoints_cache),
+                                 g_interp_cache.coords[0].data(),
+                                 g_interp_cache.coords[1].data(),
+                                 g_interp_cache.coords[2].data());
+
+    // Build per-patch outer-boundary policy
+    const int npatches = cctkGH->cctk_npatches;
+    g_interp_cache.policy.resize(npatches);
+
+    static const bool have_boundary_spec =
+        CCTK_IsFunctionAliased("MultiPatch_GetBoundarySpecification2");
+
+    if (have_boundary_spec) {
+      std::array<CCTK_INT, 2 * dim> spec;
+      for (int p = 0; p < npatches; ++p) {
+        MultiPatch_GetBoundarySpecification2(p, 2 * dim, spec.data());
+        for (int f = 0; f < 2; ++f)
+          for (int d = 0; d < dim; ++d)
+            g_interp_cache.policy[p][f][d] = !spec[2 * d + f];
+      }
+    } else {
+      for (int p = 0; p < npatches; ++p)
+        for (int f = 0; f < 2; ++f)
+          for (int d = 0; d < dim; ++d)
+            g_interp_cache.policy[p][f][d] = true;
+    }
+
+    g_interp_cache.epoch = current_epoch;
   }
 
-  assert(coords[0].size() == coords[1].size() &&
-         coords[0].size() == coords[2].size() &&
-         coords[1].size() == coords[2].size());
+  // Step 2: Interpolate using the cached setup.
 
   const std::size_t nvars = varinds.size();
-  const std::size_t npoints = coords[0].size();
+  const std::size_t npoints = g_interp_cache.coords[0].size();
 
   const std::vector<CCTK_INT> operations(nvars, 0);
 
-  // Allocate memory for values
-  std::vector<std::vector<CCTK_REAL> > results(nvars);
+  auto &results = g_interp_cache.results;
+  results.resize(nvars);
   std::vector<CCTK_REAL *> resultptrs(nvars);
-
-  results.reserve(nvars);
-  resultptrs.reserve(nvars);
 
   for (size_t n = 0; n < nvars; ++n) {
     results.at(n).resize(npoints);
     resultptrs.at(n) = results.at(n).data();
   }
 
-  // Interpolate
-  const bool allow_boundaries = false;
-  Interpolate(cctkGH, npoints, coords[0].data(), coords[1].data(),
-              coords[2].data(), varinds.size(), varinds.data(),
-              operations.data(), allow_boundaries, resultptrs.data());
+  g_interp_cache.setup.value().Interpolate(
+      cctkGH, nvars, varinds.data(), operations.data(), g_interp_cache.policy,
+      resultptrs.data());
 
-  // Scatter interpolated values
-  std::map<Location, std::vector<std::vector<CCTK_REAL> > > result_mapping;
-
-  std::size_t pos = 0;
-  for (const auto &[location, source_points] : source_mapping) {
-    const std::size_t length = source_points[0].size();
-    std::vector<std::vector<CCTK_REAL> > result_values(nvars);
-    for (std::size_t n = 0; n < nvars; ++n)
-      result_values.at(n).insert(result_values.at(n).begin(),
-                                 results.at(n).data() + pos,
-                                 results.at(n).data() + pos + length);
-    pos += length;
-
-#pragma omp critical
-    {
-      result_mapping[location] = std::move(result_values);
+// Diagnostic: count NaN values in the interpolated results. Non-zero means
+// source data in neighboring patches contains NaN (e.g. their interior cells
+// were not yet filled before MultiPatch_Interpolate ran, or
+// poison_undefined_values=yes is leaving interior ghosts uninitialized).
+#ifdef CCTK_DEBUG
+  {
+    static bool g_nan_result_reported = false;
+    if (!g_nan_result_reported && nvars > 0 && npoints > 0) {
+      std::size_t n_nan = 0;
+      for (std::size_t n = 0; n < nvars; ++n)
+        for (std::size_t p = 0; p < npoints; ++p)
+          if (std::isnan(results[n][p])) {
+            ++n_nan;
+          }
+      if (n_nan > 0) {
+        g_nan_result_reported = true;
+        CCTK_VINFO("MultiPatch1_Interpolate: %zu NaN values in interpolated "
+                   "results (out of %zu points x %zu vars = %zu total). Source "
+                   "patches may have poisoned interior/ghost cells. ",
+                   n_nan, npoints, nvars, npoints * nvars);
+      }
     }
   }
-  assert(pos == results.at(0).size());
+#endif // CCTK_DEBUG
 
   // Step 3: Write back results
-  CarpetX::active_levels_t().loop_parallel([&](int patch, int level, int index,
-                                               int component,
-                                               const cGH *cctkGH) {
-    const Loop::GridDescBase grid(cctkGH);
-    const std::array<int, dim> centering{0, 0, 0};
-    const Loop::GF3D2layout layout(cctkGH, centering);
+  {
+    CarpetX::active_levels_t().loop_parallel([&](int patch, int level,
+                                                 int index, int component,
+                                                 const cGH *cctkGH) {
+      const Loop::GridDescBase grid(cctkGH);
+      const std::array<int, dim> centering{0, 0, 0};
+      const Loop::GF3D2layout layout(cctkGH, centering);
 
-    const auto &current_patch{g_patch_system->patches.at(patch)};
-    const auto &patch_faces{current_patch.faces};
+      std::vector<Loop::GF3D2<CCTK_REAL> > vars;
+      vars.reserve(nvars);
+      for (const auto &varind : varinds) {
+        vars.emplace_back(layout, static_cast<CCTK_REAL *>(
+                                      CCTK_VarDataPtrI(cctkGH, 0, varind)));
+      }
 
-    const Location location{patch, level, index, component};
-    const std::vector<std::vector<CCTK_REAL> > &result_values =
-        result_mapping.at(location);
+      const auto &current_patch{g_patch_system->patches.at(patch)};
+      const auto &patch_faces{current_patch.faces};
 
-    for (std::size_t n = 0; n < nvars; ++n) {
-      const std::vector<CCTK_REAL> &result_values_n = result_values.at(n);
+      const Location location{patch, level, index, component};
+      const ComponentSlice &slice = g_interp_cache.slices.at(location);
 
-      const Loop::GF3D2<CCTK_REAL> var(
-          layout,
-          static_cast<CCTK_REAL *>(CCTK_VarDataPtrI(cctkGH, 0, varinds.at(n))));
+// Count ghost cells skipped due to outer boundary (includes pure outer
+// cells and corner cells at the outer+interpatch intersection).
+// Corner cells are NOT filled here and require a 2nd BC pass in
+// SyncGroupsByDirI after this function returns.
+#ifdef CCTK_DEBUG
+      int n_outer_skipped = 0;
+#endif // CCTK_DEBUG
 
-      std::size_t pos = 0;
+      for (std::size_t n = 0; n < nvars; n++) {
+        std::size_t pos = 0;
 
-      // Note: This includes symmetry points
-      grid.loop_bnd<0, 0, 0>(grid.nghostzones, [&](const Loop::PointDesc &p) {
-        // Skip outer boundaries
-        for (int d = 0; d < dim; ++d) {
-          if (p.NI[d] < 0 && patch_faces[0][d].is_outer_boundary) {
-            return;
+        // Note: This includes symmetry points
+        grid.loop_bnd<0, 0, 0>(grid.nghostzones, [&](const Loop::PointDesc &p) {
+          // Skip outer boundaries (pure outer ghost cells and corner cells at
+          // the outer+interpatch face intersection). Corner cells must be
+          // filled by the 2nd BC pass in SyncGroupsByDirI.
+          for (int d = 0; d < dim; ++d) {
+            if (p.NI[d] < 0 && patch_faces[0][d].is_outer_boundary) {
+
+#ifdef CCTK_DEBUG
+              if (n == 0) {
+                ++n_outer_skipped;
+              }
+#endif // CCTK_DEBUG
+
+              return;
+            }
+
+            if (p.NI[d] > 0 && patch_faces[1][d].is_outer_boundary) {
+
+#ifdef CCTK_DEBUG
+              if (n == 0) {
+                ++n_outer_skipped;
+              }
+#endif // CCTK_DEBUG
+
+              return;
+            }
           }
 
-          if (p.NI[d] > 0 && patch_faces[1][d].is_outer_boundary) {
-            return;
-          }
+          vars[n](p.I) = results[n][slice.offset + pos];
+
+          pos++;
+        });
+        assert(pos == slice.length);
+      }
+
+// Report once globally: a non-zero count confirms corner cells exist
+// and were left unfilled (outer+interpatch intersection).
+#ifdef CCTK_DEBUG
+      {
+        if (n_outer_skipped > 0 && component == 0) {
+          CCTK_VINFO("MultiPatch1_Interpolate [patch %d level %d]: "
+                     "skipped %d outer-boundary ghost cells including "
+                     "corner cells at outer+interpatch face intersections; "
+                     "these are filled by the 2nd BC pass in SyncGroupsByDirI",
+                     patch, level, n_outer_skipped);
         }
-
-        var(p.I) = result_values_n[pos];
-
-        pos++;
-      });
-      assert(pos == result_values.at(0).size());
-    }
-  });
+      }
+#endif // CCTK_DEBUG
+    });
+  }
 
 #ifdef __CUDACC__
   nvtxRangeEnd(range);

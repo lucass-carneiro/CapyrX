@@ -32,7 +32,7 @@ Cactus::presync_mode = "mixed-error"
 Cactus::cctk_show_schedule = yes
 
 CarpetX::verbose = yes
-CarpetX::poison_undefined_values = no
+CarpetX::poison_undefined_values = yes
 
 # Block distribution
 CarpetX::blocking_factor_x = 1
@@ -95,3 +95,4 @@ TimerReport::out_every = $out_every
 TimerReport::out_filename = "TimerReport"
 TimerReport::output_schedule_timers = no
 TimerReport::n_top_timers = 100
+

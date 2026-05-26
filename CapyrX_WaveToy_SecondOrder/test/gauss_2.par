@@ -11,7 +11,6 @@ ActiveThorns = "
     CoordinatesX
     IOUtil
     ODESolvers
-    TimerReport
 "
 
 ###### Settings ######
@@ -90,9 +89,3 @@ CarpetX::out_tsv_vars = "
     CapyrX_WaveToy_SecondOrder::state
     CapyrX_WaveToy_SecondOrder::energy
 "
-
-TimerReport::out_every = $out_every
-TimerReport::out_filename = "TimerReport"
-TimerReport::output_schedule_timers = no
-TimerReport::n_top_timers = 100
-

@@ -221,7 +221,6 @@ CarpetX/WaveToyX
 !TYPE        = git
 !URL         = https://github.com/einsteintoolkit/spacetimex.git
 !REPO_PATH   = $2
-!REPO_BRANCH = features/NewRadX-multipatch
 !CHECKOUT    =
 SpacetimeX/NewRadX
 

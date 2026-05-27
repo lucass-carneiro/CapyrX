@@ -6,35 +6,36 @@
 #include <loop_device.hxx>
 #include <global_derivatives.hxx>
 #include <newradx.hxx>
+#include <mat.hxx>
 
 namespace CapyrX::WaveToy {
 
 template <typename PointDescCallable>
 static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_DEVICE
-c4o_1_0_0(const Loop::PointDesc &p, PointDescCallable gf) noexcept
+c4o_1_0_0(int dir, const Loop::PointDesc &p, PointDescCallable gf) noexcept
     -> CCTK_REAL {
-  const auto num{gf(-2 * p.DI[0] + p.I) - 8 * gf(-p.DI[0] + p.I) +
-                 8 * gf(p.DI[0] + p.I) - gf(2 * p.DI[0] + p.I)};
+  const auto num{gf(dir, -2 * p.DI[0] + p.I) - 8 * gf(dir, -p.DI[0] + p.I) +
+                 8 * gf(dir, p.DI[0] + p.I) - gf(dir, 2 * p.DI[0] + p.I)};
   const auto den{1.0 / (12 * p.DX[0])};
   return num * den;
 }
 
 template <typename PointDescCallable>
 static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_DEVICE
-c4o_0_1_0(const Loop::PointDesc &p, PointDescCallable gf) noexcept
+c4o_0_1_0(int dir, const Loop::PointDesc &p, PointDescCallable gf) noexcept
     -> CCTK_REAL {
-  const auto num{gf(-2 * p.DI[1] + p.I) - 8 * gf(-p.DI[1] + p.I) +
-                 8 * gf(p.DI[1] + p.I) - gf(2 * p.DI[1] + p.I)};
+  const auto num{gf(dir, -2 * p.DI[1] + p.I) - 8 * gf(dir, -p.DI[1] + p.I) +
+                 8 * gf(dir, p.DI[1] + p.I) - gf(dir, 2 * p.DI[1] + p.I)};
   const auto den{1.0 / (12 * p.DX[1])};
   return num * den;
 }
 
 template <typename PointDescCallable>
 static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_DEVICE
-c4o_0_0_1(const Loop::PointDesc &p, PointDescCallable gf) noexcept
+c4o_0_0_1(int dir, const Loop::PointDesc &p, PointDescCallable gf) noexcept
     -> CCTK_REAL {
-  const auto num{gf(-2 * p.DI[2] + p.I) - 8 * gf(-p.DI[2] + p.I) +
-                 8 * gf(p.DI[2] + p.I) - gf(2 * p.DI[2] + p.I)};
+  const auto num{gf(dir, -2 * p.DI[2] + p.I) - 8 * gf(dir, -p.DI[2] + p.I) +
+                 8 * gf(dir, p.DI[2] + p.I) - gf(dir, 2 * p.DI[2] + p.I)};
   const auto den{1.0 / (12 * p.DX[2])};
   return num * den;
 }
@@ -56,160 +57,122 @@ extern "C" void CapyrX_WaveToy_RHS(CCTK_ARGUMENTS) {
   DECLARE_CCTK_PARAMETERS;
 
   using namespace Loop;
+  using namespace Arith;
   using namespace CapyrX::MultiPatch::GlobalDerivatives;
   using std::sqrt, std::pow;
 
-  grid.loop_int_device<
-      0, 0, 0>(grid.nghostzones, [=] CCTK_DEVICE(
-                                     const PointDesc
-                                         &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-    // We follow Eqs.(56)-(58) of https://arxiv.org/abs/gr-qc/0507004
+  grid.loop_int_device<0, 0, 0>(
+      grid.nghostzones,
+      [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+        /*
+         * We assemble the metric matrix object using Arith::smat and use
+         * it to compute determinants and inverses
+         */
+        const auto get_metric =
+            [&](const vect<int, dim> &pI) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+              const smat<CCTK_REAL, 3> g_dd{gxx(pI), gxy(pI), gxz(pI),
+                                            gyy(pI), gyz(pI), gzz(pI)};
+              return g_dd;
+            };
 
-    // flux_a = \partial_i(\alpha \Pi)
-    const auto flux_a = [&](const vect<int, dim> &pI) {
-      return alp(pI) * Pi(pI);
-    };
+        /*
+         * We use the Arith::vec object to represent rank-1
+         * pysical tensors (AKA vectors)
+         */
+        const auto get_shift =
+            [&](const vect<int, dim> &pI) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+              const vec<CCTK_REAL, 3> beta{betax(pI), betay(pI), betaz(pI)};
+              return beta;
+            };
 
-    // flux_b_i = \partial_i (g^{1/2} \beta^i \Pi + \alpha g^{1/2} H^{ij} d_j)
-    // where H^{ij} = g^{ij} - \alpha^{-2} \beta^i \beta^j
-    const auto flux_b_x = [&](const vect<int, dim>
-                                  &pI) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-      return (sqrt(-(pow(gxz(pI), 2) * gyy(pI)) +
-                   2 * gxy(pI) * gxz(pI) * gyz(pI) - gxx(pI) * pow(gyz(pI), 2) -
-                   pow(gxy(pI), 2) * gzz(pI) + gxx(pI) * gyy(pI) * gzz(pI)) *
-              (pow(alp(pI), 2) *
-                   (Dz(pI) * gxz(pI) * gyy(pI) - Dz(pI) * gxy(pI) * gyz(pI) -
-                    Dy(pI) * gxz(pI) * gyz(pI) + Dx(pI) * pow(gyz(pI), 2) +
-                    Dy(pI) * gxy(pI) * gzz(pI) - Dx(pI) * gyy(pI) * gzz(pI)) -
-               betax(pI) *
-                   (betax(pI) * Dx(pI) + betay(pI) * Dy(pI) +
-                    betaz(pI) * Dz(pI)) *
-                   (pow(gxz(pI), 2) * gyy(pI) -
-                    2 * gxy(pI) * gxz(pI) * gyz(pI) +
-                    gxx(pI) * pow(gyz(pI), 2) + pow(gxy(pI), 2) * gzz(pI) -
-                    gxx(pI) * gyy(pI) * gzz(pI)) +
-               alp(pI) * betax(pI) *
-                   (pow(gxz(pI), 2) * gyy(pI) -
-                    2 * gxy(pI) * gxz(pI) * gyz(pI) +
-                    gxx(pI) * pow(gyz(pI), 2) + pow(gxy(pI), 2) * gzz(pI) -
-                    gxx(pI) * gyy(pI) * gzz(pI)) *
-                   Pi(pI))) /
-             (alp(pI) *
-              (pow(gxz(pI), 2) * gyy(pI) - 2 * gxy(pI) * gxz(pI) * gyz(pI) +
-               pow(gxy(pI), 2) * gzz(pI) +
-               gxx(pI) * (pow(gyz(pI), 2) - gyy(pI) * gzz(pI))));
-    };
+        // Flux vector
+        const auto flux =
+            [&](int dir,
+                const vect<int, dim> &pI) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+              const auto g_dd = get_metric(pI);
+              const auto detg = calc_det(g_dd);
+              const auto sqrtdetg = sqrt(detg);
+              const auto g_uu = calc_inv(g_dd, detg);
 
-    const auto flux_b_y = [&](const vect<int, dim>
-                                  &pI) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-      return (sqrt(-(pow(gxz(pI), 2) * gyy(pI)) +
-                   2 * gxy(pI) * gxz(pI) * gyz(pI) - gxx(pI) * pow(gyz(pI), 2) -
-                   pow(gxy(pI), 2) * gzz(pI) + gxx(pI) * gyy(pI) * gzz(pI)) *
-              (pow(alp(pI), 2) *
-                   (-(Dz(pI) * gxy(pI) * gxz(pI)) + Dy(pI) * pow(gxz(pI), 2) +
-                    Dz(pI) * gxx(pI) * gyz(pI) - Dx(pI) * gxz(pI) * gyz(pI) -
-                    Dy(pI) * gxx(pI) * gzz(pI) + Dx(pI) * gxy(pI) * gzz(pI)) -
-               betay(pI) *
-                   (betax(pI) * Dx(pI) + betay(pI) * Dy(pI) +
-                    betaz(pI) * Dz(pI)) *
-                   (pow(gxz(pI), 2) * gyy(pI) -
-                    2 * gxy(pI) * gxz(pI) * gyz(pI) +
-                    gxx(pI) * pow(gyz(pI), 2) + pow(gxy(pI), 2) * gzz(pI) -
-                    gxx(pI) * gyy(pI) * gzz(pI)) +
-               alp(pI) * betay(pI) *
-                   (pow(gxz(pI), 2) * gyy(pI) -
-                    2 * gxy(pI) * gxz(pI) * gyz(pI) +
-                    gxx(pI) * pow(gyz(pI), 2) + pow(gxy(pI), 2) * gzz(pI) -
-                    gxx(pI) * gyy(pI) * gzz(pI)) *
-                   Pi(pI))) /
-             (alp(pI) *
-              (pow(gxz(pI), 2) * gyy(pI) - 2 * gxy(pI) * gxz(pI) * gyz(pI) +
-               pow(gxy(pI), 2) * gzz(pI) +
-               gxx(pI) * (pow(gyz(pI), 2) - gyy(pI) * gzz(pI))));
-    };
+              const vec<CCTK_REAL, 3> beta = get_shift(pI);
+              const vec<CCTK_REAL, 3> D{Dx(pI), Dy(pI), Dz(pI)};
 
-    const auto flux_b_z = [&](const vect<int, dim>
-                                  &pI) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-      return (sqrt(-(pow(gxz(pI), 2) * gyy(pI)) +
-                   2 * gxy(pI) * gxz(pI) * gyz(pI) - gxx(pI) * pow(gyz(pI), 2) -
-                   pow(gxy(pI), 2) * gzz(pI) + gxx(pI) * gyy(pI) * gzz(pI)) *
-              (pow(alp(pI), 2) *
-                   (-(Dy(pI) * gxy(pI) * gxz(pI)) + Dx(pI) * gxz(pI) * gyy(pI) +
-                    Dz(pI) * (pow(gxy(pI), 2) - gxx(pI) * gyy(pI)) +
-                    Dy(pI) * gxx(pI) * gyz(pI) - Dx(pI) * gxy(pI) * gyz(pI)) -
-               betaz(pI) *
-                   (betax(pI) * Dx(pI) + betay(pI) * Dy(pI) +
-                    betaz(pI) * Dz(pI)) *
-                   (pow(gxz(pI), 2) * gyy(pI) -
-                    2 * gxy(pI) * gxz(pI) * gyz(pI) +
-                    gxx(pI) * pow(gyz(pI), 2) + pow(gxy(pI), 2) * gzz(pI) -
-                    gxx(pI) * gyy(pI) * gzz(pI)) +
-               alp(pI) * betaz(pI) *
-                   (pow(gxz(pI), 2) * gyy(pI) -
-                    2 * gxy(pI) * gxz(pI) * gyz(pI) +
-                    gxx(pI) * pow(gyz(pI), 2) + pow(gxy(pI), 2) * gzz(pI) -
-                    gxx(pI) * gyy(pI) * gzz(pI)) *
-                   Pi(pI))) /
-             (alp(pI) *
-              (pow(gxz(pI), 2) * gyy(pI) - 2 * gxy(pI) * gxz(pI) * gyz(pI) +
-               pow(gxy(pI), 2) * gzz(pI) +
-               gxx(pI) * (pow(gyz(pI), 2) - gyy(pI) * gzz(pI))));
-    };
+              // Now we compute the flux
+              return sqrtdetg *
+                     (beta(dir) * Pi(pI) +
+                      alp(pI) * (g_uu(dir, 0) * D(0) + g_uu(dir, 1) * D(1) +
+                                 g_uu(dir, 2) * D(2)) -
+                      (1.0 / alp(pI)) * beta(dir) *
+                          (beta(0) * D(0) + beta(1) * D(1) + beta(2) * D(2)));
+            };
 
-    // Local derivatives of flux_a
-    const LocalFirstDerivatives l_dflux_a{
-        c4o_1_0_0(p, flux_a),
-        c4o_0_1_0(p, flux_a),
-        c4o_0_0_1(p, flux_a),
-    };
+        /*
+         * alpha * \Pi product
+         * Because of how we defined our derivative functions, we will have to
+         * pass a dummy direction argument to this scalar
+         */
+        const auto alpha_Pi =
+            [&](int, const vect<int, dim> &pI)
+                CCTK_ATTRIBUTE_ALWAYS_INLINE { return alp(pI) * Pi(pI); };
 
-    // Local derivatives of flux_b
-    const LocalFirstDerivatives l_dflux_b_x{
-        c4o_1_0_0(p, flux_b_x),
-        c4o_0_1_0(p, flux_b_x),
-        c4o_0_0_1(p, flux_b_x),
-    };
+        // Local derivatives of the flux vector
+        const LocalFirstDerivatives l_dFx = {
+            c4o_1_0_0(0, p, flux),
+            c4o_0_1_0(0, p, flux),
+            c4o_0_0_1(0, p, flux),
+        };
 
-    const LocalFirstDerivatives l_dflux_b_y{
-        c4o_1_0_0(p, flux_b_y),
-        c4o_0_1_0(p, flux_b_y),
-        c4o_0_0_1(p, flux_b_y),
-    };
+        const LocalFirstDerivatives l_dFy = {
+            c4o_1_0_0(1, p, flux),
+            c4o_0_1_0(1, p, flux),
+            c4o_0_0_1(1, p, flux),
+        };
 
-    const LocalFirstDerivatives l_dflux_b_z{
-        c4o_1_0_0(p, flux_b_z),
-        c4o_0_1_0(p, flux_b_z),
-        c4o_0_0_1(p, flux_b_z),
-    };
+        const LocalFirstDerivatives l_dFz = {
+            c4o_1_0_0(2, p, flux),
+            c4o_0_1_0(2, p, flux),
+            c4o_0_0_1(2, p, flux),
+        };
 
-    // Jacobians
-    const Jacobians jac{VERTEX_JACOBIANS(p)};
+        // local derivatives of alpha * \Pi
+        const LocalFirstDerivatives l_dalphaPi = {
+            c4o_1_0_0(0, p, alpha_Pi),
+            c4o_0_1_0(0, p, alpha_Pi),
+            c4o_0_0_1(0, p, alpha_Pi),
+        };
 
-    // Global derivatives of flux_a
-    const auto g_dflux_a{project_first(l_dflux_a, jac)};
+        // Jacobians
+        const Jacobians jac{VERTEX_JACOBIANS(p)};
 
-    // Global derivatives of flux_b
-    const auto g_dflux_b_x{project_first(l_dflux_b_x, jac)};
-    const auto g_dflux_b_y{project_first(l_dflux_b_y, jac)};
-    const auto g_dflux_b_z{project_first(l_dflux_b_z, jac)};
+        // Global derivatives of the flux vector
+        const auto g_dFx = project_first(l_dFx, jac);
+        const auto g_dFy = project_first(l_dFy, jac);
+        const auto g_dFz = project_first(l_dFz, jac);
 
-    // RHS
-    phi_rhs(p.I) = flux_a(p.I);
+        // Global derivatives of alpha * Pi
+        const auto g_dalphaPi = project_first(l_dalphaPi, jac);
 
-    Pi_rhs(p.I) =
-        (betax(p.I) * g_dflux_a.dx + betay(p.I) * g_dflux_a.dy +
-         betaz(p.I) * g_dflux_a.dz +
-         (alp(p.I) * (g_dflux_b_x.dx + g_dflux_b_y.dy + g_dflux_b_z.dz)) /
-             sqrt(-(pow(gxz(p.I), 2) * gyy(p.I)) +
-                  2 * gxy(p.I) * gxz(p.I) * gyz(p.I) -
-                  gxx(p.I) * pow(gyz(p.I), 2) - pow(gxy(p.I), 2) * gzz(p.I) +
-                  gxx(p.I) * gyy(p.I) * gzz(p.I))) /
-        alp(p.I);
+        /*
+         * We follow Eqs.(56)-(58) of https://arxiv.org/abs/gr-qc/0507004.
+         * IMPORTANT: These equations are not valid if the metric is not static.
+         */
+        const auto g_dd = get_metric(p.I);
+        const auto detg = calc_det(g_dd);
+        const auto sqrtdetg = sqrt(detg);
 
-    Dx_rhs(p.I) = g_dflux_a.dx;
-    Dy_rhs(p.I) = g_dflux_a.dy;
-    Dz_rhs(p.I) = g_dflux_a.dz;
-  });
+        const auto beta = get_shift(p.I);
+
+        phi_rhs(p.I) = alpha_Pi(0, p.I);
+
+        Pi_rhs(p.I) = (1 / alp(p.I)) *
+                          (beta(0) * g_dalphaPi.dx + beta(1) * g_dalphaPi.dy +
+                           beta(2) * g_dalphaPi.dz) +
+                      (1 / sqrtdetg) * (g_dFx.dx + g_dFy.dy + g_dFz.dz);
+
+        Dx_rhs(p.I) = g_dalphaPi.dx;
+        Dy_rhs(p.I) = g_dalphaPi.dy;
+        Dz_rhs(p.I) = g_dalphaPi.dz;
+      });
 }
 
 extern "C" void CapyrX_WaveToy_Dissipation(CCTK_ARGUMENTS) {

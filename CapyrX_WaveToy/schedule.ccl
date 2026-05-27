@@ -64,6 +64,7 @@ if (use_newradx)
 SCHEDULE CapyrX_WaveToy_Energy AT analysis
 {
   LANG: C
+  READS: ADMBaseX::metric(everywhere)
   READS: state(everywhere)
   WRITES: energy(everywhere)
 } "Calculate the energy density of the scalar wave equation"

@@ -64,6 +64,7 @@ SCHEDULE CapyrX_WaveToy_SecondOrder_Energy AT analysis
   READS: MultiPatch::vertex_Jacobians(everywhere)
   READS: MultiPatch::vertex_dJacobians(everywhere)
   WRITES: energy(interior)
+  SYNC: energy
 } "Calculate the energy density of the scalar wave equation"
 
 

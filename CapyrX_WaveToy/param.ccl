@@ -11,10 +11,15 @@ BOOLEAN add_dissipation "Add Kreiss-Oliger dissipation"
 {
 } no
 
-CCTK_REAL dissipation_epsilon "Kreiss-Oliger dissipation strength"
+CCTK_REAL cart_diss_eps "Kreiss-Oliger dissipation strength on cartesian patches"
 {
-  0.0:0.33 :: ""
+  0.0:*
 } 0.15
+
+CCTK_REAL curv_diss_eps "Kreiss-Oliger dissipation strength on curvilinear patches"
+{
+  0.0:*
+} 1.0
 
 BOOLEAN use_newradx "Use radiative boundary conditions"
 {

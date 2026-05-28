@@ -182,41 +182,36 @@ extern "C" void CapyrX_WaveToy_Dissipation(CCTK_ARGUMENTS) {
   using namespace Loop;
   using std::sqrt;
 
+  const auto patch_is_cartesian =
+      static_cast<bool>(CCTK_IsFunctionAliased("MultiPatch_PatchIsCartesian"))
+          ? static_cast<bool>(MultiPatch_PatchIsCartesian(grid.patch))
+          : true;
+
+  const auto dissipation_epsilon =
+      patch_is_cartesian ? cart_diss_eps : curv_diss_eps;
+
   grid.loop_int_device<0, 0, 0>(
       grid.nghostzones,
       [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-        const CCTK_REAL jac_norms[3] = {
-            sqrt(vJ_da_dx(p.I) * vJ_da_dx(p.I) + vJ_da_dy(p.I) * vJ_da_dy(p.I) +
-                 vJ_da_dz(p.I) * vJ_da_dz(p.I)),
-            sqrt(vJ_db_dx(p.I) * vJ_db_dx(p.I) + vJ_db_dy(p.I) * vJ_db_dy(p.I) +
-                 vJ_db_dz(p.I) * vJ_db_dz(p.I)),
-            sqrt(vJ_dc_dx(p.I) * vJ_dc_dx(p.I) + vJ_dc_dy(p.I) * vJ_dc_dy(p.I) +
-                 vJ_dc_dz(p.I) * vJ_dc_dz(p.I))};
+        const auto diss_phi{
+            dissipation_epsilon *
+            (diss_5<0>(p, phi) + diss_5<1>(p, phi) + diss_5<2>(p, phi))};
 
-        const auto diss_phi{dissipation_epsilon *
-                            (jac_norms[0] * diss_5<0>(p, phi) +
-                             jac_norms[1] * diss_5<1>(p, phi) +
-                             jac_norms[2] * diss_5<2>(p, phi))};
+        const auto diss_Pi{
+            dissipation_epsilon *
+            (diss_5<0>(p, Pi) + diss_5<1>(p, Pi) + diss_5<2>(p, Pi))};
 
-        const auto diss_Pi{dissipation_epsilon *
-                           (jac_norms[0] * diss_5<0>(p, Pi) +
-                            jac_norms[1] * diss_5<1>(p, Pi) +
-                            jac_norms[2] * diss_5<2>(p, Pi))};
+        const auto diss_Dx{
+            dissipation_epsilon *
+            (diss_5<0>(p, Dx) + diss_5<1>(p, Dx) + diss_5<2>(p, Dx))};
 
-        const auto diss_Dx{dissipation_epsilon *
-                           (jac_norms[0] * diss_5<0>(p, Dx) +
-                            jac_norms[1] * diss_5<1>(p, Dx) +
-                            jac_norms[2] * diss_5<2>(p, Dx))};
+        const auto diss_Dy{
+            dissipation_epsilon *
+            (diss_5<0>(p, Dy) + diss_5<1>(p, Dy) + diss_5<2>(p, Dy))};
 
-        const auto diss_Dy{dissipation_epsilon *
-                           (jac_norms[0] * diss_5<0>(p, Dy) +
-                            jac_norms[1] * diss_5<1>(p, Dy) +
-                            jac_norms[2] * diss_5<2>(p, Dy))};
-
-        const auto diss_Dz{dissipation_epsilon *
-                           (jac_norms[0] * diss_5<0>(p, Dz) +
-                            jac_norms[1] * diss_5<1>(p, Dz) +
-                            jac_norms[2] * diss_5<2>(p, Dz))};
+        const auto diss_Dz{
+            dissipation_epsilon *
+            (diss_5<0>(p, Dz) + diss_5<1>(p, Dz) + diss_5<2>(p, Dz))};
 
         phi_rhs(p.I) += diss_phi;
         Pi_rhs(p.I) += diss_Pi;

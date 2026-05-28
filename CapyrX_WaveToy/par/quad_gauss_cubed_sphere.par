@@ -15,10 +15,10 @@ $out_every  = 32
 $r0 = 5.0
 $rf = 4.0 * $r0
 
-$angular_cells = 20
+$angular_cells = 40
 $radial_cells  = 3 * $angular_cells / 2
 
-$cfl = 0.25
+$cfl = 0.45
 ######################
 
 # Misc options
@@ -59,7 +59,8 @@ CapyrX_WaveToy::amplitude           = 1.0
 CapyrX_WaveToy::gaussian_width      = 1.0 / 2.0
 CapyrX_WaveToy::quad_gaussian_R0    = $r0 / 4.5
 CapyrX_WaveToy::add_dissipation     = yes
-CapyrX_WaveToy::dissipation_epsilon = 0.2
+CapyrX_WaveToy::cart_diss_eps       = 0.2
+CapyrX_WaveToy::curv_diss_eps       = 1.0
 
 # Boundary conditions
 CarpetX::boundary_x = "linear extrapolation"

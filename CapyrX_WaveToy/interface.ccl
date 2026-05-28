@@ -14,6 +14,10 @@ INCLUDES HEADER: gaussian.hxx IN gaussian.hxx
 INCLUDES HEADER: standing_wave.hxx IN standing_wave.hxx
 INCLUDES HEADER: quad_gaussian.hxx IN quad_gaussian.hxx
 
+# Determine if patches are cartesian
+CCTK_INT FUNCTION MultiPatch_PatchIsCartesian(CCTK_INT IN patch)
+USES FUNCTION MultiPatch_PatchIsCartesian
+
 CCTK_REAL state TYPE=gf TAGS='rhs="rhs" dependents="energy error"'
 {
   phi

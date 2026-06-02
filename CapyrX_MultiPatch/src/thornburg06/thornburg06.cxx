@@ -583,24 +583,25 @@ static inline auto make_patch(const PatchPiece &p, const PatchParams &par)
 
   const auto twice_overlap = 2 * par.patch_overlap;
   const CCTK_REAL angular_delta = 2.0 / par.angular_cells;
-  const CCTK_REAL radial_delta = 2.0 / par.radial_cells;
 
   Patch patch{};
 
+  // Angular faces are interpatch — overlap is needed so the ghost zone has
+  // source cells for the interpolation.  Radial faces are outer boundaries
+  // (both inner and outer), so no radial overlap is needed or wanted.
   patch.ncells = {par.angular_cells + twice_overlap,
-                  par.angular_cells + twice_overlap,
-                  par.radial_cells + twice_overlap};
+                  par.angular_cells + twice_overlap, par.radial_cells};
 
   patch.xmin = {
       CCTK_REAL{-1.0} - par.patch_overlap * angular_delta,
       CCTK_REAL{-1.0} - par.patch_overlap * angular_delta,
-      CCTK_REAL{-1.0} - par.patch_overlap * radial_delta,
+      CCTK_REAL{-1.0},
   };
 
   patch.xmax = {
       CCTK_REAL{1.0} + par.patch_overlap * angular_delta,
       CCTK_REAL{1.0} + par.patch_overlap * angular_delta,
-      CCTK_REAL{1.0} + par.patch_overlap * radial_delta,
+      CCTK_REAL{1.0},
   };
 
   patch.is_cartesian = false;

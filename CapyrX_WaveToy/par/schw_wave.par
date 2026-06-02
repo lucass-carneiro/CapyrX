@@ -1,66 +1,141 @@
+# --- Resolution and domain sizing for Price-tail observation ---
+#
+# The initial Gaussian has σ = 3·r0/8 ≈ 0.131 M (with r0 = 0.35 M).
+# The radial map is linear: Δr = (r_outer - r_inner) / N_r ≈ r_outer / N_r.
+#
+# Constraint 1 – initial data must not collapse to a sub-cell spike.
+#   Below σ/Δr ≈ 0.5 roughly 40% of initial energy is lost to aliasing
+#   noise, producing an incorrect QNM amplitude.  Requirement:
+#     N_r  ≥  r_outer / (2σ)  ≈  4 × (r_outer / M)    [minimum]
+#     N_r  ≥  r_outer / σ     ≈  8 × (r_outer / M)    [comfortable]
+#
+# Constraint 2 – ℓ=2 Regge-Wheeler potential peaks at r_QI ≈ 2.6 M in
+#   quasi-isotropic coordinates.  Resolving it with ≥ 10 cells requires:
+#     Δr ≤ (2.6 - 0.35) / 10 ≈ 0.22 M  →  N_r ≥ 4.5 × (r_outer / M)
+#
+# Constraint 3 – Price-tail causality.  The outer boundary sends a spurious
+#   reflection (imperfect Sommerfeld absorption) back to extraction radius
+#   r_ext at coordinate time t_contam ≈ 2·r_outer − r_ext.  Data at r_ext is
+#   uncontaminated only for  t < t_contam.  Require T_final < t_contam:
+#     r_outer  >  (T_final + r_ext_max) / 2
+#
+# ┌──────────┬───────┬─────────┬─────────┬────────┬────────────┬─────────┐
+# │  Option  │  N_r  │ r_outer │ T_final │ σ/Δr   │ cells to   │ cost×   │
+# │          │       │         │         │        │  QNM peak  │         │
+# ├──────────┼───────┼─────────┼─────────┼────────┼────────────┼─────────┤
+# │ B (now)  │ 1600  │  200 M  │  400 M  │  1.05  │    18      │  ~5.5×  │
+# │ D (16 n) │ 2048  │  250 M  │  500 M  │  1.07  │    18      │  ~11×   │
+# └──────────┴───────┴─────────┴─────────┴────────┴────────────┴─────────┘
+# "cost×" is relative to the original run (N_r=1280, T=100 M, 8 nodes).
+# Δt = CFL × 2/N_r in local coordinates, independent of r_outer.
+# Step counts: B → ~711 K;  D → ~1.14 M.
+#
+# To switch to Option D (16 nodes):
+#   – change the three lines tagged [opt-B] to the values tagged [opt-D]
+#   – update the hardware comment block below accordingly
+#
+# --- AMD EPYC 7352 "Rome" CPU tuning – Option B (N_r=1600, N_ang=32) ---
+#
+# Target: dual-socket node (48 physical cores, Zen 2)
+#   NUMA topology: NPS=1 → 2 NUMA domains, 24 cores each (1 per socket)
+#   L2: 512 KB/core, L3: ~128 MB/socket, AVX2 (4 doubles/lane)
+#
+# Recommended launch (per node): 1 MPI rank per socket keeps threads NUMA-local
+#   mpirun -n 2 --map-by socket --bind-to socket ./cactus_sim schw_wave.par
+#   OMP_NUM_THREADS=24 OMP_PROC_BIND=close OMP_PLACES=cores
+#
+# Grid size per patch (valid interior with overlap=ghost=3):
+#   ncells = [32+6, 32+6, 1600+6] = [38, 38, 1606]
+#   Total valid pts: 6 patches × 38×38×1606 ≈ 13.9 M
+#
+# Box decomposition (MPI): blocking_factor=32
+#   Per patch: ceil(38/32)×ceil(38/32)×ceil(1606/32) = 2×2×51 = 204 boxes
+#   6 patches total: 1224 boxes
+#     8 nodes  (16 ranks): 1224/16 = 76.5 boxes/rank  [excellent]
+#    16 nodes  (32 ranks): 1224/32 = 38.3 boxes/rank  [good]
+#
+# Tiling (OpenMP): max_tile 32×8×8 = 2048 active pts
+#   Stencil footprint with ghost_size=3: 38×14×14 ~ 7.5k pts × ~7 vars × 8B ~ 415 KB
+#   → fits in L2 (512 KB), maximises cache reuse before L3 spill
+#   x is left unlimited so AMReX vectorises the full box width (SIMD along x)
+#   Tasks/rank (16 ranks): 76.5 boxes × 16 tiles/box / 24 threads ≈ 51 tiles/thread
+#   Tasks/rank (32 ranks): 38.3 boxes × 16 tiles/box / 24 threads ≈ 26 tiles/thread
+#
+# Option D (N_r=2048): ncells=[38,38,2054] → 260 boxes/patch → 1560 total
+#   32 ranks: 1560/32 = 48.8 boxes/rank  [excellent for 16-node runs]
+
 ActiveThorns = "
-    ADMBaseX
-    CanudaX_ExactID
-    CapyrX_MultiPatch
-    CapyrX_WaveToy
-    CarpetX
-    CoordinatesX
-    IOUtil
-#    Multipole
-    NewRadX
-    ODESolvers
-    SystemTopology
-    TimerReport
+  ADMBaseX
+  CanudaX_ExactID
+  CapyrX_MultiPatch
+  CapyrX_WaveToy
+  CarpetX
+  CoordinatesX
+  IOUtil
+  Multipole
+  NewRadX
+  ODESolvers
+  TimerReport
 "
 
-# https://arxiv.org/pdf/1401.1548
-
 ###### Settings ######
-$itlast      = 0 #100000000
-$final_time  = 1.0
-$max_runtime = 24 * 60 # In minutes
+$itlast      = 100000000
+$max_runtime = 3 * 24 * 60 - 10 # In minutes
 
-$out_every = 32
+$silo_every = 2048
+$out_every  = 128
 
-# In quisi-isotropic coordinates, for a non-spinning BH
+# In quasi-isotropic coordinates, for a non-spinning BH
 # See https://arxiv.org/pdf/1401.1548 appendix D, page 9
-$bh_mass = 1.0
+$bh_mass    = 1.0
 $bh_horizon = $bh_mass / 2.0
 
-$r0 = 0.9 * $bh_horizon
-$rf = 20.0 + $r0
+# r0 must be strictly inside the BH horizon (r_h = M/2 = 0.5 M in KQI isotropic
+# coordinates) so that all null characteristics at the inner boundary flow
+# inward and the "linear extrapolation" ghost-zone fill is stable.
+# With the radial overlap removed from the Thornburg06 patch (see thornburg06.cxx),
+# inner_boundary_radius directly sets the first evolved cell; no compensation
+# for a phantom radial ghost-zone extension is needed.
+$r0 = 0.8 * $bh_horizon   # = 0.4 M < r_h = 0.5 M  (inside horizon, alpha < 0)
 
-$radial_cells  = 200
-$angular_cells = 32
+# angular ncells = angular_cells + 2*patch_overlap = (32-6) + 6 = 32 (divisible by blocking=32)
+# radial  ncells = radial_cells (no radial overlap) → must itself be divisible by 32
+$radial_cells  = 1920       # [opt-B]; opt-D: 2048
+$angular_cells = 32   - 6
 
-$cfl = 0.25
+$rf         = 200.0 + $r0 # [opt-B]; opt-D: 250.0 + $r0
+$final_time = 400.0       # [opt-B]; opt-D: 500.0
 
-$interp_order  = 1
-$ghost_size    = 3
-$patch_overlap = 0
+$cfl = 0.45
 
-$diss_eps = 0.32
+$verbose = no
 ######################
 
 # Misc options
 Cactus::presync_mode       = "presync-only"
 Cactus::cctk_show_schedule = yes
 
-CarpetX::verbose                 = yes
-CarpetX::poison_undefined_values = yes
+# For performance runs disable diagnostic overhead
+CarpetX::verbose                 = $verbose
+CarpetX::poison_undefined_values = no
 
-# Block distribution
-CarpetX::blocking_factor_x = 1
-CarpetX::blocking_factor_y = 1
-CarpetX::blocking_factor_z = 1
+# Block distribution (MPI grid decomposition)
+CarpetX::blocking_factor_x = 32
+CarpetX::blocking_factor_y = 32
+CarpetX::blocking_factor_z = 32
+
+# Tiling (OpenMP threading within each MPI box)
+CarpetX::max_tile_size_x = 1024000  # unlimited – SIMD vectorises along x
+CarpetX::max_tile_size_y = 8
+CarpetX::max_tile_size_z = 8
 
 # Time integration
-ODESolvers::verbose = yes
+ODESolvers::verbose = $verbose
 ODESolvers::method  = "RK4"
 CarpetX::dtfac      = $cfl
 
 # Grid
-CapyrX_MultiPatch::verbose      =  yes
+CapyrX_MultiPatch::verbose      =  $verbose
 CapyrX_MultiPatch::patch_system = "Thornburg06"
 
 CapyrX_MultiPatch::inner_boundary_radius = $r0
@@ -68,10 +143,10 @@ CapyrX_MultiPatch::outer_boundary_radius = $rf
 CapyrX_MultiPatch::angular_cells         = $angular_cells
 CapyrX_MultiPatch::radial_cells          = $radial_cells
 
-CapyrX_MultiPatch::patch_overlap = $patch_overlap
+CarpetX::ghost_size          = 3
+CarpetX::interpolation_order = 3
 
-CarpetX::ghost_size          = $ghost_size
-CarpetX::interpolation_order = $interp_order
+CapyrX_MultiPatch::patch_overlap = 3
 
 # Spacetime initial data
 ADMBaseX::initial_data    = "KQI_ana"
@@ -84,13 +159,19 @@ CanudaX_ExactID::KQI_m_plus      = $bh_mass
 CanudaX_ExactID::KQI_pos_plus[0] = 1.0e-4 # Avoid singularity when the spin is 0
 CanudaX_ExactID::KQI_spin_plus   = 0.0
 
-
-# Initial data
-CapyrX_WaveToy::initial_condition   = "Quadrupolar Gaussian"
-CapyrX_WaveToy::amplitude           = 1.0
-CapyrX_WaveToy::gaussian_width      = 3.0 * $r0 / 8.0
-CapyrX_WaveToy::quad_gaussian_R0    = 2.0 * $bh_horizon
-CapyrX_WaveToy::dissipation_epsilon = $diss_eps
+# Scalar field initial data
+CapyrX_WaveToy::initial_condition = "Quadrupolar Gaussian"
+CapyrX_WaveToy::amplitude         = 1.0
+CapyrX_WaveToy::gaussian_width    = 3.0 * $r0 / 8.0
+CapyrX_WaveToy::quad_gaussian_R0  = 3.0 * $bh_horizon
+CapyrX_WaveToy::add_dissipation   = yes
+CapyrX_WaveToy::cart_diss_eps     = 0.0
+# curv_diss_eps = 1.0 was suppressing the Price tail: KO dissipation in
+# patch coordinates is applied isotropically, so a value of 1.0 damps
+# low-amplitude late-time signals.  0.1 retains stability while keeping
+# the tail above the numerical noise floor.
+CapyrX_WaveToy::curv_diss_eps     = 0.1
+CapyrX_WaveToy::use_newradx       = yes
 
 # Boundary conditions
 CarpetX::boundary_x       = "linear extrapolation"
@@ -101,20 +182,39 @@ CarpetX::boundary_upper_y = "linear extrapolation"
 CarpetX::boundary_upper_z = "linear extrapolation"
 
 # Multipole extraction
-#Multipole::verbose           = yes
-#Multipole::out_every         = $out_every
-#Multipole::l_max             = 4
-#Multipole::interpolator_pars = "order=3"
-#Multipole::nradii            = 4
-#Multipole::radius[0]         = 4.0
-#Multipole::radius[1]         = 6.0
-#Multipole::radius[2]         = 8.0
-#Multipole::radius[3]         = 10.0
-#Multipole::ntheta            = 256
-#Multipole::nphi              = 256
-#Multipole::variables = "
-#    Capyrx_WaveToy::phi
-#"
+#
+# Extraction radii are chosen outside the strong-field region (r ≫ M) where
+# the asymptotic Price-tail power law  rΦ ~ t^{-6}  is cleanly observable.
+# The outer boundary sends a spurious (imperfectly absorbed) reflection back
+# to each extraction sphere at t_contam ≈ 2·r_outer − r_ext.  Data at r_ext
+# is only reliable for  t < t_contam.
+#
+# With r_outer ≈ 200 M (Option B):
+#   radius  10 M → t_contam ≈ 390 M  (clean window 50–390 M, ~8 e-folds of t^{-6})
+#   radius  20 M → t_contam ≈ 380 M
+#   radius  40 M → t_contam ≈ 360 M
+#   radius  60 M → t_contam ≈ 340 M
+#   radius 100 M → t_contam ≈ 300 M  (still ~5 e-folds)
+#   radius 150 M → t_contam ≈ 250 M  (useful for early-time QNM comparison)
+#
+# Option D (r_outer ≈ 250 M): all t_contam values shift up by +50 M; can
+# safely add radius[5] = 200 M for near-boundary extraction cross-check.
+Multipole::verbose           = $verbose
+Multipole::out_every         = $out_every
+Multipole::l_max             = 4
+Multipole::interpolator_pars = "order=3"
+Multipole::nradii            = 6
+Multipole::radius[0]         = 10.0
+Multipole::radius[1]         = 20.0
+Multipole::radius[2]         = 40.0
+Multipole::radius[3]         = 60.0
+Multipole::radius[4]         = 100.0
+Multipole::radius[5]         = 150.0
+Multipole::ntheta            = 256
+Multipole::nphi              = 256
+Multipole::variables = "
+  Capyrx_WaveToy::phi
+"
 
 # Termination
 Cactus::terminate       = "any"
@@ -126,25 +226,34 @@ Cactus::cctk_itlast     = $itlast
 IO::out_dir   = $parfile
 IO::out_every = $out_every
 
+CarpetX::out_performance = no
+CarpetX::out_metadata    = no
+
 CarpetX::out_tsv = no
 CarpetX::out_tsv_vars = ""
 
-CarpetX::out_silo_vars = "
-    Capyrx_WaveToy::state
-    Capyrx_WaveToy::energy
+CarpetX::out_norm_omit_unstable = false
+CarpetX::out_norm_vars = "
+  Capyrx_WaveToy::energy
 "
+
+CarpetX::out_silo_every = $silo_every
+CarpetX::out_silo_vars = "
+  Capyrx_WaveToy::state
+  Capyrx_WaveToy::energy
+"
+
+# Checkpoint and recovery
+IO::checkpoint_dir                  = "checkpoints_$parfile"
+IO::recover_dir                     = "checkpoints_$parfile"
+IO::checkpoint_ID                   = yes
+IO::checkpoint_every_walltime_hours = 2
+IO::checkpoint_on_terminate         = yes
+IO::recover                         = "autoprobe"
+CarpetX::checkpoint_method          = "openpmd"
+CarpetX::recover_method             = "openpmd"
 
 TimerReport::out_every              = $out_every
 TimerReport::out_filename           = "TimerReport"
 TimerReport::output_schedule_timers = no
-TimerReport::n_top_timers           = 200
-
-# Checkpoint and recovery
-#IO::checkpoint_dir                  = "checkpoints_$parfile"
-#IO::recover_dir                     = "checkpoints_$parfile"
-#IO::checkpoint_ID                   = yes
-#IO::checkpoint_every_walltime_hours = 6
-#IO::checkpoint_on_terminate         = yes
-#IO::recover                         = "autoprobe"
-#CarpetX::checkpoint_method          = "openpmd"
-#CarpetX::recover_method             = "openpmd"
+TimerReport::n_top_timers           = 100

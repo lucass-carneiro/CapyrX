@@ -17,8 +17,8 @@ extern "C" void CapyrX_WaveToy_Error(CCTK_ARGUMENTS) {
 
   if (CCTK_EQUALS(initial_condition, "standing wave")) {
     grid.loop_all_device<0, 0, 0>(
-        grid.nghostzones, [=] CCTK_HOST CCTK_DEVICE(
-                              const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
           using std::fabs;
 
           const auto t{cctk_time};
@@ -49,9 +49,6 @@ extern "C" void CapyrX_WaveToy_Error(CCTK_ARGUMENTS) {
           Dy_error(p.I) = fabs(expected_Dy - actual_Dy);
           Dz_error(p.I) = fabs(expected_Dz - actual_Dz);
         });
-
-  } else {
-    CCTK_ERROR("Unknown initial condition");
   }
 }
 

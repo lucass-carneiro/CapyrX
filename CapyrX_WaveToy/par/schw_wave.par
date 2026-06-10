@@ -25,13 +25,12 @@ $silo_every = 4096
 $out_every  = 128
 
 $bh_mass    = 1.0
-$bh_spin    = 0.0
 $r0         = 1.8 * $bh_mass
-$rf         = 100.0 + $r0
+$rf         = 200.0 + $r0
 
 # angular ncells = angular_cells + 2*patch_overlap = (32-6) + 6 = 32 (divisible by blocking=32)
 # radial  ncells = radial_cells (no radial overlap), must itself be divisible by 32
-$radial_cells  = 1024 # dr = 0.09765625
+$radial_cells  = 1920 # dr = 1042
 $angular_cells = 32 - 6
 
 $verbose = no
@@ -76,7 +75,7 @@ CapyrX_MultiPatch::patch_overlap = 3
 
 # Spacetime initial data
 KerrSchildX::mass    = $bh_mass
-KerrSchildX::spin    = $bh_spin
+KerrSchildX::spin    = 0.0
 KerrSchildX::epsilon = 1.0e-8
 
 # Scalar field initial data

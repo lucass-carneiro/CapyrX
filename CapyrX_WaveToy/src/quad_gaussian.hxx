@@ -25,7 +25,7 @@ template <typename T>
 static inline auto CCTK_DEVICE Pi(T A, T sigma, T R0, T x0, T y0, T z0, T x,
                                   T y, T z) noexcept -> T {
   using std::sqrt, std::pow, std::exp;
-  return 0;
+  return 0.0;
 }
 
 template <typename T>

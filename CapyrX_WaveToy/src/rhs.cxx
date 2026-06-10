@@ -12,8 +12,8 @@ namespace CapyrX::WaveToy {
 
 template <typename PointDescCallable>
 static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_DEVICE
-c4o_1_0_0(int dir, const Loop::PointDesc &p, PointDescCallable gf) noexcept
-    -> CCTK_REAL {
+c4o_1_0_0(int dir, const Loop::PointDesc &p,
+          PointDescCallable gf) noexcept -> CCTK_REAL {
   const auto num{gf(dir, -2 * p.DI[0] + p.I) - 8 * gf(dir, -p.DI[0] + p.I) +
                  8 * gf(dir, p.DI[0] + p.I) - gf(dir, 2 * p.DI[0] + p.I)};
   const auto den{1.0 / (12 * p.DX[0])};
@@ -22,8 +22,8 @@ c4o_1_0_0(int dir, const Loop::PointDesc &p, PointDescCallable gf) noexcept
 
 template <typename PointDescCallable>
 static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_DEVICE
-c4o_0_1_0(int dir, const Loop::PointDesc &p, PointDescCallable gf) noexcept
-    -> CCTK_REAL {
+c4o_0_1_0(int dir, const Loop::PointDesc &p,
+          PointDescCallable gf) noexcept -> CCTK_REAL {
   const auto num{gf(dir, -2 * p.DI[1] + p.I) - 8 * gf(dir, -p.DI[1] + p.I) +
                  8 * gf(dir, p.DI[1] + p.I) - gf(dir, 2 * p.DI[1] + p.I)};
   const auto den{1.0 / (12 * p.DX[1])};
@@ -32,8 +32,8 @@ c4o_0_1_0(int dir, const Loop::PointDesc &p, PointDescCallable gf) noexcept
 
 template <typename PointDescCallable>
 static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_DEVICE
-c4o_0_0_1(int dir, const Loop::PointDesc &p, PointDescCallable gf) noexcept
-    -> CCTK_REAL {
+c4o_0_0_1(int dir, const Loop::PointDesc &p,
+          PointDescCallable gf) noexcept -> CCTK_REAL {
   const auto num{gf(dir, -2 * p.DI[2] + p.I) - 8 * gf(dir, -p.DI[2] + p.I) +
                  8 * gf(dir, p.DI[2] + p.I) - gf(dir, 2 * p.DI[2] + p.I)};
   const auto den{1.0 / (12 * p.DX[2])};
@@ -41,9 +41,9 @@ c4o_0_0_1(int dir, const Loop::PointDesc &p, PointDescCallable gf) noexcept
 }
 
 template <std::size_t dir>
-static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_DEVICE diss_5(
-    const Loop::PointDesc &p, const Loop::GF3D2<const CCTK_REAL> &gf) noexcept
-    -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_DEVICE
+diss_5(const Loop::PointDesc &p,
+       const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
   const auto fac{(1.0 / 64.0) * (1.0 / p.DX[dir])};
   const auto stencil{gf(p.I - 3 * p.DI[dir]) - 6.0 * gf(p.I - 2 * p.DI[dir]) +
                      15.0 * gf(p.I - 1 * p.DI[dir]) - 20.0 * gf(p.I) +
@@ -70,8 +70,8 @@ extern "C" void CapyrX_WaveToy_RHS(CCTK_ARGUMENTS) {
          */
         const auto get_metric =
             [&](const vect<int, dim> &pI) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-              const smat<CCTK_REAL, 3> g_dd{gxx(pI), gxy(pI), gxz(pI),
-                                            gyy(pI), gyz(pI), gzz(pI)};
+              const smat<CCTK_REAL, dim> g_dd{gxx(pI), gxy(pI), gxz(pI),
+                                              gyy(pI), gyz(pI), gzz(pI)};
               return g_dd;
             };
 
@@ -81,7 +81,7 @@ extern "C" void CapyrX_WaveToy_RHS(CCTK_ARGUMENTS) {
          */
         const auto get_shift =
             [&](const vect<int, dim> &pI) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-              const vec<CCTK_REAL, 3> beta{betax(pI), betay(pI), betaz(pI)};
+              const vec<CCTK_REAL, dim> beta{betax(pI), betay(pI), betaz(pI)};
               return beta;
             };
 
@@ -94,8 +94,8 @@ extern "C" void CapyrX_WaveToy_RHS(CCTK_ARGUMENTS) {
               const auto sqrtdetg = sqrt(detg);
               const auto g_uu = calc_inv(g_dd, detg);
 
-              const vec<CCTK_REAL, 3> beta = get_shift(pI);
-              const vec<CCTK_REAL, 3> D{Dx(pI), Dy(pI), Dz(pI)};
+              const auto beta = get_shift(pI);
+              const vec<CCTK_REAL, dim> D{Dx(pI), Dy(pI), Dz(pI)};
 
               // Now we compute the flux
               return sqrtdetg *
@@ -231,16 +231,16 @@ extern "C" void CapyrX_WaveToy_ApplyNewRadX(CCTK_ARGUMENTS) {
                 rad_power);
 
   NewRadX_Apply(cctkGH, Pi, Pi_rhs, NEWRADX_MULTIPATCH_QUANTITIES, 0.0, 1.0,
-                rad_power);
+                rad_power + 1.0);
 
   NewRadX_Apply(cctkGH, Dx, Dx_rhs, NEWRADX_MULTIPATCH_QUANTITIES, 0.0, 1.0,
-                rad_power);
+                rad_power + 1.0);
 
   NewRadX_Apply(cctkGH, Dy, Dy_rhs, NEWRADX_MULTIPATCH_QUANTITIES, 0.0, 1.0,
-                rad_power);
+                rad_power + 1.0);
 
   NewRadX_Apply(cctkGH, Dz, Dz_rhs, NEWRADX_MULTIPATCH_QUANTITIES, 0.0, 1.0,
-                rad_power);
+                rad_power + 1.0);
 }
 
 extern "C" void CapyrX_WaveToy_Sync(CCTK_ARGUMENTS) {

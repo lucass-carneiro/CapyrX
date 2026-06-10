@@ -1,6 +1,4 @@
 # Interface definition for thorn CapyrX_WaveToy
-# The implementatio will follow Eqs. (14)-(16) of 
-# http://arxiv.org/abs/gr-qc/0512001v1
 
 IMPLEMENTS: CapyrX_WaveToy
 
@@ -18,7 +16,7 @@ INCLUDES HEADER: quad_gaussian.hxx IN quad_gaussian.hxx
 CCTK_INT FUNCTION MultiPatch_PatchIsCartesian(CCTK_INT IN patch)
 USES FUNCTION MultiPatch_PatchIsCartesian
 
-CCTK_REAL state TYPE=gf TAGS='rhs="rhs" dependents="energy error"'
+CCTK_REAL state TYPE=gf TAGS='rhs="rhs" dependents="energy"'
 {
   phi
   Pi

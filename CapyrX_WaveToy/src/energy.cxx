@@ -15,8 +15,8 @@ extern "C" void CapyrX_WaveToy_Energy(CCTK_ARGUMENTS) {
   using namespace Arith;
 
   grid.loop_all_device<0, 0, 0>(
-      grid.nghostzones, [=] CCTK_HOST CCTK_DEVICE(
-                            const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+      grid.nghostzones,
+      [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
         const smat<CCTK_REAL, 3> g_dd{gxx(p.I), gxy(p.I), gxz(p.I),
                                       gyy(p.I), gyz(p.I), gzz(p.I)};
         const auto detg = calc_det(g_dd);

@@ -69,7 +69,7 @@ CarpetX::interpolation_order = $interp_order
 CapyrX_WaveToy::initial_condition   = "Quadrupolar Gaussian"
 CapyrX_WaveToy::amplitude           = 10.0
 CapyrX_WaveToy::gaussian_width      = $r0 / 8.0
-CapyrX_WaveToy::    = $r0 / 2.5
+CapyrX_WaveToy::gaussian_R0         = $r0 / 2.5
 CapyrX_WaveToy::dissipation_epsilon = $diss_eps
 
 # Boundary conditions

@@ -37,22 +37,21 @@ extern "C" void CapyrX_WaveToy_Initial(CCTK_ARGUMENTS) {
     grid.loop_all_device<0, 0, 0>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-          const auto t{cctk_time};
           const auto x{vcoordx(p.I)};
           const auto y{vcoordy(p.I)};
           const auto z{vcoordz(p.I)};
 
-          phi(p.I) = gauss::phi(amplitude, gaussian_width, t, x, y, z);
-          Pi(p.I) = gauss::Pi(amplitude, gaussian_width, t, x, y, z);
-          Dx(p.I) = gauss::Dx(amplitude, gaussian_width, t, x, y, z);
-          Dy(p.I) = gauss::Dy(amplitude, gaussian_width, t, x, y, z);
-          Dz(p.I) = gauss::Dz(amplitude, gaussian_width, t, x, y, z);
+          phi(p.I) = 0.0;
+          Pi(p.I) = gauss::Pi(amplitude, gaussian_width, gaussian_R0, x, y, z);
+          Dx(p.I) = 0.0;
+          Dy(p.I) = 0.0;
+          Dz(p.I) = 0.0;
         });
 
   } else if (CCTK_EQUALS(initial_condition, "Quadrupolar Gaussian")) {
     constexpr auto eps{std::numeric_limits<double>::epsilon()};
     const auto sigma{gaussian_width};
-    const auto R0{quad_gaussian_R0};
+    const auto R0{gaussian_R0};
     const auto x0{quad_gaussian_x0};
     const auto y0{quad_gaussian_y0};
     const auto z0{quad_gaussian_z0};

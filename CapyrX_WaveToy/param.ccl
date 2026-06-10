@@ -55,7 +55,7 @@ CCTK_REAL gaussian_width "width of Gaussian"
   (0:* :: ""
 } 1.0
 
-CCTK_REAL quad_gaussian_R0 "quadrupolar Gaussian R0"
+CCTK_REAL gaussian_R0 "Gaussian radius"
 {
   *:* :: ""
 } 1.0

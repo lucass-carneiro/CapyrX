@@ -9,23 +9,26 @@ ActiveThorns = "
 "
 
 ###### Settings ######
-$itlast       = 8
-$out_every_it = 1
+$itlast       = 256
+$out_every_it = 16
 
 $r0 = 1.0
-$rf = 4.0 * $r0
+$rf = 4.0
 
-$radial_cells  = 40
+$radial_cells  = 60
 $angular_cells = 40
 
 $cfl = 0.25
 
 $wave_k = 0.50
 
-$interp_order  = 3
+$interp_order  = 4
 $ghost_size    = 2
 $patch_overlap = 7
 ######################
+
+$dx = 2.0 / $angular_cells
+$dt = $cfl * $dx
 
 # Misc options
 Cactus::presync_mode = "mixed-error"
@@ -58,10 +61,10 @@ CarpetX::ghost_size          = $ghost_size
 CarpetX::interpolation_order = $interp_order
 
 # Initial data
-CapyrX_WaveToy::initial_condition = "Quadrupolar Gaussian"
+CapyrX_WaveToy::initial_condition = "Gaussian"
 CapyrX_WaveToy::amplitude         = 1.0
 CapyrX_WaveToy::gaussian_width    = $r0 / 4.0
-CapyrX_WaveToy::quad_gaussian_R0  = $r0 / 2.0
+CapyrX_WaveToy::gaussian_R0  = $r0 / 2.0
 
 # Boundary conditions
 CarpetX::boundary_x       = "dirichlet"
@@ -79,12 +82,13 @@ Cactus::cctk_itlast = $itlast
 IO::out_dir = $parfile
 IO::out_every = $out_every_it
 
-CarpetX::out_metadata = no
 CarpetX::out_performance = no
+CarpetX::out_metadata    = no
 
 CarpetX::out_tsv = no
-CarpetX::out_tsv_vars = "
+CarpetX::out_tsv_vars = ""
+
+CarpetX::out_silo_vars = "
     Capyrx_WaveToy::state
     Capyrx_WaveToy::energy
 "
-

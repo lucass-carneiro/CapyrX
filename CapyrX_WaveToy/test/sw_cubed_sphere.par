@@ -68,8 +68,10 @@ CarpetX::dtfac      = $cfl
 Cactus::terminate   = "iteration"
 Cactus::cctk_itlast = $itlast
 
-IO::out_dir = $parfile
-IO::out_every = $out_every_it
+# Output
+IO::out_dir       = $parfile
+IO::out_every     = $out_every
+IO::parfile_write = no
 
 CarpetX::out_performance = no
 CarpetX::out_metadata = no

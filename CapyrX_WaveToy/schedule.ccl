@@ -72,7 +72,7 @@ SCHEDULE CapyrX_WaveToy_Energy AT analysis
 
 
 # Evolution error
-if (CCTK_EQUALS(initial_condition, "standing wave") || CCTK_EQUALS(initial_condition, "Gaussian"))
+if (CCTK_EQUALS(initial_condition, "standing wave"))
 {
   SCHEDULE CapyrX_WaveToy_Error AT analysis
   {

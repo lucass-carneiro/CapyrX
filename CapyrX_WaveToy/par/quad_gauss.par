@@ -1,0 +1,102 @@
+ActiveThorns = "
+    ADMBaseX
+    CarpetX
+    IOUtil
+    ODESolvers
+    CoordinatesX
+    CapyrX_MultiPatch
+    CapyrX_WaveToy
+"
+
+###### Settings ######
+$itlast       = 4096
+$out_every_it = 32
+
+$r0 = 1.0
+$rf = 12.8 + $r0
+
+$cfl = 0.25
+
+$interp_order  = 3
+$ghost_size    = 3
+$patch_overlap = 3
+
+$radial_cells  = 128 - 2 * $patch_overlap
+$angular_cells = 32 - 2 * $patch_overlap
+
+$diss_cart = 0.1
+$diss_curv = 0.1
+######################
+
+# Misc options
+Cactus::presync_mode       = "mixed-error"
+Cactus::cctk_show_schedule = yes
+
+CarpetX::verbose                 = yes
+CarpetX::poison_undefined_values = yes
+
+# Block distribution (MPI grid decomposition)
+CarpetX::blocking_factor_x = 16
+CarpetX::blocking_factor_y = 16
+CarpetX::blocking_factor_z = 16
+
+# Tiling (OpenMP threading within each MPI box)
+CarpetX::max_tile_size_x = 1024000  # unlimited – SIMD vectorises along x
+CarpetX::max_tile_size_y = 8
+CarpetX::max_tile_size_z = 8
+
+# Time integration
+ODESolvers::verbose = yes
+ODESolvers::method  = "RK4"
+CarpetX::dtfac      = $cfl
+
+# Grid
+CapyrX_MultiPatch::verbose      =  yes
+CapyrX_MultiPatch::patch_system = "Cubed sphere"
+
+CapyrX_MultiPatch::inner_boundary_radius = $r0
+CapyrX_MultiPatch::outer_boundary_radius = $rf
+CapyrX_MultiPatch::angular_cells         = $angular_cells
+CapyrX_MultiPatch::radial_cells          = $radial_cells
+
+CapyrX_MultiPatch::patch_overlap = $patch_overlap
+
+CarpetX::ghost_size          = $ghost_size
+CarpetX::interpolation_order = $interp_order
+
+# Initial data
+CapyrX_WaveToy::initial_condition   = "Quadrupolar Gaussian"
+CapyrX_WaveToy::amplitude           = 1.0
+CapyrX_WaveToy::gaussian_width      = 1.0
+CapyrX_WaveToy::gaussian_R0         = 1.0
+CapyrX_WaveToy::use_newradx         = no
+CapyrX_WaveToy::add_dissipation     = no
+CapyrX_WaveToy::cart_diss_eps       = $diss_cart
+CapyrX_WaveToy::curv_diss_eps       = $diss_curv
+
+# Boundary conditions
+CarpetX::boundary_x       = "linear extrapolation"
+CarpetX::boundary_y       = "linear extrapolation"
+CarpetX::boundary_z       = "linear extrapolation"
+CarpetX::boundary_upper_x = "linear extrapolation"
+CarpetX::boundary_upper_y = "linear extrapolation"
+CarpetX::boundary_upper_z = "linear extrapolation"
+
+# Termination
+Cactus::terminate   = "iteration"
+Cactus::cctk_itlast = $itlast
+
+# Output
+IO::out_dir = $parfile
+IO::out_every = $out_every_it
+
+CarpetX::out_tsv = no
+CarpetX::out_tsv_vars = ""
+
+CarpetX::out_performance = no
+CarpetX::out_metadata    = no
+
+CarpetX::out_silo_vars = "
+    Capyrx_WaveToy::state
+    Capyrx_WaveToy::energy
+"

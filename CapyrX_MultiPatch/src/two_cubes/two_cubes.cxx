@@ -8,8 +8,8 @@ namespace CapyrX::MultiPatch::TwoCubes {
 enum class PatchPiece : int { left = 0, right = 1 };
 
 static inline CCTK_HOST CCTK_DEVICE auto
-get_owner_patch(const PatchParams &par, const svec_t &global_coords)
-    -> PatchPiece {
+get_owner_patch(const PatchParams &par,
+                const svec_t &global_coords) -> PatchPiece {
   const auto x{global_coords(0)};
   const auto interface{(par.xmax + par.xmin) / 2.0};
 
@@ -20,9 +20,9 @@ get_owner_patch(const PatchParams &par, const svec_t &global_coords)
   }
 }
 
-CCTK_HOST CCTK_DEVICE auto global2local(const PatchParams &par,
-                                        const svec_t &global_coords)
-    -> std_tuple<int, svec_t> {
+CCTK_HOST CCTK_DEVICE auto
+global2local(const PatchParams &par,
+             const svec_t &global_coords) -> std_tuple<int, svec_t> {
   const auto xmin{par.xmin};
   const auto xmax{par.xmax};
 
@@ -123,8 +123,8 @@ CCTK_HOST CCTK_DEVICE auto local2global(const PatchParams &par, int patch,
 }
 
 static inline CCTK_HOST CCTK_DEVICE auto
-get_jacs(const PatchParams &par, int patch, const svec_t &global_coords)
-    -> std_tuple<jac_t, djac_t> {
+get_jacs(const PatchParams &par, int patch,
+         const svec_t &global_coords) -> std_tuple<jac_t, djac_t> {
   using std::pow;
 
   jac_t J{};
@@ -150,10 +150,12 @@ get_jacs(const PatchParams &par, int patch, const svec_t &global_coords)
     J(0)(0) = 4 / (xmax - xmin);
     J(0)(1) = 0;
     J(0)(2) = 0;
-    J(1)(0) = (4 * bend * (xmax - xmin) * (y - ymax)) /
-              pow(2 * bend * (-x + xmin) + (xmax - xmin) * (ymax - ymin), 2);
-    J(1)(1) = (2 * (xmax - xmin)) /
-              (2 * bend * (-x + xmin) + (xmax - xmin) * (ymax - ymin));
+    J(1)
+    (0) = (4 * bend * (xmax - xmin) * (y - ymax)) /
+          pow(2 * bend * (-x + xmin) + (xmax - xmin) * (ymax - ymin), 2);
+    J(1)
+    (1) = (2 * (xmax - xmin)) /
+          (2 * bend * (-x + xmin) + (xmax - xmin) * (ymax - ymin));
     J(1)(2) = 0;
     J(2)(0) = 0;
     J(2)(1) = 0;
@@ -198,10 +200,12 @@ get_jacs(const PatchParams &par, int patch, const svec_t &global_coords)
     J(0)(0) = 4 / (xmax - xmin);
     J(0)(1) = 0;
     J(0)(2) = 0;
-    J(1)(0) = (-4 * bend * (xmax - xmin) * (y - ymax)) /
-              pow(2 * bend * (x - xmax) + (xmax - xmin) * (ymax - ymin), 2);
-    J(1)(1) = (2 * (xmax - xmin)) /
-              (2 * bend * (x - xmax) + (xmax - xmin) * (ymax - ymin));
+    J(1)
+    (0) = (-4 * bend * (xmax - xmin) * (y - ymax)) /
+          pow(2 * bend * (x - xmax) + (xmax - xmin) * (ymax - ymin), 2);
+    J(1)
+    (1) = (2 * (xmax - xmin)) /
+          (2 * bend * (x - xmax) + (xmax - xmin) * (ymax - ymin));
     J(1)(2) = 0;
     J(2)(0) = 0;
     J(2)(1) = 0;
@@ -252,9 +256,9 @@ get_jacs(const PatchParams &par, int patch, const svec_t &global_coords)
   return std_make_tuple(J, dJ);
 }
 
-CCTK_HOST CCTK_DEVICE auto dlocal_dglobal(const PatchParams &par, int patch,
-                                          const svec_t &local_coords)
-    -> std_tuple<svec_t, jac_t> {
+CCTK_HOST CCTK_DEVICE auto
+dlocal_dglobal(const PatchParams &par, int patch,
+               const svec_t &local_coords) -> std_tuple<svec_t, jac_t> {
   const auto data{d2local_dglobal2(par, patch, local_coords)};
   return std_make_tuple(std::get<0>(data), std::get<1>(data));
 }
@@ -269,8 +273,8 @@ CCTK_HOST CCTK_DEVICE auto d2local_dglobal2(const PatchParams &par, int patch,
                         std::get<1>(jacobian_results));
 }
 
-static inline auto make_patch(const PatchPiece &p, const PatchParams &par)
-    -> Patch {
+static inline auto make_patch(const PatchPiece &p,
+                              const PatchParams &par) -> Patch {
 
   const auto dx{(par.xmax - par.xmin) / par.ncells_x};
 
@@ -356,7 +360,7 @@ auto unit_test(std::size_t repetitions, std::size_t seed,
   using real_dist = std::uniform_real_distribution<CCTK_REAL>;
   using int_dist = std::uniform_int_distribution<CCTK_INT>;
 
-  std::mt19937 engine{static_cast<unsigned long>(seed)};
+  std::mt19937 engine{static_cast<std::mt19937>(seed)};
 
   real_dist x_dist{par.xmin, par.xmax};
   real_dist z_dist{par.ymin, par.ymax};

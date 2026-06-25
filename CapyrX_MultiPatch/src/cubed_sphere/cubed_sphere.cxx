@@ -21,8 +21,8 @@ enum class PatchPiece : int {
 };
 
 static inline CCTK_HOST CCTK_DEVICE auto
-get_owner_patch(const PatchParams &par, const svec_t &global_coords)
-    -> PatchPiece {
+get_owner_patch(const PatchParams &par,
+                const svec_t &global_coords) -> PatchPiece {
   using std::distance;
   using std::fabs;
   using std::max_element;
@@ -82,9 +82,9 @@ get_owner_patch(const PatchParams &par, const svec_t &global_coords)
   return PatchPiece::unknown;
 }
 
-CCTK_HOST CCTK_DEVICE auto global2local(const PatchParams &par,
-                                        const svec_t &global_coords)
-    -> std_tuple<int, svec_t> {
+CCTK_HOST CCTK_DEVICE auto
+global2local(const PatchParams &par,
+             const svec_t &global_coords) -> std_tuple<int, svec_t> {
   using std::pow;
   using std::sqrt;
 
@@ -360,11 +360,13 @@ cubed_sphere_jacs(const PatchParams &par, int patch,
     J(1)(0) = -(y / pow(x, 2));
     J(1)(1) = 1 / x;
     J(1)(2) = 0;
-    J(2)(0) = (4 * x) /
-              sqrt(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
-                   4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
-                   4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)));
-    J(2)(1) =
+    J(2)
+    (0) = (4 * x) /
+          sqrt(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+               4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+               4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)));
+    J(2)
+    (1) =
         (2 * y *
          (1 +
           (2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2)) /
@@ -372,7 +374,8 @@ cubed_sphere_jacs(const PatchParams &par, int patch,
                    4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
                    4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2))))) /
         pow(r0 - r1, 2);
-    J(2)(2) =
+    J(2)
+    (2) =
         (2 * z *
          (1 +
           (2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2)) /
@@ -475,7 +478,8 @@ cubed_sphere_jacs(const PatchParams &par, int patch,
     J(1)(0) = -(1 / y);
     J(1)(1) = x / pow(y, 2);
     J(1)(2) = 0;
-    J(2)(0) =
+    J(2)
+    (0) =
         (2 * x *
          (1 +
           (2 * r0 * (r0 - r1) + pow(x, 2) + pow(z, 2)) /
@@ -483,11 +487,13 @@ cubed_sphere_jacs(const PatchParams &par, int patch,
                    4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
                    4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2))))) /
         pow(r0 - r1, 2);
-    J(2)(1) = (4 * y) /
-              sqrt(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
-                   4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
-                   4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2)));
-    J(2)(2) =
+    J(2)
+    (1) = (4 * y) /
+          sqrt(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
+               4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+               4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2)));
+    J(2)
+    (2) =
         (2 * z *
          (1 +
           (2 * r0 * (r0 - r1) + pow(x, 2) + pow(z, 2)) /
@@ -590,11 +596,13 @@ cubed_sphere_jacs(const PatchParams &par, int patch,
     J(1)(0) = -(y / pow(x, 2));
     J(1)(1) = 1 / x;
     J(1)(2) = 0;
-    J(2)(0) = (4 * x) /
-              sqrt(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
-                   4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
-                   4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)));
-    J(2)(1) =
+    J(2)
+    (0) = (4 * x) /
+          sqrt(4 * pow(r1, 2) * pow(x, 2) + pow(pow(y, 2) + pow(z, 2), 2) +
+               4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+               4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2)));
+    J(2)
+    (1) =
         (2 * y *
          (1 +
           (2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2)) /
@@ -602,7 +610,8 @@ cubed_sphere_jacs(const PatchParams &par, int patch,
                    4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
                    4 * r0 * r1 * (2 * pow(x, 2) + pow(y, 2) + pow(z, 2))))) /
         pow(r0 - r1, 2);
-    J(2)(2) =
+    J(2)
+    (2) =
         (2 * z *
          (1 +
           (2 * r0 * (r0 - r1) + pow(y, 2) + pow(z, 2)) /
@@ -705,7 +714,8 @@ cubed_sphere_jacs(const PatchParams &par, int patch,
     J(1)(0) = -(1 / y);
     J(1)(1) = x / pow(y, 2);
     J(1)(2) = 0;
-    J(2)(0) =
+    J(2)
+    (0) =
         (2 * x *
          (1 +
           (2 * r0 * (r0 - r1) + pow(x, 2) + pow(z, 2)) /
@@ -713,11 +723,13 @@ cubed_sphere_jacs(const PatchParams &par, int patch,
                    4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
                    4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2))))) /
         pow(r0 - r1, 2);
-    J(2)(1) = (4 * y) /
-              sqrt(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
-                   4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
-                   4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2)));
-    J(2)(2) =
+    J(2)
+    (1) = (4 * y) /
+          sqrt(4 * pow(r1, 2) * pow(y, 2) + pow(pow(x, 2) + pow(z, 2), 2) +
+               4 * pow(r0, 2) * (pow(x, 2) + pow(y, 2) + pow(z, 2)) -
+               4 * r0 * r1 * (pow(x, 2) + 2 * pow(y, 2) + pow(z, 2)));
+    J(2)
+    (2) =
         (2 * z *
          (1 +
           (2 * r0 * (r0 - r1) + pow(x, 2) + pow(z, 2)) /
@@ -820,21 +832,24 @@ cubed_sphere_jacs(const PatchParams &par, int patch,
     J(1)(0) = 0;
     J(1)(1) = 1 / z;
     J(1)(2) = -(y / pow(z, 2));
-    J(2)(0) = (2 * x *
-               (1 + (2 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) /
-                        sqrt((pow(x, 2) + pow(y, 2)) *
-                                 (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
-                             4 * pow(r0 - r1, 2) * pow(z, 2)))) /
-              pow(r0 - r1, 2);
-    J(2)(1) = (2 * y *
-               (1 + (2 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) /
-                        sqrt((pow(x, 2) + pow(y, 2)) *
-                                 (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
-                             4 * pow(r0 - r1, 2) * pow(z, 2)))) /
-              pow(r0 - r1, 2);
-    J(2)(2) = (4 * z) / sqrt((pow(x, 2) + pow(y, 2)) *
-                                 (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
-                             4 * pow(r0 - r1, 2) * pow(z, 2));
+    J(2)
+    (0) = (2 * x *
+           (1 + (2 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) /
+                    sqrt((pow(x, 2) + pow(y, 2)) *
+                             (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                         4 * pow(r0 - r1, 2) * pow(z, 2)))) /
+          pow(r0 - r1, 2);
+    J(2)
+    (1) = (2 * y *
+           (1 + (2 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) /
+                    sqrt((pow(x, 2) + pow(y, 2)) *
+                             (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                         4 * pow(r0 - r1, 2) * pow(z, 2)))) /
+          pow(r0 - r1, 2);
+    J(2)
+    (2) = (4 * z) / sqrt((pow(x, 2) + pow(y, 2)) *
+                             (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                         4 * pow(r0 - r1, 2) * pow(z, 2));
 
     dJ(0)(0, 0) = 0;
     dJ(0)(0, 1) = 0;
@@ -923,21 +938,24 @@ cubed_sphere_jacs(const PatchParams &par, int patch,
     J(1)(0) = 0;
     J(1)(1) = -(1 / z);
     J(1)(2) = y / pow(z, 2);
-    J(2)(0) = (2 * x *
-               (1 + (2 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) /
-                        sqrt((pow(x, 2) + pow(y, 2)) *
-                                 (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
-                             4 * pow(r0 - r1, 2) * pow(z, 2)))) /
-              pow(r0 - r1, 2);
-    J(2)(1) = (2 * y *
-               (1 + (2 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) /
-                        sqrt((pow(x, 2) + pow(y, 2)) *
-                                 (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
-                             4 * pow(r0 - r1, 2) * pow(z, 2)))) /
-              pow(r0 - r1, 2);
-    J(2)(2) = (4 * z) / sqrt((pow(x, 2) + pow(y, 2)) *
-                                 (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
-                             4 * pow(r0 - r1, 2) * pow(z, 2));
+    J(2)
+    (0) = (2 * x *
+           (1 + (2 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) /
+                    sqrt((pow(x, 2) + pow(y, 2)) *
+                             (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                         4 * pow(r0 - r1, 2) * pow(z, 2)))) /
+          pow(r0 - r1, 2);
+    J(2)
+    (1) = (2 * y *
+           (1 + (2 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) /
+                    sqrt((pow(x, 2) + pow(y, 2)) *
+                             (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                         4 * pow(r0 - r1, 2) * pow(z, 2)))) /
+          pow(r0 - r1, 2);
+    J(2)
+    (2) = (4 * z) / sqrt((pow(x, 2) + pow(y, 2)) *
+                             (4 * r0 * (r0 - r1) + pow(x, 2) + pow(y, 2)) +
+                         4 * pow(r0 - r1, 2) * pow(z, 2));
 
     dJ(0)(0, 0) = 0;
     dJ(0)(0, 1) = 0;
@@ -1032,9 +1050,9 @@ cubed_sphere_jacs(const PatchParams &par, int patch,
   return std_make_tuple(J, dJ);
 }
 
-CCTK_HOST CCTK_DEVICE auto dlocal_dglobal(const PatchParams &par, int patch,
-                                          const svec_t &local_coords)
-    -> std_tuple<svec_t, jac_t> {
+CCTK_HOST CCTK_DEVICE auto
+dlocal_dglobal(const PatchParams &par, int patch,
+               const svec_t &local_coords) -> std_tuple<svec_t, jac_t> {
   const auto data{d2local_dglobal2(par, patch, local_coords)};
   return std_make_tuple(std::get<0>(data), std::get<1>(data));
 }
@@ -1050,8 +1068,8 @@ CCTK_HOST CCTK_DEVICE auto d2local_dglobal2(const PatchParams &par, int patch,
                         std::get<1>(jacobian_results));
 }
 
-static inline auto make_patch(const PatchPiece &p, const PatchParams &par)
-    -> Patch {
+static inline auto make_patch(const PatchPiece &p,
+                              const PatchParams &par) -> Patch {
 
   const auto twice_overlap = 2 * par.patch_overlap;
   const CCTK_REAL angular_delta = 2.0 / par.angular_cells;
@@ -1190,7 +1208,7 @@ auto unit_test(std::size_t repetitions, std::size_t seed,
   using real_dist = std::uniform_real_distribution<CCTK_REAL>;
   using int_dist = std::uniform_int_distribution<CCTK_INT>;
 
-  std::mt19937 engine{static_cast<unsigned long>(seed)};
+  std::mt19937 engine{static_cast<std::mt19937>(seed)};
 
   real_dist r_dist{0.0, par.outer_boundary};
   real_dist theta_dist{0.0, M_PI};

@@ -617,6 +617,8 @@ extern "C" void CapyrX_MultiPatch_Check_Parameters(CCTK_ARGUMENTS) {
   DECLARE_CCTK_PARAMETERS;
 
   if (CCTK_Equals(patch_system, "Cubed sphere")) {
+    // Make sure the patch sizes will produce mathematicall well defined
+    // coordinate transformations
     const auto cubed_sphere_radius_condition{
         outer_boundary_radius > 4.0 * inner_boundary_radius ||
         ((outer_boundary_radius - 4.0 * inner_boundary_radius) < 1.0e-8)};
@@ -625,6 +627,32 @@ extern "C" void CapyrX_MultiPatch_Check_Parameters(CCTK_ARGUMENTS) {
       CCTK_VERROR("When using the \"Cubed sphere\" patch system, please make "
                   "sure that that outer_boundary_radius >= 4 * "
                   "inner_boundary_radius.");
+    }
+
+    // Since I can't directly read CarpetX's interpolation_order parameter, I
+    // will have to read it like this
+    const auto interpolation_order_param_ptr =
+        CCTK_ParameterGet("interpolation_order", "CarpetX", nullptr);
+
+    if (interpolation_order_param_ptr == nullptr) {
+      CCTK_ERROR("Unable to read parameter interpolation_order from CarpetX");
+    }
+
+    const auto interpolation_order_param_val =
+        *static_cast<const CCTK_INT *>(interpolation_order_param_ptr);
+
+    // Make sure we have a confortable ammount of cell overlaps
+    using std::ceil;
+    const auto required_overlap =
+        static_cast<CCTK_INT>(ceil(interpolation_order_param_val / 2.0));
+    const auto enough_overlap = patch_overlap >= required_overlap;
+
+    if (!enough_overlap) {
+      CCTK_VERROR("The requested ammount of overlapping patch cells (%d) is "
+                  "not enough to honor the requested interpolation order of "
+                  "%d. Increase the patch overlap to at least %d",
+                  patch_overlap, interpolation_order_param_val,
+                  required_overlap);
     }
   }
 }

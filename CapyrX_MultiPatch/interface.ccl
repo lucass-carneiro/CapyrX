@@ -32,12 +32,6 @@ PROVIDES FUNCTION MultiPatch_cIsRadial \
   LANGUAGE C
 
 # Overall size of the domain
-CCTK_INT FUNCTION MultiPatch_PatchIsCartesian(CCTK_INT IN patch)
-PROVIDES FUNCTION MultiPatch_PatchIsCartesian \
-  WITH MultiPatch1_PatchIsCartesian \
-  LANGUAGE C
-
-# Overall size of the domain
 CCTK_INT FUNCTION MultiPatch_GetPatchSpecification2( \
   CCTK_INT IN patch, \
   CCTK_INT OUT is_cartesian, \

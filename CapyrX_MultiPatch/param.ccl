@@ -1,5 +1,7 @@
 # Parameter definitions for thorn CapyrX_MultiPatch
 
+PRIVATE:
+
 KEYWORD patch_system "Patch system"
 {
   "none" :: "disable multi-patch systems"

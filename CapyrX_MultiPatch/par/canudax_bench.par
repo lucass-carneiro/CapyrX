@@ -1,0 +1,90 @@
+###### Settings ######
+$itlast = 4
+
+$radial_cells  = 128 - 6
+$angular_cells = 64 - 6
+######################
+
+ActiveThorns = "
+  ADMBaseX
+  CanudaX_BSSNMoL
+  CapyrX_MultiPatch
+  CarpetX
+  CoordinatesX
+  IOUtil
+  ODESolvers
+  TimerReport
+  TmunuBaseX
+"
+
+# Driver
+Cactus::presync_mode             = "presync-only"
+Cactus::cctk_show_schedule       = yes
+
+CarpetX::verbose                 = no
+CarpetX::poison_undefined_values = no
+
+# Run Termination
+Cactus::terminate   = "iteration"
+Cactus::cctk_itlast = $itlast
+
+# Initial data
+ADMBaseX::initial_data = "Cartesian Minkowski"
+ADMBaseX::initial_lapse = "one"
+ADMBaseX::initial_shift = "zero"
+
+# Grid setup
+CarpetX::ghost_size = 3
+CarpetX::interpolation_order = 3
+
+CapyrX_MultiPatch::verbose       = no
+CapyrX_MultiPatch::patch_system  = "Cubed sphere"
+CapyrX_MultiPatch::patch_overlap = CarpetX::ghost_size
+
+CapyrX_MultiPatch::inner_boundary_radius = 0.25
+CapyrX_MultiPatch::outer_boundary_radius = 1.25
+CapyrX_MultiPatch::radial_cells          = $radial_cells
+CapyrX_MultiPatch::angular_cells         = $angular_cells
+
+# Block distribution (MPI grid decomposition)
+CarpetX::blocking_factor_x = 32
+CarpetX::blocking_factor_y = 32
+CarpetX::blocking_factor_z = 32
+
+# Tiling (OpenMP threading within each MPI box)
+CarpetX::max_tile_size_x = 1024000  # unlimited – SIMD vectorises along x
+CarpetX::max_tile_size_y = 8
+CarpetX::max_tile_size_z = 8
+
+# Boundary conditions
+CarpetX::boundary_x       = "linear extrapolation"
+CarpetX::boundary_y       = "linear extrapolation"
+CarpetX::boundary_z       = "linear extrapolation"
+CarpetX::boundary_upper_x = "linear extrapolation"
+CarpetX::boundary_upper_y = "linear extrapolation"
+CarpetX::boundary_upper_z = "linear extrapolation"
+
+# Time Integration
+CarpetX::dtfac      = 0.25
+ODESolvers::verbose = yes
+ODESolvers::method  = "RK4"
+
+# Spacetime evolution
+CanudaX_BSSNMoL::calculate_constraints    = yes
+CanudaX_BSSNMoL::impose_floors_at_initial = yes
+
+# Output
+IO::out_dir   = $parfile
+IO::out_every = -1
+
+CarpetX::out_performance = no
+CarpetX::out_metadata    = no
+
+# Timer output
+TimerReport::out_every                  = $itlast
+TimerReport::out_filename               = "TimerReport"
+TimerReport::n_top_timers               = 200
+TImerReport::output_all_timers          = yes
+TimerReport::output_all_timers_readable = yes
+TimerReport::output_all_timers_together = yes
+TimerReport::output_schedule_timers     = yes

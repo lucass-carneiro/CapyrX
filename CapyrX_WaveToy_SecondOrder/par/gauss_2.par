@@ -27,7 +27,7 @@ $interp_order = 3
 $overlap      = 2
 
 $angular_cells = 32 - 2 * $overlap
-$radial_cells  = 160 - 2 * $overlap
+$radial_cells  = 160 - $overlap
 
 $verbose = no
 ######################

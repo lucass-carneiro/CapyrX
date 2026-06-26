@@ -1081,7 +1081,7 @@ static inline auto make_patch(const PatchPiece &p,
 
   patch.ncells = {par.angular_cells + twice_overlap,
                   par.angular_cells + twice_overlap,
-                  par.radial_cells + twice_overlap};
+                  par.radial_cells + par.patch_overlap};
 
   patch.xmin = {
       CCTK_REAL{-1.0} - par.patch_overlap * angular_delta,
@@ -1092,7 +1092,7 @@ static inline auto make_patch(const PatchPiece &p,
   patch.xmax = {
       CCTK_REAL{1.0} + par.patch_overlap * angular_delta,
       CCTK_REAL{1.0} + par.patch_overlap * angular_delta,
-      CCTK_REAL{1.0}, // + par.patch_overlap * radial_delta,
+      CCTK_REAL{1.0},
   };
 
   patch.is_cartesian = false;

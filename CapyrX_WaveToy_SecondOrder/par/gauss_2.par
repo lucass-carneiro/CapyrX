@@ -17,36 +17,45 @@ ActiveThorns = "
 
 ###### Settings ######
 $final_time = 16.0
-$out_every = 32
+$out_every  = 32
 
-$r0 = 2.0
-$rf = 8.0
+$r0 = 1.0
+$rf = 11.0
 
-$angular_cells = 40
-$radial_cells  = 60
+$ghosts       = 2
+$interp_order = 3
+$overlap      = 2
 
-$cfl = 0.25
+$angular_cells = 32 - 2 * $overlap
+$radial_cells  = 160 - 2 * $overlap
+
+$verbose = no
 ######################
 
 # Misc options
-Cactus::presync_mode = "mixed-error"
+Cactus::presync_mode = "presync-only"
 Cactus::cctk_show_schedule = yes
 
-CarpetX::verbose = yes
+CarpetX::verbose = $verbose
 CarpetX::poison_undefined_values = no
 
-# Block distribution
-CarpetX::blocking_factor_x = 1
-CarpetX::blocking_factor_y = 1
-CarpetX::blocking_factor_z = 1
+# Block distribution (MPI grid decomposition)
+CarpetX::blocking_factor_x = 16
+CarpetX::blocking_factor_y = 16
+CarpetX::blocking_factor_z = 16
+
+# Tiling (OpenMP threading within each MPI box)
+CarpetX::max_tile_size_x = 1024000  # unlimited – SIMD vectorises along x
+CarpetX::max_tile_size_y = 8
+CarpetX::max_tile_size_z = 8
 
 # Time integration
 ODESolvers::method  = "RK4"
-ODESolvers::verbose = yes
-CarpetX::dtfac      = $cfl
+ODESolvers::verbose = $verbose
+CarpetX::dtfac      = 0.25
 
 # Grid
-CapyrX_MultiPatch::verbose        =  yes
+CapyrX_MultiPatch::verbose        =  $verbose
 CapyrX_MultiPatch::patch_system   = "Cubed sphere"
 
 CapyrX_MultiPatch::inner_boundary_radius = $r0
@@ -54,9 +63,9 @@ CapyrX_MultiPatch::outer_boundary_radius = $rf
 CapyrX_MultiPatch::angular_cells         = $angular_cells
 CapyrX_MultiPatch::radial_cells          = $radial_cells
 
-CarpetX::ghost_size               = 2
-CarpetX::interpolation_order      = 4
-CapyrX_MultiPatch::patch_overlap  = 2
+CarpetX::ghost_size              = $ghosts
+CarpetX::interpolation_order     = $interp_order
+CapyrX_MultiPatch::patch_overlap = $overlap
 
 # Dissipation and NewRadX
 CapyrX_WaveToy_SecondOrder::add_dissipation = no
@@ -94,4 +103,4 @@ CarpetX::out_silo_vars = "
 TimerReport::out_every = $out_every
 TimerReport::out_filename = "TimerReport"
 TimerReport::output_schedule_timers = no
-TimerReport::n_top_timers = 100
+TimerReport::n_top_timers = 200

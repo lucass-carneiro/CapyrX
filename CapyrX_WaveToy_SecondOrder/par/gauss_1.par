@@ -12,39 +12,46 @@ ActiveThorns = "
 "
 
 ###### Settings ######
-$itlast       = 4096
-$out_every_it = 16
+$final_time = 16.0
+$out_every  = 32
 
 $r0 = 1.0
-$rf = 9.0
+$rf = 11.0
 
-$radial_cells  = 40
-$angular_cells = 40
+$ghosts       = 2
+$interp_order = 3
+$overlap      = 2
 
-$cfl = 0.25
+$angular_cells = 32 - 2 * $overlap
+$radial_cells  = 160
 
-$diss_eps  = 0.2
-$rad_power = 1.0
+$verbose = no
 ######################
 
 # Misc options
-Cactus::presync_mode = "mixed-error"
+Cactus::presync_mode = "presync-only"
 Cactus::cctk_show_schedule = yes
 
-CarpetX::verbose = yes
-CarpetX::poison_undefined_values = yes
+CarpetX::verbose = $verbose
+CarpetX::poison_undefined_values = no
 
-# Block distribution
-CarpetX::blocking_factor_x = 1
-CarpetX::blocking_factor_y = 1
-CarpetX::blocking_factor_z = 1
+# Block distribution (MPI grid decomposition)
+CarpetX::blocking_factor_x = 16
+CarpetX::blocking_factor_y = 16
+CarpetX::blocking_factor_z = 16
+
+# Tiling (OpenMP threading within each MPI box)
+CarpetX::max_tile_size_x = 1024000  # unlimited – SIMD vectorises along x
+CarpetX::max_tile_size_y = 8
+CarpetX::max_tile_size_z = 8
 
 # Time integration
-ODESolvers::method = "RK4"
-CarpetX::dtfac      = $cfl
+ODESolvers::method  = "RK4"
+ODESolvers::verbose = $verbose
+CarpetX::dtfac      = 0.25
 
 # Grid
-CapyrX_MultiPatch::verbose        =  yes
+CapyrX_MultiPatch::verbose        =  $verbose
 CapyrX_MultiPatch::patch_system   = "Thornburg06"
 
 CapyrX_MultiPatch::inner_boundary_radius = $r0
@@ -52,17 +59,13 @@ CapyrX_MultiPatch::outer_boundary_radius = $rf
 CapyrX_MultiPatch::angular_cells         = $angular_cells
 CapyrX_MultiPatch::radial_cells          = $radial_cells
 
-CarpetX::ghost_size = 3
-
-# We are restricted to this becase we have no patch overlaps
-CarpetX::interpolation_order = 1
+CarpetX::ghost_size              = $ghosts
+CarpetX::interpolation_order     = $interp_order
+CapyrX_MultiPatch::patch_overlap = $overlap
 
 # Dissipation and NewRadX
-CapyrX_WaveToy_SecondOrder::add_dissipation = yes
-CapyrX_WaveToy_SecondOrder::use_newradx     = no
-
-CapyrX_WaveToy_SecondOrder::dissipation_epsilon = $diss_eps
-CapyrX_WaveToy_SecondOrder::rad_power           = $rad_power
+CapyrX_WaveToy_SecondOrder::add_dissipation = no
+CapyrX_WaveToy_SecondOrder::use_newradx     = yes
 
 # Initial data
 CapyrX_WaveToy_SecondOrder::initial_condition = "Quadrupolar Gaussian"
@@ -71,30 +74,30 @@ CapyrX_WaveToy_SecondOrder::gaussian_width    = 1.0 / 2.0
 CapyrX_WaveToy_SecondOrder::quad_gaussian_R0  = 4 * $r0
 
 # Boundary conditions
-CarpetX::boundary_x       = "dirichlet"
-CarpetX::boundary_y       = "dirichlet"
-CarpetX::boundary_z       = "dirichlet"
-CarpetX::boundary_upper_x = "dirichlet"
-CarpetX::boundary_upper_y = "dirichlet"
-CarpetX::boundary_upper_z = "dirichlet"
+CarpetX::boundary_x       = "neumann"
+CarpetX::boundary_y       = "neumann"
+CarpetX::boundary_z       = "neumann"
+CarpetX::boundary_upper_x = "neumann"
+CarpetX::boundary_upper_y = "neumann"
+CarpetX::boundary_upper_z = "neumann"
 
 # Termination
-Cactus::terminate   = "iteration"
-Cactus::cctk_itlast = $itlast
+Cactus::terminate       = "time"
+Cactus::cctk_final_time = $final_time
 
 # Output
 IO::out_dir = $parfile
-IO::out_every = $out_every_it
+IO::out_every = $out_every
 
-CarpetX::out_tsv = no
-CarpetX::out_tsv_vars = ""
+CarpetX::out_metadata    = no
+CarpetX::out_performance = no
 
 CarpetX::out_silo_vars = "
     CapyrX_WaveToy_SecondOrder::state
     CapyrX_WaveToy_SecondOrder::energy
 "
 
-TimerReport::out_every = $itlast
+TimerReport::out_every = $out_every
 TimerReport::out_filename = "TimerReport"
 TimerReport::output_schedule_timers = no
-TimerReport::n_top_timers = 100
+TimerReport::n_top_timers = 200

@@ -1092,7 +1092,7 @@ static inline auto make_patch(const PatchPiece &p,
   patch.xmax = {
       CCTK_REAL{1.0} + par.patch_overlap * angular_delta,
       CCTK_REAL{1.0} + par.patch_overlap * angular_delta,
-      CCTK_REAL{1.0} + par.patch_overlap * radial_delta,
+      CCTK_REAL{1.0}, // + par.patch_overlap * radial_delta,
   };
 
   patch.is_cartesian = false;

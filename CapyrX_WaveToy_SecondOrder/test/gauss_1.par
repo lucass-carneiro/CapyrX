@@ -1,0 +1,97 @@
+# Gaussian on the Thornburg06 system
+
+ActiveThorns = "
+    CapyrX_MultiPatch
+    CapyrX_WaveToy_SecondOrder
+    CarpetX
+    CoordinatesX
+    IOUtil
+    ODESolvers
+"
+
+###### Settings ######
+$itlast    = 32
+$out_every = 8
+
+$r0 = 1.0
+$rf = 11.0
+
+$ghosts       = 2
+$interp_order = 3
+$overlap      = 2
+
+$angular_cells = 32 - 2 * $overlap
+$radial_cells  = 160
+
+$verbose = yes
+######################
+
+# Misc options
+Cactus::presync_mode = "presync-only"
+Cactus::cctk_show_schedule = yes
+
+CarpetX::verbose = $verbose
+CarpetX::poison_undefined_values = yes
+
+# Block distribution (MPI grid decomposition)
+CarpetX::blocking_factor_x = 16
+CarpetX::blocking_factor_y = 16
+CarpetX::blocking_factor_z = 16
+
+# Tiling (OpenMP threading within each MPI box)
+CarpetX::max_tile_size_x = 1024000  # unlimited – SIMD vectorises along x
+CarpetX::max_tile_size_y = 8
+CarpetX::max_tile_size_z = 8
+
+# Time integration
+ODESolvers::method  = "RK4"
+ODESolvers::verbose = $verbose
+CarpetX::dtfac      = 0.25
+
+# Grid
+CapyrX_MultiPatch::verbose        =  $verbose
+CapyrX_MultiPatch::patch_system   = "Thornburg06"
+
+CapyrX_MultiPatch::inner_boundary_radius = $r0
+CapyrX_MultiPatch::outer_boundary_radius = $rf
+CapyrX_MultiPatch::angular_cells         = $angular_cells
+CapyrX_MultiPatch::radial_cells          = $radial_cells
+
+CarpetX::ghost_size              = $ghosts
+CarpetX::interpolation_order     = $interp_order
+CapyrX_MultiPatch::patch_overlap = $overlap
+
+# Dissipation and NewRadX
+CapyrX_WaveToy_SecondOrder::add_dissipation = no
+CapyrX_WaveToy_SecondOrder::use_newradx     = yes
+
+# Initial data
+CapyrX_WaveToy_SecondOrder::initial_condition = "Quadrupolar Gaussian"
+CapyrX_WaveToy_SecondOrder::amplitude         = 1.0
+CapyrX_WaveToy_SecondOrder::gaussian_width    = 1.0 / 2.0
+CapyrX_WaveToy_SecondOrder::quad_gaussian_R0  = 4 * $r0
+
+# Boundary conditions
+CarpetX::boundary_x       = "neumann"
+CarpetX::boundary_y       = "neumann"
+CarpetX::boundary_z       = "neumann"
+CarpetX::boundary_upper_x = "neumann"
+CarpetX::boundary_upper_y = "neumann"
+CarpetX::boundary_upper_z = "neumann"
+
+# Termination
+Cactus::terminate   = "iteration"
+Cactus::cctk_itlast = $itlast
+
+# Output
+IO::parfile_write = no
+IO::out_dir       = $parfile
+IO::out_every     = $out_every
+
+CarpetX::out_metadata    = no
+CarpetX::out_performance = no
+
+CarpetX::out_tsv_vars = "
+    CapyrX_WaveToy_SecondOrder::state
+    CapyrX_WaveToy_SecondOrder::energy
+"

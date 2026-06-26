@@ -43,8 +43,9 @@ CarpetX::boundary_upper_z = "dirichlet"
 
 CarpetX::interpolation_order = 0
 
-IO::out_dir = $parfile
-IO::out_every = 1
+IO::parfile_write = no
+IO::out_dir       = $parfile
+IO::out_every     = 1
 
 CarpetX::out_performance = no
 CarpetX::out_metadata = no

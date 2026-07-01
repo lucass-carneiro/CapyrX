@@ -81,6 +81,12 @@ struct InterpolationCache {
   // Per-patch outer-boundary policy for InterpolateFromSetup.
   std::vector<Arith::vect<Arith::vect<bool, 3>, 2> > policy;
 
+  // CarpetX's interpolation order. Needed to decide how many radial cells
+  // near a patch's own outer-radial face cannot be served by any donor's
+  // interpolation stencil once outer faces are excluded from `policy` (see
+  // mp_corners_2.md, fix A companion change).
+  CCTK_INT interpolation_order{1};
+
   // Per-Location (offset, length) into the flat coords/results arrays.
   // Built once per epoch alongside ordered_components; avoids scatter copy.
   std::unordered_map<Location, ComponentSlice> slices;
@@ -90,6 +96,43 @@ struct InterpolationCache {
 };
 
 static InterpolationCache g_interp_cache;
+
+// Fix A companion check (mp_corners_2.md): once outer faces are excluded
+// from the interpolation policy below, a target ghost point that is a
+// genuine interpatch (seam) ghost in some direction, but sits within
+// `nghostzones + interpolation_order` cells of a patch's own outer-radial
+// face, can no longer be served by any donor: the donor's radial stencil
+// would have to anchor inside its own outer-BC-filled ghost zone, which is
+// now disallowed, and the interpolator's anchor placement only ever nudges
+// by a single cell. Such points are excluded from MultiPatch1_Interpolate
+// below and instead filled by the same-patch fallback extrapolation.
+static bool is_within_donor_outer_reach(const Patch &patch,
+                                        const Loop::GridDescBase &grid,
+                                        const Loop::PointDesc &p,
+                                        const CCTK_INT interpolation_order) {
+  if (!patch.c_is_radial)
+    return false;
+
+  constexpr int d = 2; // c, the patch-local radial direction
+
+  if (p.NI[d] != 0)
+    return false; // already excluded as a literal outer-boundary ghost cell
+
+  for (int f = 0; f < 2; ++f) {
+    if (!patch.faces[f][d].is_outer_boundary)
+      continue;
+    if (!grid.bbox[f][d])
+      continue; // this component does not touch the outer face
+
+    const int nghost = grid.nghostzones[d];
+    const int dist = f == 0 ? p.I[d] - nghost
+                            : (grid.lsh[d] - nghost - 1) - p.I[d];
+    if (dist < nghost + interpolation_order)
+      return true;
+  }
+
+  return false;
+}
 
 extern "C" void
 MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
@@ -204,6 +247,21 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
                "epoch = %d). Rebuilding",
                g_interp_cache.epoch, current_epoch);
 
+    // Fix A companion (mp_corners_2.md): read CarpetX's interpolation order
+    // once per cache rebuild. Needed below (and in the write-back step) to
+    // determine which near-outer seam ghosts cannot be served by any donor
+    // once outer faces are excluded from the interpolation policy.
+    {
+      const auto *const interpolation_order_ptr =
+          static_cast<const CCTK_INT *>(
+              CCTK_ParameterGet("interpolation_order", "CarpetX", nullptr));
+      if (interpolation_order_ptr == nullptr) {
+        CCTK_ERROR(
+            "Unable to read parameter interpolation_order from CarpetX");
+      }
+      g_interp_cache.interpolation_order = *interpolation_order_ptr;
+    }
+
     // Collect ghost-zone coordinates.
     // Serial pass: assign each component a fixed slot so the parallel fill
     // phase can write without any synchronisation.
@@ -258,6 +316,16 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
             }
           }
 
+          // Fix A companion (mp_corners_2.md): also skip near-outer-radial
+          // seam ghosts that no donor can serve now that outer faces are
+          // excluded from the interpolation policy. The fallback
+          // extrapolation pass in the write-back step fills these instead.
+          if (is_within_donor_outer_reach(
+                  current_patch, grid, p,
+                  g_interp_cache.interpolation_order)) {
+            return;
+          }
+
           for (int d = 0; d < dim; ++d) {
             source_points[d].push_back(vcoords[d](p.I));
           }
@@ -309,13 +377,20 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
         MultiPatch_GetBoundarySpecification2(p, 2 * dim, spec.data());
         for (int f = 0; f < 2; ++f)
           for (int d = 0; d < dim; ++d)
-            g_interp_cache.policy[p][f][d] = !spec[2 * d + f];
+            // Allow an interpolation stencil to anchor into the ghost
+            // region only on genuine interpatch faces (filled with valid
+            // donor data by MultiPatch_Interpolate itself). On outer faces
+            // the ghost cells hold low-order BC-extrapolated values that
+            // are not valid interior data; push the stencil inward there
+            // instead, so interpatch results never depend on a
+            // neighbour's outer BC (fix A, mp_corners_2.md).
+            g_interp_cache.policy[p][f][d] = spec[2 * d + f];
       }
     } else {
       for (int p = 0; p < npatches; ++p)
         for (int f = 0; f < 2; ++f)
           for (int d = 0; d < dim; ++d)
-            g_interp_cache.policy[p][f][d] = true;
+            g_interp_cache.policy[p][f][d] = false;
     }
 
     g_interp_cache.epoch = current_epoch;
@@ -394,6 +469,7 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
 // SyncGroupsByDirI after this function returns.
 #ifdef CCTK_DEBUG
       int n_outer_skipped = 0;
+      int n_donor_reach_skipped = 0;
 #endif // CCTK_DEBUG
 
       for (std::size_t n = 0; n < nvars; n++) {
@@ -428,6 +504,23 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
             }
           }
 
+          // Fix A companion (mp_corners_2.md): skip near-outer-radial seam
+          // ghosts that no donor can serve now that outer faces are
+          // excluded from the interpolation policy; the fallback
+          // extrapolation pass below fills them instead.
+          if (is_within_donor_outer_reach(
+                  current_patch, grid, p,
+                  g_interp_cache.interpolation_order)) {
+
+#ifdef CCTK_DEBUG
+            if (n == 0) {
+              ++n_donor_reach_skipped;
+            }
+#endif // CCTK_DEBUG
+
+            return;
+          }
+
           vars[n](p.I) = results[n][slice.offset + pos];
 
           pos++;
@@ -446,8 +539,91 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
                      "these are filled by the 2nd BC pass in SyncGroupsByDirI",
                      patch, level, n_outer_skipped);
         }
+        if (n_donor_reach_skipped > 0 && component == 0) {
+          CCTK_VINFO(
+              "MultiPatch1_Interpolate [patch %d level %d]: skipped %d "
+              "near-outer-radial seam ghost cells that no donor could serve "
+              "under the flipped interpolation policy (fix A, "
+              "mp_corners_2.md); these are filled by the same-patch "
+              "fallback extrapolation below",
+              patch, level, n_donor_reach_skipped);
+        }
       }
 #endif // CCTK_DEBUG
+
+      // Step 3b (fix A companion, mp_corners_2.md): fill the near-outer-
+      // radial seam ghosts skipped above via same-patch quadratic
+      // extrapolation along the radial direction. Layers are filled one at
+      // a time, marching outward from already-valid data (dist descending),
+      // so each layer only ever reads strictly-more-interior data that is
+      // either genuinely donor-interpolated above or was extrapolated by an
+      // earlier iteration of this same loop. This keeps a neighbour's
+      // BC-contaminated outer-radial ghost data out of the interpatch
+      // channel entirely, while still providing a finite, continuous value
+      // for these seam cells.
+      if (current_patch.c_is_radial) {
+        constexpr int d_rad = 2;
+        const int nghost_r = grid.nghostzones[d_rad];
+        const CCTK_INT order = g_interp_cache.interpolation_order;
+
+        for (int f_rad = 0; f_rad < 2; ++f_rad) {
+          if (!patch_faces[f_rad][d_rad].is_outer_boundary)
+            continue;
+          if (!grid.bbox[f_rad][d_rad])
+            continue;
+
+          const int threshold = nghost_r + order;
+          const int last_interior = grid.lsh[d_rad] - nghost_r - 1;
+          const int sign = f_rad == 0 ? +1 : -1;
+
+          if (grid.lsh[d_rad] < 2 * nghost_r + order + 3) {
+            CCTK_VERROR(
+                "MultiPatch1_Interpolate [patch %d level %d]: radial "
+                "extent (%d cells) is too small to fall back to "
+                "same-patch extrapolation for near-outer seam ghosts "
+                "(need at least %d cells); increase the number of radial "
+                "cells or decrease interpolation_order.",
+                patch, level, grid.lsh[d_rad], 2 * nghost_r + order + 3);
+          }
+
+          for (int k = threshold - 1; k >= 0; --k) {
+            const int idx_rad = f_rad == 0 ? nghost_r + k : last_interior - k;
+
+            grid.loop_bnd<0, 0, 0>(
+                grid.nghostzones, [&](const Loop::PointDesc &p) {
+                  if (p.I[d_rad] != idx_rad || p.NI[d_rad] != 0)
+                    return;
+
+                  // Stay clear of cells that are themselves a literal
+                  // outer-boundary ghost in some other direction; those
+                  // remain the responsibility of the true outer BC / 2nd
+                  // BC pass.
+                  for (int dd = 0; dd < dim; ++dd) {
+                    if (p.NI[dd] < 0 && patch_faces[0][dd].is_outer_boundary)
+                      return;
+                    if (p.NI[dd] > 0 && patch_faces[1][dd].is_outer_boundary)
+                      return;
+                  }
+
+                  auto nbr = p.I;
+                  for (std::size_t n = 0; n < nvars; ++n) {
+                    nbr[d_rad] = idx_rad + 1 * sign;
+                    const CCTK_REAL y1 = vars[n](nbr);
+                    nbr[d_rad] = idx_rad + 2 * sign;
+                    const CCTK_REAL y2 = vars[n](nbr);
+                    nbr[d_rad] = idx_rad + 3 * sign;
+                    const CCTK_REAL y3 = vars[n](nbr);
+                    // Quadratic extrapolation (the same formula fix B
+                    // recommends for the true outer BC), sourced entirely
+                    // from this patch's own already-valid interior or
+                    // previously-extrapolated data -- never from a
+                    // neighbour's outer-BC ghosts.
+                    vars[n](p.I) = 3 * y1 - 3 * y2 + y3;
+                  }
+                });
+          }
+        }
+      }
     });
   }
 

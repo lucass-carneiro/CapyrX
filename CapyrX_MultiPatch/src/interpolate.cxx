@@ -10,6 +10,7 @@
 #include <nvtx3/nvToolsExt.h>
 #endif
 
+#include <cmath>
 #include <optional>
 #include <unordered_map>
 #include <utility>
@@ -613,6 +614,49 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
                     const CCTK_REAL y2 = vars[n](nbr);
                     nbr[d_rad] = idx_rad + 3 * sign;
                     const CCTK_REAL y3 = vars[n](nbr);
+
+                    // Diagnostic (mp_corners_3.md investigation): this
+                    // fallback assumes y1/y2/y3 are already finite -- either
+                    // genuinely donor-interpolated (Step 1/3 above, for
+                    // radial distances outside the near-outer band) or
+                    // extrapolated by an earlier, more-interior iteration of
+                    // this same k-loop. If that assumption is violated, this
+                    // formula silently manufactures and then propagates NaN
+                    // outward through every remaining layer and into the
+                    // true outer ghost zone. Report the first few
+                    // occurrences with full location context so the actual
+                    // upstream cause (bad donor data vs. a coverage gap in
+                    // the skip/fallback bookkeeping) can be identified
+                    // without re-deriving it from the much-larger poison
+                    // footprint that SyncGroupsByDirI reports downstream.
+                    if (!(std::isfinite(y1) && std::isfinite(y2) &&
+                          std::isfinite(y3))) {
+                      static int n_reports = 0;
+#pragma omp critical
+                      if (n_reports < 20) {
+                        ++n_reports;
+                        CCTK_VWARN(
+                            CCTK_WARN_ALERT,
+                            "MultiPatch1_Interpolate same-patch fallback "
+                            "(fix A companion, mp_corners_2.md/mp_corners_3.md): "
+                            "non-finite seed for var '%s' at patch %d level "
+                            "%d component %d, target index [%d,%d,%d] "
+                            "(f_rad=%d, idx_rad=%d, threshold-relative "
+                            "layer=%d), seeds at radial offsets 1,2,3 from "
+                            "target = %.17g, %.17g, %.17g. The seed must be "
+                            "finite before this fallback runs; a non-finite "
+                            "seed here means the bug is upstream (the "
+                            "normal cross-patch donor interpolation for "
+                            "this lateral ghost cell, or a gap between the "
+                            "is_within_donor_outer_reach skip and this "
+                            "fallback's coverage), not in the extrapolation "
+                            "formula itself.",
+                            CCTK_VarName(varinds[n]), patch, level, component,
+                            p.I[0], p.I[1], p.I[2], f_rad, idx_rad,
+                            threshold - 1 - k, y1, y2, y3);
+                      }
+                    }
+
                     // Quadratic extrapolation (the same formula fix B
                     // recommends for the true outer BC), sourced entirely
                     // from this patch's own already-valid interior or

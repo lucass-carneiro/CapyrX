@@ -243,7 +243,19 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
 
   const CCTK_INT current_epoch = GetEpoch();
 
-  if (current_epoch != g_interp_cache.epoch) {
+  // mp_corners_4.md, fix option 2: a freshly (re)built cache is the signal
+  // that no patch's interpatch ghosts are guaranteed populated yet -- most
+  // notably true on the very first call of a run, before any patch has ever
+  // been written to by this function, but this signal also naturally
+  // re-arms after every future regrid. Fix A's policy (below) assumes some
+  // prior call already left every patch's interpatch ghosts valid; that
+  // assumption is false exactly when the cache was just rebuilt. Recording
+  // this here (rather than a dedicated one-shot "first call" flag) keeps
+  // the bootstrap self-correcting instead of depending on bookkeeping that
+  // could go stale under a future schedule reordering.
+  const bool cache_was_rebuilt = current_epoch != g_interp_cache.epoch;
+
+  if (cache_was_rebuilt) {
     CCTK_VINFO("Interpolation cache out of date (cache epoch = %d. Current "
                "epoch = %d). Rebuilding",
                g_interp_cache.epoch, current_epoch);
@@ -397,279 +409,301 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
     g_interp_cache.epoch = current_epoch;
   }
 
-  // Step 2: Interpolate using the cached setup.
+  // Step 2/3: Interpolate using the cached setup, then write the results
+  // back. Factored into a lambda, parameterized on the outer-boundary
+  // policy, so it can be run twice in immediate succession on a freshly
+  // rebuilt cache (mp_corners_4.md, fix option 2): once with the
+  // conservative pre-Fix-A policy to seed every patch's interpatch ghosts
+  // with finite (if less accurate) values, then again with Fix A's real
+  // policy now that "some prior call already filled the ghosts" is true.
 
   const std::size_t nvars = varinds.size();
   const std::size_t npoints = g_interp_cache.coords[0].size();
 
   const std::vector<CCTK_INT> operations(nvars, 0);
 
-  auto &results = g_interp_cache.results;
-  results.resize(nvars);
-  std::vector<CCTK_REAL *> resultptrs(nvars);
+  const auto run_interpolation_pass =
+      [&](const std::vector<Arith::vect<Arith::vect<bool, 3>, 2> > &policy) {
+        auto &results = g_interp_cache.results;
+        results.resize(nvars);
+        std::vector<CCTK_REAL *> resultptrs(nvars);
 
-  for (size_t n = 0; n < nvars; ++n) {
-    results.at(n).resize(npoints);
-    resultptrs.at(n) = results.at(n).data();
-  }
+        for (size_t n = 0; n < nvars; ++n) {
+          results.at(n).resize(npoints);
+          resultptrs.at(n) = results.at(n).data();
+        }
 
-  g_interp_cache.setup.value().Interpolate(
-      cctkGH, nvars, varinds.data(), operations.data(), g_interp_cache.policy,
-      resultptrs.data());
+        g_interp_cache.setup.value().Interpolate(cctkGH, nvars,
+                                                   varinds.data(),
+                                                   operations.data(), policy,
+                                                   resultptrs.data());
 
 // Diagnostic: count NaN values in the interpolated results. Non-zero means
 // source data in neighboring patches contains NaN (e.g. their interior cells
 // were not yet filled before MultiPatch_Interpolate ran, or
 // poison_undefined_values=yes is leaving interior ghosts uninitialized).
 #ifdef CCTK_DEBUG
-  {
-    static bool g_nan_result_reported = false;
-    if (!g_nan_result_reported && nvars > 0 && npoints > 0) {
-      std::size_t n_nan = 0;
-      for (std::size_t n = 0; n < nvars; ++n)
-        for (std::size_t p = 0; p < npoints; ++p)
-          if (std::isnan(results[n][p])) {
-            ++n_nan;
+        {
+          static bool g_nan_result_reported = false;
+          if (!g_nan_result_reported && nvars > 0 && npoints > 0) {
+            std::size_t n_nan = 0;
+            for (std::size_t n = 0; n < nvars; ++n)
+              for (std::size_t p = 0; p < npoints; ++p)
+                if (std::isnan(results[n][p])) {
+                  ++n_nan;
+                }
+            if (n_nan > 0) {
+              g_nan_result_reported = true;
+              CCTK_VINFO(
+                  "MultiPatch1_Interpolate: %zu NaN values in interpolated "
+                  "results (out of %zu points x %zu vars = %zu total). Source "
+                  "patches may have poisoned interior/ghost cells. ",
+                  n_nan, npoints, nvars, npoints * nvars);
+            }
           }
-      if (n_nan > 0) {
-        g_nan_result_reported = true;
-        CCTK_VINFO("MultiPatch1_Interpolate: %zu NaN values in interpolated "
-                   "results (out of %zu points x %zu vars = %zu total). Source "
-                   "patches may have poisoned interior/ghost cells. ",
-                   n_nan, npoints, nvars, npoints * nvars);
-      }
-    }
-  }
+        }
 #endif // CCTK_DEBUG
 
-  // Step 3: Write back results
-  {
-    CarpetX::active_levels_t().loop_parallel([&](int patch, int level,
-                                                 int index, int component,
-                                                 const cGH *cctkGH) {
-      const Loop::GridDescBase grid(cctkGH);
-      const std::array<int, dim> centering{0, 0, 0};
-      const Loop::GF3D2layout layout(cctkGH, centering);
+        // Step 3: Write back results
+        CarpetX::active_levels_t().loop_parallel([&](int patch, int level,
+                                                   int index, int component,
+                                                   const cGH *cctkGH) {
+        const Loop::GridDescBase grid(cctkGH);
+        const std::array<int, dim> centering{0, 0, 0};
+        const Loop::GF3D2layout layout(cctkGH, centering);
 
-      std::vector<Loop::GF3D2<CCTK_REAL> > vars;
-      vars.reserve(nvars);
-      for (const auto &varind : varinds) {
-        vars.emplace_back(layout, static_cast<CCTK_REAL *>(
-                                      CCTK_VarDataPtrI(cctkGH, 0, varind)));
-      }
+        std::vector<Loop::GF3D2<CCTK_REAL> > vars;
+        vars.reserve(nvars);
+        for (const auto &varind : varinds) {
+          vars.emplace_back(layout, static_cast<CCTK_REAL *>(
+                                        CCTK_VarDataPtrI(cctkGH, 0, varind)));
+        }
 
-      const auto &current_patch{g_patch_system->patches.at(patch)};
-      const auto &patch_faces{current_patch.faces};
+        const auto &current_patch{g_patch_system->patches.at(patch)};
+        const auto &patch_faces{current_patch.faces};
 
-      const Location location{patch, level, index, component};
-      const ComponentSlice &slice = g_interp_cache.slices.at(location);
+        const Location location{patch, level, index, component};
+        const ComponentSlice &slice = g_interp_cache.slices.at(location);
 
 // Count ghost cells skipped due to outer boundary (includes pure outer
 // cells and corner cells at the outer+interpatch intersection).
 // Corner cells are NOT filled here and require a 2nd BC pass in
 // SyncGroupsByDirI after this function returns.
 #ifdef CCTK_DEBUG
-      int n_outer_skipped = 0;
-      int n_donor_reach_skipped = 0;
+        int n_outer_skipped = 0;
+        int n_donor_reach_skipped = 0;
 #endif // CCTK_DEBUG
 
-      for (std::size_t n = 0; n < nvars; n++) {
-        std::size_t pos = 0;
+        for (std::size_t n = 0; n < nvars; n++) {
+          std::size_t pos = 0;
 
-        // Note: This includes symmetry points
-        grid.loop_bnd<0, 0, 0>(grid.nghostzones, [&](const Loop::PointDesc &p) {
-          // Skip outer boundaries (pure outer ghost cells and corner cells at
-          // the outer+interpatch face intersection). Corner cells must be
-          // filled by the 2nd BC pass in SyncGroupsByDirI.
-          for (int d = 0; d < dim; ++d) {
-            if (p.NI[d] < 0 && patch_faces[0][d].is_outer_boundary) {
+          // Note: This includes symmetry points
+          grid.loop_bnd<0, 0, 0>(grid.nghostzones, [&](const Loop::PointDesc &p) {
+            // Skip outer boundaries (pure outer ghost cells and corner cells at
+            // the outer+interpatch face intersection). Corner cells must be
+            // filled by the 2nd BC pass in SyncGroupsByDirI.
+            for (int d = 0; d < dim; ++d) {
+              if (p.NI[d] < 0 && patch_faces[0][d].is_outer_boundary) {
+
+#ifdef CCTK_DEBUG
+                if (n == 0) {
+                  ++n_outer_skipped;
+                }
+#endif // CCTK_DEBUG
+
+                return;
+              }
+
+              if (p.NI[d] > 0 && patch_faces[1][d].is_outer_boundary) {
+
+#ifdef CCTK_DEBUG
+                if (n == 0) {
+                  ++n_outer_skipped;
+                }
+#endif // CCTK_DEBUG
+
+                return;
+              }
+            }
+
+            // Fix A companion (mp_corners_2.md): skip near-outer-radial seam
+            // ghosts that no donor can serve now that outer faces are
+            // excluded from the interpolation policy; the fallback
+            // extrapolation pass below fills them instead.
+            if (is_within_donor_outer_reach(
+                    current_patch, grid, p,
+                    g_interp_cache.interpolation_order)) {
 
 #ifdef CCTK_DEBUG
               if (n == 0) {
-                ++n_outer_skipped;
+                ++n_donor_reach_skipped;
               }
 #endif // CCTK_DEBUG
 
               return;
             }
 
-            if (p.NI[d] > 0 && patch_faces[1][d].is_outer_boundary) {
+            vars[n](p.I) = results[n][slice.offset + pos];
 
-#ifdef CCTK_DEBUG
-              if (n == 0) {
-                ++n_outer_skipped;
-              }
-#endif // CCTK_DEBUG
-
-              return;
-            }
-          }
-
-          // Fix A companion (mp_corners_2.md): skip near-outer-radial seam
-          // ghosts that no donor can serve now that outer faces are
-          // excluded from the interpolation policy; the fallback
-          // extrapolation pass below fills them instead.
-          if (is_within_donor_outer_reach(
-                  current_patch, grid, p,
-                  g_interp_cache.interpolation_order)) {
-
-#ifdef CCTK_DEBUG
-            if (n == 0) {
-              ++n_donor_reach_skipped;
-            }
-#endif // CCTK_DEBUG
-
-            return;
-          }
-
-          vars[n](p.I) = results[n][slice.offset + pos];
-
-          pos++;
-        });
-        assert(pos == slice.length);
-      }
+            pos++;
+          });
+          assert(pos == slice.length);
+        }
 
 // Report once globally: a non-zero count confirms corner cells exist
 // and were left unfilled (outer+interpatch intersection).
 #ifdef CCTK_DEBUG
-      {
-        if (n_outer_skipped > 0 && component == 0) {
-          CCTK_VINFO("MultiPatch1_Interpolate [patch %d level %d]: "
-                     "skipped %d outer-boundary ghost cells including "
-                     "corner cells at outer+interpatch face intersections; "
-                     "these are filled by the 2nd BC pass in SyncGroupsByDirI",
-                     patch, level, n_outer_skipped);
+        {
+          if (n_outer_skipped > 0 && component == 0) {
+            CCTK_VINFO("MultiPatch1_Interpolate [patch %d level %d]: "
+                       "skipped %d outer-boundary ghost cells including "
+                       "corner cells at outer+interpatch face intersections; "
+                       "these are filled by the 2nd BC pass in SyncGroupsByDirI",
+                       patch, level, n_outer_skipped);
+          }
+          if (n_donor_reach_skipped > 0 && component == 0) {
+            CCTK_VINFO(
+                "MultiPatch1_Interpolate [patch %d level %d]: skipped %d "
+                "near-outer-radial seam ghost cells that no donor could serve "
+                "under the flipped interpolation policy (fix A, "
+                "mp_corners_2.md); these are filled by the same-patch "
+                "fallback extrapolation below",
+                patch, level, n_donor_reach_skipped);
+          }
         }
-        if (n_donor_reach_skipped > 0 && component == 0) {
-          CCTK_VINFO(
-              "MultiPatch1_Interpolate [patch %d level %d]: skipped %d "
-              "near-outer-radial seam ghost cells that no donor could serve "
-              "under the flipped interpolation policy (fix A, "
-              "mp_corners_2.md); these are filled by the same-patch "
-              "fallback extrapolation below",
-              patch, level, n_donor_reach_skipped);
-        }
-      }
 #endif // CCTK_DEBUG
 
-      // Step 3b (fix A companion, mp_corners_2.md): fill the near-outer-
-      // radial seam ghosts skipped above via same-patch quadratic
-      // extrapolation along the radial direction. Layers are filled one at
-      // a time, marching outward from already-valid data (dist descending),
-      // so each layer only ever reads strictly-more-interior data that is
-      // either genuinely donor-interpolated above or was extrapolated by an
-      // earlier iteration of this same loop. This keeps a neighbour's
-      // BC-contaminated outer-radial ghost data out of the interpatch
-      // channel entirely, while still providing a finite, continuous value
-      // for these seam cells.
-      if (current_patch.c_is_radial) {
-        constexpr int d_rad = 2;
-        const int nghost_r = grid.nghostzones[d_rad];
-        const CCTK_INT order = g_interp_cache.interpolation_order;
+        // Step 3b (fix A companion, mp_corners_2.md): fill the near-outer-
+        // radial seam ghosts skipped above via same-patch quadratic
+        // extrapolation along the radial direction. Layers are filled one at
+        // a time, marching outward from already-valid data (dist descending),
+        // so each layer only ever reads strictly-more-interior data that is
+        // either genuinely donor-interpolated above or was extrapolated by an
+        // earlier iteration of this same loop. This keeps a neighbour's
+        // BC-contaminated outer-radial ghost data out of the interpatch
+        // channel entirely, while still providing a finite, continuous value
+        // for these seam cells.
+        if (current_patch.c_is_radial) {
+          constexpr int d_rad = 2;
+          const int nghost_r = grid.nghostzones[d_rad];
+          const CCTK_INT order = g_interp_cache.interpolation_order;
 
-        for (int f_rad = 0; f_rad < 2; ++f_rad) {
-          if (!patch_faces[f_rad][d_rad].is_outer_boundary)
-            continue;
-          if (!grid.bbox[f_rad][d_rad])
-            continue;
+          for (int f_rad = 0; f_rad < 2; ++f_rad) {
+            if (!patch_faces[f_rad][d_rad].is_outer_boundary)
+              continue;
+            if (!grid.bbox[f_rad][d_rad])
+              continue;
 
-          const int threshold = nghost_r + order;
-          const int last_interior = grid.lsh[d_rad] - nghost_r - 1;
-          const int sign = f_rad == 0 ? +1 : -1;
+            const int threshold = nghost_r + order;
+            const int last_interior = grid.lsh[d_rad] - nghost_r - 1;
+            const int sign = f_rad == 0 ? +1 : -1;
 
-          if (grid.lsh[d_rad] < 2 * nghost_r + order + 3) {
-            CCTK_VERROR(
-                "MultiPatch1_Interpolate [patch %d level %d]: radial "
-                "extent (%d cells) is too small to fall back to "
-                "same-patch extrapolation for near-outer seam ghosts "
-                "(need at least %d cells); increase the number of radial "
-                "cells or decrease interpolation_order.",
-                patch, level, grid.lsh[d_rad], 2 * nghost_r + order + 3);
-          }
+            if (grid.lsh[d_rad] < 2 * nghost_r + order + 3) {
+              CCTK_VERROR(
+                  "MultiPatch1_Interpolate [patch %d level %d]: radial "
+                  "extent (%d cells) is too small to fall back to "
+                  "same-patch extrapolation for near-outer seam ghosts "
+                  "(need at least %d cells); increase the number of radial "
+                  "cells or decrease interpolation_order.",
+                  patch, level, grid.lsh[d_rad], 2 * nghost_r + order + 3);
+            }
 
-          for (int k = threshold - 1; k >= 0; --k) {
-            const int idx_rad = f_rad == 0 ? nghost_r + k : last_interior - k;
+            for (int k = threshold - 1; k >= 0; --k) {
+              const int idx_rad = f_rad == 0 ? nghost_r + k : last_interior - k;
 
-            grid.loop_bnd<0, 0, 0>(
-                grid.nghostzones, [&](const Loop::PointDesc &p) {
-                  if (p.I[d_rad] != idx_rad || p.NI[d_rad] != 0)
-                    return;
-
-                  // Stay clear of cells that are themselves a literal
-                  // outer-boundary ghost in some other direction; those
-                  // remain the responsibility of the true outer BC / 2nd
-                  // BC pass.
-                  for (int dd = 0; dd < dim; ++dd) {
-                    if (p.NI[dd] < 0 && patch_faces[0][dd].is_outer_boundary)
+              grid.loop_bnd<0, 0, 0>(
+                  grid.nghostzones, [&](const Loop::PointDesc &p) {
+                    if (p.I[d_rad] != idx_rad || p.NI[d_rad] != 0)
                       return;
-                    if (p.NI[dd] > 0 && patch_faces[1][dd].is_outer_boundary)
-                      return;
-                  }
 
-                  auto nbr = p.I;
-                  for (std::size_t n = 0; n < nvars; ++n) {
-                    nbr[d_rad] = idx_rad + 1 * sign;
-                    const CCTK_REAL y1 = vars[n](nbr);
-                    nbr[d_rad] = idx_rad + 2 * sign;
-                    const CCTK_REAL y2 = vars[n](nbr);
-                    nbr[d_rad] = idx_rad + 3 * sign;
-                    const CCTK_REAL y3 = vars[n](nbr);
-
-                    // Diagnostic (mp_corners_3.md investigation): this
-                    // fallback assumes y1/y2/y3 are already finite -- either
-                    // genuinely donor-interpolated (Step 1/3 above, for
-                    // radial distances outside the near-outer band) or
-                    // extrapolated by an earlier, more-interior iteration of
-                    // this same k-loop. If that assumption is violated, this
-                    // formula silently manufactures and then propagates NaN
-                    // outward through every remaining layer and into the
-                    // true outer ghost zone. Report the first few
-                    // occurrences with full location context so the actual
-                    // upstream cause (bad donor data vs. a coverage gap in
-                    // the skip/fallback bookkeeping) can be identified
-                    // without re-deriving it from the much-larger poison
-                    // footprint that SyncGroupsByDirI reports downstream.
-                    if (!(std::isfinite(y1) && std::isfinite(y2) &&
-                          std::isfinite(y3))) {
-                      static int n_reports = 0;
-#pragma omp critical
-                      if (n_reports < 20) {
-                        ++n_reports;
-                        CCTK_VWARN(
-                            CCTK_WARN_ALERT,
-                            "MultiPatch1_Interpolate same-patch fallback "
-                            "(fix A companion, mp_corners_2.md/mp_corners_3.md): "
-                            "non-finite seed for var '%s' at patch %d level "
-                            "%d component %d, target index [%d,%d,%d] "
-                            "(f_rad=%d, idx_rad=%d, threshold-relative "
-                            "layer=%d), seeds at radial offsets 1,2,3 from "
-                            "target = %.17g, %.17g, %.17g. The seed must be "
-                            "finite before this fallback runs; a non-finite "
-                            "seed here means the bug is upstream (the "
-                            "normal cross-patch donor interpolation for "
-                            "this lateral ghost cell, or a gap between the "
-                            "is_within_donor_outer_reach skip and this "
-                            "fallback's coverage), not in the extrapolation "
-                            "formula itself.",
-                            CCTK_VarName(varinds[n]), patch, level, component,
-                            p.I[0], p.I[1], p.I[2], f_rad, idx_rad,
-                            threshold - 1 - k, y1, y2, y3);
-                      }
+                    // Stay clear of cells that are themselves a literal
+                    // outer-boundary ghost in some other direction; those
+                    // remain the responsibility of the true outer BC / 2nd
+                    // BC pass.
+                    for (int dd = 0; dd < dim; ++dd) {
+                      if (p.NI[dd] < 0 && patch_faces[0][dd].is_outer_boundary)
+                        return;
+                      if (p.NI[dd] > 0 && patch_faces[1][dd].is_outer_boundary)
+                        return;
                     }
 
-                    // Quadratic extrapolation (the same formula fix B
-                    // recommends for the true outer BC), sourced entirely
-                    // from this patch's own already-valid interior or
-                    // previously-extrapolated data -- never from a
-                    // neighbour's outer-BC ghosts.
-                    vars[n](p.I) = 3 * y1 - 3 * y2 + y3;
-                  }
-                });
+                    auto nbr = p.I;
+                    for (std::size_t n = 0; n < nvars; ++n) {
+                      nbr[d_rad] = idx_rad + 1 * sign;
+                      const CCTK_REAL y1 = vars[n](nbr);
+                      nbr[d_rad] = idx_rad + 2 * sign;
+                      const CCTK_REAL y2 = vars[n](nbr);
+                      nbr[d_rad] = idx_rad + 3 * sign;
+                      const CCTK_REAL y3 = vars[n](nbr);
+
+                      // Diagnostic (mp_corners_3.md investigation): this
+                      // fallback assumes y1/y2/y3 are already finite -- either
+                      // genuinely donor-interpolated (Step 1/3 above, for
+                      // radial distances outside the near-outer band) or
+                      // extrapolated by an earlier, more-interior iteration of
+                      // this same k-loop. If that assumption is violated, this
+                      // formula silently manufactures and then propagates NaN
+                      // outward through every remaining layer and into the
+                      // true outer ghost zone. Report the first few
+                      // occurrences with full location context so the actual
+                      // upstream cause (bad donor data vs. a coverage gap in
+                      // the skip/fallback bookkeeping) can be identified
+                      // without re-deriving it from the much-larger poison
+                      // footprint that SyncGroupsByDirI reports downstream.
+                      if (!(std::isfinite(y1) && std::isfinite(y2) &&
+                            std::isfinite(y3))) {
+                        static int n_reports = 0;
+#pragma omp critical
+                        if (n_reports < 20) {
+                          ++n_reports;
+                          CCTK_VWARN(
+                              CCTK_WARN_ALERT,
+                              "MultiPatch1_Interpolate same-patch fallback "
+                              "(fix A companion, mp_corners_2.md/mp_corners_3.md): "
+                              "non-finite seed for var '%s' at patch %d level "
+                              "%d component %d, target index [%d,%d,%d] "
+                              "(f_rad=%d, idx_rad=%d, threshold-relative "
+                              "layer=%d), seeds at radial offsets 1,2,3 from "
+                              "target = %.17g, %.17g, %.17g. The seed must be "
+                              "finite before this fallback runs; a non-finite "
+                              "seed here means the bug is upstream (the "
+                              "normal cross-patch donor interpolation for "
+                              "this lateral ghost cell, or a gap between the "
+                              "is_within_donor_outer_reach skip and this "
+                              "fallback's coverage), not in the extrapolation "
+                              "formula itself.",
+                              CCTK_VarName(varinds[n]), patch, level, component,
+                              p.I[0], p.I[1], p.I[2], f_rad, idx_rad,
+                              threshold - 1 - k, y1, y2, y3);
+                        }
+                      }
+
+                      // Quadratic extrapolation (the same formula fix B
+                      // recommends for the true outer BC), sourced entirely
+                      // from this patch's own already-valid interior or
+                      // previously-extrapolated data -- never from a
+                      // neighbour's outer-BC ghosts.
+                      vars[n](p.I) = 3 * y1 - 3 * y2 + y3;
+                    }
+                  });
+            }
           }
         }
-      }
-    });
+        });
+  };
+
+  if (cache_was_rebuilt) {
+    // mp_corners_4.md, fix option 2: bootstrap pass with the conservative,
+    // pre-Fix-A policy (never anchor at any patch face), so every
+    // interpatch ghost the accurate pass below could possibly read is
+    // already finite, however inaccurate. This is what makes Fix A's "some
+    // prior call already filled the ghosts" assumption true on this call.
+    const std::vector<Arith::vect<Arith::vect<bool, 3>, 2> >
+        conservative_policy(g_interp_cache.policy.size());
+    run_interpolation_pass(conservative_policy);
   }
+
+  run_interpolation_pass(g_interp_cache.policy);
 
 #ifdef __CUDACC__
   nvtxRangeEnd(range);

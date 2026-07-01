@@ -698,6 +698,9 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
     // interpatch ghost the accurate pass below could possibly read is
     // already finite, however inaccurate. This is what makes Fix A's "some
     // prior call already filled the ghosts" assumption true on this call.
+    CCTK_VINFO("MultiPatch1_Interpolate: cache was just (re)built; running a "
+               "one-time conservative bootstrap interpolation pass before "
+               "the accurate pass (mp_corners_4.md, fix option 2)");
     const std::vector<Arith::vect<Arith::vect<bool, 3>, 2> >
         conservative_policy(g_interp_cache.policy.size());
     run_interpolation_pass(conservative_policy);

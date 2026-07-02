@@ -12,6 +12,7 @@
 
 #include <cmath>
 #include <optional>
+#include <set>
 #include <unordered_map>
 #include <utility>
 
@@ -165,6 +166,26 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
   // Cast GH and wrap varinds
   const auto cctkGH{static_cast<const cGH *>(cctkGH_)};
   const std::vector<CCTK_INT> varinds(varinds_, varinds_ + nvars_);
+
+  // mp_corners_7.md section 5 point 4: always-on log, tagged with group
+  // name and a monotonic call counter, so a debug run's stdout directly
+  // shows this call's order relative to SyncGroupsByDirI's own per-group
+  // log (schedule.cxx), instead of inferring it from stream ordering
+  // across ranks.
+  {
+    static long call_counter = 0;
+    ++call_counter;
+    std::set<int> groups_seen;
+    for (const auto &varind : varinds) {
+      if (varind < 0)
+        continue;
+      const int gi = CCTK_GroupIndexFromVarI(varind);
+      if (gi >= 0 && groups_seen.insert(gi).second)
+#pragma omp critical
+        CCTK_VINFO("MultiPatch1_Interpolate call #%ld: group %s",
+                   call_counter, CCTK_FullGroupName(gi));
+    }
+  }
 
   // Check input varinds validity
   for (const auto &varind : varinds) {

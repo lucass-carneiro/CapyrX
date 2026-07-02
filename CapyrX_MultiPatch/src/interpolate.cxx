@@ -444,7 +444,8 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
   const std::vector<CCTK_INT> operations(nvars, 0);
 
   const auto run_interpolation_pass =
-      [&](const std::vector<Arith::vect<Arith::vect<bool, 3>, 2> > &policy) {
+      [&](const std::vector<Arith::vect<Arith::vect<bool, 3>, 2> > &policy,
+          const bool force_conservative_intrapatch = false) {
         auto &results = g_interp_cache.results;
         results.resize(nvars);
         std::vector<CCTK_REAL *> resultptrs(nvars);
@@ -454,10 +455,9 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
           resultptrs.at(n) = results.at(n).data();
         }
 
-        g_interp_cache.setup.value().Interpolate(cctkGH, nvars,
-                                                   varinds.data(),
-                                                   operations.data(), policy,
-                                                   resultptrs.data());
+        g_interp_cache.setup.value().Interpolate(
+            cctkGH, nvars, varinds.data(), operations.data(), policy,
+            resultptrs.data(), force_conservative_intrapatch);
 
 // Diagnostic: count NaN values in the interpolated results. Non-zero means
 // source data in neighboring patches contains NaN (e.g. their interior cells
@@ -719,12 +719,22 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
     // interpatch ghost the accurate pass below could possibly read is
     // already finite, however inaccurate. This is what makes Fix A's "some
     // prior call already filled the ghosts" assumption true on this call.
+    //
+    // mp_corners_9.md, fix option 1: this call runs from schedule.cxx before
+    // AMReX's own fill-patch pass has repopulated intra-patch (box-split)
+    // ghosts for the current sync, so those ghosts are still poison-NaN too,
+    // not just the interpatch ones this policy already targets. Pass
+    // force_conservative_intrapatch=true so the interpolator pushes its
+    // stencil inward on those faces as well instead of trusting the
+    // (not yet true) "AMReX fill-patch guarantees this" assumption.
     CCTK_VINFO("MultiPatch1_Interpolate: cache was just (re)built; running a "
                "one-time conservative bootstrap interpolation pass before "
-               "the accurate pass (mp_corners_4.md, fix option 2)");
+               "the accurate pass (mp_corners_4.md, fix option 2; "
+               "mp_corners_9.md, fix option 1)");
     const std::vector<Arith::vect<Arith::vect<bool, 3>, 2> >
         conservative_policy(g_interp_cache.policy.size());
-    run_interpolation_pass(conservative_policy);
+    run_interpolation_pass(conservative_policy,
+                           /*force_conservative_intrapatch=*/true);
   }
 
   run_interpolation_pass(g_interp_cache.policy);

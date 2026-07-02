@@ -720,21 +720,30 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
     // already finite, however inaccurate. This is what makes Fix A's "some
     // prior call already filled the ghosts" assumption true on this call.
     //
-    // mp_corners_9.md, fix option 1: this call runs from schedule.cxx before
-    // AMReX's own fill-patch pass has repopulated intra-patch (box-split)
-    // ghosts for the current sync, so those ghosts are still poison-NaN too,
-    // not just the interpatch ones this policy already targets. Pass
-    // force_conservative_intrapatch=true so the interpolator pushes its
-    // stencil inward on those faces as well instead of trusting the
-    // (not yet true) "AMReX fill-patch guarantees this" assumption.
+    // mp_corners_9.md, fix option 1 (superseded -- see mp_corners_11.md):
+    // this call runs from schedule.cxx before AMReX's own fill-patch pass
+    // has repopulated intra-patch (box-split) ghosts for the current sync,
+    // so those ghosts used to still be poison-NaN too, not just the
+    // interpatch ones this policy already targets. That report passed
+    // force_conservative_intrapatch=true here so the interpolator would
+    // push its stencil inward on those faces as well.
+    //
+    // mp_corners_11.md: that made the *read* safe but broke the point-to-
+    // donor-box assignment this cache already computed under the ordinary,
+    // non-conservative policy -- many points legitimately close to an
+    // intra-patch seam then had no anchor any box would allow, a hard
+    // "Interpolation anchor is not allowed" crash (interpolate.cxx:310)
+    // regardless of whether the underlying data was finite. The actual fix
+    // is upstream, in schedule.cxx: it now gives level-0 intra-patch ghosts
+    // real data (a plain FillBoundary) before calling here at all, which is
+    // what makes force_conservative_intrapatch unnecessary -- and, per the
+    // above, actively wrong to pass -- on this call.
     CCTK_VINFO("MultiPatch1_Interpolate: cache was just (re)built; running a "
                "one-time conservative bootstrap interpolation pass before "
-               "the accurate pass (mp_corners_4.md, fix option 2; "
-               "mp_corners_9.md, fix option 1)");
+               "the accurate pass (mp_corners_4.md, fix option 2)");
     const std::vector<Arith::vect<Arith::vect<bool, 3>, 2> >
         conservative_policy(g_interp_cache.policy.size());
-    run_interpolation_pass(conservative_policy,
-                           /*force_conservative_intrapatch=*/true);
+    run_interpolation_pass(conservative_policy);
   }
 
   run_interpolation_pass(g_interp_cache.policy);

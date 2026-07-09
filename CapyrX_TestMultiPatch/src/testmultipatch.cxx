@@ -5,14 +5,16 @@
 #include <loop_device.hxx>
 #include <global_derivatives.hxx>
 
+#include <array>
 #include <cmath>
+#include <limits>
 
 namespace CapyrX::TestMultiPatch {
 
 static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
 standing_wave(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
-              CCTK_REAL t, CCTK_REAL x, CCTK_REAL y, CCTK_REAL z) noexcept
-    -> CCTK_REAL {
+              CCTK_REAL t, CCTK_REAL x, CCTK_REAL y,
+              CCTK_REAL z) noexcept -> CCTK_REAL {
   using std::cos, std::sin, std::sqrt;
 
   const auto pi{acos(-1.0)};
@@ -24,8 +26,8 @@ standing_wave(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
 
 static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
 standing_wave_dx(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
-                 CCTK_REAL t, CCTK_REAL x, CCTK_REAL y, CCTK_REAL z) noexcept
-    -> CCTK_REAL {
+                 CCTK_REAL t, CCTK_REAL x, CCTK_REAL y,
+                 CCTK_REAL z) noexcept -> CCTK_REAL {
   using std::cos, std::sin, std::sqrt;
 
   const auto pi{acos(-1.0)};
@@ -37,8 +39,8 @@ standing_wave_dx(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
 
 static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
 standing_wave_dy(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
-                 CCTK_REAL t, CCTK_REAL x, CCTK_REAL y, CCTK_REAL z) noexcept
-    -> CCTK_REAL {
+                 CCTK_REAL t, CCTK_REAL x, CCTK_REAL y,
+                 CCTK_REAL z) noexcept -> CCTK_REAL {
   using std::cos, std::sin, std::sqrt;
 
   const auto pi{acos(-1.0)};
@@ -50,8 +52,8 @@ standing_wave_dy(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
 
 static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
 standing_wave_dz(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
-                 CCTK_REAL t, CCTK_REAL x, CCTK_REAL y, CCTK_REAL z) noexcept
-    -> CCTK_REAL {
+                 CCTK_REAL t, CCTK_REAL x, CCTK_REAL y,
+                 CCTK_REAL z) noexcept -> CCTK_REAL {
   using std::cos, std::sin, std::sqrt;
 
   const auto pi{acos(-1.0)};
@@ -63,8 +65,8 @@ standing_wave_dz(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
 
 static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
 standing_wave_dx2(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
-                  CCTK_REAL t, CCTK_REAL x, CCTK_REAL y, CCTK_REAL z) noexcept
-    -> CCTK_REAL {
+                  CCTK_REAL t, CCTK_REAL x, CCTK_REAL y,
+                  CCTK_REAL z) noexcept -> CCTK_REAL {
   using std::cos, std::sin, std::sqrt;
 
   const auto pi{acos(-1.0)};
@@ -76,8 +78,8 @@ standing_wave_dx2(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
 
 static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
 standing_wave_dy2(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
-                  CCTK_REAL t, CCTK_REAL x, CCTK_REAL y, CCTK_REAL z) noexcept
-    -> CCTK_REAL {
+                  CCTK_REAL t, CCTK_REAL x, CCTK_REAL y,
+                  CCTK_REAL z) noexcept -> CCTK_REAL {
   using std::cos, std::sin, std::sqrt;
 
   const auto pi{acos(-1.0)};
@@ -89,8 +91,8 @@ standing_wave_dy2(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
 
 static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
 standing_wave_dz2(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
-                  CCTK_REAL t, CCTK_REAL x, CCTK_REAL y, CCTK_REAL z) noexcept
-    -> CCTK_REAL {
+                  CCTK_REAL t, CCTK_REAL x, CCTK_REAL y,
+                  CCTK_REAL z) noexcept -> CCTK_REAL {
   using std::cos, std::sin, std::sqrt;
 
   const auto pi{acos(-1.0)};
@@ -102,8 +104,8 @@ standing_wave_dz2(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
 
 static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
 standing_wave_dxy(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
-                  CCTK_REAL t, CCTK_REAL x, CCTK_REAL y, CCTK_REAL z) noexcept
-    -> CCTK_REAL {
+                  CCTK_REAL t, CCTK_REAL x, CCTK_REAL y,
+                  CCTK_REAL z) noexcept -> CCTK_REAL {
   using std::cos, std::sin, std::sqrt;
 
   const auto pi{acos(-1.0)};
@@ -115,8 +117,8 @@ standing_wave_dxy(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
 
 static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
 standing_wave_dxz(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
-                  CCTK_REAL t, CCTK_REAL x, CCTK_REAL y, CCTK_REAL z) noexcept
-    -> CCTK_REAL {
+                  CCTK_REAL t, CCTK_REAL x, CCTK_REAL y,
+                  CCTK_REAL z) noexcept -> CCTK_REAL {
   using std::cos, std::sin, std::sqrt;
 
   const auto pi{acos(-1.0)};
@@ -128,8 +130,8 @@ standing_wave_dxz(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
 
 static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
 standing_wave_dyz(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
-                  CCTK_REAL t, CCTK_REAL x, CCTK_REAL y, CCTK_REAL z) noexcept
-    -> CCTK_REAL {
+                  CCTK_REAL t, CCTK_REAL x, CCTK_REAL y,
+                  CCTK_REAL z) noexcept -> CCTK_REAL {
   using std::cos, std::sin, std::sqrt;
 
   const auto pi{acos(-1.0)};
@@ -199,27 +201,27 @@ static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
   return num * den;
 }
 
-static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE c4o_0_1_0(
-    const Loop::PointDesc &p, const Loop::GF3D2<const CCTK_REAL> &gf) noexcept
-    -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+c4o_0_1_0(const Loop::PointDesc &p,
+          const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
   const auto num{gf(-2 * p.DI[1] + p.I) - 8 * gf(-p.DI[1] + p.I) +
                  8 * gf(p.DI[1] + p.I) - gf(2 * p.DI[1] + p.I)};
   const auto den{1.0 / (12 * p.DX[1])};
   return num * den;
 }
 
-static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE c4o_0_0_1(
-    const Loop::PointDesc &p, const Loop::GF3D2<const CCTK_REAL> &gf) noexcept
-    -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+c4o_0_0_1(const Loop::PointDesc &p,
+          const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
   const auto num{gf(-2 * p.DI[2] + p.I) - 8 * gf(-p.DI[2] + p.I) +
                  8 * gf(p.DI[2] + p.I) - gf(2 * p.DI[2] + p.I)};
   const auto den{1.0 / (12 * p.DX[2])};
   return num * den;
 }
 
-static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE c4o_2_0_0(
-    const Loop::PointDesc &p, const Loop::GF3D2<const CCTK_REAL> &gf) noexcept
-    -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+c4o_2_0_0(const Loop::PointDesc &p,
+          const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
   const auto num{-30 * gf(p.I) - gf(-2 * p.DI[0] + p.I) +
                  16 * gf(-p.DI[0] + p.I) + 16 * gf(p.DI[0] + p.I) -
                  gf(2 * p.DI[0] + p.I)};
@@ -227,9 +229,9 @@ static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE c4o_2_0_0(
   return num * den;
 }
 
-static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE c4o_1_1_0(
-    const Loop::PointDesc &p, const Loop::GF3D2<const CCTK_REAL> &gf) noexcept
-    -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+c4o_1_1_0(const Loop::PointDesc &p,
+          const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
   const auto num{
       gf(-2 * p.DI[0] - 2 * p.DI[1] + p.I) -
       8 * gf(-p.DI[0] - 2 * p.DI[1] + p.I) +
@@ -247,9 +249,9 @@ static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE c4o_1_1_0(
   return num * den;
 }
 
-static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE c4o_1_0_1(
-    const Loop::PointDesc &p, const Loop::GF3D2<const CCTK_REAL> &gf) noexcept
-    -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+c4o_1_0_1(const Loop::PointDesc &p,
+          const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
   const auto num{
       gf(-2 * p.DI[0] - 2 * p.DI[2] + p.I) -
       8 * gf(-p.DI[0] - 2 * p.DI[2] + p.I) +
@@ -267,9 +269,9 @@ static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE c4o_1_0_1(
   return num * den;
 }
 
-static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE c4o_0_2_0(
-    const Loop::PointDesc &p, const Loop::GF3D2<const CCTK_REAL> &gf) noexcept
-    -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+c4o_0_2_0(const Loop::PointDesc &p,
+          const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
   const auto num{-30 * gf(p.I) - gf(-2 * p.DI[1] + p.I) +
                  16 * gf(-p.DI[1] + p.I) + 16 * gf(p.DI[1] + p.I) -
                  gf(2 * p.DI[1] + p.I)};
@@ -277,9 +279,9 @@ static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE c4o_0_2_0(
   return num * den;
 }
 
-static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE c4o_0_1_1(
-    const Loop::PointDesc &p, const Loop::GF3D2<const CCTK_REAL> &gf) noexcept
-    -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+c4o_0_1_1(const Loop::PointDesc &p,
+          const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
   const auto num{
       gf(-2 * p.DI[1] - 2 * p.DI[2] + p.I) -
       8 * gf(-p.DI[1] - 2 * p.DI[2] + p.I) +
@@ -297,9 +299,9 @@ static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE c4o_0_1_1(
   return num * den;
 }
 
-static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE c4o_0_0_2(
-    const Loop::PointDesc &p, const Loop::GF3D2<const CCTK_REAL> &gf) noexcept
-    -> CCTK_REAL {
+static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
+c4o_0_0_2(const Loop::PointDesc &p,
+          const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
   const auto num{-30 * gf(p.I) - gf(-2 * p.DI[2] + p.I) +
                  16 * gf(-p.DI[2] + p.I) + 16 * gf(p.DI[2] + p.I) -
                  gf(2 * p.DI[2] + p.I)};
@@ -353,10 +355,10 @@ extern "C" void CapyrX_TestMultiPatch_compute_interp_error(CCTK_ARGUMENTS) {
           const auto y{vcoordy(p.I)};
           const auto z{vcoordz(p.I)};
 
-          const auto evolved_u{u(p.I)};
-          const auto real_u{standing_wave(A, kx, ky, kz, t, x, y, z)};
+          const auto interpd_u{u(p.I)};
+          const auto exact_u{standing_wave(A, kx, ky, kz, t, x, y, z)};
 
-          interp(p.I) = fabs(evolved_u - real_u);
+          interp(p.I) = fabs(interpd_u - exact_u);
         });
 
   } else if (CCTK_Equals(test_data, "parabola")) {
@@ -369,10 +371,10 @@ extern "C" void CapyrX_TestMultiPatch_compute_interp_error(CCTK_ARGUMENTS) {
                                         const auto y{vcoordy(p.I)};
                                         const auto z{vcoordz(p.I)};
 
-                                        const auto evolved_u{u(p.I)};
-                                        const auto real_u{parabola(x, y, z)};
+                                        const auto interpd_u{u(p.I)};
+                                        const auto exact_u{parabola(x, y, z)};
 
-                                        interp(p.I) = fabs(evolved_u - real_u);
+                                        interp(p.I) = fabs(interpd_u - exact_u);
                                       });
   }
 }
@@ -476,20 +478,91 @@ extern "C" void CapyrX_TestMultiPatch_write_color(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTSX_CapyrX_TestMultiPatch_write_color;
   DECLARE_CCTK_PARAMETERS;
 
+  // Coloring is a 2 digit number. The first digit indicates the region
+  // (interior, boundary, ghost, overlap band). The second digit indicates
+  // the patch index. For this to hold, we need to have patch systems with 9
+  // (or less) patches
+  assert(cctk_npatches < 10);
+
+  constexpr auto interior_marker = 10;
+  constexpr auto boundary_marker = 20;
+  constexpr auto ghost_marker = 30;
+  constexpr auto overlap_marker = 40;
+
+  // CapyrX_MultiPatch::patch_overlap is not this thorn's own parameter; read
+  // it cross-thorn the same way CapyrX_MultiPatch itself reads
+  // CarpetX::interpolation_order (see CapyrX_MultiPatch_Check_Parameters in
+  // multipatch.cxx).
+  const auto patch_overlap_param_ptr =
+      CCTK_ParameterGet("patch_overlap", "CapyrX_MultiPatch", nullptr);
+  if (patch_overlap_param_ptr == nullptr)
+    CCTK_ERROR("Unable to read parameter patch_overlap from CapyrX_MultiPatch");
+  const auto patch_overlap =
+      *static_cast<const CCTK_INT *>(patch_overlap_param_ptr);
+
+  // Per axis, the global-index thresholds beyond which an interior point
+  // falls in the overlap band: the patch_overlap-wide slice of this patch's
+  // own interior that exists purely so a neighboring patch has enough source
+  // data to interpolate its ghost zone. Faces that are the true
+  // physical/outer boundary (not another patch) never grow an overlap band,
+  // so their threshold is set to never trigger.
+  Loop::vect<int, Loop::dim> lo_threshold, hi_threshold;
+  {
+    std::array<CCTK_INT, 2 * Loop::dim> is_interpatch_face{};
+    if (CCTK_IsFunctionAliased("MultiPatch_GetBoundarySpecification2"))
+      MultiPatch_GetBoundarySpecification2(grid.patch, 2 * Loop::dim,
+                                           is_interpatch_face.data());
+
+    for (int d = 0; d < Loop::dim; ++d) {
+      lo_threshold[d] = is_interpatch_face[2 * d + 0]
+                            ? grid.nghostzones[d] + patch_overlap
+                            : -1;
+      hi_threshold[d] = is_interpatch_face[2 * d + 1]
+                            ? grid.gsh[d] - grid.nghostzones[d] - patch_overlap
+                            : std::numeric_limits<int>::max();
+    }
+  }
+
+  const auto lbnd{grid.lbnd};
+
   grid.loop_int_device<0, 0, 0>(
       grid.nghostzones,
-      [=] CCTK_DEVICE(const Loop::PointDesc &p)
-          CCTK_ATTRIBUTE_ALWAYS_INLINE { color(p.I) = 3 * p.patch + 1; });
+      [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+        bool in_overlap_band = false;
+        for (int d = 0; d < Loop::dim; ++d) {
+          const auto gI{p.I[d] + lbnd[d]};
+          if (gI < lo_threshold[d] || gI >= hi_threshold[d]) {
+            in_overlap_band = true;
+            break;
+          }
+        }
+        color(p.I) =
+            (in_overlap_band ? overlap_marker : interior_marker) + p.patch;
+      });
 
-  grid.loop_bnd_device<0, 0, 0>(
+  grid.loop_bnd_device<0, 0, 0>(grid.nghostzones,
+                                [=] CCTK_DEVICE(const Loop::PointDesc &p)
+                                    CCTK_ATTRIBUTE_ALWAYS_INLINE {
+                                      color(p.I) = boundary_marker + p.patch;
+                                    });
+
+  grid.loop_ghosts_device<0, 0, 0>(grid.nghostzones,
+                                   [=] CCTK_DEVICE(const Loop::PointDesc &p)
+
+                                       CCTK_ATTRIBUTE_ALWAYS_INLINE {
+                                         color(p.I) = ghost_marker + p.patch;
+                                       });
+
+  // Snapshot into color_pre before returning: the driver runs "SYNC: color"
+  // immediately after this routine, which overwrites color's ghost zones via
+  // interpatch interpolation. color_pre lives in a separate storage group
+  // that nothing ever syncs, so it preserves exactly what color looked like
+  // beforehand (in particular, ghost points still holding their own patch's
+  // never-filled ghost_marker).
+  grid.loop_all_device<0, 0, 0>(
       grid.nghostzones,
       [=] CCTK_DEVICE(const Loop::PointDesc &p)
-          CCTK_ATTRIBUTE_ALWAYS_INLINE { color(p.I) = 3 * p.patch + 2; });
-  grid.loop_ghosts_device<0, 0, 0>(
-      grid.nghostzones,
-      [=] CCTK_DEVICE(const Loop::PointDesc &p)
-
-          CCTK_ATTRIBUTE_ALWAYS_INLINE { color(p.I) = 3 * p.patch + 3; });
+          CCTK_ATTRIBUTE_ALWAYS_INLINE { color_pre(p.I) = color(p.I); });
 }
 
 extern "C" void CapyrX_TestMultiPatch_sync(CCTK_ARGUMENTS) {

@@ -1,0 +1,76 @@
+# Same problem as color_ghost.par, but with patch overlaps.
+
+ActiveThorns = "
+    CarpetX
+    IOUtil
+    CoordinatesX
+    CapyrX_MultiPatch
+    CapyrX_TestMultiPatch
+"
+
+Cactus::presync_mode = "mixed-error"
+Cactus::cctk_show_schedule = yes
+
+Cactus::terminate = "iteration"
+Cactus::cctk_itlast = 0
+
+CarpetX::verbose                 = yes
+CarpetX::poison_undefined_values = yes
+
+CarpetX::ghost_size          = 2
+CarpetX::interpolation_order = 0
+
+CarpetX::blocking_factor_x = 1
+CarpetX::blocking_factor_y = 1
+CarpetX::blocking_factor_z = 1
+
+CapyrX_MultiPatch::verbose        =  yes
+CapyrX_MultiPatch::patch_system   = "Cubed sphere"
+CapyrX_MultiPatch::inner_boundary_radius = 0.5
+CapyrX_MultiPatch::outer_boundary_radius = 2.5
+CapyrX_MultiPatch::angular_cells         = 16 # Less cells than this cause ill defined Jacobians in this test
+CapyrX_MultiPatch::radial_cells          = 32 # Less cells than this cause ill defined Jacobians in this test
+CapyrX_MultiPatch::patch_overlap         = CarpetX::ghost_size
+
+# Each cubed-sphere patch is angular_cells+2*patch_overlap = 20 cells wide
+# in x/y; the cartesian patch is 20 cells in z, the six other patches are
+# radial_cells+patch_overlap = 34 cells in z. Setting max_grid_size to the
+# largest patch extent in each direction keeps every patch as a single
+# AMReX box. This alone is not enough with more than one MPI process,
+# though: AMReX's amr.refine_grid_layout (on by default) still re-chops
+# each patch's single box until there are at least as many boxes as MPI
+# ranks. Disabling it keeps exactly one box per patch no matter how many
+# ranks/threads the run uses.
+CarpetX::max_grid_size_x = CapyrX_MultiPatch::angular_cells + 2 * CapyrX_MultiPatch::patch_overlap
+CarpetX::max_grid_size_y = CapyrX_MultiPatch::angular_cells + 2 * CapyrX_MultiPatch::patch_overlap
+CarpetX::max_grid_size_z = CapyrX_MultiPatch::radial_cells + CapyrX_MultiPatch::patch_overlap
+
+CarpetX::amrex_parameters[0] = "amr.refine_grid_layout=0"
+CarpetX::amrex_parameters[1] = "amr.v=2"
+
+CarpetX::boundary_x       = "dirichlet"
+CarpetX::boundary_y       = "dirichlet"
+CarpetX::boundary_z       = "dirichlet"
+CarpetX::boundary_upper_x = "dirichlet"
+CarpetX::boundary_upper_y = "dirichlet"
+CarpetX::boundary_upper_z = "dirichlet"
+
+IO::parfile_write = no
+IO::out_dir       = $parfile
+IO::out_every     = 1
+
+CarpetX::out_performance = no
+CarpetX::out_metadata    = no
+
+CarpetX::out_tsv = yes
+CarpetX::out_tsv_vars = "
+  CoordinatesX::vertex_coords
+  CapyrX_TestMultiPatch::color
+  CapyrX_TestMultiPatch::color_pre
+"
+
+CarpetX::out_silo_vars = "
+  CoordinatesX::vertex_coords
+  CapyrX_TestMultiPatch::color
+  CapyrX_TestMultiPatch::color_pre
+"

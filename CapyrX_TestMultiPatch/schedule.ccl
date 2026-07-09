@@ -2,30 +2,45 @@
 
 STORAGE: test_data
 STORAGE: error
+STORAGE: color
+STORAGE: color_pre
 
-# Interp error test
-SCHEDULE CapyrX_TestMultiPatch_write_test_data AT initial
+
+
+SCHEDULE GROUP CapyrX_TestMultiPatch_InterpError AT initial
+{
+} "CapyrX: test interpolation error"
+
+SCHEDULE GROUP CapyrX_TestMultiPatch_DerivError AT initial AFTER CapyrX_TestMultiPatch_InterpError
+{
+} "CapyrX: test derivative error"
+
+SCHEDULE GROUP CapyrX_TestMultiPatch_Color AT initial AFTER CapyrX_TestMultiPatch_DerivError
+{
+} "CapyrX: patch coloring test"
+
+
+
+# Interpolation error test
+SCHEDULE CapyrX_TestMultiPatch_write_test_data IN CapyrX_TestMultiPatch_InterpError
 {
   LANG: C
   READS: CoordinatesX::vertex_coords(interior)
   WRITES: test_data(interior)
+  SYNC: test_data
 } "Fill test data"
 
-SCHEDULE CapyrX_TestMultiPatch_sync AS TestMultiPatch_sync_test_data AT initial AFTER TestMultiPatch_write_test_data
-{
-  LANG: C
-  OPTIONS: global
-  SYNC: test_data
-} "Synchronizes grid functions"
-
-SCHEDULE CapyrX_TestMultiPatch_compute_interp_error AT initial AFTER TestMultiPatch_sync_test_data
+SCHEDULE CapyrX_TestMultiPatch_compute_interp_error IN CapyrX_TestMultiPatch_InterpError AFTER CapyrX_TestMultiPatch_sync
 {
   LANG: C
   READS: test_data(everywhere) CoordinatesX::vertex_coords(everywhere)
   WRITES: interp(everywhere)
 } "Compute interpolation error"
 
-SCHEDULE CapyrX_TestMultiPatch_compute_deriv_error AT initial AFTER TestMultiPatch_compute_interp_error
+
+
+# Derivative error test
+SCHEDULE CapyrX_TestMultiPatch_compute_deriv_error IN CapyrX_TestMultiPatch_DerivError
 {
   LANG: C
   READS: test_data(everywhere)
@@ -41,26 +56,24 @@ SCHEDULE CapyrX_TestMultiPatch_compute_deriv_error AT initial AFTER TestMultiPat
   WRITES: d2fdxy(interior)
   WRITES: d2fdxz(interior)
   WRITES: d2fdyz(interior)
+  SYNC: error
 } "Compute derivative error"
 
-SCHEDULE CapyrX_TestMultiPatch_sync AS CapyrX_TestMultiPatch_sync_error AT initial AFTER TestMultiPatch_compute_deriv_error
-{
-  LANG: C
-  OPTIONS: global
-  SYNC: error
-} "Synchronizes grid functions"
+
 
 # Coloring test
-SCHEDULE CapyrX_TestMultiPatch_write_color AT initial
+#
+# color_pre is filled with the same values as color, but is declared in its
+# own storage group so that "SYNC: color" below does not touch it. It
+# therefore keeps the raw, un-interpolated values (including each ghost
+# zone's own-patch marker) exactly as they stood the instant before CarpetX
+# ran interpatch communication, letting us diff "before" against "after" from
+# a single iteration's output.
+SCHEDULE CapyrX_TestMultiPatch_write_color IN CapyrX_TestMultiPatch_Color
 {
   LANG: C
   READS: CoordinatesX::vertex_coords(everywhere)
   WRITES: color(everywhere)
-} "Fill patch colors"
-
-SCHEDULE CapyrX_TestMultiPatch_sync AS CapyrX_TestMultiPatch_sync_color AT initial AFTER CapyrX_TestMultiPatch_write_color
-{
-  LANG: C
-  OPTIONS: global
+  WRITES: color_pre(everywhere)
   SYNC: color
-} "Synchronizes grid functions"
+} "Fill patch colors"

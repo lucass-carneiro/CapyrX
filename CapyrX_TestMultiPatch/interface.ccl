@@ -7,6 +7,13 @@ INHERITS: CoordinatesX MultiPatch
 USES INCLUDE HEADER: loop_device.hxx
 USES INCLUDE HEADER: global_derivatives.hxx
 
+# Determine which of a patch's faces border another patch
+CCTK_INT FUNCTION MultiPatch_GetBoundarySpecification2( \
+  CCTK_INT IN patch, \
+  CCTK_INT IN size, \
+  CCTK_INT OUT ARRAY is_interpatch_boundary)
+USES FUNCTION MultiPatch_GetBoundarySpecification2
+
 CCTK_REAL test_data TYPE=gf TAGS='dependents="error" dirichlet_values={1138.0 1138.0 1138.0}'
 {
     u
@@ -30,3 +37,8 @@ CCTK_REAL color TYPE=gf
 {
     color
 } "Patch colors, for testing interpolation sources and targets"
+
+CCTK_REAL color_pre TYPE=gf
+{
+    color_pre
+} "Snapshot of patch colors taken before interpatch SYNC; never itself synced"

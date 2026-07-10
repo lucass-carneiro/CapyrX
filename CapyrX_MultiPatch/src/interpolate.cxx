@@ -5,14 +5,28 @@
 #include "../../../CarpetX/CarpetX/src/timer.hxx"
 
 #include <cctk.h>
+#include <cctk_Parameters.h>
 
 #ifdef __CUDACC__
 #include <nvtx3/nvToolsExt.h>
 #endif
 
+#include <array>
 #include <optional>
 #include <unordered_map>
 #include <utility>
+#include <vector>
+
+// System-agnostic owner lookup, provided by this same thorn
+// (CapyrX_MultiPatch/src/multipatch.cxx). For a batch of global coordinates it
+// returns, per point, the index of the single patch that owns that coordinate
+// (the same classifier global2local uses to pick a donor). Declared directly
+// rather than through the aliased MultiPatch_GetGlobalToLocal2 registration
+// because it lives in the same thorn.
+extern "C" void MultiPatch1_GlobalToLocal2(
+    CCTK_INT npoints, const CCTK_REAL *globalsx, const CCTK_REAL *globalsy,
+    const CCTK_REAL *globalsz, CCTK_INT *patches, CCTK_REAL *localsx,
+    CCTK_REAL *localsy, CCTK_REAL *localsz);
 
 namespace CapyrX::MultiPatch {
 
@@ -72,6 +86,13 @@ struct InterpolationCache {
   // O(1) slot lookup used during the parallel fill phase.
   std::unordered_map<Location, std::size_t> component_index;
 
+  // Slaved interior cells per component (same slot indexing as
+  // ordered_components), in the order their coordinates were appended to the
+  // source points. Computed once per epoch; reused by the write-back pass so
+  // the owner classification is not recomputed every sync. Empty per slot
+  // unless slave_overlap is enabled.
+  std::vector<std::vector<Arith::vect<int, dim> > > slaved_indices;
+
   // Flat coordinate arrays fed to InterpolationSetup.
   PointList coords;
 
@@ -91,6 +112,64 @@ struct InterpolationCache {
 
 static InterpolationCache g_interp_cache;
 
+// One interior overlap-band cell that this patch does not own: its grid index
+// (for write-back) and its global coordinate (for the interpolation query).
+struct SlavePoint {
+  Arith::vect<int, dim> I;
+  std::array<CCTK_REAL, dim> x;
+};
+
+// Enumerate the interior cells of one component whose true global owner is a
+// *different* patch (the "slave" overlap band). These are the cells that today
+// are dual-evolved: both this patch and the owner independently RK4-integrate
+// them. When slave_overlap is enabled they are treated exactly like ghost
+// cells -- overwritten with an interpolated read of the owner's value -- so
+// that exactly one numerical solution survives per physical point.
+//
+// Ownership is resolved through MultiPatch1_GlobalToLocal2, the same
+// coordinate-based classifier the donor lookup uses, so every slaved cell
+// mirrors straight from its true owner in a single hop (no corner chaining --
+// see mp_noise_1.md §4). The returned list has a deterministic order (the
+// loop_int traversal order), so the collection and write-back passes, which
+// call this independently, agree cell-for-cell.
+static std::vector<SlavePoint> collect_slaved_interior(
+    const Loop::GridDescBase &grid, const int patch,
+    const std::array<Loop::GF3D2<const CCTK_REAL>, dim> &vcoords) {
+  // Gather every interior cell as a candidate, then batch-classify.
+  std::vector<Arith::vect<int, dim> > cand_I;
+  std::array<std::vector<CCTK_REAL>, dim> cand_x;
+  grid.loop_int<0, 0, 0>(grid.nghostzones, [&](const Loop::PointDesc &p) {
+    cand_I.push_back(p.I);
+    for (int d = 0; d < dim; ++d)
+      cand_x[d].push_back(vcoords[d](p.I));
+  });
+
+  const CCTK_INT ncand = static_cast<CCTK_INT>(cand_I.size());
+  std::vector<SlavePoint> slaved;
+  if (ncand == 0)
+    return slaved;
+
+  std::vector<CCTK_INT> owner(ncand);
+  std::array<std::vector<CCTK_REAL>, dim> local; // discarded
+  for (int d = 0; d < dim; ++d)
+    local[d].resize(ncand);
+
+  MultiPatch1_GlobalToLocal2(ncand, cand_x[0].data(), cand_x[1].data(),
+                             cand_x[2].data(), owner.data(), local[0].data(),
+                             local[1].data(), local[2].data());
+
+  for (CCTK_INT i = 0; i < ncand; ++i) {
+    if (owner[i] != patch) {
+      SlavePoint sp;
+      sp.I = cand_I[i];
+      for (int d = 0; d < dim; ++d)
+        sp.x[d] = cand_x[d][i];
+      slaved.push_back(sp);
+    }
+  }
+  return slaved;
+}
+
 extern "C" void
 MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
                         const CCTK_INT nvars_,
@@ -102,6 +181,8 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
 
   static CarpetX::Timer timer("CapyrX::MultiPatch1_Interpolate");
   CarpetX::Interval interval(timer);
+
+  DECLARE_CCTK_PARAMETERS;
 
   // Step 0: Check input
 
@@ -217,6 +298,11 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
           g_interp_cache.ordered_components.emplace_back(location, PointList{});
         });
 
+    // Per-slot slaved-index storage, sized to match ordered_components so the
+    // parallel pass can write each slot without synchronisation.
+    g_interp_cache.slaved_indices.assign(
+        g_interp_cache.ordered_components.size(), {});
+
     // Parallel pass: each component writes to its pre-assigned slot.
     {
       CarpetX::active_levels_t().loop_parallel([&](int patch, int level,
@@ -262,8 +348,52 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
             source_points[d].push_back(vcoords[d](p.I));
           }
         });
+
         g_interp_cache.ordered_components[slot].second =
             std::move(source_points);
+      });
+    }
+
+    // Slave overlap band: append the interior cells this patch does not own,
+    // in loop_int order, right after the ghost cells collected above. Done in
+    // a *serial* pass because collect_slaved_interior calls
+    // MultiPatch1_GlobalToLocal2, whose CarpetX timer is only safe to enter
+    // single-threaded (its handle is shared across threads). This runs only on
+    // a cache rebuild (epoch change), not every sync, so the serial cost is
+    // paid rarely. The write-back pass reuses the cached slaved_indices, so the
+    // owner classification here is never repeated per-step.
+    if (slave_overlap) {
+      CarpetX::active_levels_t().loop_serially([&](int patch, int level,
+                                                   int index, int component,
+                                                   const cGH *cctkGH) {
+        const Loop::GridDescBase grid(cctkGH);
+        const std::array<int, dim> centering{0, 0, 0};
+        const Loop::GF3D2layout layout(cctkGH, centering);
+
+        const std::array<Loop::GF3D2<const CCTK_REAL>, dim> vcoords{
+            Loop::GF3D2<const CCTK_REAL>(
+                layout, static_cast<const CCTK_REAL *>(CCTK_VarDataPtr(
+                            cctkGH, 0, "CoordinatesX::vcoordx"))),
+            Loop::GF3D2<const CCTK_REAL>(
+                layout, static_cast<const CCTK_REAL *>(CCTK_VarDataPtr(
+                            cctkGH, 0, "CoordinatesX::vcoordy"))),
+            Loop::GF3D2<const CCTK_REAL>(
+                layout, static_cast<const CCTK_REAL *>(CCTK_VarDataPtr(
+                            cctkGH, 0, "CoordinatesX::vcoordz")))};
+
+        const Location location{patch, level, index, component};
+        const std::size_t slot = g_interp_cache.component_index.at(location);
+
+        const auto slaved = collect_slaved_interior(grid, patch, vcoords);
+
+        PointList &source_points = g_interp_cache.ordered_components[slot].second;
+        auto &slot_indices = g_interp_cache.slaved_indices[slot];
+        slot_indices.reserve(slaved.size());
+        for (const auto &sp : slaved) {
+          for (int d = 0; d < dim; ++d)
+            source_points[d].push_back(sp.x[d]);
+          slot_indices.push_back(sp.I);
+        }
       });
     }
 
@@ -388,6 +518,12 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
       const Location location{patch, level, index, component};
       const ComponentSlice &slice = g_interp_cache.slices.at(location);
 
+      // Slaved interior cells for this component, computed once at cache
+      // rebuild (see the collection pass). Empty unless slave_overlap is on.
+      const std::vector<Arith::vect<int, dim> > &slaved =
+          g_interp_cache.slaved_indices.at(
+              g_interp_cache.component_index.at(location));
+
 // Count ghost cells skipped due to outer boundary (includes pure outer
 // cells and corner cells at the outer+interpatch intersection).
 // Corner cells are NOT filled here and require a 2nd BC pass in
@@ -432,6 +568,15 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
 
           pos++;
         });
+
+        // Slave overlap band: overwrite non-owned interior cells with the
+        // owner's interpolated value, immediately after the ghost cells and
+        // in the same order used when their coordinates were collected.
+        for (const auto &I : slaved) {
+          vars[n](I) = results[n][slice.offset + pos];
+          pos++;
+        }
+
         assert(pos == slice.length);
       }
 

@@ -34,6 +34,10 @@ INT patch_overlap "How many grid points of overlap to add between patches"
   0:* :: "Positive"
 } 0
 
+BOOLEAN slave_overlap "Overwrite non-owned interior overlap-band cells with an interpolated read of the true global owner's value (slave-evolution), instead of letting every patch independently RK4-evolve the same physical cells (dual-evolution). See mp_slave_0.md / mp_noise_1.md."
+{
+} no
+
 # Cartesian patch system
 
 INT cartesian_ncells_i "Number of cells in i direction"

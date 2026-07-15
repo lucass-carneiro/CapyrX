@@ -23,10 +23,11 @@
 // (the same classifier global2local uses to pick a donor). Declared directly
 // rather than through the aliased MultiPatch_GetGlobalToLocal2 registration
 // because it lives in the same thorn.
-extern "C" void MultiPatch1_GlobalToLocal2(
-    CCTK_INT npoints, const CCTK_REAL *globalsx, const CCTK_REAL *globalsy,
-    const CCTK_REAL *globalsz, CCTK_INT *patches, CCTK_REAL *localsx,
-    CCTK_REAL *localsy, CCTK_REAL *localsz);
+extern "C" void
+MultiPatch1_GlobalToLocal2(CCTK_INT npoints, const CCTK_REAL *globalsx,
+                           const CCTK_REAL *globalsy, const CCTK_REAL *globalsz,
+                           CCTK_INT *patches, CCTK_REAL *localsx,
+                           CCTK_REAL *localsy, CCTK_REAL *localsz);
 
 namespace CapyrX::MultiPatch {
 
@@ -42,8 +43,8 @@ using PointList = std::array<std::vector<CCTK_REAL>, dim>;
 } // namespace CapyrX::MultiPatch
 
 // See https://stackoverflow.com/a/2595226
-static constexpr inline auto hash_combine(std::size_t h1, std::size_t h2)
-    -> std::size_t {
+static constexpr inline auto hash_combine(std::size_t h1,
+                                          std::size_t h2) -> std::size_t {
   return h1 ^ (h2 + 0x9e3779b9 + (h1 << 6) + (h1 >> 2));
 }
 
@@ -386,7 +387,8 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
 
         const auto slaved = collect_slaved_interior(grid, patch, vcoords);
 
-        PointList &source_points = g_interp_cache.ordered_components[slot].second;
+        PointList &source_points =
+            g_interp_cache.ordered_components[slot].second;
         auto &slot_indices = g_interp_cache.slaved_indices[slot];
         slot_indices.reserve(slaved.size());
         for (const auto &sp : slaved) {
@@ -433,19 +435,31 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
     static const bool have_boundary_spec =
         CCTK_IsFunctionAliased("MultiPatch_GetBoundarySpecification2");
 
-    if (have_boundary_spec) {
-      std::array<CCTK_INT, 2 * dim> spec;
-      for (int p = 0; p < npatches; ++p) {
-        MultiPatch_GetBoundarySpecification2(p, 2 * dim, spec.data());
-        for (int f = 0; f < 2; ++f)
-          for (int d = 0; d < dim; ++d)
-            g_interp_cache.policy[p][f][d] = !spec[2 * d + f];
+    // This routine is itself provided by CapyrX_MultiPatch, which also
+    // provides MultiPatch_GetBoundarySpecification2 (interface.ccl). The two
+    // are always wired together, so reaching here without the alias means
+    // the aliasing is broken (e.g. a malformed interface.ccl), not that
+    // multipatch is inactive. Silently defaulting to policy=true would open
+    // every outer face to donor stencils reading outer-BC ghosts into
+    // interpatch values without anyone noticing.
+    if (!have_boundary_spec) {
+      CCTK_VERROR(
+          "MultiPatch1_Interpolate: MultiPatch_GetBoundarySpecification2 is "
+          "not aliased even though CapyrX_MultiPatch (which provides it) is "
+          "active. Refusing to silently default every outer face's donor "
+          "policy to \"anchor allowed\" (this would let outer-boundary data "
+          "leak into interpatch values on every face). Check interface.ccl "
+          "wiring.");
+    }
+
+    std::array<CCTK_INT, 2 * dim> spec;
+    for (int p = 0; p < npatches; ++p) {
+      MultiPatch_GetBoundarySpecification2(p, 2 * dim, spec.data());
+      for (int f = 0; f < 2; ++f) {
+        for (int d = 0; d < dim; ++d) {
+          g_interp_cache.policy[p][f][d] = !spec[2 * d + f];
+        }
       }
-    } else {
-      for (int p = 0; p < npatches; ++p)
-        for (int f = 0; f < 2; ++f)
-          for (int d = 0; d < dim; ++d)
-            g_interp_cache.policy[p][f][d] = true;
     }
 
     g_interp_cache.epoch = current_epoch;

@@ -206,6 +206,8 @@ def load_global_coords(coords_path):
 
 
 def decode_color(color):
+    if not math.isfinite(color):
+        return None, None  # NaN/inf poison (poison_undefined_values) -> NON-INTEGER-COLOR
     c = round(color)
     if abs(c - color) > 1e-6:
         return None, None  # not an integer marker at all

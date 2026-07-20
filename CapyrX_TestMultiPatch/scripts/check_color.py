@@ -86,6 +86,14 @@ INTERIOR, BOUNDARY, GHOST, OVERLAP = 10, 20, 30, 40
 # relative tolerance when comparing against r0/r1.
 REL_TOL = 1e-9
 
+# If more than this fraction of the rows read fail to join against the coords
+# TSV, the join itself is broken (coords file mismatch, changed `component`
+# numbering, truncated output) and any "no evidence" verdict would be vacuous.
+# main() treats crossing this threshold -- or checking zero rows at all -- as a
+# hard error (exit 2, distinct from the exit 1 used for a genuine content
+# mismatch). See coloring_2 finding 2.
+MAX_MISSING_COORDS_FRACTION = 0.5
+
 
 def get_owner_patch(x, y, z, r0):
     """Faithful port of CubedSphere::get_owner_patch (cubed_sphere.cxx:23-83)."""
@@ -234,6 +242,10 @@ class Report:
             f"Rows checked against ground truth: {self.checked}",
             f"Passed:                       {self.passed}",
         ]
+        if self.total and (self.checked == 0 or
+                           self.missing_coords > MAX_MISSING_COORDS_FRACTION * self.total):
+            lines.append("  ^^ coords join looks broken (see RESULT below): with these "
+                         "checked / missing-coords counts the verdict is not trustworthy.")
         return "\n".join(lines)
 
 
@@ -447,6 +459,29 @@ def main():
 
     print(report.summary())
     print()
+
+    # Vacuous-pass guard (coloring_2 finding 2). The any_critical verdict below
+    # inspects only report.by_kind, so a run that validated *nothing* -- because
+    # the coords join produced no matches -- would otherwise print "no evidence"
+    # and exit 0 while having checked zero rows. A broken/empty join is a
+    # "checker couldn't run" condition, not a clean result: fail with exit 2
+    # (distinct from the exit 1 used for a genuine content mismatch, so CI can
+    # tell the two apart), with an explicit message separate from any content
+    # mismatch so the failure mode is unambiguous.
+    if report.checked == 0:
+        print(f"RESULT: nothing was validated -- 0 of {report.total} rows read were "
+              "checked against ground truth. The coords join produced no matches "
+              "(wrong/missing coords TSV, mismatched component numbering, or "
+              "truncated output); this is not a clean pass.", file=sys.stderr)
+        sys.exit(2)
+    if report.total and report.missing_coords > MAX_MISSING_COORDS_FRACTION * report.total:
+        pct = 100.0 * report.missing_coords / report.total
+        print(f"RESULT: coords join largely broke -- {report.missing_coords} of "
+              f"{report.total} rows ({pct:.1f}%) had no coords match, over the "
+              f"{MAX_MISSING_COORDS_FRACTION:.0%} threshold. Only {report.checked} rows "
+              "were actually checked; the verdict is not trustworthy. Treating as a "
+              "hard failure.", file=sys.stderr)
+        sys.exit(2)
 
     any_critical = False
     for kind, items in sorted(report.by_kind.items(), key=lambda kv: -len(kv[1])):

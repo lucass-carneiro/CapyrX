@@ -42,3 +42,33 @@ CCTK_REAL color_pre TYPE=gf
 {
     color_pre
 } "Snapshot of patch colors taken before interpatch SYNC; never itself synced"
+
+CCTK_REAL nan_test TYPE=gf TAGS='dirichlet_values={1.0 1.0 1.0}'
+{
+    nan_test
+} "NaN-injection field: 1.0 = clean baseline, NaN = corrupted"
+
+CCTK_REAL nan_test_pre TYPE=gf
+{
+    nan_test_pre
+} "Snapshot of nan_test immediately after injection, before SYNC; never itself synced"
+
+# Smooth-field outer-BC A/B test .
+# `smooth` is filled with a smooth analytic field (`smooth_field`) *everywhere*,
+# including the outer-BC ghost cells, then SYNCed. Under CarpetX::boundary_* =
+# neumann / "linear extrapolation" the SYNC's BC pass overwrites the outer-BC
+# ghosts and the interpatch interpolation then reads them (measurement (a),
+# "current centered+ghost"); under boundary_* = none the BC pass is a no-op so
+# the outer ghosts keep their exact analytic values and the interpatch
+# interpolation reads exact ghosts (measurement (c), "exact-solution ghosts").
+# Deliberately carries no dirichlet_values / *_vars override so its boundary
+# kind is exactly the global CarpetX::boundary_* setting the par file selects.
+CCTK_REAL smooth_test TYPE=gf
+{
+    smooth
+} "Smooth analytic field for the outer-BC (Channel 1) A/B test"
+
+CCTK_REAL smooth_test_pre TYPE=gf
+{
+    smooth_pre
+} "Snapshot of smooth immediately after fill (= exact analytic value at every cell, incl. outer ghosts), before SYNC; never itself synced"

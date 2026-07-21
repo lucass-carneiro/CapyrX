@@ -6,7 +6,14 @@ doc/_static
 doc/_templates
 
 venv/*
-mpx/__pycache__
 
 *.png
 *.svg
+
+# Ignore all __pycache__ directories recursively
+__pycache__/
+
+# Ignore compiled Python files
+*.pyc
+*.pyo
+*.pyd

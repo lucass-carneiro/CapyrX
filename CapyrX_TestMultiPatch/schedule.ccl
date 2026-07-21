@@ -4,6 +4,10 @@ STORAGE: test_data
 STORAGE: error
 STORAGE: color
 STORAGE: color_pre
+STORAGE: nan_test
+STORAGE: nan_test_pre
+STORAGE: smooth_test
+STORAGE: smooth_test_pre
 
 
 
@@ -18,6 +22,21 @@ SCHEDULE GROUP CapyrX_TestMultiPatch_DerivError AT initial AFTER CapyrX_TestMult
 SCHEDULE GROUP CapyrX_TestMultiPatch_Color AT initial AFTER CapyrX_TestMultiPatch_DerivError
 {
 } "CapyrX: patch coloring test"
+
+# The NaN-injection and smooth-field A/B diagnostics inject NaN / require
+# poison_undefined_values=no, so they abort the poison=yes coloring test. Gate
+# both groups behind run_outer_bc_tests (default no); only the nan_*/smooth_*
+# par files enable them. See param.ccl.
+if (run_outer_bc_tests)
+{
+  SCHEDULE GROUP CapyrX_TestMultiPatch_NanTest AT initial AFTER CapyrX_TestMultiPatch_Color
+  {
+  } "CapyrX: physical-outer-boundary NaN injection test"
+
+  SCHEDULE GROUP CapyrX_TestMultiPatch_SmoothTest AT initial AFTER CapyrX_TestMultiPatch_NanTest
+  {
+  } "CapyrX: smooth-field outer-BC (Channel 1) A/B test"
+}
 
 
 
@@ -77,3 +96,47 @@ SCHEDULE CapyrX_TestMultiPatch_write_color IN CapyrX_TestMultiPatch_Color
   WRITES: color_pre(everywhere)
   SYNC: color
 } "Fill patch colors"
+
+
+
+# Physical-outer-boundary NaN injection test
+#
+# nan_test_pre mirrors color_pre's convention: it is written once here, in its
+# own storage group that "SYNC: nan_test" below never touches, so it keeps the
+# exact injected values (before any interpatch communication or boundary
+# condition pass) to diff the post-sync nan_test against.
+if (run_outer_bc_tests)
+{
+  SCHEDULE CapyrX_TestMultiPatch_write_nan_test IN CapyrX_TestMultiPatch_NanTest
+  {
+    LANG: C
+    READS: CoordinatesX::vertex_coords(everywhere)
+    WRITES: nan_test(everywhere)
+    WRITES: nan_test_pre(everywhere)
+    SYNC: nan_test
+  } "Inject NaN at the physical outer boundary, per nan_injection_mode"
+}
+
+
+
+# Smooth-field outer-BC (Channel 1) A/B test
+#
+# smooth is filled with the analytic smooth_field EVERYWHERE (interior + all
+# ghost cells, so the outer-BC ghosts start out holding the exact analytic
+# value). smooth_pre mirrors nan_test_pre / color_pre: written once here, in
+# its own never-synced storage group, so it keeps the exact analytic value at
+# every cell as an in-place ground truth. "SYNC: smooth" below then runs
+# CarpetX's full BC + MultiPatch_Interpolate pipeline using whichever
+# CarpetX::boundary_* kind the par file selects (neumann/linear-extrapolation =
+# measurement (a); none = measurement (c), exact outer ghosts preserved).
+if (run_outer_bc_tests)
+{
+  SCHEDULE CapyrX_TestMultiPatch_write_smooth_test IN CapyrX_TestMultiPatch_SmoothTest
+  {
+    LANG: C
+    READS: CoordinatesX::vertex_coords(everywhere)
+    WRITES: smooth(everywhere)
+    WRITES: smooth_pre(everywhere)
+    SYNC: smooth_test
+  } "Fill smooth analytic field everywhere; snapshot pre-sync ground truth"
+}

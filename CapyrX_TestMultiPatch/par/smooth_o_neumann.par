@@ -1,0 +1,85 @@
+# Smooth-field outer-BC (Channel 1) A/B test -- mp_noise_3.md sec 8.
+#
+# Run A: outer boundary = Neumann. This is measurement (a) for the Neumann leg:
+# the outer-BC ghosts (radial k=35,36 in the r=32/overlap=2 layout) are filled
+# by CarpetX's Neumann kernel (a 0th-order copy of the r=2.5 boundary vertex),
+# and the interpatch interpolation that fills a neighbouring wedge's near-outer
+# corner ghosts then reads them (the "current centered+ghost" path).
+#
+# This file is IDENTICAL to smooth_z_linextrap.par and smooth_z_none.par except
+# for the CarpetX::boundary_* block below. The interior (including the k=34
+# donor vertex) is therefore bit-identical across the three runs; only the
+# outer-ghost fill differs. Diffing the post-SYNC smooth values between this and
+# smooth_z_linextrap.par at the near-corner interpatch-ghost receiver cells is
+# the sec-8 primary signal (Delta != 0 => Channel 1 is a live BC-distinct
+# injector). See scripts/check_smooth_test.py.
+
+ActiveThorns = "
+    CarpetX
+    IOUtil
+    CoordinatesX
+    CapyrX_MultiPatch
+    CapyrX_TestMultiPatch
+"
+
+Cactus::presync_mode = "mixed-error"
+Cactus::cctk_show_schedule = yes
+
+Cactus::terminate = "iteration"
+Cactus::cctk_itlast = 0
+
+CarpetX::verbose                 = yes
+# smooth/smooth_pre are written every cell (loop_all), so nothing here relies on
+# poison-fill; disabling it only sidesteps CarpetX's hardcoded forbid_nans in
+# check_valid_gf (carpetx_nan_checker_bug.md), matching the nan_* par files.
+CarpetX::poison_undefined_values = no
+
+CarpetX::ghost_size          = 2
+CarpetX::interpolation_order = 4
+
+CarpetX::blocking_factor_x = 1
+CarpetX::blocking_factor_y = 1
+CarpetX::blocking_factor_z = 1
+
+CapyrX_MultiPatch::verbose        =  yes
+CapyrX_MultiPatch::patch_system   = "Cubed sphere"
+CapyrX_MultiPatch::inner_boundary_radius = 0.5
+CapyrX_MultiPatch::outer_boundary_radius = 2.5
+CapyrX_MultiPatch::angular_cells         = 16
+CapyrX_MultiPatch::radial_cells          = 32
+CapyrX_MultiPatch::patch_overlap         = CarpetX::ghost_size
+
+# One AMReX box per patch (see nan_neumann_interior_overlap_order4.par for the
+# full explanation of these three max_grid_size lines + refine_grid_layout=0).
+CarpetX::max_grid_size_x = CapyrX_MultiPatch::angular_cells + 2 * CapyrX_MultiPatch::patch_overlap
+CarpetX::max_grid_size_y = CapyrX_MultiPatch::angular_cells + 2 * CapyrX_MultiPatch::patch_overlap
+CarpetX::max_grid_size_z = CapyrX_MultiPatch::radial_cells + CapyrX_MultiPatch::patch_overlap
+
+CarpetX::amrex_parameters[0] = "amr.refine_grid_layout=0"
+CarpetX::amrex_parameters[1] = "amr.v=2"
+
+# ---- The only block that differs between the three A/B par files ----
+CarpetX::boundary_x       = "neumann"
+CarpetX::boundary_y       = "neumann"
+CarpetX::boundary_z       = "neumann"
+CarpetX::boundary_upper_x = "neumann"
+CarpetX::boundary_upper_y = "neumann"
+CarpetX::boundary_upper_z = "neumann"
+# --------------------------------------------------------------------
+
+CapyrX_TestMultiPatch::smooth_field = "one_over_r"
+CapyrX_TestMultiPatch::run_outer_bc_tests = yes
+
+IO::parfile_write = no
+IO::out_dir       = $parfile
+IO::out_every     = 1
+
+CarpetX::out_performance = no
+CarpetX::out_metadata    = no
+
+CarpetX::out_tsv = yes
+CarpetX::out_tsv_vars = "
+  CoordinatesX::vertex_coords
+  CapyrX_TestMultiPatch::smooth
+  CapyrX_TestMultiPatch::smooth_pre
+"

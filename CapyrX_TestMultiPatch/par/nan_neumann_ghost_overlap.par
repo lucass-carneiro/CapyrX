@@ -1,0 +1,87 @@
+# nan_test matrix (mp_nan_test_design.md Sec 5), extended with patch overlaps:
+# same geometry as color_ghost_overlap.par (patch_overlap = CarpetX::ghost_size,
+# so interpatch overlap bands actually exist), boundary_* = "neumann" (one of
+# the three non-dirichlet BC kinds predicted in the design's Sec 7 to read from
+# ghost/interior data rather than assign a constant), nan_injection_mode =
+# "ghost". This is the first matrix entry run with a nonzero patch_overlap,
+# specifically to probe the "corner cell catastrophe" (boundaries_impl.hxx)
+# under the geometry where interpatch overlap bands are widest.
+
+ActiveThorns = "
+    CarpetX
+    IOUtil
+    CoordinatesX
+    CapyrX_MultiPatch
+    CapyrX_TestMultiPatch
+"
+
+Cactus::presync_mode = "mixed-error"
+Cactus::cctk_show_schedule = yes
+
+Cactus::terminate = "iteration"
+Cactus::cctk_itlast = 0
+
+CarpetX::verbose                 = yes
+# Deliberately off for this test: CarpetX's own check_valid_gf/check_valid_ga
+# hardcode forbid_nans regardless of a group's checkpoint tag (see
+# carpetx_nan_checker_bug.md), so poison_undefined_values=yes aborts the run
+# before SYNC ever executes. nan_test/nan_test_pre are fully self-written every
+# cell (never rely on implicit poison-fill), and neither BC application nor
+# MultiPatch_Interpolate branch on this flag, so turning it off does not change
+# any value this test compares -- see mp_nan_test_1.md Sec 3.
+CarpetX::poison_undefined_values = no
+
+CarpetX::ghost_size          = 2
+CarpetX::interpolation_order = 0
+
+CarpetX::blocking_factor_x = 1
+CarpetX::blocking_factor_y = 1
+CarpetX::blocking_factor_z = 1
+
+CapyrX_MultiPatch::verbose        =  yes
+CapyrX_MultiPatch::patch_system   = "Cubed sphere"
+CapyrX_MultiPatch::inner_boundary_radius = 0.5
+CapyrX_MultiPatch::outer_boundary_radius = 2.5
+CapyrX_MultiPatch::angular_cells         = 16 # Less cells than this cause ill defined Jacobians in this test
+CapyrX_MultiPatch::radial_cells          = 32 # Less cells than this cause ill defined Jacobians in this test
+CapyrX_MultiPatch::patch_overlap         = CarpetX::ghost_size
+
+# Each cubed-sphere patch is angular_cells+2*patch_overlap = 20 cells wide
+# in x/y; the cartesian patch is 20 cells in z, the six other patches are
+# radial_cells+patch_overlap = 34 cells in z. Setting max_grid_size to the
+# largest patch extent in each direction keeps every patch as a single
+# AMReX box. This alone is not enough with more than one MPI process,
+# though: AMReX's amr.refine_grid_layout (on by default) still re-chops
+# each patch's single box until there are at least as many boxes as MPI
+# ranks. Disabling it keeps exactly one box per patch no matter how many
+# ranks/threads the run uses.
+CarpetX::max_grid_size_x = CapyrX_MultiPatch::angular_cells + 2 * CapyrX_MultiPatch::patch_overlap
+CarpetX::max_grid_size_y = CapyrX_MultiPatch::angular_cells + 2 * CapyrX_MultiPatch::patch_overlap
+CarpetX::max_grid_size_z = CapyrX_MultiPatch::radial_cells + CapyrX_MultiPatch::patch_overlap
+
+CarpetX::amrex_parameters[0] = "amr.refine_grid_layout=0"
+CarpetX::amrex_parameters[1] = "amr.v=2"
+
+CarpetX::boundary_x       = "neumann"
+CarpetX::boundary_y       = "neumann"
+CarpetX::boundary_z       = "neumann"
+CarpetX::boundary_upper_x = "neumann"
+CarpetX::boundary_upper_y = "neumann"
+CarpetX::boundary_upper_z = "neumann"
+
+CapyrX_TestMultiPatch::nan_injection_mode = "ghost"
+CapyrX_TestMultiPatch::run_outer_bc_tests = yes
+
+IO::parfile_write = no
+IO::out_dir       = $parfile
+IO::out_every     = 1
+
+CarpetX::out_performance = no
+CarpetX::out_metadata    = no
+
+CarpetX::out_tsv = yes
+CarpetX::out_tsv_vars = "
+  CoordinatesX::vertex_coords
+  CapyrX_TestMultiPatch::nan_test
+  CapyrX_TestMultiPatch::nan_test_pre
+"

@@ -11,6 +11,11 @@
 
 namespace CapyrX::TestMultiPatch {
 
+// Must live at namespace scope (not inside a function): nvcc forbids a
+// function-local type from being used as the type of a variable captured by
+// an extended __device__ lambda.
+enum class SmoothKind { z_global, parabola, one_over_r };
+
 static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_HOST CCTK_DEVICE
 standing_wave(CCTK_REAL A, CCTK_REAL kx, CCTK_REAL ky, CCTK_REAL kz,
               CCTK_REAL t, CCTK_REAL x, CCTK_REAL y,
@@ -638,7 +643,6 @@ extern "C" void CapyrX_TestMultiPatch_write_smooth_test(CCTK_ARGUMENTS) {
   // Which analytic field to use, resolved once on the host so the device
   // lambda only carries an int (CCTK_Equals on the raw keyword string inside a
   // device kernel is neither needed nor cheap).
-  enum class SmoothKind { z_global, parabola, one_over_r };
   SmoothKind kind;
   if (CCTK_Equals(smooth_field, "z_global"))
     kind = SmoothKind::z_global;

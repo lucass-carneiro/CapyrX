@@ -85,7 +85,8 @@ USES FUNCTION GetEpoch
 void FUNCTION MultiPatch_Interpolate( \
   CCTK_POINTER_TO_CONST IN cctkGH, \
   CCTK_INT IN nvars, \
-  CCTK_INT ARRAY IN varinds)
+  CCTK_INT ARRAY IN varinds, \
+  CCTK_INT IN apply_slave_writes)
 PROVIDES FUNCTION MultiPatch_Interpolate \
   WITH MultiPatch1_Interpolate \
   LANGUAGE C

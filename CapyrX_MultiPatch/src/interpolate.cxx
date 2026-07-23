@@ -12,6 +12,9 @@
 #endif
 
 #include <array>
+#include <cstdlib>
+#include <iomanip>
+#include <iostream>
 #include <optional>
 #include <unordered_map>
 #include <utility>
@@ -134,7 +137,8 @@ struct SlavePoint {
 // loop_int traversal order), so the collection and write-back passes, which
 // call this independently, agree cell-for-cell.
 static std::vector<SlavePoint> collect_slaved_interior(
-    const Loop::GridDescBase &grid, const int patch,
+    const Loop::GridDescBase &grid, const int patch, const int level,
+    const int component,
     const std::array<Loop::GF3D2<const CCTK_REAL>, dim> &vcoords) {
   // Gather every interior cell as a candidate, then batch-classify.
   std::vector<Arith::vect<int, dim> > cand_I;
@@ -159,6 +163,32 @@ static std::vector<SlavePoint> collect_slaved_interior(
                              cand_x[2].data(), owner.data(), local[0].data(),
                              local[1].data(), local[2].data());
 
+#ifdef CCTK_DEBUG
+  // mp_slave_3.md §4 instrumentation: log the exact coordinate and owner
+  // decision this classifier saw at collection time (which happens once, at
+  // the interpolation cache's single serial rebuild pass), for every
+  // candidate interior cell. This is compared offline against the same
+  // cell's coordinate in the final output TSV (written much later, at I/O
+  // time) to test the coordinate-staleness hypothesis: that
+  // CoordinatesX::vcoordx/y/z for a wedge's overlap-band cells is not yet in
+  // its final settled state when collect_slaved_interior classifies it,
+  // so a coordinate that ends up just outside cartesian's cube by output
+  // time was seen just inside (or closer to) it here.
+  {
+    static const bool log_donors = std::getenv("CAPYRX_LOG_DONORS") != nullptr;
+    if (log_donors) {
+      for (CCTK_INT i = 0; i < ncand; ++i) {
+        std::cerr << "COLLECT patch=" << patch << " level=" << level
+                  << " component=" << component << " I=(" << cand_I[i][0]
+                  << "," << cand_I[i][1] << "," << cand_I[i][2] << ")"
+                  << " x=" << std::setprecision(17) << cand_x[0][i]
+                  << " y=" << cand_x[1][i] << " z=" << cand_x[2][i]
+                  << " owner=" << owner[i] << "\n";
+      }
+    }
+  }
+#endif
+
   for (CCTK_INT i = 0; i < ncand; ++i) {
     if (owner[i] != patch) {
       SlavePoint sp;
@@ -174,7 +204,8 @@ static std::vector<SlavePoint> collect_slaved_interior(
 extern "C" void
 MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
                         const CCTK_INT nvars_,
-                        const CCTK_INT *restrict const varinds_) {
+                        const CCTK_INT *restrict const varinds_,
+                        const CCTK_INT apply_slave_writes_) {
 #ifdef __CUDACC__
   const nvtxRangeId_t range =
       nvtxRangeStartA("CapyrX::MultiPatch1_Interpolate");
@@ -203,6 +234,7 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
   // Cast GH and wrap varinds
   const auto cctkGH{static_cast<const cGH *>(cctkGH_)};
   const std::vector<CCTK_INT> varinds(varinds_, varinds_ + nvars_);
+  const bool apply_slave_writes = apply_slave_writes_ != 0;
 
   // Check input varinds validity
   for (const auto &varind : varinds) {
@@ -348,6 +380,29 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
           for (int d = 0; d < dim; ++d) {
             source_points[d].push_back(vcoords[d](p.I));
           }
+
+#ifdef CCTK_DEBUG
+          // mp_slave_3.md §4 instrumentation, part 2: bucket (a)'s victims
+          // turned out to be ordinary ghost points (this loop), not members
+          // of the `slaved` list (collect_slaved_interior, logged
+          // separately as COLLECT) -- so the coordinate-staleness question
+          // must be tested against *this* collection point, the one that
+          // actually feeds InterpolationSetup's own donor-routing call for
+          // ghost points, not collect_slaved_interior's separate,
+          // redundant classification pass.
+          {
+            static const bool log_donors =
+                std::getenv("CAPYRX_LOG_DONORS") != nullptr;
+            if (log_donors) {
+              std::cerr << "GHOSTCOORD patch=" << patch << " level=" << level
+                        << " component=" << component << " I=(" << p.I[0]
+                        << "," << p.I[1] << "," << p.I[2] << ")"
+                        << " x=" << std::setprecision(17) << vcoords[0](p.I)
+                        << " y=" << vcoords[1](p.I) << " z=" << vcoords[2](p.I)
+                        << "\n";
+            }
+          }
+#endif
         });
 
         g_interp_cache.ordered_components[slot].second =
@@ -385,7 +440,8 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
         const Location location{patch, level, index, component};
         const std::size_t slot = g_interp_cache.component_index.at(location);
 
-        const auto slaved = collect_slaved_interior(grid, patch, vcoords);
+        const auto slaved =
+            collect_slaved_interior(grid, patch, level, component, vcoords);
 
         PointList &source_points =
             g_interp_cache.ordered_components[slot].second;
@@ -546,6 +602,17 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
       int n_outer_skipped = 0;
 #endif // CCTK_DEBUG
 
+// mp_slave_2.md §4 instrumentation: dump every victim cell's identity
+// (Location + grid index + the flat query index `n` fed to
+// InterpolationSetup, i.e. `idata(1)` on the CarpetX side) so it can be
+// cross-referenced against the CarpetX "DONOR" log lines for the same `n`
+// to find which donor cell (and whether it is a genuine ghost zone or an
+// interior overlap-band cell) actually fed a given failing point. Logged
+// once (var loop index 0), not once per variable. Opt-in via env var.
+#ifdef CCTK_DEBUG
+      static const bool log_donors = std::getenv("CAPYRX_LOG_DONORS") != nullptr;
+#endif // CCTK_DEBUG
+
       for (std::size_t n = 0; n < nvars; n++) {
         std::size_t pos = 0;
 
@@ -560,6 +627,18 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
 #ifdef CCTK_DEBUG
               if (n == 0) {
                 ++n_outer_skipped;
+                // mp_slave_7.md §5 / mp_slave_8.md instrumentation: log which
+                // axis/face triggered the skip for this ghost point, so it
+                // can be cross-referenced against bucket (b)'s known cell
+                // list to confirm this is the mechanism that makes those
+                // cells invisible to this loop.
+                if (log_donors) {
+                  std::cerr << "GHOSTSKIP patch=" << patch
+                            << " level=" << level << " component=" << component
+                            << " I=(" << p.I[0] << "," << p.I[1] << ","
+                            << p.I[2] << ")"
+                            << " axis=" << d << " face=lo\n";
+                }
               }
 #endif // CCTK_DEBUG
 
@@ -571,12 +650,29 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
 #ifdef CCTK_DEBUG
               if (n == 0) {
                 ++n_outer_skipped;
+                if (log_donors) {
+                  std::cerr << "GHOSTSKIP patch=" << patch
+                            << " level=" << level << " component=" << component
+                            << " I=(" << p.I[0] << "," << p.I[1] << ","
+                            << p.I[2] << ")"
+                            << " axis=" << d << " face=hi\n";
+                }
               }
 #endif // CCTK_DEBUG
 
               return;
             }
           }
+
+#ifdef CCTK_DEBUG
+          if (n == 0 && log_donors) {
+            std::cerr << "VICTIM bucket=ghost patch=" << patch
+                      << " level=" << level << " index=" << index
+                      << " component=" << component << " I=(" << p.I[0] << ","
+                      << p.I[1] << "," << p.I[2] << ")"
+                      << " n=" << (slice.offset + pos) << "\n";
+          }
+#endif // CCTK_DEBUG
 
           vars[n](p.I) = results[n][slice.offset + pos];
 
@@ -586,8 +682,31 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
         // Slave overlap band: overwrite non-owned interior cells with the
         // owner's interpolated value, immediately after the ghost cells and
         // in the same order used when their coordinates were collected.
+        //
+        // mp_slave_2.md §7 Fix #1: only actually write these back when this
+        // call is the sync's final pass (apply_slave_writes). Writing them
+        // on an earlier pass (e.g. SyncGroupsByDirI's bootstrap call) mutates
+        // interior cells that are themselves donor source data for the
+        // ordinary interpatch ghost fill above, making a later pass's
+        // interpolation non-idempotent (mp_slave_2.md/mp_slave_3.md's
+        // confirmed root cause of bucket (a)'s corruption). `pos` still
+        // advances unconditionally so the flat `results` array stays aligned
+        // with `slice.length` (asserted below) regardless of which pass this
+        // is -- only the write into the grid function is gated.
         for (const auto &I : slaved) {
-          vars[n](I) = results[n][slice.offset + pos];
+#ifdef CCTK_DEBUG
+          if (n == 0 && log_donors) {
+            std::cerr << "VICTIM bucket=slaved patch=" << patch
+                      << " level=" << level << " index=" << index
+                      << " component=" << component << " I=(" << I[0] << ","
+                      << I[1] << "," << I[2] << ")"
+                      << " n=" << (slice.offset + pos) << "\n";
+          }
+#endif // CCTK_DEBUG
+
+          if (apply_slave_writes) {
+            vars[n](I) = results[n][slice.offset + pos];
+          }
           pos++;
         }
 

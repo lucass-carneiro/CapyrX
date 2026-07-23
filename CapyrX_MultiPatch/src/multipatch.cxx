@@ -21,6 +21,9 @@
 #endif
 
 #include <cmath>
+#include <cstdlib>
+#include <iomanip>
+#include <iostream>
 
 namespace CapyrX::MultiPatch {
 
@@ -505,6 +508,34 @@ static inline void coordinate_setup_kernel(cGH *cctkGH, PatchParameters par) {
         vdJ_d2c_dydz(p.I) = dJ(2)(1, 2);
         vdJ_d2c_dzdz(p.I) = dJ(2)(2, 2);
       });
+
+#ifdef CCTK_DEBUG
+  // mp_slave_4.md §6 instrumentation: dump every ghost-zone vertex_coords
+  // value immediately after this basegrid-time write -- before any
+  // interpatch sync has run, in particular before
+  // CapyrX::MultiPatch1_Interpolate's Step 1 cache rebuild ever reads
+  // CoordinatesX::vcoordx/y/z (see that function's GHOSTCOORD log,
+  // CapyrX_MultiPatch/src/interpolate.cxx). Joining BASEGRID_COORD against
+  // GHOSTCOORD on (patch,level,component,I) tests whether the cache-rebuild's
+  // coordinate read is simply this un-corrected, single-patch-chart
+  // extrapolation (i.e. no interpatch correction of CoordinatesX's own
+  // ghosts had run yet at that point) or something that already differs from
+  // it. This loop is host-only (not `_device`) and re-reads the GF through
+  // its ordinary accessor, so it is safe to add a std::cerr call here
+  // regardless of whether this translation unit is also built for CUDA.
+  {
+    static const bool log_donors = std::getenv("CAPYRX_LOG_DONORS") != nullptr;
+    if (log_donors) {
+      grid.loop_bnd<0, 0, 0>(grid.nghostzones, [&](const Loop::PointDesc &p) {
+        std::cerr << "BASEGRID_COORD patch=" << p.patch
+                  << " level=" << p.level << " component=" << p.component
+                  << " I=(" << p.I[0] << "," << p.I[1] << "," << p.I[2] << ")"
+                  << " x=" << std::setprecision(17) << vcoordx(p.I)
+                  << " y=" << vcoordy(p.I) << " z=" << vcoordz(p.I) << "\n";
+      });
+    }
+  }
+#endif
 
   grid.loop_all_device<1, 1, 1>(
       grid.nghostzones, [=] CCTK_HOST CCTK_DEVICE(

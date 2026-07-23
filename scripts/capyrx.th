@@ -182,6 +182,7 @@ Numerical/AEILocalInterp
 !TYPE     = git
 !URL      = https://github.com/EinsteinToolkit/CarpetX
 !REPO_PATH = $2
+!REPO_BRANCH = multipatch_bcs_2
 !CHECKOUT =
 CarpetX/ADMBaseX
 CarpetX/Algo

@@ -94,15 +94,30 @@ record() {  # record <status> <name> <detail>
 }
 
 # run_par <basename> -> populates "$EXE_DIR/<basename>/"; returns cactus rc.
+#
+# The two streams are kept SEPARATE (<base>.run.out / <base>.run.err) and must
+# stay that way. A CCTK warning can land on BOTH: the flesh sends it to stderr
+# when its level <= warning_level (default 1) and to stdout when its level <=
+# logging_level -- which the -L3 below raises to 3 -- or, on any non-root rank,
+# whenever level <= warning_level (Cactus/src/main/WarnLevel.c:576-688). So under
+# -L3 levels 0 and 1 appear twice while 2 and 3 are stdout-only, and the two
+# copies are not even byte-identical (mpiexec pty-forwards rank 0's stdout, so
+# Cactus bolds the stdout copy and not the stderr one). A merged log can
+# therefore be neither stream-attributed nor de-duplicated, and its duplicated
+# lines read as twice the evidence.
+# (The Python checkers below keep 2>&1 on purpose: they are single-stream, and
+# only their exit code and their stdout RESULT line are ever consumed.)
 run_par() {
-  local base="$1" par="$PAR_DIR/$1.par" log="$LOG_DIR/$1.run.log"
-  [[ -f "$par" ]] || { echo "MISSING PAR: $par" >"$log"; return 127; }
+  local base="$1" par="$PAR_DIR/$1.par"
+  local out="$LOG_DIR/$1.run.out" err="$LOG_DIR/$1.run.err"
+  [[ -f "$par" ]] || { echo "MISSING PAR: $par" >"$err"; : >"$out"; return 127; }
   if [[ "$SKIP_RUN" == "1" ]]; then
-    echo "SKIP_RUN=1: reusing existing $EXE_DIR/$base" >"$log"
+    echo "SKIP_RUN=1: reusing existing $EXE_DIR/$base" >"$out"
+    : >"$err"
     return 0
   fi
   rm -rf "${EXE_DIR:?}/$base"
-  ( cd "$EXE_DIR" && mpiexec -n "$NRANKS" "$CACTUS_SIM" -L3 "$par" ) >"$log" 2>&1
+  ( cd "$EXE_DIR" && mpiexec -n "$NRANKS" "$CACTUS_SIM" -L3 "$par" ) >"$out" 2>"$err"
 }
 
 echo "== run_checks.sh =="
@@ -117,7 +132,7 @@ for base in "${COLOR_PARS[@]}"; do
   name="color:$base"
   echo "-- running $base.par ..."
   if ! run_par "$base"; then
-    record "CANNOT-RUN" "$name" "cactus run aborted (see $LOG_DIR/$base.run.log)"
+    record "CANNOT-RUN" "$name" "cactus run aborted (see $LOG_DIR/$base.run.{out,err})"
     continue
   fi
   tsv="$EXE_DIR/$base/$COLOR_TSV"
@@ -144,7 +159,7 @@ smooth_ok=1
 for leg in "${SMOOTH_TRIPLET[@]}"; do
   echo "-- running $leg.par ..."
   if ! run_par "$leg"; then
-    record "CANNOT-RUN" "$name" "leg $leg aborted (see $LOG_DIR/$leg.run.log)"
+    record "CANNOT-RUN" "$name" "leg $leg aborted (see $LOG_DIR/$leg.run.{out,err})"
     smooth_ok=0; break
   fi
   tsv="$EXE_DIR/$leg/$SMOOTH_TSV"

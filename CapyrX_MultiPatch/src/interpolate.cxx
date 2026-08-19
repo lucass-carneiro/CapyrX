@@ -204,8 +204,7 @@ static std::vector<SlavePoint> collect_slaved_interior(
 extern "C" void
 MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
                         const CCTK_INT nvars_,
-                        const CCTK_INT *restrict const varinds_,
-                        const CCTK_INT apply_slave_writes_) {
+                        const CCTK_INT *restrict const varinds_) {
 #ifdef __CUDACC__
   const nvtxRangeId_t range =
       nvtxRangeStartA("CapyrX::MultiPatch1_Interpolate");
@@ -234,7 +233,6 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
   // Cast GH and wrap varinds
   const auto cctkGH{static_cast<const cGH *>(cctkGH_)};
   const std::vector<CCTK_INT> varinds(varinds_, varinds_ + nvars_);
-  const bool apply_slave_writes = apply_slave_writes_ != 0;
 
   // Check input varinds validity
   for (const auto &varind : varinds) {
@@ -683,16 +681,14 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
         // owner's interpolated value, immediately after the ghost cells and
         // in the same order used when their coordinates were collected.
         //
-        // mp_slave_2.md §7 Fix #1: only actually write these back when this
-        // call is the sync's final pass (apply_slave_writes). Writing them
-        // on an earlier pass (e.g. SyncGroupsByDirI's bootstrap call) mutates
-        // interior cells that are themselves donor source data for the
-        // ordinary interpatch ghost fill above, making a later pass's
-        // interpolation non-idempotent (mp_slave_2.md/mp_slave_3.md's
-        // confirmed root cause of bucket (a)'s corruption). `pos` still
-        // advances unconditionally so the flat `results` array stays aligned
-        // with `slice.length` (asserted below) regardless of which pass this
-        // is -- only the write into the grid function is gated.
+        // These writes used to be gated on an apply_slave_writes argument
+        // (mp_slave_2.md §7 Fix #1), because SyncGroupsByDirI ran this
+        // function twice per sync and slaving on the first call mutated
+        // interior cells that were the second call's own donor source data --
+        // the two-pass non-idempotency behind the 696 + 312 corruption.
+        // BUGFIX_TODO.md step B3 deleted that first call, so there is exactly
+        // one interpolate per sync, no call can read another call's output,
+        // and the gate has nothing left to protect against.
         for (const auto &I : slaved) {
 #ifdef CCTK_DEBUG
           if (n == 0 && log_donors) {
@@ -704,9 +700,8 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
           }
 #endif // CCTK_DEBUG
 
-          if (apply_slave_writes) {
-            vars[n](I) = results[n][slice.offset + pos];
-          }
+          vars[n](I) = results[n][slice.offset + pos];
+
           pos++;
         }
 

@@ -1,0 +1,85 @@
+# centering_ccc.par -- BUGFIX_TODO.md step B6's failing-before test.
+#
+# A patch system whose SYNC set contains a NON-VERTEX-CENTERED grid function.
+# TestODESolvers2 declares `state`, `rhs`, `error` and `order` as CENTERING={ccc}
+# (TestODESolvers2/interface.ccl:7-13) and SYNCs `state` at `initial`
+# (schedule.ccl:11), and its writer is a function of `cctk_time` alone, so it is
+# grid-agnostic and runs unchanged on a cubed sphere.
+#
+# CarpetX::SyncGroupsByDirI flattens every synced group of a sync into ONE
+# MultiPatch_Interpolate call (schedule.cxx:2795-2810), so the sync cannot route
+# a {ccc} group around the interpolator.  CapyrX_MultiPatch's interpolator then
+# builds its GF3D2 layouts with a HARD-CODED vertex centering (interpolate.cxx
+# :345, :426, :575) while CarpetX allocates a {ccc} group one point SMALLER per
+# direction (Loop/src/loop.hxx: ash[d] = cctk_ash[d] - indextype[d];
+# CarpetX/src/schedule.cxx: gash[d] = ash[d] - groupdata.indextype.at(d)), so the
+# write-back stores PAST THE END of the allocation.
+#
+#   before B6:  the store goes out of bounds (undetected by the GF3D2 debug
+#               asserts, which use the vertex imin/imax)
+#   after  B6:  CapyrX_MultiPatch refuses at the first sync, naming the group and
+#               its centering
+#
+# CarpetX's own interpolator handles only 0b000 and 0b111 and CCTK_VERRORs on any
+# mixed centering (interpolate.cxx:809-910), so {ccc} is the case that reaches the
+# out-of-bounds store; a {cvv} group dies earlier, inside CarpetX.
+#
+# 1 rank, cctk_itlast = 0: the sync at `initial` is enough.
+
+ActiveThorns = "
+    CarpetX
+    IOUtil
+    CoordinatesX
+    ODESolvers
+    TestODESolvers2
+    CapyrX_MultiPatch
+"
+
+Cactus::presync_mode = "mixed-error"
+Cactus::cctk_show_schedule = yes
+Cactus::highlight_warning_messages = no
+
+Cactus::terminate    = "iteration"
+Cactus::cctk_itlast  = 0
+
+CarpetX::verbose                 = yes
+CarpetX::poison_undefined_values = yes
+
+CarpetX::ghost_size          = 2
+CarpetX::interpolation_order = 0
+
+CarpetX::blocking_factor_x = 1
+CarpetX::blocking_factor_y = 1
+CarpetX::blocking_factor_z = 1
+
+CapyrX_MultiPatch::verbose               = yes
+CapyrX_MultiPatch::patch_system          = "Cubed sphere"
+CapyrX_MultiPatch::inner_boundary_radius = 0.5
+CapyrX_MultiPatch::outer_boundary_radius = 2.5
+CapyrX_MultiPatch::angular_cells         = 8
+CapyrX_MultiPatch::radial_cells          = 16
+CapyrX_MultiPatch::patch_overlap         = 0
+
+CarpetX::boundary_x       = "dirichlet"
+CarpetX::boundary_y       = "dirichlet"
+CarpetX::boundary_z       = "dirichlet"
+CarpetX::boundary_upper_x = "dirichlet"
+CarpetX::boundary_upper_y = "dirichlet"
+CarpetX::boundary_upper_z = "dirichlet"
+
+ODESolvers::method       = "RK2"
+TestODESolvers2::porder  = 2
+
+IO::parfile_write = no
+IO::out_dir       = $parfile
+IO::out_every     = 1
+
+CarpetX::out_performance = no
+CarpetX::out_metadata    = no
+CarpetX::out_norm_vars   = ""
+
+CarpetX::out_tsv = yes
+CarpetX::out_tsv_vars = "
+  CoordinatesX::vertex_coords
+  TestODESolvers2::state
+"

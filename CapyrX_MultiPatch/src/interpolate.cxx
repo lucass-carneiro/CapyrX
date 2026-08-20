@@ -6,6 +6,8 @@
 
 #include <cctk.h>
 #include <cctk_Parameters.h>
+#include <util_ErrorCodes.h>
+#include <util_Table.h>
 
 #ifdef __CUDACC__
 #include <nvtx3/nvToolsExt.h>
@@ -234,7 +236,15 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
   const auto cctkGH{static_cast<const cGH *>(cctkGH_)};
   const std::vector<CCTK_INT> varinds(varinds_, varinds_ + nvars_);
 
-  // Check input varinds validity
+  // Check input varinds validity.
+  //
+  // B6: the first non-vertex-centred group found here, if any. The refusal is
+  // deferred to the top of Step 2, where `npoints` is known -- see the
+  // centering block below, and the comment at the refusal itself.
+  int nonvertex_gi{-1};
+  CCTK_INT nonvertex_varind{-1};
+  std::array<CCTK_INT, dim> nonvertex_centering{0, 0, 0};
+
   for (const auto &varind : varinds) {
     if (varind < 0) {
       CCTK_VERROR("The varind %i is negative", varind);
@@ -304,7 +314,75 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
                   gi, varind, dim);
     }
 
-    // TODO: Check centerings table
+    // BUGFIX_TODO.md step B6: the check this TODO asked for.
+    //
+    // Every GF3D2 layout in this function is built with a hard-coded VERTEX
+    // centering -- the ghost-point collection pass, the slave-overlap pass and
+    // the write-back all say `centering{0, 0, 0}`. CarpetX allocates a group
+    // whose indextype[d] is 1 one point SMALLER in direction d
+    // (`gash[d] = ash[d] - groupdata.indextype.at(d)` in CarpetX's
+    // schedule.cxx; `ash[d] = cctk_ash[d] - indextype[d]` in Loop's loop.hxx),
+    // so a vertex
+    // layout over such a group has larger `dj`, `dk` and `np` than the
+    // allocation: the write-back at the end of this function stores PAST THE
+    // END of the array. That is an out-of-bounds write, not a wrong value, and
+    // GF3D2's own debug asserts cannot catch it -- they test the vertex
+    // `imin`/`imax`, which the loop respects. Measured with valgrind on the
+    // `{ccc}` rig named below, before this check existed: 51 x "Invalid write
+    // of size 8 ... 8 bytes after a block of size 55,296", all of them at the
+    // write-back store, and an uninstrumented optimized run then dies inside
+    // CarpetX's own `why_valid_t::set_ghosts`. On a group with several
+    // variables most of the overrun is worse than out of bounds and yet
+    // invisible: the variables are consecutive inside one fab, so all but the
+    // last overrun into the NEXT VARIABLE'S data. The interpolation points are
+    // vertex coordinates (`CoordinatesX::vcoord*`) too, so the values would be
+    // wrong for a non-vertex group even if the store were in bounds.
+    //
+    // `SyncGroupsByDirI` flattens every synced group of a sync into ONE call to
+    // this function, and the two regrid call sites pass EVERY `CCTK_GF` group
+    // on the grid (CarpetX/src/schedule.cxx), so neither a sync nor a regrid
+    // can route a non-vertex group around it.
+    //
+    // The centering is read from the group's centering table, which is the same
+    // source CarpetX's own `get_group_indextype` reads
+    // (CarpetX/src/driver.cxx), so the two cannot drift apart. No key means
+    // vertex-centred, as it does there.
+    // Failing-before test: CapyrX_TestMultiPatch/par/centering_ccc.par.
+    //
+    // The refusal itself is NOT here: it is at the top of Step 2, where
+    // `npoints` is known, because it must not fire on a configuration that
+    // works today. See the comment at that site.
+    std::array<CCTK_INT, dim> centering{0, 0, 0};
+    const auto centering_table{CCTK_GroupCenteringTableI(gi)};
+
+    if (centering_table < 0) {
+      CCTK_VERROR("Group index %i in varind %i has no centering table (error "
+                  "%i); refusing to assume it is vertex-centred",
+                  gi, varind, centering_table);
+    }
+
+    const auto centering_ret{Util_TableGetIntArray(
+        centering_table, static_cast<int>(dim), centering.data(), "centering")};
+
+    if (centering_ret != UTIL_ERROR_TABLE_NO_SUCH_KEY) {
+      if (centering_ret != static_cast<int>(dim)) {
+        CCTK_VERROR("Could not read the \"centering\" key of group %s (group "
+                    "index %i, varind %i): Util_TableGetIntArray returned %i, "
+                    "expected %lu",
+                    CCTK_FullGroupName(gi), gi, varind, centering_ret, dim);
+      }
+
+      for (int d = 0; d < dim; ++d) {
+        if (centering[d] != 0) {
+          if (nonvertex_gi < 0) {
+            nonvertex_gi = gi;
+            nonvertex_varind = varind;
+            nonvertex_centering = centering;
+          }
+          break;
+        }
+      }
+    }
   }
 
   // Step 1: Rebuild the interpolation cache if the AMR epoch has changed.
@@ -523,6 +601,45 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
 
   const std::size_t nvars = varinds.size();
   const std::size_t npoints = g_interp_cache.coords[0].size();
+
+  // BUGFIX_TODO.md step B6: refuse a non-vertex-centred group HERE, and not in
+  // the input-validation loop above, because `npoints == 0` is a configuration
+  // that works today and an additive commit may not break it.
+  //
+  // `npoints` is the number of cells this call will write, and it is the same
+  // set for every group in the call (the target coordinates come from
+  // CoordinatesX, not from the group). It is ZERO whenever no cell needs
+  // filling -- in particular for the single-patch `Cartesian` patch system,
+  // where all six faces are outer boundaries and the collection loop skips
+  // every ghost point. That configuration DOES reach this function with
+  // non-vertex groups, and not by anyone's choice: the two regrid call sites
+  // build their variable list from every `CCTK_GF` group on the grid, so
+  // `CoordinatesX::cell_coords`, `CoordinatesX::cell_volume` and
+  // `CarpetXRegrid::regrid_error` -- all `{ccc}` -- arrive here on any run with
+  // `max_num_levels > 1`. With `npoints == 0` nothing is stored through the
+  // wrong layout and there is nothing to refuse; measured on
+  // evidence/fix/a8/pars/a8_cart_l2.par, which an earlier revision of this
+  // check turned from exit 0 into exit 1.
+  //
+  // Multi-rank note: `npoints` is this rank's count, so on a decomposition
+  // where one rank owns no interpatch ghost cell the refusal is raised by the
+  // other ranks. `CCTK_VERROR` aborts the job, so the run still stops; what is
+  // not guaranteed is which rank prints it.
+  if (nonvertex_gi >= 0 && npoints > 0) {
+    CCTK_VERROR(
+        "Group %s (group index %i, varind %i) has centering [%i,%i,%i], and "
+        "MultiPatch_Interpolate only supports vertex-centred [0,0,0] grid "
+        "functions: its interpolation points are vertex coordinates and every "
+        "layout it builds assumes a vertex-centred allocation, so filling this "
+        "group's %zu interpatch cells would write past the end of its array. "
+        "Do not sync this group on a patch system with interpatch faces "
+        "(CarpetX::SyncGroupsByDirI passes every synced group of a sync to "
+        "this function, and the regrid path passes every CCTK_GF group, so it "
+        "cannot be excluded one group at a time)",
+        CCTK_FullGroupName(nonvertex_gi), nonvertex_gi, int(nonvertex_varind),
+        int(nonvertex_centering[0]), int(nonvertex_centering[1]),
+        int(nonvertex_centering[2]), npoints);
+  }
 
   const std::vector<CCTK_INT> operations(nvars, 0);
 

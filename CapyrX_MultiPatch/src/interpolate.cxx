@@ -711,8 +711,27 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
   // `ghext->patchdata[p].symmetries` and `groupdata.boundaries`; term (2) is a
   // runtime bit that a thorn's own write can set.  Neither exists at
   // PARAMCHECK -- there is no grid yet.  This is the first point at which both
-  // are known AND slaved cells are about to be written, so the refusal lands
-  // before the first interpatch fill of the run.
+  // are known AND slaved cells are about to be written.
+  //
+  // WHEN IT FIRES, MEASURED RATHER THAN ASSUMED, AND IT IS NOT ALWAYS THE
+  // FIRST FILL OF THE RUN.  Term (2) is a runtime bit, so a group whose
+  // initial-data routine declares `WRITES: state(everywhere)` -- CapyrX_WaveToy
+  // does, `schedule.ccl` -- has a CERTIFIED outer zone at the first fill.  That
+  // fill imports real initial data, there is nothing wrong with it, and it is
+  // allowed.  The evolution then writes `rhs(interior)` only, the bit goes
+  // false, and the NEXT fill is the first one that would import an uncertified
+  // zone.  That is the one refused.  Measured on A9's pair (evidence/fix/b9):
+  // `ov1_none` (`cctk_itlast = 0`, one fill) runs to completion with its donor
+  // census unmoved in every field; `ov1_none_it1` is the same rig one iteration
+  // longer and is refused at its SECOND call.
+  //
+  // The alignment with the defect is exact, and that is the argument for
+  // firing here rather than earlier: the 32 NaNs of `evidence/it7/i7_e5.par`
+  // appear at `SyncGroupsByDirI call #2`, iteration 1's `ODESolvers_PostStep`
+  // sync -- precisely the fill this guard stops.  So do not describe this as a
+  // configuration check.  It refuses the first fill that would actually do the
+  // damage and lets a legitimate one through, which is why a rig whose only
+  // fill is legitimate keeps working.
   //
   // LEVEL 0 IS NOT MERELY THE CONVENIENT LEVEL, IT IS THE ONLY ONE: a slaved
   // cell requires a patch overlap, and B8's PARAMCHECK guard in
@@ -806,7 +825,7 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
               "INTERIOR cells: this call would write %zu of them from an "
               "interpolation whose donor stencil can reach that unwritten "
               "outer ghost zone, and the driver marks the result valid. "
-              "Refusing before the first interpatch fill. Give that face a "
+              "Refusing before this fill writes anything. Give that face a "
               "boundary condition, or name %s in one of CarpetX's "
               "{dirichlet,linear_extrapolation,neumann,robin}_{,upper_}"
               "{x,y,z}_vars, or write the group everywhere, or set "

@@ -1,5 +1,6 @@
 #include "multipatch.hxx"
 
+#include "../../../CarpetX/CarpetX/src/driver.hxx"
 #include "../../../CarpetX/CarpetX/src/interp.hxx"
 #include "../../../CarpetX/CarpetX/src/schedule.hxx"
 #include "../../../CarpetX/CarpetX/src/timer.hxx"
@@ -18,6 +19,7 @@
 #include <iomanip>
 #include <iostream>
 #include <optional>
+#include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -639,6 +641,181 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
         CCTK_FullGroupName(nonvertex_gi), nonvertex_gi, int(nonvertex_varind),
         int(nonvertex_centering[0]), int(nonvertex_centering[1]),
         int(nonvertex_centering[2]), npoints);
+  }
+
+  // BUGFIX_TODO.md step B9: REFUSE `slave_overlap` WHEN A VARIABLE BEING
+  // FILLED HAS A PHYSICAL OUTER FACE THAT NOTHING WRITES.
+  //
+  // THE DEFECT.  A slaved write puts an interpolated value into an INTERIOR
+  // cell -- a cell CarpetX marks `valid_int` -- and the interpolation's donor
+  // stencil can reach the donor patch's physical outer ghost zone.  If nothing
+  // writes that ghost zone, the interior takes whatever was there.  With
+  // `CarpetX::poison_undefined_values = yes` that is poison and the arithmetic
+  // carries it (`0 x NaN = NaN`, so a near-zero interpolation weight does not
+  // save it); with poisoning off it is stale memory and the corruption is
+  // quiet at the moment it happens.  Measured at `evidence/it7/i7_e5.par`: 32
+  // NaN interior cells on the wedges' outermost interior radial vertex plane,
+  // per patch 1/1/5/5/10/10 -- a direct fingerprint of `get_owner_patch`'s
+  // `x > y > z` tie-break -- and 0 NaN, no message, on the same leg with
+  // poisoning off.
+  //
+  // THE PREDICATE HAS TWO TERMS AND BOTH ARE NECESSARY.
+  //
+  //   (1) The face carries neither a symmetry nor a boundary condition:
+  //       `all_faces_have_symmetries_or_boundaries()`, which is CarpetX's own
+  //       function, CALLED and not re-derived.  `boundary_x` and its eleven
+  //       siblings do not answer this question, because
+  //       `get_group_boundaries` applies the 24
+  //       `{dirichlet,linear_extrapolation,neumann,robin}_{,upper_}{x,y,z}_vars`
+  //       per-group overrides on top of them; a parameter scan therefore says
+  //       "no boundary condition" for a group that has one.  There is no
+  //       `none_*_vars`, so that error only ever runs in the direction of
+  //       refusing a configuration that works.
+  //
+  //   (2) The driver has not certified this variable's outer region:
+  //       `valid.at(0).at(vi).get().valid_outer` is false.  TERM (1) ALONE IS
+  //       NOT ENOUGH, and that is measured, not reasoned: with term (1) alone
+  //       this guard refused `CAPYRX_TESTMULTIPATCH::COLOR` on
+  //       `smooth_z_none.par` (`evidence/fix/b9/probe/`), a group whose own
+  //       thorn declares `WRITES: color(everywhere)` and fills its outer ghost
+  //       zone itself.  Nothing is unwritten there and nothing is poisoned;
+  //       refusing it would have broken a rig that works, which is the one
+  //       thing an additive commit may not do.  The outer validity bit is
+  //       precisely the record of such a write, and it is the bit
+  //       `poison_invalid_gf` acts on -- so term (2) is not a proxy for the
+  //       defect, it is the same bit that decides whether there is anything
+  //       poisonous in the donor zone to import.
+  //
+  // WHAT TERM (2) DOES NOT PROMISE.  `valid_outer` says that something wrote
+  // that region and the driver is willing to certify it.  It does not say the
+  // contents are current: a group written everywhere at initial and evolved in
+  // the interior afterwards keeps the bit while its outer data goes stale.
+  // That is CarpetX's own validity semantics, and this guard defers to it
+  // rather than inventing a second, stricter notion of validity downstream of
+  // the driver that maintains the first.
+  //
+  // WHY THE PREDICATE HAS A `slave_overlap` TERM AT ALL, which is the part of
+  // this guard most likely to be questioned.  WITHOUT slaving the same import
+  // lands only in interpatch GHOST cells, and CarpetX already declines to
+  // certify those: `SyncGroupsByDirI`'s postcondition calls `set_outer(true)`
+  // only if `all_faces_have_symmetries_or_boundaries()` -- term (1) again --
+  // and on a patch system the outer bit is what covers the interpatch ghosts.
+  // So the non-slaved case writes wrong values into cells that are MARKED
+  // INVALID, which is CarpetX working as designed.  Slaving is what moves
+  // those values into cells marked valid.  The control for this sentence is
+  // B7's `b7_wit_none.par` with slaving off: it must NOT be refused here, and
+  // it is not -- it still aborts exactly where it did before, at the
+  // `CCTK_DEBUG` `contains_nan()` sweep in `CarpetX/src/schedule.cxx`.
+  //
+  // WHY HERE AND NOT AT PARAMCHECK.  Term (1) is a `GroupData` member reading
+  // `ghext->patchdata[p].symmetries` and `groupdata.boundaries`; term (2) is a
+  // runtime bit that a thorn's own write can set.  Neither exists at
+  // PARAMCHECK -- there is no grid yet.  This is the first point at which both
+  // are known AND slaved cells are about to be written, so the refusal lands
+  // before the first interpatch fill of the run.
+  //
+  // LEVEL 0 IS NOT MERELY THE CONVENIENT LEVEL, IT IS THE ONLY ONE: a slaved
+  // cell requires a patch overlap, and B8's PARAMCHECK guard in
+  // `CarpetX/src/driver.cxx` refuses mesh refinement on a multi-patch grid, so
+  // `n_slaved > 0` implies a single-level hierarchy.  (`boundaries` would be
+  // level-independent regardless -- `get_group_boundaries(gi, patch)` takes no
+  // level -- but `valid` would not be.)
+  //
+  // THE GATE IS `n_slaved > 0`, for B6's reason one block up: a single-patch
+  // `Cartesian` patch system reaches this function with no interpatch cell and
+  // no slaved cell, and refusing there would break configurations that work.
+  // On a multi-rank decomposition the count is this rank's, so a rank that
+  // owns no slaved cell stays silent and another rank raises the refusal;
+  // `CCTK_VERROR` stops the job either way.
+  //
+  // WHAT THIS DOES AND DOES NOT BUY.  On this branch the refused configuration
+  // does not run silently to completion today either -- with poisoning on it
+  // dies in `check_valid_gf` AFTER the interior has already been corrupted,
+  // and with poisoning off it dies later at `valid.cxx`'s `error_if_invalid`
+  // when a reader asks for the outer boundary that `set_outer` declined to
+  // certify.  Both measured (`evidence/fix/b9/before/`).  What changes here is
+  // WHEN the run stops and WHAT IT SAYS.  Do not describe this as closing a
+  // hole through which wrong answers were leaving; describe it as refusing,
+  // before it writes anything, a configuration that cannot be made right.
+  if (slave_overlap) {
+    std::size_t n_slaved = 0;
+    for (const auto &slot : g_interp_cache.slaved_indices) {
+      n_slaved += slot.size();
+    }
+
+    if (n_slaved > 0) {
+      const int npatches_gh = CarpetX::ghext->num_patches();
+      for (const auto &varind : varinds) {
+        const int gi = CCTK_GroupIndexFromVarI(varind);
+        for (int p = 0; p < npatches_gh; ++p) {
+          const auto &patchdata = CarpetX::ghext->patchdata.at(p);
+          if (patchdata.leveldata.empty()) {
+            continue;
+          }
+          const auto &leveldata = patchdata.leveldata.at(0);
+          if (gi < 0 || std::size_t(gi) >= leveldata.groupdata.size()) {
+            continue;
+          }
+          const auto &groupdata = leveldata.groupdata.at(gi);
+          if (!groupdata) {
+            continue; // not a CCTK_GF group on this grid
+          }
+          if (groupdata->all_faces_have_symmetries_or_boundaries()) {
+            continue; // term (1) is false
+          }
+          const int vi = int(varind) - groupdata->firstvarindex;
+          if (vi < 0 || vi >= groupdata->numvars) {
+            continue; // not this group's variable after all
+          }
+          if (groupdata->valid.empty()) {
+            continue;
+          }
+          if (groupdata->valid.at(0).at(vi).get().valid_outer) {
+            continue; // term (2) is false: something wrote the outer zone
+          }
+
+          // Name every offending face, by the parameter that would fix it,
+          // rather than saying "some face": the user's fix is a specific
+          // parameter and there is no reason to make them find out which.
+          static_assert(dim == 3, "the face names below assume three "
+                                  "directions");
+          const char *const dirname[dim] = {"x", "y", "z"};
+          std::string faces;
+          for (int f = 0; f < 2; ++f) {
+            for (int d = 0; d < dim; ++d) {
+              if (patchdata.symmetries.at(f).at(d) ==
+                      CarpetX::symmetry_t::none &&
+                  groupdata->boundaries.at(f).at(d) ==
+                      CarpetX::boundary_t::none) {
+                if (!faces.empty()) {
+                  faces += ", ";
+                }
+                faces += (f == 0 ? "CarpetX::boundary_"
+                                 : "CarpetX::boundary_upper_");
+                faces += dirname[d];
+              }
+            }
+          }
+
+          CCTK_VERROR(
+              "MultiPatch1_Interpolate: CapyrX_MultiPatch::slave_overlap is "
+              "on, and variable %s has a physical outer face that nothing "
+              "writes on patch %d: %s is \"none\" there, no per-group override "
+              "names %s, and the driver has not marked this variable's outer "
+              "region valid, so nothing else wrote it either. Slaved cells are "
+              "INTERIOR cells: this call would write %zu of them from an "
+              "interpolation whose donor stencil can reach that unwritten "
+              "outer ghost zone, and the driver marks the result valid. "
+              "Refusing before the first interpatch fill. Give that face a "
+              "boundary condition, or name %s in one of CarpetX's "
+              "{dirichlet,linear_extrapolation,neumann,robin}_{,upper_}"
+              "{x,y,z}_vars, or write the group everywhere, or set "
+              "CapyrX_MultiPatch::slave_overlap = no.",
+              CCTK_FullVarName(int(varind)), p, faces.c_str(),
+              CCTK_FullGroupName(gi), n_slaved, CCTK_FullGroupName(gi));
+        }
+      }
+    }
   }
 
   const std::vector<CCTK_INT> operations(nvars, 0);

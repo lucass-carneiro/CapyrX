@@ -523,6 +523,22 @@ static inline void coordinate_setup_kernel(cGH *cctkGH, PatchParameters par) {
   // it. This loop is host-only (not `_device`) and re-reads the GF through
   // its ordinary accessor, so it is safe to add a std::cerr call here
   // regardless of whether this translation unit is also built for CUDA.
+  //
+  // THE RESULT THIS WAS BUILT FOR IS RETRACTED, AND THIS NOTE IS HERE SO NOBODY
+  // RE-DERIVES IT (BUGFIX_TODO.md B10).  mp_slave_5.md, confirmed exhaustively
+  // over the full 696-cell set in mp_slave_6.md: `MultiPatch_Interpolate` never
+  // resyncs `CoordinatesX` at all, and the ghost coordinate is byte-identical
+  // from this basegrid write through the cache rebuild to the final output --
+  // 52504/52504.  The "88% route-to-cartesian staleness anomaly" was an
+  // unapplied `+nghostzones` index offset in the analysis scripts, reproduced
+  // exactly on both published examples.  The instrument is kept because the
+  // join it supports (BASEGRID_COORD x GHOSTCOORD on patch/level/component/I)
+  // is the cheapest way to re-establish that, not because the anomaly is open.
+  //
+  // COST WHEN ON, measured: one line per ghost-zone vertex per component --
+  // 14500 on `color.par`, 35440 on `color_ghost.par`
+  // (evidence/fix/b10/before/h_report.txt).  Read it at `OMP_NUM_THREADS=1` and
+  // `MPIEXEC=none`; see the note on the same hazard in interpolate.cxx.
   {
     static const bool log_donors = std::getenv("CAPYRX_LOG_DONORS") != nullptr;
     if (log_donors) {

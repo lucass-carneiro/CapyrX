@@ -168,16 +168,36 @@ static std::vector<SlavePoint> collect_slaved_interior(
                              local[1].data(), local[2].data());
 
 #ifdef CCTK_DEBUG
+  // INSTRUMENT (BUGFIX_TODO.md R2 / B10), debug builds only and OFF unless
+  // `CAPYRX_LOG_DONORS` is set.  KEPT.
+  //
   // mp_slave_3.md §4 instrumentation: log the exact coordinate and owner
   // decision this classifier saw at collection time (which happens once, at
   // the interpolation cache's single serial rebuild pass), for every
-  // candidate interior cell. This is compared offline against the same
+  // candidate interior cell. This was compared offline against the same
   // cell's coordinate in the final output TSV (written much later, at I/O
   // time) to test the coordinate-staleness hypothesis: that
   // CoordinatesX::vcoordx/y/z for a wedge's overlap-band cells is not yet in
   // its final settled state when collect_slaved_interior classifies it,
   // so a coordinate that ends up just outside cartesian's cube by output
   // time was seen just inside (or closer to) it here.
+  //
+  // THAT HYPOTHESIS IS RETRACTED, AND THIS NOTE IS HERE SO NOBODY RE-DERIVES
+  // IT.  mp_slave_5.md, confirmed exhaustively over the full 696-cell set in
+  // mp_slave_6.md: `CoordinatesX` is never resynced by `MultiPatch_Interpolate`
+  // at all and its ghost coordinate is byte-identical from basegrid through
+  // cache rebuild to final output, 52504/52504.  The "staleness" that
+  // mp_slave_3/4 measured was an unapplied `+nghostzones` index offset in their
+  // own analysis scripts.  The instrument is kept because it is cheap when off
+  // and because it is the only per-candidate record of the owner decision --
+  // not because the result it was built for stands.
+  //
+  // COST WHEN ON: one stderr line per CANDIDATE INTERIOR CELL of every
+  // component, i.e. the whole interior of the grid, and it fires only when
+  // `slave_overlap` is on (the collection pass is inside that test).  Measured
+  // 8991 lines on `color_slave.par`, 0 on every `slave_overlap = no` leg
+  // (evidence/fix/b10/before/h_report.txt).  It shares one environment variable
+  // with seven other blocks, so it cannot be enabled alone (`[P27]`).
   {
     static const bool log_donors = std::getenv("CAPYRX_LOG_DONORS") != nullptr;
     if (log_donors) {
@@ -460,14 +480,25 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
           }
 
 #ifdef CCTK_DEBUG
+          // INSTRUMENT (BUGFIX_TODO.md R2 / B10), debug builds only and OFF
+          // unless `CAPYRX_LOG_DONORS` is set.  KEPT.
+          //
           // mp_slave_3.md §4 instrumentation, part 2: bucket (a)'s victims
           // turned out to be ordinary ghost points (this loop), not members
           // of the `slaved` list (collect_slaved_interior, logged
           // separately as COLLECT) -- so the coordinate-staleness question
-          // must be tested against *this* collection point, the one that
+          // had to be tested against *this* collection point, the one that
           // actually feeds InterpolationSetup's own donor-routing call for
           // ghost points, not collect_slaved_interior's separate,
-          // redundant classification pass.
+          // redundant classification pass.  THAT QUESTION IS CLOSED AND THE
+          // ANSWER WAS A RETRACTION: see the note on COLLECT above -- the
+          // coordinate is byte-identical from basegrid to output, 52504/52504
+          // (mp_slave_5.md, mp_slave_6.md).  Kept for the
+          // BASEGRID_COORD x GHOSTCOORD join, not for the retracted result.
+          //
+          // COST WHEN ON: one line per interpatch ghost point, per component,
+          // on a cache rebuild.  Measured 12472 on `color.par`, 31552 on
+          // `color_ghost.par` (evidence/fix/b10/before/h_report.txt).
           {
             static const bool log_donors =
                 std::getenv("CAPYRX_LOG_DONORS") != nullptr;
@@ -786,8 +817,22 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
           if (vi < 0 || vi >= groupdata->numvars) {
             continue; // not this group's variable after all
           }
+          // BUGFIX_TODO.md B10.  Unreachable: `GroupData`'s constructor
+          // sizes `valid` to `group.numtimelevels`
+          // (`CarpetX/src/driver.cxx:1013`, ctor at :935), which is at least 1
+          // for any declared group.  It used to `continue`, which is the one
+          // thing a guard like this may not do -- silently allow a state it
+          // does not understand, in the middle of refusing states it does.  If
+          // it ever fires, this is not a `GroupData` the driver built and
+          // nothing below can be trusted, term (2) least of all.
           if (groupdata->valid.empty()) {
-            continue;
+            CCTK_VERROR(
+                "MultiPatch1_Interpolate: group %s has an empty `valid` "
+                "vector. GroupData's constructor sizes it to the group's time "
+                "level count, so this cannot happen; reaching it means this is "
+                "not a GroupData the driver built. Refusing rather than "
+                "skipping the slave_overlap outer-face check for it.",
+                CCTK_FullGroupName(gi));
           }
           if (groupdata->valid.at(0).at(vi).get().valid_outer) {
             continue; // term (2) is false: something wrote the outer zone
@@ -920,6 +965,30 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
 // to find which donor cell (and whether it is a genuine ghost zone or an
 // interior overlap-band cell) actually fed a given failing point. Logged
 // once (var loop index 0), not once per variable. Opt-in via env var.
+// INSTRUMENTS (BUGFIX_TODO.md R2 / B10), debug builds only and OFF unless
+// `CAPYRX_LOG_DONORS` is set: `GHOSTSKIP` (lo and hi twins) and `VICTIM`
+// (buckets `ghost` and `slaved`) below.  ALL KEPT, and `VICTIM bucket=slaved`
+// IS LOAD-BEARING: it is half of A9's donor-census join and all of C6's
+// slaved-cell identification.  Deleting it in a future cleanup silently removes
+// the only record of WHICH interior cells a slaved write replaced.
+//
+// COST WHEN ON, measured (evidence/fix/b10/before/h_report.txt): per sync and
+// per component, one `GHOSTSKIP` line per outer-boundary ghost point and one
+// `VICTIM` line per filled cell -- 6084 + 37416 on `color.par`, 11664 + 94656
+// on `color_ghost.par`, and `bucket=slaved` adds 6258 on `color_slave.par`.
+//
+// READING THE STREAM: `OMP_NUM_THREADS=1` AND `MPIEXEC=none`, and they are two
+// different preconditions.  These are bare `std::cerr` chains, one `<<` per
+// field, emitted from inside an `omp parallel` region: at 16 threads they
+// INTERLEAVE, and the damage is invisible to `wc -l` because each thread still
+// writes its own newline (`[P26]`, `[P32]`: 19.8M of 21.2M lines malformed at
+// 16 threads, 0 at 1).  Separately, at ONE thread, mpiexec's stderr forwarder
+// DROPS BYTES from the head of a line under an instrument flood (`[P31]`), which
+// no amount of atomicity here would fix.  B10 considered building each line in
+// an `ostringstream` and emitting it with a single `<<`; it was rejected,
+// because it removes only the first hazard, leaves both operational gates in
+// place unchanged, and would make every stream A8 and A9 already measured
+// incomparable with the next one.  `tools/run_split.sh` pins both.
 #ifdef CCTK_DEBUG
       static const bool log_donors = std::getenv("CAPYRX_LOG_DONORS") != nullptr;
 #endif // CCTK_DEBUG

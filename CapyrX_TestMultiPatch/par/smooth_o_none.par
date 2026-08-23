@@ -76,12 +76,23 @@ CarpetX::boundary_upper_z = "none"
 # back to a real (neumann) outer BC. get_group_boundaries can only override a
 # group TO a real BC, never TO none -- which is why the smooth group must stay
 # on the global none rather than the reverse. See mp_noise_5.md.
-CarpetX::neumann_x_vars       = "CapyrX_TestMultiPatch::test_data"
-CarpetX::neumann_y_vars       = "CapyrX_TestMultiPatch::test_data"
-CarpetX::neumann_z_vars       = "CapyrX_TestMultiPatch::test_data"
-CarpetX::neumann_upper_x_vars = "CapyrX_TestMultiPatch::test_data"
-CarpetX::neumann_upper_y_vars = "CapyrX_TestMultiPatch::test_data"
-CarpetX::neumann_upper_z_vars = "CapyrX_TestMultiPatch::test_data"
+# `error` is in the same position as test_data and is here for the same reason,
+# one step further on. It is written interior-only (WRITES: dfdx(interior) and
+# its eight siblings), it is SYNCed, and under global `none` its physical outer
+# ghost zone is written by nobody. That was harmless while nothing read it --
+# until BUGFIX_TODO.md step B9, whose guard refuses `slave_overlap = yes`
+# against exactly that shape: a slaved write lands in an INTERIOR cell, and the
+# donor stencil that produces it can reach the unwritten zone. A4 derives a
+# `slave_overlap = yes` leg from this file, so without this line that leg is
+# refused rather than run. Adding it does NOT touch the (c) measurement: the
+# smooth group keeps the global `none` and therefore keeps its exact analytic
+# outer ghosts, which is the whole point of this file.
+CarpetX::neumann_x_vars       = "CapyrX_TestMultiPatch::test_data CapyrX_TestMultiPatch::error"
+CarpetX::neumann_y_vars       = "CapyrX_TestMultiPatch::test_data CapyrX_TestMultiPatch::error"
+CarpetX::neumann_z_vars       = "CapyrX_TestMultiPatch::test_data CapyrX_TestMultiPatch::error"
+CarpetX::neumann_upper_x_vars = "CapyrX_TestMultiPatch::test_data CapyrX_TestMultiPatch::error"
+CarpetX::neumann_upper_y_vars = "CapyrX_TestMultiPatch::test_data CapyrX_TestMultiPatch::error"
+CarpetX::neumann_upper_z_vars = "CapyrX_TestMultiPatch::test_data CapyrX_TestMultiPatch::error"
 
 CapyrX_TestMultiPatch::smooth_field = "one_over_r"
 CapyrX_TestMultiPatch::run_outer_bc_tests = yes

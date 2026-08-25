@@ -35,17 +35,34 @@ CapyrX_MultiPatch::patch_overlap         = CarpetX::ghost_size
 # Each cubed-sphere patch is angular_cells+2*patch_overlap = 20 cells wide
 # in x/y; the cartesian patch is 20 cells in z, the six other patches are
 # radial_cells+patch_overlap = 34 cells in z. Setting max_grid_size to the
-# largest patch extent in each direction keeps every patch as a single
-# AMReX box. This alone is not enough with more than one MPI process,
-# though: AMReX's amr.refine_grid_layout (on by default) still re-chops
-# each patch's single box until there are at least as many boxes as MPI
-# ranks. Disabling it keeps exactly one box per patch no matter how many
-# ranks/threads the run uses.
+# largest patch extent in each direction keeps every patch as a single AMReX
+# box AT ONE MPI RANK.
+#
+# It does NOT keep it at more than one rank, and the amrex_parameters line
+# below does not either. AMReX's amr.refine_grid_layout (on by default)
+# re-chops each patch's single box until there are at least as many boxes as
+# MPI ranks -- but CarpetX sets that AMReX parameter itself, from its own
+# CarpetX::refine_grid_layout parameter (default yes, CarpetX/src/driver.cxx),
+# and a CarpetX::amrex_parameters entry for a key CarpetX sets itself is inert.
+# Measured in both directions, with amrex.parmparse.verbose = 1 showing no
+# unused entries: this file gets 1 box per patch at -n 1, 2 at -n 2, 4 at -n 4.
+# So read the box layout of a run out of its own log ("level 0: N boxes"),
+# never out of a par file or out of this comment -- reading it from the par
+# file is what made a multi-rank blocker look fixed for four weeks.
+#
+# Do not "fix" the above by adding CarpetX::refine_grid_layout = no. One box
+# per patch at more than one rank is the reproducer for an upstream bug: each
+# rank then silently drops the interpolation queries it holds for patches it
+# does not own, the answers never come back, and the run dies in the recvbuf
+# size check after MPI_Alltoallv (CarpetX/src/interpolate.cxx). A par file
+# carrying that keyword is a regression test for that bug, not a cell of the
+# interpatch battery, and scripts/run_checks.sh refuses such a cell at more
+# than one rank.
 CarpetX::max_grid_size_x = CapyrX_MultiPatch::angular_cells + 2 * CapyrX_MultiPatch::patch_overlap
 CarpetX::max_grid_size_y = CapyrX_MultiPatch::angular_cells + 2 * CapyrX_MultiPatch::patch_overlap
 CarpetX::max_grid_size_z = CapyrX_MultiPatch::radial_cells + CapyrX_MultiPatch::patch_overlap
 
-CarpetX::amrex_parameters[0] = "amr.refine_grid_layout=0"
+CarpetX::amrex_parameters[0] = "amr.refine_grid_layout=0"  # INERT -- see the note above
 CarpetX::amrex_parameters[1] = "amr.v=2"
 
 CarpetX::boundary_x       = "dirichlet"

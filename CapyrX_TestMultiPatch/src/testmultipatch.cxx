@@ -694,6 +694,46 @@ extern "C" void CapyrX_TestMultiPatch_write_smooth_test(CCTK_ARGUMENTS) {
       [=] CCTK_DEVICE(const Loop::PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
         smooth_pre(p.I) = smooth(p.I);
       });
+
+  // BUGFIX_TODO.md C6 instrument (R2, gated off by default): overwrite this
+  // patch's outer-BC ghost shell with smooth_sentinel, after the smooth_pre
+  // snapshot above so the ground truth stays the exact analytic field. With
+  // boundary_* = none the BC pass below is a no-op, so the sentinel survives
+  // into SYNC and any neighbouring patch's interpatch interpolation that
+  // reads this shell (a slaved fill included) carries it forward scaled by
+  // its stencil weight -- see param.ccl.
+  if (smooth_sentinel != 0.0) {
+    std::array<CCTK_INT, 2 * Loop::dim> is_interpatch_face{};
+    if (CCTK_IsFunctionAliased("MultiPatch_GetBoundarySpecification2"))
+      MultiPatch_GetBoundarySpecification2(grid.patch, 2 * Loop::dim,
+                                           is_interpatch_face.data());
+
+    Loop::vect<bool, Loop::dim> is_outer_lo, is_outer_hi;
+    for (int d = 0; d < Loop::dim; ++d) {
+      is_outer_lo[d] = !is_interpatch_face[2 * d + 0];
+      is_outer_hi[d] = !is_interpatch_face[2 * d + 1];
+    }
+
+    const auto gsh{grid.gsh};
+    const auto lbnd{grid.lbnd};
+    const auto nghostzones{grid.nghostzones};
+
+    grid.loop_all_device<0, 0, 0>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const Loop::PointDesc &p)
+            CCTK_ATTRIBUTE_ALWAYS_INLINE {
+          bool is_outer_ghost = false;
+          for (int d = 0; d < Loop::dim; ++d) {
+            const auto gI{p.I[d] + lbnd[d]};
+            if (is_outer_lo[d] && gI < nghostzones[d])
+              is_outer_ghost = true;
+            if (is_outer_hi[d] && gI >= gsh[d] - nghostzones[d])
+              is_outer_ghost = true;
+          }
+          if (is_outer_ghost)
+            smooth(p.I) = smooth_sentinel;
+        });
+  }
 }
 
 extern "C" void CapyrX_TestMultiPatch_sync(CCTK_ARGUMENTS) {

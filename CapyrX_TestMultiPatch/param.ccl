@@ -51,3 +51,17 @@ KEYWORD smooth_field "Analytic field used by the smooth-field outer-BC (Channel 
 BOOLEAN run_outer_bc_tests "Schedule the outer-boundary NaN-injection and smooth-field (Channel 1) A/B diagnostics"
 {
 } "no"
+
+# BUGFIX_TODO.md C6 instrument (R2: gated off by default, declared in B10's
+# inventory). After the smooth_pre snapshot, write_smooth_test overwrites the
+# outer-BC ghost shell with this value (skipped when 0, the default). Because
+# the interpolation weights of a tensor-product Lagrange stencil sum to 1, a
+# receiver downstream of that ghost reads back w_O*smooth_sentinel plus the
+# untouched remainder of the stencil, so value/smooth_sentinel ~= w_O (the
+# donor-outer-ghost weight) once smooth_sentinel dominates the analytic field
+# by many orders of magnitude. Leave at 0 for every other smooth_* leg: a
+# nonzero value here destroys the outer ghosts every other measurement reads.
+CCTK_REAL smooth_sentinel "Outer-BC ghost sentinel value for the C6 slaved-fill weight measurement; 0 = off"
+{
+  *:* :: ""
+} 0.0

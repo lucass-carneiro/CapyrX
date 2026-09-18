@@ -1,0 +1,63 @@
+# Interface definition for thorn CapyrX_TestOuterBC
+
+IMPLEMENTS: CapyrX_TestOuterBC
+
+INHERITS: CoordinatesX MultiPatch
+
+USES INCLUDE HEADER: loop_device.hxx
+
+# Determine which of a patch's faces border another patch
+CCTK_INT FUNCTION MultiPatch_GetBoundarySpecification2( \
+  CCTK_INT IN patch, \
+  CCTK_INT IN size, \
+  CCTK_INT OUT ARRAY is_interpatch_boundary)
+USES FUNCTION MultiPatch_GetBoundarySpecification2
+
+# NOTE ON WHY THESE FOUR GROUPS LIVE IN A THORN OF THEIR OWN.
+#
+# CarpetX allocates a MultiFab for EVERY declared CCTK_GF group on EVERY level
+# of every patch, whether or not any thorn asks for storage: see
+# CarpetX/src/driver.cxx, which loops over CCTK_NumGroups() unconditionally,
+# and CarpetX/src/schedule.cxx's GroupStorageIncrease/Decrease, which carry
+# the comment "TODO: actually do something" and do nothing.  When CarpetX
+# creates a refined level it prolongates every one of those groups and
+# requires the coarse data to be VALID first, so a group that has storage and
+# no writer aborts the run at "MakeNewLevelFromCoarse before prolongation" as
+# soon as CarpetX::max_num_levels > 1.
+#
+# These four fields are written only by the two outer-boundary diagnostics,
+# which are not part of every test.  Declaring them in CapyrX_TestMultiPatch
+# therefore made EVERY par file of that thorn -- the coloring test included --
+# unusable with mesh refinement.  Activating this thorn is now the switch:
+# when it is not in ActiveThorns the groups do not exist, and when it is, its
+# routines write all four unconditionally.
+
+CCTK_REAL nan_test TYPE=gf TAGS='dirichlet_values={1.0 1.0 1.0}'
+{
+    nan_test
+} "NaN-injection field: 1.0 = clean baseline, NaN = corrupted"
+
+CCTK_REAL nan_test_pre TYPE=gf
+{
+    nan_test_pre
+} "Snapshot of nan_test immediately after injection, before SYNC; never itself synced"
+
+# Smooth-field outer-BC A/B test .
+# `smooth` is filled with a smooth analytic field (`smooth_field`) *everywhere*,
+# including the outer-BC ghost cells, then SYNCed. Under CarpetX::boundary_* =
+# neumann / "linear extrapolation" the SYNC's BC pass overwrites the outer-BC
+# ghosts and the interpatch interpolation then reads them (measurement (a),
+# "current centered+ghost"); under boundary_* = none the BC pass is a no-op so
+# the outer ghosts keep their exact analytic values and the interpatch
+# interpolation reads exact ghosts (measurement (c), "exact-solution ghosts").
+# Deliberately carries no dirichlet_values / *_vars override so its boundary
+# kind is exactly the global CarpetX::boundary_* setting the par file selects.
+CCTK_REAL smooth_test TYPE=gf
+{
+    smooth
+} "Smooth analytic field for the outer-BC (Channel 1) A/B test"
+
+CCTK_REAL smooth_test_pre TYPE=gf
+{
+    smooth_pre
+} "Snapshot of smooth immediately after fill (= exact analytic value at every cell, incl. outer ghosts), before SYNC; never itself synced"

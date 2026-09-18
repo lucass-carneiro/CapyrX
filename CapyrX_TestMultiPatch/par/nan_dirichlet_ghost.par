@@ -4,6 +4,7 @@ ActiveThorns = "
     CoordinatesX
     CapyrX_MultiPatch
     CapyrX_TestMultiPatch
+    CapyrX_TestOuterBC
 "
 
 Cactus::presync_mode = "mixed-error"
@@ -44,7 +45,7 @@ CarpetX::boundary_upper_x = "dirichlet"
 CarpetX::boundary_upper_y = "dirichlet"
 CarpetX::boundary_upper_z = "dirichlet"
 
-CapyrX_TestMultiPatch::nan_injection_mode = "ghost"
+CapyrX_TestOuterBC::nan_injection_mode = "ghost"
 CapyrX_TestMultiPatch::run_outer_bc_tests = yes
 
 IO::parfile_write = no
@@ -57,6 +58,6 @@ CarpetX::out_metadata    = no
 CarpetX::out_tsv = yes
 CarpetX::out_tsv_vars = "
   CoordinatesX::vertex_coords
-  CapyrX_TestMultiPatch::nan_test
-  CapyrX_TestMultiPatch::nan_test_pre
+  CapyrX_TestOuterBC::nan_test
+  CapyrX_TestOuterBC::nan_test_pre
 "

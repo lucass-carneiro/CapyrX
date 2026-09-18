@@ -90,6 +90,18 @@ PROVIDES FUNCTION MultiPatch_Interpolate \
   WITH MultiPatch1_Interpolate \
   LANGUAGE C
 
+# Does MultiPatch_Interpolate write cells INSIDE a patch's valid region, or
+# only its interpatch ghost zones?  The driver owns the AMReX boxes and has to
+# re-share the inter-box ghost copies of any interior cell this function
+# overwrites; this is how it learns whether there are any to re-share.  See the
+# comment at MultiPatch1_InterpolateWritesInterior in src/interpolate.cxx for
+# why the question is asked about the contract rather than about the name of
+# this thorn's `slave_overlap` parameter.
+CCTK_INT FUNCTION MultiPatch_InterpolateWritesInterior()
+PROVIDES FUNCTION MultiPatch_InterpolateWritesInterior \
+  WITH MultiPatch1_InterpolateWritesInterior \
+  LANGUAGE C
+
 PUBLIC:
 
 CCTK_REAL vertex_Jacobians TYPE=gf CENTERING={vvv} TAGS='checkpoint="no"'

@@ -67,9 +67,9 @@ The sec-8 decision, read off the summary:
 Usage
 -----
     check_smooth_test.py \\
-        --neumann   exe/smooth_z_neumann/capyrx_testmultipatch-smooth.it000000.p0000.tsv \\
-        --linextrap exe/smooth_z_linextrap/capyrx_testmultipatch-smooth.it000000.p0000.tsv \\
-        --none      exe/smooth_z_none/capyrx_testmultipatch-smooth.it000000.p0000.tsv
+        --neumann   exe/smooth_z_neumann/capyrx_testouterbc-smooth.it000000.p0000.tsv \\
+        --linextrap exe/smooth_z_linextrap/capyrx_testouterbc-smooth.it000000.p0000.tsv \\
+        --none      exe/smooth_z_none/capyrx_testouterbc-smooth.it000000.p0000.tsv
 
 The companion smooth_pre and coordinatesx-vertex_coords TSVs are auto-located
 next to the --none file (the exact-ghost run) unless --pre/--coords are given.
@@ -106,13 +106,13 @@ def guess_companion(smooth_path, target_stem):
     coords stem).
 
     CarpetX names TSVs by *group*, and the smooth field's group is `smooth_test`
-    (real files are `capyrx_testmultipatch-smooth_test...` and `...-smooth_test_pre...`),
+    (real files are `capyrx_testouterbc-smooth_test...` and `...-smooth_test_pre...`),
     so the match must anchor on `-smooth_test`, not `-smooth`: anchoring on the
     shorter `-smooth` left `_test` dangling and synthesized non-existent names
     (`...-smooth_pre_test...`), which is why --pre/--coords had to be passed by
     hand. See 12_9_impl.md Phase 3(a)."""
     p = Path(smooth_path)
-    name = re.sub(r"^capyrx_testmultipatch-smooth_test(?:_pre)?", target_stem, p.name)
+    name = re.sub(r"^capyrx_testouterbc-smooth_test(?:_pre)?", target_stem, p.name)
     if name == p.name:
         return None
     candidate = p.with_name(name)
@@ -258,7 +258,7 @@ def main():
 
     # Companions: exact (pre) + coords, from --none if present else --neumann.
     comp_src = args.none or args.neumann
-    pre_path = Path(args.pre) if args.pre else guess_companion(comp_src, "capyrx_testmultipatch-smooth_test_pre")
+    pre_path = Path(args.pre) if args.pre else guess_companion(comp_src, "capyrx_testouterbc-smooth_test_pre")
     coords_path = Path(args.coords) if args.coords else guess_companion(comp_src, "coordinatesx-vertex_coords")
     if pre_path is None or not Path(pre_path).exists():
         ap.error("could not find the exact smooth_pre TSV; pass --pre explicitly")

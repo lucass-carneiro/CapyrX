@@ -14,11 +14,14 @@
 #include <nvtx3/nvToolsExt.h>
 #endif
 
+#include <algorithm>
 #include <array>
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>
+#include <map>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -89,6 +92,29 @@ struct InterpolationCache {
   // Epoch at which this cache was built. -1 = never built.
   CCTK_INT epoch{-1};
 
+  // AMR-B2: the caller's active (level, patch) range this cache was built for,
+  // and part of its key. THE EPOCH ALONE IS NOT A KEY once the range is
+  // honoured: `regrid_interpatch_repair` and the syncs that follow it inside
+  // one regrid share an epoch and ask for DIFFERENT ranges
+  // (`CarpetX/src/schedule.cxx:1503` and `:1916` against `:1975`), and reusing
+  // one cache across the two is wrong in both directions -- a narrow cache
+  // reused by a wide caller has no slice for the levels the write-back then
+  // loops over, so `slices.at()` throws, and a wide cache reused by a narrow
+  // caller writes levels the caller excluded, which is the defect this step
+  // removes. -1 = never built.
+  int min_level{-1}, max_level{-1}, min_patch{-1}, max_patch{-1};
+
+  // AMR-B3: the (patch, level) pairs this cache did NOT collect, because the
+  // driver does not call their `CoordinatesX::vertex_coords` interior valid.
+  // IT IS PART OF THE KEY, and that is a correctness requirement and not
+  // bookkeeping: a cache built while a level was skipped carries no slice for
+  // that level, so the write-back's `slices.at(location)` would throw the
+  // moment a later caller with the SAME (epoch, range) found the level valid.
+  // That is not hypothetical -- it is the regrid path, where
+  // `CCTK_Traverse("CCTK_BASEGRID")` runs between the repair and the fill that
+  // follows it and turns exactly these pairs valid. Empty = nothing skipped.
+  std::vector<std::pair<int, int> > skipped_pl;
+
   // Ghost-zone source points in deterministic insertion order.
   std::vector<std::pair<Location, PointList> > ordered_components;
   // O(1) slot lookup used during the parallel fill phase.
@@ -119,6 +145,361 @@ struct InterpolationCache {
 };
 
 static InterpolationCache g_interp_cache;
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// AMR-B2 INSTRUMENT.  WHICH LEVELS DID THE CALLER ASK FOR, AND WHICH ONES DOES
+// THIS FILL TOUCH?
+//
+// WHY THIS EXISTS.  `MultiPatch_Interpolate` has two callers with two different
+// meanings (`CarpetX/src/schedule.cxx`):
+//
+//   * `SyncGroupsByDirI`, once per sync, under whatever level range the
+//     traverse it is inside set -- during evolution `(0, num_levels)`,
+//     because nothing subcycles (`schedule.cxx:1975`);
+//   * `regrid_interpatch_repair`, once per regrid that modified a level, under
+//     `(first_modified_level, last_modified_level + 1)` (`schedule.cxx:1503`
+//     in `Initialise`, `:1916` in `Evolve`) -- i.e. under the levels the
+//     regrid actually changed, which on a fresh level 1 is the single-element
+//     range `{1}`.
+//
+// The second range is the whole subject of AMR-B2, and NOTHING in this file
+// read it before this instrument was written.  The three loops that make up
+// the repair disagreed about it: `regrid_interpatch_repair`'s validity filter
+// (`schedule.cxx:191`) and its corners-only boundary pass (`:232`) both honour
+// `active_levels`, while the interpolation between them -- this function --
+// looped every level of every patch.  So the instrument prints BOTH numbers on
+// one line: what the driver asked for (`range=`) and what this call will write
+// (`touched=`).  On a regrid repair, before AMR-B2, they do not match, and
+// that mismatch is the step's failing-before test.
+//
+// WHAT IT PRINTS, one line per call, all fields on one line so a stream can be
+// read with `grep MPLEVELS`:
+//
+//   MPLEVELS call=N epoch=E src=caller|default range=L[a,b)P[c,d)
+//            nlevels=X npatches=Y rebuilt=0|1 reason=first|epoch|range|none
+//            nvars=V npoints=P nslaved=S origin_pts=O touched=p:l:n,...
+//
+//   src         `caller` if the driver's `active_levels` was set, `default`
+//               if this function fell back to "every level of every patch".
+//               Both callers set it, so `default` is unreachable today; it is
+//               printed rather than assumed so that a future caller reaching
+//               here outside a traverse is visible instead of silent.
+//   range       the caller's range.  `L[1,2)P[0,7)` is "level 1 only, all
+//               seven patches".
+//   rebuilt     whether THIS call rebuilt the cache, and `reason` why.
+//               `first` = the cache had never been built; `epoch` = the AMR
+//               epoch moved; `range` = the caller's range moved (AMR-B2 only:
+//               before AMR-B2 the range is not part of the cache key and this
+//               value cannot appear); `none` = the cache was reused.
+//   npoints     the number of cells this call's write-back will write, per
+//               variable, on this process.  It is read out of the cache's own
+//               slices, so it is what the call WILL do, not an estimate.
+//   nslaved     how many of those are slaved interior cells rather than
+//               interpatch ghosts.
+//   origin_pts  how many query coordinates are EXACTLY (0, 0, 0).  This is
+//               `[P246]`'s signature: an interpatch query at the origin means
+//               the coordinate it was collected from had not been written when
+//               the cache was built.  One legitimate hit is conceivable (the
+//               cube's centre vertex is a real coordinate, though never an
+//               interpatch ghost), so the number to read is the difference
+//               between two columns, not the value itself.
+//   coords_invalid
+//               how many (patch, level) pairs in `range` hold a
+//               `CoordinatesX::vertex_coords` interior the driver does NOT
+//               call valid -- i.e. how many of them this call must not read a
+//               coordinate from.  AMR-B3's predicate, and AMR-D5's subject.
+//               BEFORE AMR-B3's FIX THIS IS WHAT THE CALL READ ANYWAY; AFTER
+//               IT, IT IS WHAT THE CALL SKIPPED.  The column does not move
+//               across the fix -- `touched` does, and that is the whole test.
+//   invalid_pl  those pairs as `patch:level`, or `-`.  Every call outside the
+//               regrid path reports `-`: `CCTK_BASEGRID` has run on every
+//               level a sync covers.
+//   touched     per (patch, level), the point count -- the level census this
+//               step is about.  A `:0` entry is printed rather than dropped,
+//               so that "the level was in range and had nothing" is
+//               distinguishable from "the level was not in range".
+//
+// COST.  One `std::getenv` per process when off, and nothing else: no line, no
+// map, no sweep.  When ON it is one stderr line per call plus one O(npoints)
+// pass over the cached coordinates for `origin_pts` and one O(ncomponents)
+// pass for `touched` -- 22 lines on `a2_v1_Pno_Sno_R0.par`'s whole run, against
+// the 12472-line floods the `CAPYRX_LOG_DONORS` blocks in this file emit for
+// one par.  It gets its OWN environment variable (`[P27]`: `CAPYRX_LOG_DONORS`
+// already carries eight blocks and cannot be enabled alone) and it is ALWAYS
+// COMPILED rather than `CCTK_DEBUG`-gated (AMR-A4's deviation, and for the same
+// reason: the numbers have to be readable in the optimized build, which is the
+// only build in which the production geometry runs in minutes).
+//
+// IT IS ON STDERR, DELIBERATELY.  `CCTK_VINFO` is root-rank-only by default --
+// the flesh reopens non-root stdout to the null device
+// (`Cactus/src/main/CommandLine.c:782-785`) -- and every count here is
+// RANK-LOCAL, because which rank holds a component is the decomposition's
+// business.  On stdout a four-rank run would silently report rank 0 alone
+// (`[P223]`).  The line is assembled in an `ostringstream` and emitted with a
+// single `<<`, which the flood instruments below deliberately do NOT do
+// (`[P26]`, `[P32]`: their streams are already measured and must stay
+// comparable); this one has no history to preserve and is emitted from a
+// serial point anyway, since `MultiPatch_Interpolate` is called in global mode.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+// The active (level, patch) range the CALLER set before invoking us.
+//
+// `CarpetX::active_levels` is the driver's own record of which levels the
+// current traverse applies to (`CarpetX/src/schedule.hxx:93`, defined at
+// `schedule.cxx:82`).  It is an `optional` and is empty outside a traverse.
+// Both callers of `MultiPatch_Interpolate` set it -- `regrid_interpatch_repair`
+// asserts it and `SyncGroupsByDirI` dereferences it several times before
+// reaching us -- so the fallback here is unreachable today.  It is NOT a silent
+// default: the instrument records which of the two was used.
+static CarpetX::active_levels_t caller_active_levels() {
+  if (CarpetX::active_levels)
+    return *CarpetX::active_levels;
+  return CarpetX::active_levels_t();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// AMR-B3 PREDICATE.  WHICH (patch, level) PAIRS IN THE CALLER'S RANGE HOLD
+// VERTEX COORDINATES THIS FUNCTION IS ALLOWED TO READ?
+//
+// WHY THIS EXISTS.  Both collection passes below read
+// `CoordinatesX::vcoordx/y/z`: the ghost pass to get the global coordinate of
+// every interpatch ghost point (`grid.loop_bnd`), and
+// `collect_slaved_interior` to classify the owner of every interior cell.
+// Those arrays are written ONCE per level, `(everywhere)`, by
+// `CoordinatesX_Setup` at `CCTK_BASEGRID` (`CoordinatesX/schedule.ccl:3-8`).
+// On the regrid path `regrid_interpatch_repair` is called BEFORE that traverse
+// -- `CarpetX/src/schedule.cxx:1518` against `:1520` in `Initialise`, `:1931`
+// against `:1933` in `Evolve` -- and its active range is exactly the levels
+// the regrid modified.  On such a level the coordinate array holds whatever
+// the allocator left: poison with `CarpetX::poison_undefined_values = yes`,
+// residue without.  This function then reads it as a physical coordinate.
+//
+// THAT IS AMR-D5, AND IT HAS BEEN MEASURED IN THREE SHAPES:
+//
+//   * `[P212]` (A3): poison x `slave_overlap` -- `MultiPatch1_GlobalToLocal2`
+//     refuses the classified NaN with `Unable to compute global2local:
+//     Unknown patch piece`, `cubed_sphere.cxx:177`, exit 1, 4 of 4, ~19 s.
+//   * `[P246]` (A5): residue of zeros -- 9126 interpatch queries carry the
+//     coordinate (0,0,0), are answered from level 1 at the cube's centre, and
+//     the leg exits 0 with no message at all.
+//   * `[P257]` (A6): arbitrary residue -- the donor anchor lands outside the
+//     box and `CarpetX/src/interpolate.cxx:293`'s
+//     `assert(all(i >= 0 && i + order < grid.lsh))` aborts with exit 134,
+//     non-deterministically, 13 of 24 attempts on the production geometry, in
+//     the OPTIMIZED build with poisoning OFF.
+//
+// So this is not a poisoning artefact and not a debug-build nuisance: the
+// residue decides which of the three you get.
+//
+// THE PREDICATE IS VALIDITY, AND IT IS D3's PREDICATE VERBATIM.  CarpetX's own
+// regrid repair already asks the driver's flags the same question about the
+// groups it is about to FILL (`CarpetX/src/schedule.cxx:189-205`, with the
+// argument at `:167-175`: "it held poison" and "its interior is not valid" are
+// the same statement, because `poison_invalid_gf` poisons exactly the regions
+// the flags call invalid).  Before AMR-B3 this file disagreed with its own
+// caller: the repair excluded `CoordinatesX` from the variable list BECAUSE
+// its interior was not valid, and then this function read that same array for
+// every coordinate it interpolated at.  Asking the flags asks the driver's own
+// record rather than compiling another thorn's schedule into this one, and it
+// fails safe if a fourth caller ever reaches here.
+//
+// WHAT IT RETURNS.  The (patch, level) pairs in `levels` that EXIST and whose
+// `CoordinatesX::vertex_coords` interior the driver does not call valid, in
+// ascending (patch, level) order so that two calls' lists can be compared with
+// `==` -- which is what makes the list usable as part of the interpolation
+// cache's key.  A (patch, level) that does not exist for that patch is NOT in
+// the list and is not "skipped": `active_levels_t`'s loops already leave it
+// out (`CarpetX/src/schedule.cxx:951-963`), so listing it would make the cache
+// key depend on how many levels a patch happens to carry.
+//
+// COST.  `npatches * nlevels` iterations of a loop over a handful of `bool`s,
+// once per `MultiPatch_Interpolate` call: 14 iterations on the seven-patch
+// two-level production geometry.  No grid traversal, no allocation beyond the
+// (normally empty) result.  It is ALWAYS COMPILED and never env-gated,
+// because it is the predicate the fix acts on rather than an instrument.
+//
+////////////////////////////////////////////////////////////////////////////////
+static std::vector<std::pair<int, int> >
+invalid_coord_levels(const CarpetX::active_levels_t &levels) {
+  std::vector<std::pair<int, int> > invalid;
+
+  // CoordinatesX must be active: both collection passes below fetch
+  // `CoordinatesX::vcoordx` BY NAME through `CCTK_VarDataPtr`, so a missing
+  // group index is a broken configuration and not an inactive feature.
+  // Refusing here rather than returning an empty list follows the same rule as
+  // the `MultiPatch_GetBoundarySpecification2` check further down: silently
+  // defaulting to "every level's coordinates are valid" would put this defect
+  // straight back with nobody able to see it.
+  const int coords_gi = CCTK_GroupIndex("CoordinatesX::vertex_coords");
+  if (coords_gi < 0)
+    CCTK_VERROR("MultiPatch1_Interpolate: CCTK_GroupIndex("
+                "\"CoordinatesX::vertex_coords\") returned %d, but this "
+                "function reads CoordinatesX::vcoordx/y/z as the coordinates "
+                "of every point it interpolates at. Refusing to assume that "
+                "every active level's coordinates have been written "
+                "(AMR-B3 / AMR-D5)",
+                coords_gi);
+
+  for (int patch = levels.min_patch; patch < levels.max_patch; ++patch) {
+    const auto &patchdata = CarpetX::ghext->patchdata.at(patch);
+    for (int level = levels.min_level; level < levels.max_level; ++level) {
+      if (level >= int(patchdata.leveldata.size()))
+        continue; // this patch has no such level, and the loops skip it too
+      const auto &leveldata = patchdata.leveldata.at(level);
+      const auto &groupdata_ptr = leveldata.groupdata.at(coords_gi);
+      if (!groupdata_ptr) {
+        // A CCTK_GF group with no level data. Not reachable today; counted as
+        // invalid because that is the direction that fails safe.
+        invalid.emplace_back(patch, level);
+        continue;
+      }
+      const auto &groupdata = *groupdata_ptr;
+      // `sync_tl` exactly as CarpetX's own repair computes it
+      // (`schedule.cxx:196-197`): where there is more than one time level the
+      // oldest is not synced and is not required to hold a value.
+      const int ntls = int(groupdata.mfab.size());
+      const int sync_tl = ntls > 1 ? ntls - 1 : ntls;
+      bool interior_is_valid = true;
+      for (int tl = 0; tl < sync_tl; ++tl)
+        for (int vi = 0; vi < groupdata.numvars; ++vi)
+          if (!groupdata.valid.at(tl).at(vi).get().valid_int)
+            interior_is_valid = false;
+      if (!interior_is_valid)
+        invalid.emplace_back(patch, level);
+    }
+  }
+  return invalid;
+}
+
+// AMR-B3: render a (patch, level) list for one log field -- `0:1,0:2`, or `-`
+// for the empty list, which is what every call outside the regrid path reports.
+static std::string
+format_patch_levels(const std::vector<std::pair<int, int> > &pl) {
+  if (pl.empty())
+    return "-";
+  std::ostringstream out;
+  bool first = true;
+  for (const auto &[patch, level] : pl) {
+    if (!first)
+      out << ",";
+    first = false;
+    out << patch << ":" << level;
+  }
+  return out.str();
+}
+
+// AMR-B5: render a (patch, level) -> count census for one log field --
+// `0:0:11548,1:0:42602`, or `-` for the empty census.  Same shape as
+// `touched=` above so the two fields can be read side by side; `slaved_pl` is
+// a SUBSET of `touched`, because `collect_slaved_interior`'s coordinates are
+// appended to the same per-component point list the ghost points are in.
+static std::string format_census(
+    const std::map<std::pair<int, int>, std::size_t> &census) {
+  if (census.empty())
+    return "-";
+  std::ostringstream out;
+  bool first = true;
+  for (const auto &[patch_level, count] : census) {
+    if (!first)
+      out << ",";
+    first = false;
+    out << patch_level.first << ":" << patch_level.second << ":" << count;
+  }
+  return out.str();
+}
+
+static void log_active_levels(
+    const CarpetX::active_levels_t &levels, const bool from_caller,
+    const CCTK_INT epoch, const bool rebuilt, const char *const reason,
+    const std::size_t nvars,
+    const std::vector<std::pair<int, int> > &coords_invalid) {
+  DECLARE_CCTK_PARAMETERS;
+
+  static const bool log_levels = std::getenv("CAPYRX_LOG_LEVELS") != nullptr;
+  if (!log_levels)
+    return;
+
+  // BUGFIX_TODO.md B10's rule: an unsynchronised mutable static is written
+  // only on the path that also reads it.  This function is called from global
+  // mode (`assert(in_global_mode(cctkGH))` in both callers), so the counter is
+  // serial; it counts LOGGED calls, which is every call when the instrument is
+  // on.
+  static long call_counter = 0;
+  ++call_counter;
+
+  // AMR-B5: `slaved_pl` is the per-(patch, level) SLAVED census and
+  // `slaved_maxlevel` is the deepest level carrying one.  They cost one
+  // `std::map` insert per component that has a slaved cell, inside a loop that
+  // already walks both vectors, and they exist because the B9 guard below
+  // hardcodes `leveldata.at(0)` on the premise that no slaved cell lives above
+  // level 0.  `[P217]` measured that premise once, on one geometry, out of an
+  // 8.5 GB `CAPYRX_LOG_DONORS` flood; these two fields make it one line of any
+  // run.  `slaved_maxlevel = -1` means no slaved cell on this rank at all.
+  std::map<std::pair<int, int>, std::size_t> per_patch_level;
+  std::map<std::pair<int, int>, std::size_t> slaved_per_patch_level;
+  int slaved_maxlevel = -1;
+  std::size_t npoints = 0, nslaved = 0;
+  for (std::size_t slot = 0;
+       slot < g_interp_cache.ordered_components.size(); ++slot) {
+    const Location &location = g_interp_cache.ordered_components[slot].first;
+    const std::size_t n =
+        g_interp_cache.ordered_components[slot].second[0].size();
+    per_patch_level[std::make_pair(location.patch, location.level)] += n;
+    npoints += n;
+    const std::size_t ns = slot < g_interp_cache.slaved_indices.size()
+                               ? g_interp_cache.slaved_indices[slot].size()
+                               : 0;
+    nslaved += ns;
+    if (ns > 0) {
+      slaved_per_patch_level[std::make_pair(location.patch, location.level)] +=
+          ns;
+      slaved_maxlevel = std::max(slaved_maxlevel, location.level);
+    }
+  }
+
+  std::size_t origin_pts = 0;
+  for (std::size_t i = 0; i < g_interp_cache.coords[0].size(); ++i)
+    if (g_interp_cache.coords[0][i] == 0 && g_interp_cache.coords[1][i] == 0 &&
+        g_interp_cache.coords[2][i] == 0)
+      ++origin_pts;
+
+  std::ostringstream line;
+  line << "MPLEVELS call=" << call_counter << " epoch=" << epoch
+       << " src=" << (from_caller ? "caller" : "default") << " range=L["
+       << levels.min_level << "," << levels.max_level << ")P["
+       << levels.min_patch << "," << levels.max_patch << ")"
+       << " nlevels=" << CarpetX::ghext->num_levels()
+       << " npatches=" << CarpetX::ghext->num_patches()
+       << " rebuilt=" << (rebuilt ? 1 : 0) << " reason=" << reason
+       << " nvars=" << nvars << " npoints=" << npoints
+       << " nslaved=" << nslaved << " origin_pts=" << origin_pts
+       // `[N13]`: an empty census has two causes and they are not the same
+       // measurement.  `slave_overlap = no` means the classifier never ran;
+       // `slave_overlap = yes` with an empty census means it ran and found
+       // nothing.  Say which.
+       << " slaving=" << (slave_overlap ? "on" : "off")
+       << " slaved_maxlevel=" << slaved_maxlevel
+       << " slaved_pl=" << format_census(slaved_per_patch_level)
+       << " coords_invalid=" << coords_invalid.size()
+       << " invalid_pl=" << format_patch_levels(coords_invalid)
+       << " touched=";
+  if (per_patch_level.empty()) {
+    line << "-";
+  } else {
+    bool first = true;
+    for (const auto &[patch_level, count] : per_patch_level) {
+      if (!first)
+        line << ",";
+      first = false;
+      line << patch_level.first << ":" << patch_level.second << ":" << count;
+    }
+  }
+  line << "\n";
+  std::cerr << line.str();
+}
 
 // One interior overlap-band cell that this patch does not own: its grid index
 // (for write-back) and its global coordinate (for the interpolation query).
@@ -223,6 +604,37 @@ static std::vector<SlavePoint> collect_slaved_interior(
     }
   }
   return slaved;
+}
+
+// AMR-B4 (`[P123]`).  DOES THIS FUNCTION WRITE INTERIOR CELLS?
+//
+// WHY THE DRIVER HAS TO ASK.  With `slave_overlap = yes` the write-back in
+// Step 3 does two things, not one: it fills the interpatch ghost points, and it
+// OVERWRITES interior cells this patch holds but does not own (the slave band).
+// The second write happens after AMReX has already copied those same interior
+// cells into the neighbouring boxes' ghost regions, and nothing re-runs that
+// copy, so for the rest of the sync every inter-box ghost copy of a slaved cell
+// is one slave-write stale -- 400 / 1624 / 5040 cells on `color` /
+// `color_ghost` / `color_ghost_overlap`, and exactly zero with slaving off
+// (`[P123]`, C1 gate 5b; `[P157]` measured the same signature on the BBH).
+// The repair is a `FillBoundary` on the driver's side, because the driver is
+// the side that holds the `MultiFab`s.  It is not free, so the driver has to be
+// told whether this call writes an interior cell at all.
+//
+// WHY THIS IS NOT `slave_overlap` READ BY NAME FROM CarpetX.  CarpetX reaches
+// this thorn only through the `MultiPatch_*` alias set, and what it needs is a
+// statement about the CONTRACT of `MultiPatch_Interpolate` -- "not every cell I
+// write is outside your valid region" -- not the name of one implementation's
+// boolean.  A different multipatch thorn that writes interior cells for some
+// other reason answers this correctly without knowing the word "slave".
+//
+// IT IS A PARAMETER READ AND NOTHING ELSE, which is load-bearing rather than
+// incidental: the driver uses the answer to decide whether to enter a
+// COLLECTIVE `FillBoundary`, so the answer must be the same on every rank.
+// `slave_overlap` is not steerable, so it is also constant for the run.
+extern "C" CCTK_INT MultiPatch1_InterpolateWritesInterior() {
+  DECLARE_CCTK_PARAMETERS;
+  return static_cast<CCTK_INT>(slave_overlap);
 }
 
 extern "C" void
@@ -407,22 +819,75 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
     }
   }
 
-  // Step 1: Rebuild the interpolation cache if the AMR epoch has changed.
+  // Step 1: Rebuild the interpolation cache if the AMR epoch or the caller's
+  // active level range has changed (AMR-B2).
 
   const CCTK_INT current_epoch = GetEpoch();
 
-  if (current_epoch != g_interp_cache.epoch) {
-    CCTK_VINFO("Interpolation cache out of date (cache epoch = %d. Current "
-               "epoch = %d). Rebuilding",
-               g_interp_cache.epoch, current_epoch);
+  // AMR-B2: honour the caller's active (level, patch) range, and make it part
+  // of the cache key. See `InterpolationCache`'s key comment for why the epoch
+  // alone stops being a key the moment the range is honoured.
+  const CarpetX::active_levels_t caller_levels = caller_active_levels();
+  const bool levels_from_caller = CarpetX::active_levels.has_value();
+  const bool cache_never_built = g_interp_cache.epoch < 0;
+  const bool epoch_changed = current_epoch != g_interp_cache.epoch;
+  const bool range_changed =
+      caller_levels.min_level != g_interp_cache.min_level ||
+      caller_levels.max_level != g_interp_cache.max_level ||
+      caller_levels.min_patch != g_interp_cache.min_patch ||
+      caller_levels.max_patch != g_interp_cache.max_patch;
+
+  // AMR-B3: the (patch, level) pairs whose `CoordinatesX::vertex_coords`
+  // interior the driver does not call valid. The four loops below skip them --
+  // a grid function whose interior is not valid must not be a SOURCE, and this
+  // function's source is a coordinate -- and the cache records them, because a
+  // cache built while a level was skipped is not the cache a later caller of
+  // the same range wants. See `InterpolationCache::skipped_pl`.
+  const std::vector<std::pair<int, int> > coords_invalid =
+      invalid_coord_levels(caller_levels);
+  const auto coords_are_invalid = [&coords_invalid](const int patch,
+                                                    const int level) {
+    return std::find(coords_invalid.begin(), coords_invalid.end(),
+                     std::make_pair(patch, level)) != coords_invalid.end();
+  };
+  const bool skip_changed = coords_invalid != g_interp_cache.skipped_pl;
+
+  if (epoch_changed || range_changed || skip_changed) {
+    CCTK_VINFO("Interpolation cache out of date (cache epoch = %d, active "
+               "levels [%d,%d) patches [%d,%d); current epoch = %d, active "
+               "levels [%d,%d) patches [%d,%d)). Rebuilding",
+               g_interp_cache.epoch, g_interp_cache.min_level,
+               g_interp_cache.max_level, g_interp_cache.min_patch,
+               g_interp_cache.max_patch, current_epoch,
+               caller_levels.min_level, caller_levels.max_level,
+               caller_levels.min_patch, caller_levels.max_patch);
+
+    // AMR-B3: say it out loud. A skip that nobody can see is the same defect
+    // one indirection further away (`[P135]`, `[P184]`: a zero is only a zero
+    // if the instrument spoke). This is bounded by the REBUILD count, not the
+    // call count -- one or two lines per regrid.
+    if (!coords_invalid.empty())
+      CCTK_VINFO("MultiPatch_Interpolate: skipping %zu (patch, level) pair(s) "
+                 "%s whose CoordinatesX::vertex_coords interior the driver "
+                 "does not call valid. This call interpolates AT vertex "
+                 "coordinates, so a level whose coordinates have not been "
+                 "written cannot be collected from (AMR-B3 / AMR-D5). Nothing "
+                 "on such a level is filled by this call",
+                 coords_invalid.size(),
+                 format_patch_levels(coords_invalid).c_str());
 
     // Collect ghost-zone coordinates.
     // Serial pass: assign each component a fixed slot so the parallel fill
     // phase can write without any synchronisation.
     g_interp_cache.ordered_components.clear();
     g_interp_cache.component_index.clear();
-    CarpetX::active_levels_t().loop_serially(
+    caller_levels.loop_serially(
         [&](int patch, int level, int index, int component, const cGH *) {
+          // AMR-B3: no slot, so no later pass visits this (patch, level) --
+          // the ghost fill, the slave collection and the write-back all index
+          // through `component_index`/`slices`, which are built here.
+          if (coords_are_invalid(patch, level))
+            return;
           const Location location{patch, level, index, component};
           g_interp_cache.component_index[location] =
               g_interp_cache.ordered_components.size();
@@ -436,9 +901,10 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
 
     // Parallel pass: each component writes to its pre-assigned slot.
     {
-      CarpetX::active_levels_t().loop_parallel([&](int patch, int level,
-                                                   int index, int component,
-                                                   const cGH *cctkGH) {
+      caller_levels.loop_parallel([&](int patch, int level, int index,
+                                     int component, const cGH *cctkGH) {
+        if (coords_are_invalid(patch, level))
+          return; // AMR-B3: `vcoords` below is exactly the unwritten array
         const Loop::GridDescBase grid(cctkGH);
         const std::array<int, dim> centering{0, 0, 0};
         const Loop::GF3D2layout layout(cctkGH, centering);
@@ -528,9 +994,11 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
     // paid rarely. The write-back pass reuses the cached slaved_indices, so the
     // owner classification here is never repeated per-step.
     if (slave_overlap) {
-      CarpetX::active_levels_t().loop_serially([&](int patch, int level,
-                                                   int index, int component,
-                                                   const cGH *cctkGH) {
+      caller_levels.loop_serially([&](int patch, int level, int index,
+                                     int component, const cGH *cctkGH) {
+        if (coords_are_invalid(patch, level))
+          return; // AMR-B3: this is `[P212]`'s reader -- the classified
+                  // coordinate that reads `-nan(0x80000deadbeef)`
         const Loop::GridDescBase grid(cctkGH);
         const std::array<int, dim> centering{0, 0, 0};
         const Loop::GF3D2layout layout(cctkGH, centering);
@@ -588,10 +1056,21 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
     const std::size_t npoints_cache = g_interp_cache.coords[0].size();
     for (auto &r : g_interp_cache.results)
       r.resize(npoints_cache);
+    // C-AMR2 (CarpetX `src/interpolate.cxx`): these query points are the
+    // interpatch ghost points of a patch boundary -- and, when
+    // `slave_overlap` is on, the non-owned interior overlap cells that are
+    // filled the same way. Every one of them must be answered from a level-0
+    // box. If a refined level ever covers the region a seam point is drawn
+    // from, `Redistribute` will silently start answering it from prolongated
+    // fine data instead of evolved coarse data, at a moment set by wherever
+    // the refinement boxes have travelled to. CarpetX cannot tell that apart
+    // from a legitimate level-1 answer to somebody else's query, so the
+    // caller declares it; the flag defaults to false there.
     g_interp_cache.setup.emplace(cctkGH, static_cast<CCTK_INT>(npoints_cache),
                                  g_interp_cache.coords[0].data(),
                                  g_interp_cache.coords[1].data(),
-                                 g_interp_cache.coords[2].data());
+                                 g_interp_cache.coords[2].data(),
+                                 /*require_level0_donors=*/true);
 
     // Build per-patch outer-boundary policy
     const int npatches = cctkGH->cctk_npatches;
@@ -628,7 +1107,33 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
     }
 
     g_interp_cache.epoch = current_epoch;
+    g_interp_cache.min_level = caller_levels.min_level;
+    g_interp_cache.max_level = caller_levels.max_level;
+    g_interp_cache.min_patch = caller_levels.min_patch;
+    g_interp_cache.max_patch = caller_levels.max_patch;
+    g_interp_cache.skipped_pl = coords_invalid;
   }
+
+  // AMR-B3 adds a fourth term. THE VOCABULARY OF THE FIRST THREE IS B2's AND
+  // IS UNCHANGED -- `first`, `epoch`, `range`, `epoch+range`, `none` -- so a
+  // b2 stream and a b3 stream can be read side by side; `skip` joins them with
+  // `+` in the order the tests are written.
+  std::string rebuild_reason;
+  if (cache_never_built) {
+    rebuild_reason = "first";
+  } else {
+    if (epoch_changed)
+      rebuild_reason = "epoch";
+    if (range_changed)
+      rebuild_reason += rebuild_reason.empty() ? "range" : "+range";
+    if (skip_changed)
+      rebuild_reason += rebuild_reason.empty() ? "skip" : "+skip";
+    if (rebuild_reason.empty())
+      rebuild_reason = "none";
+  }
+  log_active_levels(caller_levels, levels_from_caller, current_epoch,
+                    epoch_changed || range_changed || skip_changed,
+                    rebuild_reason.c_str(), varinds.size(), coords_invalid);
 
   // Step 2: Interpolate using the cached setup.
 
@@ -764,12 +1269,108 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
   // damage and lets a legitimate one through, which is why a rig whose only
   // fill is legitimate keeps working.
   //
-  // LEVEL 0 IS NOT MERELY THE CONVENIENT LEVEL, IT IS THE ONLY ONE: a slaved
-  // cell requires a patch overlap, and B8's PARAMCHECK guard in
-  // `CarpetX/src/driver.cxx` refuses mesh refinement on a multi-patch grid, so
-  // `n_slaved > 0` implies a single-level hierarchy.  (`boundaries` would be
-  // level-independent regardless -- `get_group_boundaries(gi, patch)` takes no
-  // level -- but `valid` would not be.)
+  // WHY `leveldata.at(0)`, AND IT IS NOT BECAUSE MESH REFINEMENT IS REFUSED.
+  // This block used to read: "a slaved cell requires a patch overlap, and B8's
+  // PARAMCHECK guard in `CarpetX/src/driver.cxx` refuses mesh refinement on a
+  // multi-patch grid, so `n_slaved > 0` implies a single-level hierarchy".
+  // AMR-B1 DELETED that refusal and replaced it with two contracts, each
+  // evaluated at the site that would violate it, so the sentence named
+  // something that no longer exists.  The reason has two legs; they are
+  // independent, and THE FIRST IS THE ONE THAT CARRIES THE WEIGHT.
+  //
+  //   (i) BOTH TERMS DESCRIBE THE DONOR, NOT THE CELL BEING WRITTEN, AND
+  //       C-AMR2 PINS THE DONOR TO LEVEL 0.  Term (1) is level-free by
+  //       construction: `all_faces_have_symmetries_or_boundaries()` reads
+  //       `ghext->patchdata[p].symmetries` and `groupdata.boundaries`
+  //       (`CarpetX/src/driver.cxx:1060`), and `get_group_boundaries(gi,
+  //       patch)` takes no level (`:368`), so every level's `GroupData`
+  //       answers it identically.  Term (2) is the certification of the outer
+  //       zone THE DONOR STENCIL WILL READ -- the defect at the top of this
+  //       block is an import FROM an unwritten physical outer ghost zone, so
+  //       the bit that decides it is the donor patch's, at the level the donor
+  //       is on.  C-AMR2 is "no interpatch query point may be answered from a
+  //       `level > 0` box", and it is enforced here rather than assumed:
+  //       `InterpolationSetup::RefuseAboveLevel0Donors` is a PRE-PASS inside
+  //       the `Interpolate` call below, this thorn opts into it
+  //       (`/*require_level0_donors=*/true` at the `setup.emplace` above, and
+  //       the comment there says why the slaved points are part of its
+  //       subject), and it sweeps the whole particle container -- ONE array
+  //       carrying this patch's interpatch ghost points and its slaved points
+  //       together.  So the level of the cell being WRITTEN never enters this
+  //       predicate, and `leveldata.at(0)` is right because the DONOR is
+  //       there.
+  //
+  //  (ii) AND AT EVERY GEOMETRY OF RECORD THERE IS NO SLAVED CELL ABOVE LEVEL
+  //       0 TO ASK ABOUT.  `[P217]`: on A2's V1 at `max_num_levels = 2`,
+  //       `collect_slaved_interior` classified 35,937 level-1 candidates and
+  //       slaved 0 of them, while level 0 carried 11,548 on the cube and
+  //       42,602 / 47,458 / 52,133 on the wedge pairs -- a real zero, because
+  //       the classifier demonstrably ran there.  `[P313]` re-measured the
+  //       same seven numbers from a single `CAPYRX_LOG_LEVELS` line instead of
+  //       an 8.5 GB donor flood: `slaved_pl=` is that per-(patch, level)
+  //       census and `slaved_maxlevel=` its deepest level.  `[P276]`: the
+  //       count is a PER-RANGE quantity, so once this function honours the
+  //       caller's active levels the regrid repair's own `L[1,2)` call reports
+  //       `nslaved = 0` where it used to report 295,934.
+  //
+  // LEG (ii) IS A MEASUREMENT AND NOT A THEOREM.  Do not restate it as "C-AMR
+  // implies no slaved cell above level 0"; `[P316]` is the counterexample.
+  // `evidence/amr/b5/pars/b5_c_p37_r012.par` widens `patch_overlap` to 8 and
+  // puts a small OFF-CENTRE refined box inside the resulting overlap band.  It
+  // runs to completion; C-AMR reports "holds" with a clearance of 1 coarse
+  // cell at both sites it enters; C-AMR2 reports "holds"; and the census reads
+  // `slaved_maxlevel=1 slaved_pl=0:1:567` -- all 567 interior vertices of the
+  // level-1 box are slaved.  They are the SAME 567 that C-AMR2's line reports
+  // as answered from level 0.  That is leg (i) working exactly where leg (ii)
+  // does not, and `[P319]` is the same geometry with `boundary = none`, where
+  // this guard then REFUSES and names a WEDGE's unwritten face while every
+  // slaved cell sits on patch 0's level 1.
+  //   Why the band is reachable there and not on the rigs of record: the
+  //   overlap band lies OUTSIDE `r0` while the wedges' interpatch ghost zone
+  //   lies INSIDE it, so an off-centre box can be in the band without meeting
+  //   the zone C-AMR2 protects -- and a wide enough overlap leaves room for
+  //   such a box to also stay clear of the patch face, which is C-AMR's
+  //   condition.  The arithmetic, and it is a DERIVATION rather than a
+  //   measurement: with vertex centring, `ghost_size = g`, ratio 2 and a
+  //   prolongation stencil of `s = (prolongation_order + 1) / 2` coarse cells
+  //   (`CarpetX/src/prolongate_3d_rf2_impl.hxx:398`, `:1243-1253`), C-AMR
+  //   needs a fine nodal top `F <= 2N - 2s - g`, and a refined region is a
+  //   union of COARSE cells so `F` is even; hence C-AMR alone excludes a band
+  //   cell from level 1 only while `patch_overlap <= s + ceil(g/2)`, which at
+  //   the defaults `prolongation_order = 1` and `ghost_size = 3` is
+  //   `patch_overlap <= 3`.  `ho_slave.par` has exactly 3 and A2's V1 has 2 --
+  //   both inside the bound, production AT it.  Three points corroborate the
+  //   derivation (V1's and `[P316]`'s clearances came out at the predicted +5
+  //   and +1, and `[P317]` measured the window it predicts, one coarse cell
+  //   wide, bounded by C-AMR outward and C-AMR2 inward), and none of them is
+  //   a proof.
+  //
+  // AND THE ONE PARAMETER THAT SUSPENDS BOTH LEGS AT ONCE:
+  // `CarpetX::multipatch_amr_contract = "warn"`.  Under it a run reaches here
+  // with slaved cells above level 0 AND donors above level 0, and term (2) is
+  // then read off a level the donor is not on.  `[P318]` is that state,
+  // measured: 92,384 level-1 slaved cells with both contracts reporting a
+  // violation and the run exiting 0.  The keyword's own description says it is
+  // for diagnosing a violation and not for running with one; this guard is one
+  // of the places that depends on that being true.
+  //
+  // WHERE THE GATE FIRST EVALUATES AT TWO LEVELS, AND THIS PART IS A CODE
+  // READING RATHER THAN A MEASUREMENT.  The gate below is `n_slaved > 0`, so
+  // on a geometry whose level 1 carries no slaved cell this guard is NOT
+  // evaluated at the regrid repair's `L[1,2)` call and is first evaluated at
+  // the sync that follows it (`[P276]`).  It still fires before any slaved
+  // cell is written, because after AMR-B2 the repair writes none -- that
+  // clause is read off the code, not measured.  `[P316]`'s geometry is the
+  // other case and it IS measured: there the repair's own `L[1,2)` call
+  // reports `nslaved = 567` and the guard is evaluated at it.
+  //
+  // ONE PROPERTY OF THE CENSUS THAT ITS ABSOLUTE NUMBERS DEPEND ON (`[P321]`,
+  // and it is `[P304]` again): `slaved_pl` sums per-COMPONENT list lengths,
+  // and a vertex-centred group's boxes OVERLAP on their shared planes, so a
+  // slaved vertex on a plane two boxes of one patch share is counted in both.
+  // `nslaved` has always had that property and so does `[P276]`'s 295,934.
+  // The zero-versus-non-zero reading this block rests on is unaffected; a
+  // count compared across two decompositions is not.
   //
   // THE GATE IS `n_slaved > 0`, for B6's reason one block up: a single-patch
   // `Cartesian` patch system reaches this function with no interpatch cell and
@@ -924,9 +1525,14 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
 
   // Step 3: Write back results
   {
-    CarpetX::active_levels_t().loop_parallel([&](int patch, int level,
-                                                 int index, int component,
-                                                 const cGH *cctkGH) {
+    caller_levels.loop_parallel([&](int patch, int level, int index,
+                                   int component, const cGH *cctkGH) {
+      // AMR-B3: the collection passes assigned this (patch, level) no slot, so
+      // `slices.at(location)` below would throw. The skip is the same
+      // predicate they used, and the cache key records it so that this call
+      // and the build that produced the cache can never disagree.
+      if (coords_are_invalid(patch, level))
+        return;
       const Loop::GridDescBase grid(cctkGH);
       const std::array<int, dim> centering{0, 0, 0};
       const Loop::GF3D2layout layout(cctkGH, centering);

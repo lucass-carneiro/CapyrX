@@ -1,0 +1,53 @@
+Cactus Code Thorn CapyrX_TestOuterBC
+Author(s)    : Lucas Timotheo Sanches <lsanches@lsu.edu>
+               Erik Schnetter <schnetter@gmail.com>
+
+Maintainer(s): Lucas Timotheo Sanches <lsanches@lsu.edu>
+
+Licence      : LGPL
+--------------------------------------------------------------------------
+
+1. Purpose
+
+The two physical-outer-boundary diagnostics of the CapyrX multipatch test
+suite:
+
+  * the NaN-injection test, which injects NaN at (or just inside) the genuine
+    physical outer boundary and asks whether it leaks across an interpatch
+    interface; and
+
+  * the smooth-field "Channel 1" A/B test, which fills a smooth analytic field
+    everywhere -- outer-BC ghosts included -- and compares what an interpatch
+    receiver reads under different CarpetX::boundary_* kinds.
+
+Both used to live in CapyrX_TestMultiPatch behind its `run_outer_bc_tests`
+parameter.  They were moved out because CarpetX allocates a MultiFab for every
+DECLARED grid function whether or not any thorn asks for storage
+(CarpetX/src/driver.cxx loops over CCTK_NumGroups() unconditionally, and
+CarpetX's GroupStorageIncrease/Decrease in src/schedule.cxx are no-ops), and
+it requires every such group to be VALID before it creates a refined level.
+A group that is declared but written only by a switched-off diagnostic
+therefore aborted the run at "MakeNewLevelFromCoarse before prolongation" the
+moment CarpetX::max_num_levels > 1 -- which made every CapyrX_TestMultiPatch
+par file, the coloring test included, unusable with mesh refinement.
+
+Activating this thorn is now the switch.  When it is not in ActiveThorns the
+four fields do not exist; when it is, its two routines write all four
+unconditionally.  CapyrX_TestMultiPatch keeps `run_outer_bc_tests` and refuses
+at PARAMCHECK if it is set while this thorn is inactive, so an old par file
+fails by name with the line to add rather than silently producing nothing.
+
+2. Parameters
+
+  nan_injection_mode   where to inject NaN relative to the physical outer
+                       boundary; moved here unchanged
+  smooth_field         which analytic field the A/B test uses; moved here
+                       unchanged
+  smooth_sentinel      outer-BC ghost sentinel for the slaved-fill weight
+                       measurement, 0 = off; moved here unchanged
+
+3. Checkers
+
+  scripts/check_nan_test.py and scripts/check_smooth_test.py, in
+  CapyrX_TestMultiPatch, read this thorn's TSV output.  The output file names
+  carry the thorn name, so they now begin `capyrx_testouterbc-`.

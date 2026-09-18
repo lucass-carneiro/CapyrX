@@ -62,7 +62,7 @@ sub-classified -- mirrors check_color.py's DEFAULT-LEAK: always critical,
 regardless of where it sits.
 
 Usage:
-    check_nan_test.py exe/nan_dirichlet_ghost/capyrx_testmultipatch-nan_test.it000000.p0000.tsv
+    check_nan_test.py exe/nan_dirichlet_ghost/capyrx_testouterbc-nan_test.it000000.p0000.tsv
 
     check_nan_test.py --strict COLOR.tsv   # also fail on LEAK-CORNER
 
@@ -117,7 +117,7 @@ def guess_pre_path(nan_test_path):
 
 def guess_coords_path(nan_test_path):
     p = Path(nan_test_path)
-    name = re.sub(r"^capyrx_testmultipatch-nan_test(?:_pre)?",
+    name = re.sub(r"^capyrx_testouterbc-nan_test(?:_pre)?",
                   "coordinatesx-vertex_coords", p.name)
     if name == p.name:
         return None
@@ -326,7 +326,7 @@ def process_file(nan_path, pre_path, coords_path, r0, r1, angular_cells,
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("nan_test_tsv", nargs="+",
-                    help="post-SYNC capyrx_testmultipatch-nan_test TSV file(s) to check")
+                    help="post-SYNC capyrx_testouterbc-nan_test TSV file(s) to check")
     ap.add_argument("--pre", default=None,
                     help="matching nan_test_pre TSV (auto-detected by default; "
                          "only valid with a single nan_test_tsv argument)")

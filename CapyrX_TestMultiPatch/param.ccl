@@ -27,41 +27,20 @@ CCTK_REAL kz "standing wave kz"
   *:* :: ""
 } 1.0
 
-KEYWORD nan_injection_mode "Where to inject NaN relative to the physical outer boundary"
-{
-  "ghost"              :: "exterior/ghost cells beyond the outer boundary only"
-  "ghost_and_interior" :: "exterior ghost cells plus the last interior row"
-  "interior"           :: "last interior row only; ghosts untouched"
-} "ghost"
-
-KEYWORD smooth_field "Analytic field used by the smooth-field outer-BC (Channel 1) A/B test"
-{
-  "z_global"   :: "global z coordinate (radial gradient z/r on the outer sphere; vanishes on the equator)"
-  "parabola"   :: "x^2 + y^2 + z^2 (radially symmetric; nonzero radial gradient 2r and curvature everywhere on the outer sphere)"
-  "one_over_r" :: "1/r (Robin-natural ~1/r fall-off; nonzero radial gradient everywhere on the outer sphere)"
-} "z_global"
-
-# The NaN-injection test (write_nan_test) intentionally writes NaN into
-# nan_test, which trips CarpetX's hardcoded validity check and aborts the run
-# whenever poison_undefined_values=yes (see carpetx_nan_checker_bug). That makes
-# the two boundary diagnostics incompatible with the poison=yes coloring test,
-# so they are OFF by default: color.par et al. run to completion, while the
+# The NaN-injection test intentionally writes NaN into nan_test, which trips
+# CarpetX's hardcoded validity check and aborts the run whenever
+# poison_undefined_values=yes (see carpetx_nan_checker_bug). That makes the two
+# boundary diagnostics incompatible with the poison=yes coloring test, so they
+# are OFF by default: color.par et al. run to completion, while the
 # nan_*/smooth_* par files opt in explicitly (they set poison_undefined_values=no
 # to tolerate the injected NaN).
-BOOLEAN run_outer_bc_tests "Schedule the outer-boundary NaN-injection and smooth-field (Channel 1) A/B diagnostics"
+#
+# THE DIAGNOSTICS THEMSELVES NOW LIVE IN CapyrX_TestOuterBC, and ACTIVATING
+# THAT THORN IS THE REAL SWITCH.  This parameter is kept because every existing
+# par file sets it: CapyrX_TestMultiPatch_Check_Parameters refuses at PARAMCHECK
+# when it is set while CapyrX_TestOuterBC is inactive, and names the line to
+# add, so an un-migrated par file fails by name instead of silently producing no
+# diagnostic output.
+BOOLEAN run_outer_bc_tests "Run the outer-boundary NaN-injection and smooth-field (Channel 1) A/B diagnostics -- requires CapyrX_TestOuterBC in ActiveThorns"
 {
 } "no"
-
-# BUGFIX_TODO.md C6 instrument (R2: gated off by default, declared in B10's
-# inventory). After the smooth_pre snapshot, write_smooth_test overwrites the
-# outer-BC ghost shell with this value (skipped when 0, the default). Because
-# the interpolation weights of a tensor-product Lagrange stencil sum to 1, a
-# receiver downstream of that ghost reads back w_O*smooth_sentinel plus the
-# untouched remainder of the stencil, so value/smooth_sentinel ~= w_O (the
-# donor-outer-ghost weight) once smooth_sentinel dominates the analytic field
-# by many orders of magnitude. Leave at 0 for every other smooth_* leg: a
-# nonzero value here destroys the outer ghosts every other measurement reads.
-CCTK_REAL smooth_sentinel "Outer-BC ghost sentinel value for the C6 slaved-fill weight measurement; 0 = off"
-{
-  *:* :: ""
-} 0.0

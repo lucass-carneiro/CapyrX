@@ -224,8 +224,8 @@ SMOOTH_TRIPLETS=(
 # files a multi-rank run writes (.p0000, .p0001, ...); the checkers take several
 # TSVs and find each one's own coords/pre companion.
 COLOR_TSV_GLOB="capyrx_testmultipatch-color.it000000.p*.tsv"
-NAN_TSV_GLOB="capyrx_testmultipatch-nan_test.it000000.p*.tsv"
-SMOOTH_TSV_GLOB="capyrx_testmultipatch-smooth_test.it000000.p*.tsv"
+NAN_TSV_GLOB="capyrx_testouterbc-nan_test.it000000.p*.tsv"
+SMOOTH_TSV_GLOB="capyrx_testouterbc-smooth_test.it000000.p*.tsv"
 # =============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

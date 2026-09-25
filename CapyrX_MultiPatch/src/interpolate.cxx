@@ -853,6 +853,12 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
   const bool skip_changed = coords_invalid != g_interp_cache.skipped_pl;
 
   if (epoch_changed || range_changed || skip_changed) {
+    // interp_speed_cpu.md C0-2: the rebuild, the write-back and the CarpetX
+    // call are timed apart, so the three can be optimised on measurements.
+    static CarpetX::Timer timer_rebuild(
+        "CapyrX::MultiPatch1_Interpolate.rebuild");
+    CarpetX::Interval interval_rebuild(timer_rebuild);
+
     CCTK_VINFO("Interpolation cache out of date (cache epoch = %d, active "
                "levels [%d,%d) patches [%d,%d); current epoch = %d, active "
                "levels [%d,%d) patches [%d,%d)). Rebuilding",
@@ -1066,11 +1072,16 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
     // the refinement boxes have travelled to. CarpetX cannot tell that apart
     // from a legitimate level-1 answer to somebody else's query, so the
     // caller declares it; the flag defaults to false there.
-    g_interp_cache.setup.emplace(cctkGH, static_cast<CCTK_INT>(npoints_cache),
-                                 g_interp_cache.coords[0].data(),
-                                 g_interp_cache.coords[1].data(),
-                                 g_interp_cache.coords[2].data(),
-                                 /*require_level0_donors=*/true);
+    {
+      static CarpetX::Timer timer_setup(
+          "CapyrX::MultiPatch1_Interpolate.rebuild.InterpolationSetup");
+      CarpetX::Interval interval_setup(timer_setup);
+      g_interp_cache.setup.emplace(cctkGH, static_cast<CCTK_INT>(npoints_cache),
+                                   g_interp_cache.coords[0].data(),
+                                   g_interp_cache.coords[1].data(),
+                                   g_interp_cache.coords[2].data(),
+                                   /*require_level0_donors=*/true);
+    }
 
     // Build per-patch outer-boundary policy
     const int npatches = cctkGH->cctk_npatches;
@@ -1494,9 +1505,14 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
     resultptrs.at(n) = results.at(n).data();
   }
 
-  g_interp_cache.setup.value().Interpolate(
-      cctkGH, nvars, varinds.data(), operations.data(), g_interp_cache.policy,
-      resultptrs.data());
+  {
+    static CarpetX::Timer timer_interpolate(
+        "CapyrX::MultiPatch1_Interpolate.Interpolate");
+    CarpetX::Interval interval_interpolate(timer_interpolate);
+    g_interp_cache.setup.value().Interpolate(
+        cctkGH, nvars, varinds.data(), operations.data(), g_interp_cache.policy,
+        resultptrs.data());
+  }
 
 // Diagnostic: count NaN values in the interpolated results. Non-zero means
 // source data in neighboring patches contains NaN (e.g. their interior cells
@@ -1525,6 +1541,9 @@ MultiPatch1_Interpolate(const CCTK_POINTER_TO_CONST cctkGH_,
 
   // Step 3: Write back results
   {
+    static CarpetX::Timer timer_writeback(
+        "CapyrX::MultiPatch1_Interpolate.writeback");
+    CarpetX::Interval interval_writeback(timer_writeback);
     caller_levels.loop_parallel([&](int patch, int level, int index,
                                    int component, const cGH *cctkGH) {
       // AMR-B3: the collection passes assigned this (patch, level) no slot, so

@@ -5,6 +5,7 @@
 
 #include "cartesian/cartesian.hxx"
 #include "cubed_sphere/cubed_sphere.hxx"
+#include "llama/llama.hxx"
 #include "thornburg06/thornburg06.hxx"
 #include "two_cubes/two_cubes.hxx"
 
@@ -20,6 +21,7 @@
 #include <nvtx3/nvToolsExt.h>
 #endif
 
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include <iomanip>
@@ -155,6 +157,16 @@ static inline void global2local_kernel(const CCTK_INT npoints,
 
                                     .patch_overlap = patch_overlap};
       g2l = TwoCubes::global2local(p, global_coords);
+    } else if constexpr (sys == PatchSystems::llama) {
+      const Llama::PatchParams p{.angular_cells = angular_cells,
+                                 .radial_cells = radial_cells,
+                                 .cube_ncells_i = cartesian_ncells_i,
+                                 .cube_ncells_j = cartesian_ncells_j,
+                                 .cube_ncells_k = cartesian_ncells_k,
+                                 .inner_boundary = inner_boundary_radius,
+                                 .outer_boundary = outer_boundary_radius,
+                                 .patch_overlap = patch_overlap};
+      g2l = Llama::global2local(p, global_coords);
     }
 
     const auto patch{std::get<0>(g2l)};
@@ -218,6 +230,13 @@ extern "C" void MultiPatch1_GlobalToLocal2(
     global2local_kernel<PatchSystems::two_cubes>(npoints, globalsx, globalsy,
                                                  globalsz, patches, localsx,
                                                  localsy, localsz);
+    break;
+  }
+
+  case PatchSystems::llama: {
+    global2local_kernel<PatchSystems::llama>(npoints, globalsx, globalsy,
+                                             globalsz, patches, localsx, localsy,
+                                             localsz);
     break;
   }
 
@@ -297,6 +316,16 @@ static inline void local2global_kernel(const CCTK_INT npoints,
 
                                     .patch_overlap = patch_overlap};
       global_vars = TwoCubes::local2global(p, patch, local_coords);
+    } else if constexpr (sys == PatchSystems::llama) {
+      const Llama::PatchParams p{.angular_cells = angular_cells,
+                                 .radial_cells = radial_cells,
+                                 .cube_ncells_i = cartesian_ncells_i,
+                                 .cube_ncells_j = cartesian_ncells_j,
+                                 .cube_ncells_k = cartesian_ncells_k,
+                                 .inner_boundary = inner_boundary_radius,
+                                 .outer_boundary = outer_boundary_radius,
+                                 .patch_overlap = patch_overlap};
+      global_vars = Llama::local2global(p, patch, local_coords);
     }
 
     globalsx[i] = global_vars(0);
@@ -357,6 +386,13 @@ extern "C" void MultiPatch1_LocalToGlobal2(
     local2global_kernel<PatchSystems::two_cubes>(npoints, patches, localsx,
                                                  localsy, localsz, globalsx,
                                                  globalsy, globalsz);
+    break;
+  }
+
+  case PatchSystems::llama: {
+    local2global_kernel<PatchSystems::llama>(npoints, patches, localsx, localsy,
+                                             localsz, globalsx, globalsy,
+                                             globalsz);
     break;
   }
 
@@ -439,6 +475,18 @@ extern "C" int CapyrX_MultiPatch_Setup() {
 
     g_patch_system = std::make_unique<PatchSystem>(TwoCubes::make_system(p));
 
+  } else if (CCTK_EQUALS(patch_system, "Llama")) {
+    const Llama::PatchParams p{.angular_cells = angular_cells,
+                               .radial_cells = radial_cells,
+                               .cube_ncells_i = cartesian_ncells_i,
+                               .cube_ncells_j = cartesian_ncells_j,
+                               .cube_ncells_k = cartesian_ncells_k,
+                               .inner_boundary = inner_boundary_radius,
+                               .outer_boundary = outer_boundary_radius,
+                               .patch_overlap = patch_overlap};
+
+    g_patch_system = std::make_unique<PatchSystem>(Llama::make_system(p));
+
   } else {
     CCTK_VERROR("Unbable to setup unknown patch system \"%s\"", patch_system);
   }
@@ -462,6 +510,8 @@ d2local_dglobal2_dispatch(const PatchParameters &par, int patch,
     return Thornburg06::d2local_dglobal2(par, patch, a);
   } else if constexpr (sys == PatchSystems::two_cubes) {
     return TwoCubes::d2local_dglobal2(par, patch, a);
+  } else if constexpr (sys == PatchSystems::llama) {
+    return Llama::d2local_dglobal2(par, patch, a);
   }
 }
 
@@ -656,6 +706,19 @@ extern "C" void CapyrX_MultiPatch_Coordinates_Setup(CCTK_ARGUMENTS) {
     break;
   }
 
+  case PatchSystems::llama: {
+    const Llama::PatchParams par{.angular_cells = angular_cells,
+                                 .radial_cells = radial_cells,
+                                 .cube_ncells_i = cartesian_ncells_i,
+                                 .cube_ncells_j = cartesian_ncells_j,
+                                 .cube_ncells_k = cartesian_ncells_k,
+                                 .inner_boundary = inner_boundary_radius,
+                                 .outer_boundary = outer_boundary_radius,
+                                 .patch_overlap = patch_overlap};
+    coordinate_setup_kernel<PatchSystems::llama>(cctkGH, par);
+    break;
+  }
+
   default:
     CCTK_VERROR("Unable to setup coordinates for unknown patch system");
     break;
@@ -707,6 +770,86 @@ extern "C" void CapyrX_MultiPatch_Check_Parameters(CCTK_ARGUMENTS) {
                   "%d. Increase the patch overlap to at least %d",
                   patch_overlap, interpolation_order_param_val,
                   required_overlap);
+    }
+  } else if (CCTK_Equals(patch_system, "Llama")) {
+    // Llama does pure boundary interpolation into ghost zones: no overlap band
+    // and no slave-evolution. Reject any config that would reintroduce either.
+    if (patch_overlap != 0) {
+      CCTK_VERROR("The \"Llama\" patch system requires patch_overlap = 0 "
+                  "(got %d); its interpatch coupling is the ghost band, not an "
+                  "overlap band.",
+                  patch_overlap);
+    }
+
+    if (slave_overlap) {
+      CCTK_ERROR("The \"Llama\" patch system requires slave_overlap = no; it "
+                 "does pure boundary interpolation with no slave-evolution.");
+    }
+
+    // The cube corner sits at radius sqrt(3)*R; it must fit inside the outer
+    // sphere (R = inner_boundary_radius). This is the Llama bound, not the
+    // cubed_sphere outer >= 4*inner condition.
+    using std::sqrt;
+    const auto cube_corner_radius{sqrt(CCTK_REAL{3.0}) * inner_boundary_radius};
+    if (cube_corner_radius >= outer_boundary_radius) {
+      CCTK_VERROR("The \"Llama\" patch system requires sqrt(3)*"
+                  "inner_boundary_radius < outer_boundary_radius so the cube "
+                  "corner (r = %g) fits inside the outer sphere (r = %g).",
+                  double(cube_corner_radius), double(outer_boundary_radius));
+    }
+
+    // interpolation_order and ghost width are CarpetX parameters; read them the
+    // same indirect way as the cubed_sphere branch above.
+    const auto interpolation_order_param_ptr =
+        CCTK_ParameterGet("interpolation_order", "CarpetX", nullptr);
+    if (interpolation_order_param_ptr == nullptr) {
+      CCTK_ERROR("Unable to read parameter interpolation_order from CarpetX");
+    }
+    const auto interpolation_order_param_val =
+        *static_cast<const CCTK_INT *>(interpolation_order_param_ptr);
+
+    // Assumes 4th-order evolution. CapyrX_MultiPatch cannot read the evolution
+    // thorn's FD order, so this is a fixed constant: re-tune it by hand if the
+    // evolution order changes (design 9.4).
+    constexpr CCTK_INT required_interpolation_order{4};
+    if (interpolation_order_param_val < required_interpolation_order) {
+      CCTK_VERROR("The \"Llama\" patch system requires CarpetX "
+                  "interpolation_order >= %d (got %d).",
+                  int(required_interpolation_order),
+                  int(interpolation_order_param_val));
+    }
+
+    // ghost_size == -1 means "use ghost_size_{x,y,z}"; take the min of the three
+    // axis widths so a per-axis config cannot silently pass against -1.
+    const auto ghost_size_param_ptr =
+        CCTK_ParameterGet("ghost_size", "CarpetX", nullptr);
+    if (ghost_size_param_ptr == nullptr) {
+      CCTK_ERROR("Unable to read parameter ghost_size from CarpetX");
+    }
+    auto ghost_width{*static_cast<const CCTK_INT *>(ghost_size_param_ptr)};
+
+    if (ghost_width == -1) {
+      const auto gx_ptr = CCTK_ParameterGet("ghost_size_x", "CarpetX", nullptr);
+      const auto gy_ptr = CCTK_ParameterGet("ghost_size_y", "CarpetX", nullptr);
+      const auto gz_ptr = CCTK_ParameterGet("ghost_size_z", "CarpetX", nullptr);
+      if (gx_ptr == nullptr || gy_ptr == nullptr || gz_ptr == nullptr) {
+        CCTK_ERROR("Unable to read parameter ghost_size_{x,y,z} from CarpetX");
+      }
+      const auto gx{*static_cast<const CCTK_INT *>(gx_ptr)};
+      const auto gy{*static_cast<const CCTK_INT *>(gy_ptr)};
+      const auto gz{*static_cast<const CCTK_INT *>(gz_ptr)};
+      using std::min;
+      ghost_width = min(gx, min(gy, gz));
+    }
+
+    // Need >= max(4th-order FD half-width 2, 6th-order KO half-width 3,
+    // ceil(interp_order/2) = 2). The interpatch coupling width is the ghost
+    // band since patch_overlap == 0 -- do not check against patch_overlap here.
+    constexpr CCTK_INT required_ghost_width{3};
+    if (ghost_width < required_ghost_width) {
+      CCTK_VERROR("The \"Llama\" patch system requires CarpetX ghost width >= "
+                  "%d (got %d).",
+                  int(required_ghost_width), int(ghost_width));
     }
   }
 }
@@ -807,6 +950,18 @@ extern "C" void CapyrX_MultiPatch_Run_Unit_Tests(CCTK_ARGUMENTS) {
         }
       }
     }
+
+  } else if (CCTK_EQUALS(patch_system, "Llama")) {
+    const Llama::PatchParams par{.angular_cells = angular_cells,
+                                 .radial_cells = radial_cells,
+                                 .cube_ncells_i = cartesian_ncells_i,
+                                 .cube_ncells_j = cartesian_ncells_j,
+                                 .cube_ncells_k = cartesian_ncells_k,
+                                 .inner_boundary = inner_boundary_radius,
+                                 .outer_boundary = outer_boundary_radius,
+                                 .patch_overlap = patch_overlap};
+
+    pass = Llama::unit_test(test_repetitions, test_seed, par);
 
   } else {
     CCTK_VERROR(

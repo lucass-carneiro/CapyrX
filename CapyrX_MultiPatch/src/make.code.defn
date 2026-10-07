@@ -9,5 +9,6 @@ SRCS =						    \
 SUBDIRS =        \
 	cartesian    \
 	cubed_sphere \
+	llama        \
 	thornburg06  \
 	two_cubes

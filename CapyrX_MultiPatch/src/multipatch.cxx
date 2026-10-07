@@ -353,6 +353,13 @@ extern "C" void MultiPatch1_LocalToGlobal2(
     break;
   }
 
+  case PatchSystems::two_cubes: {
+    local2global_kernel<PatchSystems::two_cubes>(npoints, patches, localsx,
+                                                 localsy, localsz, globalsx,
+                                                 globalsy, globalsz);
+    break;
+  }
+
   default:
     CCTK_VERROR(
         "MultiPatch1_LocalToGlobal2 called for an unknown patch system");
@@ -768,6 +775,38 @@ extern "C" void CapyrX_MultiPatch_Run_Unit_Tests(CCTK_ARGUMENTS) {
 
                                     .patch_overlap = patch_overlap};
     pass = TwoCubes::unit_test(test_repetitions, test_seed, par);
+
+    // Round-trip through the C dispatch functions so the two_cubes cases in
+    // the MultiPatch1_{Local,Global}2 switches are actually exercised: a
+    // missing case would abort here. (These aliased functions have no runtime
+    // callers yet, so the switches are otherwise untested.)
+    {
+      constexpr CCTK_INT n{2};
+      const CCTK_INT in_patch[n]{0, 1};
+      const CCTK_REAL in_lx[n]{0.0, 0.0}, in_ly[n]{0.0, 0.0},
+          in_lz[n]{0.0, 0.0};
+      CCTK_REAL gx[n], gy[n], gz[n];
+      MultiPatch1_LocalToGlobal2(n, in_patch, in_lx, in_ly, in_lz, gx, gy, gz);
+
+      CCTK_INT out_patch[n];
+      CCTK_REAL out_lx[n], out_ly[n], out_lz[n];
+      MultiPatch1_GlobalToLocal2(n, gx, gy, gz, out_patch, out_lx, out_ly,
+                                 out_lz);
+
+      for (CCTK_INT i = 0; i < n; ++i) {
+        const bool ok{out_patch[i] == in_patch[i] &&
+                      std::fabs(out_lx[i] - in_lx[i]) < 1e-10 &&
+                      std::fabs(out_ly[i] - in_ly[i]) < 1e-10 &&
+                      std::fabs(out_lz[i] - in_lz[i]) < 1e-10};
+        if (!ok) {
+          CCTK_VINFO("TwoCubes dispatch round-trip \033[1;31mFAILED\033[0m for "
+                     "patch %d: recovered patch %d local (%.16f, %.16f, %.16f)",
+                     int(in_patch[i]), int(out_patch[i]), out_lx[i], out_ly[i],
+                     out_lz[i]);
+          pass = false;
+        }
+      }
+    }
 
   } else {
     CCTK_VERROR(

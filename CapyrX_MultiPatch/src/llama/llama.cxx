@@ -1,5 +1,7 @@
 #include "llama.hxx"
 
+#include <algorithm>
+#include <array>
 #include <cmath>
 
 namespace CapyrX::MultiPatch::Llama {
@@ -18,6 +20,151 @@ enum class PatchPiece : int {
 
   unknown = 7
 };
+
+static inline CCTK_HOST CCTK_DEVICE auto
+get_owner_patch(const PatchParams &par,
+                const svec_t &global_coords) -> PatchPiece {
+  using std::distance;
+  using std::fabs;
+  using std::max_element;
+
+  const auto x{global_coords(0)};
+  const auto y{global_coords(1)};
+  const auto z{global_coords(2)};
+
+  const auto abs_x{fabs(x)};
+  const auto abs_y{fabs(y)};
+  const auto abs_z{fabs(z)};
+
+  const auto r0{par.inner_boundary};
+
+  // The whole box [-R,R]^3, corners included, is cube-owned. The box-corner
+  // shell R < r < sqrt(3)R is deliberately cube-owned for donor purposes even
+  // though the wedges also hold interior cells there (overset, slave_overlap=no).
+  if (abs_x <= r0 && abs_y <= r0 && abs_z <= r0) {
+    return PatchPiece::cartesian;
+  }
+
+  std::array<CCTK_REAL, 3> abs_coords{abs_x, abs_y, abs_z};
+  const auto max_coord_idx{distance(
+      abs_coords.begin(), max_element(abs_coords.begin(), abs_coords.end()))};
+
+  if (x > 0.0 && max_coord_idx == 0) {
+    return PatchPiece::plus_x;
+  }
+
+  if (x < 0.0 && max_coord_idx == 0) {
+    return PatchPiece::minus_x;
+  }
+
+  if (y > 0.0 && max_coord_idx == 1) {
+    return PatchPiece::plus_y;
+  }
+
+  if (y < 0.0 && max_coord_idx == 1) {
+    return PatchPiece::minus_y;
+  }
+
+  if (z > 0.0 && max_coord_idx == 2) {
+    return PatchPiece::plus_z;
+  }
+
+  if (z < 0.0 && max_coord_idx == 2) {
+    return PatchPiece::minus_z;
+  }
+
+// We don't know where we are. This is unexpected
+#if !defined(__CUDACC__) && !defined(__HIP_PLATFORM_AMD__) &&                  \
+    !defined(__HIP_PLATFORM_HCC__) && !defined(__INTEL_LLVM_COMPILER)
+  CCTK_VINFO("Coordinate triplet (%.16f, %.16f, %.16f) cannot be located "
+             "within the simulation domain",
+             x, y, z);
+#else
+  assert(false);
+#endif
+
+  return PatchPiece::unknown;
+}
+
+CCTK_HOST CCTK_DEVICE auto
+global2local(const PatchParams &par,
+             const svec_t &global_coords) -> std_tuple<int, svec_t> {
+  using std::pow;
+  using std::sqrt;
+
+  const auto r0{par.inner_boundary};
+  const auto r1{par.outer_boundary};
+
+  const auto x{global_coords(0)};
+  const auto y{global_coords(1)};
+  const auto z{global_coords(2)};
+
+  const auto patch{get_owner_patch(par, global_coords)};
+
+  svec_t local_coords{0.0, 0.0, 0.0};
+
+  switch (patch) {
+
+  case PatchPiece::cartesian:
+    local_coords(0) = x;
+    local_coords(1) = y;
+    local_coords(2) = z;
+    break;
+
+  case PatchPiece::plus_x:
+    local_coords(0) = z / x;
+    local_coords(1) = y / x;
+    local_coords(2) =
+        (r0 + r1 - 2 * sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2))) / (r0 - r1);
+    break;
+
+  case PatchPiece::plus_y:
+    local_coords(0) = z / y;
+    local_coords(1) = -(x / y);
+    local_coords(2) =
+        (r0 + r1 - 2 * sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2))) / (r0 - r1);
+    break;
+
+  case PatchPiece::minus_x:
+    local_coords(0) = -(z / x);
+    local_coords(1) = y / x;
+    local_coords(2) =
+        (r0 + r1 - 2 * sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2))) / (r0 - r1);
+    break;
+
+  case PatchPiece::minus_y:
+    local_coords(0) = -(z / y);
+    local_coords(1) = -(x / y);
+    local_coords(2) =
+        (r0 + r1 - 2 * sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2))) / (r0 - r1);
+    break;
+
+  case PatchPiece::plus_z:
+    local_coords(0) = -(x / z);
+    local_coords(1) = y / z;
+    local_coords(2) =
+        (r0 + r1 - 2 * sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2))) / (r0 - r1);
+    break;
+
+  case PatchPiece::minus_z:
+    local_coords(0) = -(x / z);
+    local_coords(1) = -(y / z);
+    local_coords(2) =
+        (r0 + r1 - 2 * sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2))) / (r0 - r1);
+    break;
+
+  default:
+#if !defined(__CUDACC__) && !defined(__HIP_PLATFORM_AMD__) &&                  \
+    !defined(__HIP_PLATFORM_HCC__) && !defined(__INTEL_LLVM_COMPILER)
+    CCTK_VERROR("Unable to compute global2local: Unknown patch piece");
+#else
+    assert(false);
+#endif
+    break;
+  }
+
+  return std_make_tuple(static_cast<int>(patch), local_coords);
+}
 
 CCTK_HOST CCTK_DEVICE auto local2global(const PatchParams &par, int patch,
                                         const svec_t &local_coords) -> svec_t {
@@ -492,6 +639,118 @@ CCTK_HOST CCTK_DEVICE auto d2local_dglobal2(const PatchParams &par, int patch,
 
   return std_make_tuple(local_to_global_result, std::get<0>(jacobian_results),
                         std::get<1>(jacobian_results));
+}
+
+static inline auto make_patch(const PatchPiece &p,
+                              const PatchParams &par) -> Patch {
+
+  const auto twice_overlap = 2 * par.patch_overlap;
+  const CCTK_REAL angular_delta = 2.0 / par.angular_cells;
+  const CCTK_REAL radial_delta = 2.0 / par.radial_cells;
+
+  // Default: a wedge. Angular faces are interpatch (need overlap for donor
+  // stencils); the radial direction is c. The inner radial face is fed by the
+  // cube (co), the outer radial face is the physical outer boundary (ob).
+  Patch patch{};
+
+  patch.ncells = {par.angular_cells + twice_overlap,
+                  par.angular_cells + twice_overlap,
+                  par.radial_cells + par.patch_overlap};
+
+  patch.xmin = {
+      CCTK_REAL{-1.0} - par.patch_overlap * angular_delta,
+      CCTK_REAL{-1.0} - par.patch_overlap * angular_delta,
+      CCTK_REAL{-1.0} - par.patch_overlap * radial_delta,
+  };
+
+  patch.xmax = {
+      CCTK_REAL{1.0} + par.patch_overlap * angular_delta,
+      CCTK_REAL{1.0} + par.patch_overlap * angular_delta,
+      CCTK_REAL{1.0},
+  };
+
+  patch.is_cartesian = false;
+  patch.c_is_radial = true;
+
+  PatchFace ob{true, -1};
+  PatchFace co{false, static_cast<int>(PatchPiece::cartesian)};
+  PatchFace px{false, static_cast<int>(PatchPiece::plus_x)};
+  PatchFace mx{false, static_cast<int>(PatchPiece::minus_x)};
+  PatchFace py{false, static_cast<int>(PatchPiece::plus_y)};
+  PatchFace my{false, static_cast<int>(PatchPiece::minus_y)};
+  PatchFace pz{false, static_cast<int>(PatchPiece::plus_z)};
+  PatchFace mz{false, static_cast<int>(PatchPiece::minus_z)};
+
+  switch (p) {
+
+  case PatchPiece::cartesian:
+    patch.name = "Cartesian";
+
+    // The cube is a true [-R,R]^3 Cartesian patch whose resolution is
+    // independent of the angular grid (Llama's h_cartesian), so it must not
+    // reuse angular_cells the way cubed_sphere does.
+    patch.ncells = {par.cube_ncells_i, par.cube_ncells_j, par.cube_ncells_k};
+
+    patch.xmin = {
+        -par.inner_boundary,
+        -par.inner_boundary,
+        -par.inner_boundary,
+    };
+
+    patch.xmax = {
+        par.inner_boundary,
+        par.inner_boundary,
+        par.inner_boundary,
+    };
+
+    patch.faces = {{mx, my, mz}, {px, py, pz}};
+
+    patch.is_cartesian = true;
+    patch.c_is_radial = false;
+
+    break;
+
+  case PatchPiece::plus_x:
+    patch.name = "Plus X";
+    patch.faces = {{mz, my, co}, {pz, py, ob}};
+    break;
+
+  case PatchPiece::minus_x:
+    patch.name = "Minus X";
+    patch.faces = {{mz, py, co}, {pz, my, ob}};
+    break;
+
+  case PatchPiece::plus_y:
+    patch.name = "Plus Y";
+    patch.faces = {{mz, px, co}, {pz, mx, ob}};
+    break;
+
+  case PatchPiece::minus_y:
+    patch.name = "Minus Y";
+    patch.faces = {{mz, mx, co}, {pz, px, ob}};
+    break;
+
+  case PatchPiece::plus_z:
+    patch.name = "Plus Z";
+    patch.faces = {{px, my, co}, {mx, py, ob}};
+    break;
+
+  case PatchPiece::minus_z:
+    patch.name = "Minus Z";
+    patch.faces = {{mx, my, co}, {px, py, ob}};
+    break;
+
+  default:
+#if !defined(__CUDACC__) && !defined(__HIP_PLATFORM_AMD__) &&                  \
+    !defined(__HIP_PLATFORM_HCC__) && !defined(__INTEL_LLVM_COMPILER)
+    CCTK_VERROR("Unable to create patch. Unknown patch piece");
+#else
+    assert(false);
+#endif
+    break;
+  }
+
+  return patch;
 }
 
 } // namespace CapyrX::MultiPatch::Llama

@@ -28,6 +28,10 @@ struct PatchParams {
 };
 
 CCTK_HOST CCTK_DEVICE CAPYRX_EXTERNAL auto
+global2local(const PatchParams &par, const svec_t &global_coords)
+    -> std_tuple<int, svec_t>;
+
+CCTK_HOST CCTK_DEVICE CAPYRX_EXTERNAL auto
 local2global(const PatchParams &par, int patch, const svec_t &local_coords)
     -> svec_t;
 

@@ -1,0 +1,62 @@
+# Phase A green gate for the Llama patch system: the coordinate round-trip and
+# ownership unit tests only (CapyrX_MultiPatch::run_unit_tests, scheduled AT
+# wragh). CapyrX_TestMultiPatch is deliberately NOT activated: its test_data
+# SYNC exercises interpatch interpolation, which at patch_overlap=0 drops donors
+# in the cube corner shell (R<r<sqrt(3)R). That is Phase B (R2) territory, not
+# this gate.
+
+ActiveThorns = "
+    CarpetX
+    IOUtil
+    CoordinatesX
+    CapyrX_MultiPatch
+"
+
+Cactus::presync_mode = "mixed-error"
+Cactus::cctk_show_schedule = yes
+
+Cactus::terminate = "iteration"
+Cactus::cctk_itlast = 0
+
+CarpetX::verbose = yes
+CarpetX::poison_undefined_values = yes
+
+CarpetX::blocking_factor_x = 1
+CarpetX::blocking_factor_y = 1
+CarpetX::blocking_factor_z = 1
+
+CarpetX::max_num_levels = 1
+
+CarpetX::ghost_size          = 3
+CarpetX::interpolation_order = 4
+
+CapyrX_MultiPatch::verbose        =  yes
+CapyrX_MultiPatch::patch_system   = "Llama"
+CapyrX_MultiPatch::run_unit_tests = yes
+CapyrX_MultiPatch::patch_overlap  = 0
+CapyrX_MultiPatch::slave_overlap  = no
+
+CapyrX_MultiPatch::inner_boundary_radius = 1.0
+CapyrX_MultiPatch::outer_boundary_radius = 4.0
+CapyrX_MultiPatch::angular_cells         = 20
+CapyrX_MultiPatch::radial_cells          = 20
+
+CapyrX_MultiPatch::cartesian_ncells_i = 20
+CapyrX_MultiPatch::cartesian_ncells_j = 20
+CapyrX_MultiPatch::cartesian_ncells_k = 20
+
+CarpetX::boundary_x       = "dirichlet"
+CarpetX::boundary_y       = "dirichlet"
+CarpetX::boundary_z       = "dirichlet"
+CarpetX::boundary_upper_x = "dirichlet"
+CarpetX::boundary_upper_y = "dirichlet"
+CarpetX::boundary_upper_z = "dirichlet"
+
+IO::parfile_write = no
+IO::out_dir       = $parfile
+IO::out_every     = 1
+
+CarpetX::out_performance = no
+CarpetX::out_metadata = no
+
+CarpetX::out_tsv = no

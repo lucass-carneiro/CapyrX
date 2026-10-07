@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <limits>
+#include <random>
 
 namespace CapyrX::MultiPatch::Llama {
 
@@ -751,6 +753,188 @@ static inline auto make_patch(const PatchPiece &p,
   }
 
   return patch;
+}
+
+auto make_system(const PatchParams &par) -> PatchSystem {
+  return PatchSystem{.name = "Llama",
+                     .id_tag = PatchSystems::llama,
+                     .patches = {make_patch(PatchPiece::cartesian, par),
+                                 make_patch(PatchPiece::plus_x, par),
+                                 make_patch(PatchPiece::minus_x, par),
+                                 make_patch(PatchPiece::plus_y, par),
+                                 make_patch(PatchPiece::minus_y, par),
+                                 make_patch(PatchPiece::plus_z, par),
+                                 make_patch(PatchPiece::minus_z, par)}};
+}
+
+template <typename fp_type>
+static inline auto isapprox(fp_type x, fp_type y, fp_type atol = 0.0) -> bool {
+  using std::abs;
+  using std::max;
+  using std::sqrt;
+
+  const fp_type rtol{
+      atol > 0.0 ? 0.0 : sqrt(std::numeric_limits<fp_type>::epsilon())};
+  return abs(x - y) <= max(atol, rtol * max(abs(x), abs(y)));
+}
+
+auto unit_test(std::size_t repetitions, std::size_t seed,
+               const PatchParams &par) -> bool {
+  using std::cos;
+  using std::sin;
+
+  using real_dist = std::uniform_real_distribution<CCTK_REAL>;
+  using int_dist = std::uniform_int_distribution<CCTK_INT>;
+
+  std::mt19937 engine{static_cast<std::mt19937>(seed)};
+
+  real_dist r_dist{0.0, par.outer_boundary};
+  real_dist theta_dist{0.0, M_PI};
+  real_dist phi_dist{0.0, 2.0 * M_PI};
+
+  real_dist local_dist{-1.0, 1.0};
+  int_dist patch_dist{0, static_cast<CCTK_INT>(PatchPiece::unknown) - 1};
+
+  bool all_pass{true};
+
+  // local2global(global2local(global)) == global ?
+  for (CCTK_INT i = 0; i < repetitions; i++) {
+    const auto r{r_dist(engine)};
+    const auto theta{theta_dist(engine)};
+    const auto phi{phi_dist(engine)};
+
+    const auto x{r * sin(theta) * cos(phi)};
+    const auto y{r * sin(theta) * sin(phi)};
+    const auto z{r * cos(theta)};
+
+    const svec_t g_i{x, y, z};
+
+    const auto l{global2local(par, g_i)};
+    const auto g_f{local2global(par, std::get<0>(l), std::get<1>(l))};
+
+    const auto passed{isapprox(g_i(0), g_f(0)) && isapprox(g_i(1), g_f(1)) &&
+                      isapprox(g_i(2), g_f(2))};
+
+    if (!passed) {
+      CCTK_VINFO("local2global(global2local(global)) == global repetition %i "
+                 "\033[1;31mFAILED\033[0m. Expected (%.16f, %.16f, %.16f) "
+                 "but got (%.16f, %.16f, %.16f)",
+                 i, g_i(0), g_i(1), g_i(2), g_f(0), g_f(1), g_f(2));
+      all_pass = false;
+    }
+  }
+
+  // global2local(local2global(local)) round-trip. The patch/local identity only
+  // holds in single-covered regions: a wedge local point near c=-1 lands in the
+  // cube's box-corner shell (R<r<sqrt(3)R), which is cube-owned (overset,
+  // design S3.2). There the position must still round-trip, but ownership
+  // legitimately switches to the cube, so assert identity only when the
+  // generated point is single-covered by the sampled patch.
+  //
+  // Both branches must actually be exercised, else the test passes vacuously:
+  // count single-cover hits and overset corner-shell hits (a wedge sample
+  // reclassified to the cube) and require each to be non-zero below.
+  std::size_t single_cover_hits{0};
+  std::size_t overset_shell_hits{0};
+  for (CCTK_INT i = 0; i < repetitions; i++) {
+    const int p_i{patch_dist(engine)};
+    const svec_t l_i{local_dist(engine), local_dist(engine),
+                     local_dist(engine)};
+
+    const auto g{local2global(par, p_i, l_i)};
+    const auto owner{get_owner_patch(par, g)};
+
+    const auto l{global2local(par, g)};
+    const auto &p_f{std::get<0>(l)};
+    const auto &l_f{std::get<1>(l)};
+
+    const auto g_rt{local2global(par, p_f, l_f)};
+
+    bool passed{isapprox(g(0), g_rt(0)) && isapprox(g(1), g_rt(1)) &&
+                isapprox(g(2), g_rt(2))};
+
+    const bool single_covered{static_cast<int>(owner) == p_i};
+    if (single_covered) {
+      ++single_cover_hits;
+      passed = passed && p_i == p_f && isapprox(l_i(0), l_f(0)) &&
+               isapprox(l_i(1), l_f(1)) && isapprox(l_i(2), l_f(2));
+    } else if (p_i != static_cast<int>(PatchPiece::cartesian) &&
+               owner == PatchPiece::cartesian) {
+      ++overset_shell_hits;
+    }
+
+    if (!passed) {
+      CCTK_VINFO(
+          "global2local(local2global(local)) round-trip repetition %i "
+          "\033[1;31mFAILED\033[0m. Patch %i local (%.16f, %.16f, %.16f) -> "
+          "global (%.16f, %.16f, %.16f); got patch %i local "
+          "(%.16f, %.16f, %.16f), owner patch %i",
+          i, p_i, l_i(0), l_i(1), l_i(2), g(0), g(1), g(2), p_f, l_f(0), l_f(1),
+          l_f(2), static_cast<int>(owner));
+      all_pass = false;
+    }
+  }
+
+  if (single_cover_hits == 0) {
+    CCTK_VINFO("Round-trip test exercised no single-covered samples "
+               "\033[1;31m(vacuous)\033[0m. Increase repetitions.");
+    all_pass = false;
+  }
+  if (overset_shell_hits == 0) {
+    CCTK_VINFO("Round-trip test exercised no overset corner-shell samples "
+               "\033[1;31m(vacuous)\033[0m. Increase repetitions or check that "
+               "the geometry has a box-corner shell (R < r < sqrt(3)R).");
+    all_pass = false;
+  }
+
+  // Ownership spot-checks (design S3.2).
+  // On-axis wedge midpoint: single-covered, owned by the +x wedge.
+  {
+    const svec_t global_coords{par.inner_boundary +
+                                   (par.outer_boundary - par.inner_boundary) /
+                                       CCTK_REAL{2.0},
+                               CCTK_REAL{0.0}, CCTK_REAL{0.0}};
+    const auto owner{get_owner_patch(par, global_coords)};
+
+    if (owner != PatchPiece::plus_x) {
+      CCTK_VINFO("Wedge-owner spot-check failed. Expected patch %i but got %i",
+                 static_cast<int>(PatchPiece::plus_x),
+                 static_cast<int>(owner));
+      all_pass = false;
+    }
+  }
+
+  // Cube interior (r < R): cube-owned.
+  {
+    const auto half{par.inner_boundary / CCTK_REAL{2.0}};
+    const svec_t global_coords{half, half, half};
+    const auto owner{get_owner_patch(par, global_coords)};
+
+    if (owner != PatchPiece::cartesian) {
+      CCTK_VINFO("Cube-interior spot-check failed. Expected patch %i but got %i",
+                 static_cast<int>(PatchPiece::cartesian),
+                 static_cast<int>(owner));
+      all_pass = false;
+    }
+  }
+
+  // Box-corner shell (R < r < sqrt(3)R but still inside [-R,R]^3): cube-owned
+  // despite r > R. This pins the overset ownership rule of design S3.2.
+  {
+    const auto s{CCTK_REAL{0.9} * par.inner_boundary};
+    const svec_t global_coords{s, s, s};
+    const auto owner{get_owner_patch(par, global_coords)};
+
+    if (owner != PatchPiece::cartesian) {
+      CCTK_VINFO("Box-corner-shell spot-check failed. Expected patch %i (cube) "
+                 "but got %i",
+                 static_cast<int>(PatchPiece::cartesian),
+                 static_cast<int>(owner));
+      all_pass = false;
+    }
+  }
+
+  return all_pass;
 }
 
 } // namespace CapyrX::MultiPatch::Llama

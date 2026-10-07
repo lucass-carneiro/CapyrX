@@ -43,6 +43,11 @@ CCTK_HOST CCTK_DEVICE CAPYRX_EXTERNAL auto
 d2local_dglobal2(const PatchParams &par, int patch, const svec_t &local_coords)
     -> std_tuple<svec_t, jac_t, djac_t>;
 
+auto make_system(const PatchParams &par) -> PatchSystem;
+
+auto unit_test(std::size_t repetitions, std::size_t seed,
+               const PatchParams &par) -> bool;
+
 } // namespace CapyrX::MultiPatch::Llama
 
 #endif //  CAPYRX_PATCH_LLAMA_HXX

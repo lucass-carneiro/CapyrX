@@ -934,6 +934,107 @@ auto unit_test(std::size_t repetitions, std::size_t seed,
     }
   }
 
+  // Analytic-vs-finite-difference Jacobian check (design S6). The round-trips
+  // above validate only the coordinate maps; nothing exercises the reused
+  // thornburg06 wedge Jacobians J and dJ. Verify them against central
+  // differences of local2global using two identities that hold on every patch
+  // and need no matrix inverse:
+  //   (1) J . M = I, with M(k,m) = d global_k / d local_m (FD of local2global)
+  //       and J(i)(k) = d local_i / d global_k (analytic).
+  //   (2) d J(i)(j) / d local_m = sum_k dJ(i)(j,k) . M(k,m) (chain rule): the
+  //       left side is a central difference of J, the right contracts analytic
+  //       dJ with M.
+  // d2local_dglobal2 takes an explicit patch, so no owner dispatch happens and
+  // the overset shell is irrelevant here. Step size and tolerance scale with
+  // CCTK_REAL precision so the check is meaningful in real64 and real32 builds.
+  {
+    using std::abs;
+    using std::max;
+    using std::pow;
+
+    const CCTK_REAL eps{std::numeric_limits<CCTK_REAL>::epsilon()};
+    const CCTK_REAL h{pow(eps, CCTK_REAL{1} / 3)};
+    const CCTK_REAL tol{CCTK_REAL{1000} * pow(eps, CCTK_REAL{2} / 3)};
+
+    const auto close{[&](CCTK_REAL a, CCTK_REAL b) {
+      return abs(a - b) <= tol + tol * max(abs(a), abs(b));
+    }};
+
+    // Keep samples away from the local cube edges so the FD error stays small.
+    real_dist interior_dist{-0.7, 0.7};
+    std::size_t jac_checks{0};
+
+    for (int p = 0; p <= static_cast<int>(PatchPiece::unknown) - 1; ++p) {
+      for (CCTK_INT rep = 0; rep < repetitions; ++rep) {
+        const svec_t l0{interior_dist(engine), interior_dist(engine),
+                        interior_dist(engine)};
+
+        const auto base{d2local_dglobal2(par, p, l0)};
+        const auto &J0{std::get<1>(base)};
+        const auto &dJ0{std::get<2>(base)};
+
+        ++jac_checks;
+
+        for (int m = 0; m < 3; ++m) {
+          svec_t lp{l0}, lm{l0};
+          lp(m) += h;
+          lm(m) -= h;
+
+          const auto gp{local2global(par, p, lp)};
+          const auto gm{local2global(par, p, lm)};
+          const auto base_p{d2local_dglobal2(par, p, lp)};
+          const auto base_m{d2local_dglobal2(par, p, lm)};
+          const auto &Jp{std::get<1>(base_p)};
+          const auto &Jm{std::get<1>(base_m)};
+
+          CCTK_REAL M[3];
+          for (int k = 0; k < 3; ++k) {
+            M[k] = (gp(k) - gm(k)) / (2 * h);
+          }
+
+          // Identity (1), column m of J.M.
+          for (int i = 0; i < 3; ++i) {
+            CCTK_REAL jm{0};
+            for (int k = 0; k < 3; ++k) {
+              jm += J0(i)(k) * M[k];
+            }
+            const CCTK_REAL expected{i == m ? CCTK_REAL{1} : CCTK_REAL{0}};
+            if (!close(jm, expected)) {
+              CCTK_VINFO("Jacobian J.M = I check \033[1;31mFAILED\033[0m on "
+                         "patch %i, entry (%i,%i): got %.16e, expected %.16e",
+                         p, i, m, jm, expected);
+              all_pass = false;
+            }
+          }
+
+          // Identity (2), column m of the chain rule.
+          for (int i = 0; i < 3; ++i) {
+            for (int j = 0; j < 3; ++j) {
+              const CCTK_REAL L{(Jp(i)(j) - Jm(i)(j)) / (2 * h)};
+              CCTK_REAL rhs{0};
+              for (int k = 0; k < 3; ++k) {
+                rhs += dJ0(i)(j, k) * M[k];
+              }
+              if (!close(L, rhs)) {
+                CCTK_VINFO("Jacobian-derivative dJ check \033[1;31mFAILED\033[0m "
+                           "on patch %i, entry (%i,%i,%i): FD %.16e, "
+                           "analytic %.16e",
+                           p, i, j, m, L, rhs);
+                all_pass = false;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if (jac_checks == 0) {
+      CCTK_VINFO("Jacobian FD check exercised no samples "
+                 "\033[1;31m(vacuous)\033[0m. Increase repetitions.");
+      all_pass = false;
+    }
+  }
+
   return all_pass;
 }
 

@@ -772,18 +772,15 @@ extern "C" void CapyrX_MultiPatch_Check_Parameters(CCTK_ARGUMENTS) {
                   required_overlap);
     }
   } else if (CCTK_Equals(patch_system, "Llama")) {
-    // Llama does pure boundary interpolation into ghost zones: no overlap band
-    // and no slave-evolution. Reject any config that would reintroduce either.
-    if (patch_overlap != 0) {
-      CCTK_VERROR("The \"Llama\" patch system requires patch_overlap = 0 "
-                  "(got %d); its interpatch coupling is the ghost band, not an "
-                  "overlap band.",
-                  patch_overlap);
-    }
-
+    // Faithful Llama uses a dual-evolved interior overlap (Llama's
+    // additional_overlap_size = ceil(order/2); e.g. 2 at order 4, 3 at order 5),
+    // NOT zero overlap, so every interpatch ghost lands in the donor patch's
+    // evolved interior. The overlap width is checked against ceil(order/2) below
+    // (after the order is read), mirroring the cubed_sphere rule. slave_overlap
+    // must stay off: Llama dual-evolves the band, it does not slave it.
     if (slave_overlap) {
       CCTK_ERROR("The \"Llama\" patch system requires slave_overlap = no; it "
-                 "does pure boundary interpolation with no slave-evolution.");
+                 "dual-evolves its overlap band, it does not slave it.");
     }
 
     // The cube corner sits at radius sqrt(3)*R; it must fit inside the outer
@@ -819,6 +816,22 @@ extern "C" void CapyrX_MultiPatch_Check_Parameters(CCTK_ARGUMENTS) {
                   int(interpolation_order_param_val));
     }
 
+    // The evolved overlap band must be at least ceil(order/2) wide so a centered
+    // interpolation stencil for any interpatch ghost stays inside the donor
+    // patch's evolved interior (the condition Llama meets via
+    // additional_overlap_size). Same rule as the cubed_sphere branch above.
+    using std::ceil;
+    const auto required_overlap = static_cast<CCTK_INT>(
+        ceil(interpolation_order_param_val / 2.0));
+    if (patch_overlap < required_overlap) {
+      CCTK_VERROR("The \"Llama\" patch system requires patch_overlap >= %d "
+                  "(ceil(interpolation_order/2) for order %d); got %d. The "
+                  "interpatch coupling is a dual-evolved overlap band, not a "
+                  "bare ghost band.",
+                  int(required_overlap), int(interpolation_order_param_val),
+                  int(patch_overlap));
+    }
+
     // ghost_size == -1 means "use ghost_size_{x,y,z}"; take the min of the three
     // axis widths so a per-axis config cannot silently pass against -1.
     const auto ghost_size_param_ptr =
@@ -843,8 +856,8 @@ extern "C" void CapyrX_MultiPatch_Check_Parameters(CCTK_ARGUMENTS) {
     }
 
     // Need >= max(4th-order FD half-width 2, 6th-order KO half-width 3,
-    // ceil(interp_order/2) = 2). The interpatch coupling width is the ghost
-    // band since patch_overlap == 0 -- do not check against patch_overlap here.
+    // ceil(interp_order/2) = 2). This is the per-patch stencil-halo requirement
+    // (independent of the interpatch overlap width checked above).
     constexpr CCTK_INT required_ghost_width{3};
     if (ghost_width < required_ghost_width) {
       CCTK_VERROR("The \"Llama\" patch system requires CarpetX ghost width >= "

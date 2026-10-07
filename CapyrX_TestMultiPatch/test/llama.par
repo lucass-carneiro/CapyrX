@@ -33,7 +33,7 @@ CarpetX::interpolation_order = 4
 CapyrX_MultiPatch::verbose        =  yes
 CapyrX_MultiPatch::patch_system   = "Llama"
 CapyrX_MultiPatch::run_unit_tests = yes
-CapyrX_MultiPatch::patch_overlap  = 0
+CapyrX_MultiPatch::patch_overlap  = 2
 CapyrX_MultiPatch::slave_overlap  = no
 
 CapyrX_MultiPatch::inner_boundary_radius = 1.0

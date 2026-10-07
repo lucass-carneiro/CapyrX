@@ -685,24 +685,36 @@ static inline auto make_patch(const PatchPiece &p,
 
   switch (p) {
 
-  case PatchPiece::cartesian:
+  case PatchPiece::cartesian: {
     patch.name = "Cartesian";
 
     // The cube is a true [-R,R]^3 Cartesian patch whose resolution is
     // independent of the angular grid (Llama's h_cartesian), so it must not
     // reuse angular_cells the way cubed_sphere does.
-    patch.ncells = {par.cube_ncells_i, par.cube_ncells_j, par.cube_ncells_k};
+    //
+    // All 6 faces are interpatch, so the cube carries the evolved overlap band
+    // on every side (like the wedges): extend each extent by patch_overlap cells
+    // and add 2*patch_overlap cells, keeping dx fixed. Without this the cube's
+    // evolved interior stops at r = R and cannot donate a centered stencil for a
+    // wedge's near-seam inner ghost (the R2 donor dropout).
+    const CCTK_REAL cube_delta_i = 2.0 * par.inner_boundary / par.cube_ncells_i;
+    const CCTK_REAL cube_delta_j = 2.0 * par.inner_boundary / par.cube_ncells_j;
+    const CCTK_REAL cube_delta_k = 2.0 * par.inner_boundary / par.cube_ncells_k;
+
+    patch.ncells = {par.cube_ncells_i + twice_overlap,
+                    par.cube_ncells_j + twice_overlap,
+                    par.cube_ncells_k + twice_overlap};
 
     patch.xmin = {
-        -par.inner_boundary,
-        -par.inner_boundary,
-        -par.inner_boundary,
+        -par.inner_boundary - par.patch_overlap * cube_delta_i,
+        -par.inner_boundary - par.patch_overlap * cube_delta_j,
+        -par.inner_boundary - par.patch_overlap * cube_delta_k,
     };
 
     patch.xmax = {
-        par.inner_boundary,
-        par.inner_boundary,
-        par.inner_boundary,
+        par.inner_boundary + par.patch_overlap * cube_delta_i,
+        par.inner_boundary + par.patch_overlap * cube_delta_j,
+        par.inner_boundary + par.patch_overlap * cube_delta_k,
     };
 
     patch.faces = {{mx, my, mz}, {px, py, pz}};
@@ -711,6 +723,7 @@ static inline auto make_patch(const PatchPiece &p,
     patch.c_is_radial = false;
 
     break;
+  }
 
   case PatchPiece::plus_x:
     patch.name = "Plus X";

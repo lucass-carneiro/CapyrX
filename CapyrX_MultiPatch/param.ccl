@@ -9,6 +9,7 @@ KEYWORD patch_system "Patch system"
   "Cubed sphere" :: "Cartesian cube surrounded with 6 spherical-like patches"
   "Thornburg06" :: "Six spherical patches with inner and outer spherical boundaries"
   "TwoCubes" :: "Two touching cubes. Used for debugging"
+  "Llama" :: "Central Cartesian cube [-R,R]^3 (sized by cartesian_ncells_{i,j,k}) surrounded by 6 Thornburg wedges."
 } "none"
 
 BOOLEAN verbose "Enable verbose output"

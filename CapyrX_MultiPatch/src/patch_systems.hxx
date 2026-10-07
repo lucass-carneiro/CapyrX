@@ -11,7 +11,8 @@ enum class PatchSystems : int {
   cartesian,
   cubed_spehre,
   thornburg06,
-  two_cubes
+  two_cubes,
+  llama
 };
 
 } // namespace CapyrX::MultiPatch

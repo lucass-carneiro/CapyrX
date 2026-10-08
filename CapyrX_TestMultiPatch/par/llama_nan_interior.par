@@ -1,0 +1,95 @@
+# Llama NaN-leak test, "interior" injection -- the leak (order-1 threshold) case.
+#
+# NaN is written into each wedge's last true-interior radial row at its genuine
+# physical-outer face (r ~ outer). That row IS a valid interpolation donor, so at
+# the mandated interpolation_order = 4 an order-4 stencil near a shared angular
+# edge of two abutting wedges bridges their two injected rows across the
+# interpatch seam: check_nan_test.py reports LEAK-CROSS-PATCH > 0 (exit 1). This
+# is EXPECTED and is the Llama counterpart of nan_neumann_interior_overlap_order4
+# (cubed_sphere). The cubed_sphere series established the leak turns on at
+# interpolation_order 1 and grows with order; the Llama Check_Parameters guard
+# forbids order < 4, so order 4 (>= 1) is the only legal order and it leaks --
+# the threshold's prediction holds. Its complement (llama_nan_ghost, same
+# geometry, "ghost" injection) does NOT leak, isolating the mechanism to the
+# injection site being a valid donor.
+#
+# Faithful-Llama config (Step 5 guards): patch_overlap = 2 = ceil(order/2),
+# slave_overlap = no, interpolation_order = 4, ghost_size = 3, sqrt(3)*R = 1.73
+# < outer = 4.0.
+
+ActiveThorns = "
+    CarpetX
+    IOUtil
+    CoordinatesX
+    CapyrX_MultiPatch
+    CapyrX_TestMultiPatch
+    CapyrX_TestOuterBC
+"
+
+Cactus::presync_mode = "mixed-error"
+Cactus::cctk_show_schedule = yes
+
+Cactus::terminate = "iteration"
+Cactus::cctk_itlast = 0
+
+CarpetX::verbose = yes
+# Deliberately off: CarpetX's check_valid_gf/check_valid_ga hardcode forbid_nans
+# regardless of a group's checkpoint tag, so poison_undefined_values=yes aborts
+# before SYNC runs. nan_test/nan_test_pre are self-written every cell and neither
+# BC application nor MultiPatch_Interpolate branch on this flag, so turning it
+# off changes no value this test compares (see mp_nan_test_1.md Sec 3).
+CarpetX::poison_undefined_values = no
+
+CarpetX::ghost_size          = 3
+CarpetX::interpolation_order = 4
+
+CarpetX::blocking_factor_x = 1
+CarpetX::blocking_factor_y = 1
+CarpetX::blocking_factor_z = 1
+
+CapyrX_MultiPatch::verbose        = yes
+CapyrX_MultiPatch::patch_system   = "Llama"
+CapyrX_MultiPatch::patch_overlap  = 2
+CapyrX_MultiPatch::slave_overlap  = no
+
+CapyrX_MultiPatch::inner_boundary_radius = 1.0
+CapyrX_MultiPatch::outer_boundary_radius = 4.0
+CapyrX_MultiPatch::angular_cells         = 16
+CapyrX_MultiPatch::radial_cells          = 16
+
+CapyrX_MultiPatch::cartesian_ncells_i = 16
+CapyrX_MultiPatch::cartesian_ncells_j = 16
+CapyrX_MultiPatch::cartesian_ncells_k = 16
+
+# Keep one AMReX box per patch at one rank (see llama_nan_ghost.par for the
+# arithmetic): largest extent is 20 cells on every axis.
+CarpetX::max_grid_size_x = 20
+CarpetX::max_grid_size_y = 20
+CarpetX::max_grid_size_z = 20
+
+CarpetX::amrex_parameters[0] = "amr.refine_grid_layout=0"
+CarpetX::amrex_parameters[1] = "amr.v=2"
+
+CarpetX::boundary_x       = "neumann"
+CarpetX::boundary_y       = "neumann"
+CarpetX::boundary_z       = "neumann"
+CarpetX::boundary_upper_x = "neumann"
+CarpetX::boundary_upper_y = "neumann"
+CarpetX::boundary_upper_z = "neumann"
+
+CapyrX_TestOuterBC::nan_injection_mode    = "interior"
+CapyrX_TestMultiPatch::run_outer_bc_tests = yes
+
+IO::parfile_write = no
+IO::out_dir       = $parfile
+IO::out_every     = 1
+
+CarpetX::out_performance = no
+CarpetX::out_metadata    = no
+
+CarpetX::out_tsv = yes
+CarpetX::out_tsv_vars = "
+  CoordinatesX::vertex_coords
+  CapyrX_TestOuterBC::nan_test
+  CapyrX_TestOuterBC::nan_test_pre
+"

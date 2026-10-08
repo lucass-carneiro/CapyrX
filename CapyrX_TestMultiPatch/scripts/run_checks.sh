@@ -8,14 +8,14 @@
 # binary is required (building is the operator's responsibility).
 #
 # ---------------------------------------------------------------------------
-# THE MATRIX -- 31 runs plus 3 triplet checks = 34 verdicts, enumerated below
+# THE MATRIX -- 35 runs plus 3 triplet checks = 38 verdicts, enumerated below
 # in MATRIX[], never computed as a product. A product is how a matrix comes to
 # run 12 of its 300 cells and exit 0; every cell here is written out, and every
 # cell that does not reach a verdict is REPORTED, not skipped.
 #
 #   colour  3 pars x slave_overlap {no,yes} x {1 rank, 2 ranks}   = 12  -> check_color.py
 #   owner   2 llama pars (owner marker), 1 rank                    =  2  -> check_color.py --owner
-#   nan     10 nan_*.par, 1 rank                                 = 10  -> check_nan_test.py
+#   nan     12 nan_*.par (10 cubed_sphere + 2 llama), 1 rank      = 12  -> check_nan_test.py
 #   smooth  smooth_{z,p,o}_{neumann,linextrap,none}, 1 rank       =  9  -> check_smooth_test.py
 #                                                                          (3 triplet checks)
 #
@@ -211,6 +211,22 @@ MATRIX=(
   "nan_neumann_interior_overlap_order2|nan|nan_neumann_interior_overlap_order2|no|1|1:LEAK-CROSS-PATCH=1512:rows=161875"
   "nan_neumann_interior_overlap_order3|nan|nan_neumann_interior_overlap_order3|no|1|1:LEAK-CROSS-PATCH=2208:rows=161875"
   "nan_neumann_interior_overlap_order4|nan|nan_neumann_interior_overlap_order4|no|1|1:LEAK-CROSS-PATCH=3312:rows=161875"
+  # ---- NaN injection, Llama: order 4 only (the guard forbids order < 4) ------
+  # The Llama Check_Parameters guard pins interpolation_order >= 4, so the leak
+  # threshold cannot be swept here the way the cubed_sphere cells above do; order
+  # 4 is the only legal order and it is >= the established order-1 threshold.
+  #   * ghost injection    : the injection site is never a valid interpolation
+  #                          donor, so SYNC cannot carry the NaN across any seam
+  #                          -- zero leak, exit 0 (the isolation case).
+  #   * interior injection : the injected last-interior radial row IS a donor, so
+  #                          an order-4 stencil bridges two abutting wedges'
+  #                          injected rows across their shared angular edge --
+  #                          LEAK-CROSS-PATCH by construction, exit 1 (expected),
+  #                          same mechanism as cubed_sphere's order-4 cell (3312).
+  # Counts measured 2026-10-08, this machine, 1 rank (R=1, outer=4, angular=16,
+  # radial=16, cartesian_ncells=16, overlap=2, ghost=3, one box per patch).
+  "llama_nan_ghost|nan|llama_nan_ghost|no|1|0:rows=129033"
+  "llama_nan_interior|nan|llama_nan_interior|no|1|1:LEAK-CROSS-PATCH=3456:rows=129033"
   # ---- smooth-field Channel-1 A/B, three fields x three outer BCs ----------
   # Checked as triplets (see SMOOTH_TRIPLETS); the per-leg expect is unused.
   "smooth_z_neumann|smoothleg|smooth_z_neumann|no|1|-"

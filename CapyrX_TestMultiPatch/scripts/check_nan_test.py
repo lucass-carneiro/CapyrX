@@ -61,6 +61,15 @@ is bordered by wedges on all six faces and is therefore never injected):
 sub-classified -- mirrors check_color.py's DEFAULT-LEAK: always critical,
 regardless of where it sits.
 
+Both patch systems (cubed_sphere, Llama) are a cartesian cube + 6 wedge shells
+with the same injection geometry -- the wedge's high-radial face is its only
+genuine physical-outer face, the cube has none -- so the only system-specific
+differences here are the cube/wedge ownership rule (cubed_sphere a box, Llama a
+sphere r=R, matching real Llama) that CROSS-PATCH classification relies on, and
+how the cube patch's index range is sized (cubed_sphere reuses angular_cells,
+Llama its independent cartesian_ncells_{i,j,k}). Both are selected by
+--patch-system, defaulting to the par file's own value.
+
 Usage:
     check_nan_test.py exe/nan_dirichlet_ghost/capyrx_testouterbc-nan_test.it000000.p0000.tsv
 
@@ -93,6 +102,7 @@ from check_color import (  # noqa: E402
     get_owner_patch,
     load_global_coords,
     parse_par_params,
+    parse_patch_system,
     read_tsv_rows,
 )
 
@@ -157,14 +167,16 @@ def near_hi(idx, extent, band):
     return idx >= extent - (band - 1)
 
 
-def is_own_interior(patch, i, j, k, angular_extent, radial_extent):
+def is_own_interior(patch, i, j, k, angular_extent, radial_extent, cube_extent):
     if patch == CARTESIAN:
-        return 0 <= i <= angular_extent and 0 <= j <= angular_extent and 0 <= k <= angular_extent
+        return (0 <= i <= cube_extent[0] and 0 <= j <= cube_extent[1]
+                and 0 <= k <= cube_extent[2])
     return 0 <= i <= angular_extent and 0 <= j <= angular_extent and 0 <= k <= radial_extent
 
 
 def classify_leak(patch, i, j, k, vx, vy, vz, r0, r1,
-                  angular_extent, radial_extent, band):
+                  angular_extent, radial_extent, band, cube_extent,
+                  spherical=False):
     """Sub-classify a 1.0 -> NaN leak row. Returns (subkind, expected_patch)
     where expected_patch is None unless subkind is CROSS-PATCH (or a
     same-patch ground-truth check happened to run anyway).
@@ -179,7 +191,7 @@ def classify_leak(patch, i, j, k, vx, vy, vz, r0, r1,
     entire 1104-cell cross-patch leak behind a clean (exit 0) default-mode
     result. CROSS-PATCH must win that race, since it is always critical.
     """
-    is_interior = is_own_interior(patch, i, j, k, angular_extent, radial_extent)
+    is_interior = is_own_interior(patch, i, j, k, angular_extent, radial_extent, cube_extent)
 
     if not is_interior:
         # Ghost/exterior point: is it inside the whole multipatch domain (a
@@ -191,7 +203,7 @@ def classify_leak(patch, i, j, k, vx, vy, vz, r0, r1,
         inside_cube = max(abs(vx), abs(vy), abs(vz)) <= r0 * (1 + REL_TOL)
         inside_domain = inside_cube or r <= r1 * (1 + REL_TOL)
         if inside_domain:
-            expected_patch = get_owner_patch(vx, vy, vz, r0)
+            expected_patch = get_owner_patch(vx, vy, vz, r0, spherical=spherical)
             if expected_patch != patch:
                 return "CROSS-PATCH", expected_patch
 
@@ -199,9 +211,9 @@ def classify_leak(patch, i, j, k, vx, vy, vz, r0, r1,
         # No genuine physical-outer face at all (bordered by wedges on all
         # six faces) -- corner cells therefore cannot occur here.
         near_outer = False
-        near_other = (near_lo(i, band) or near_hi(i, angular_extent, band) or
-                      near_lo(j, band) or near_hi(j, angular_extent, band) or
-                      near_lo(k, band) or near_hi(k, angular_extent, band))
+        near_other = (near_lo(i, band) or near_hi(i, cube_extent[0], band) or
+                      near_lo(j, band) or near_hi(j, cube_extent[1], band) or
+                      near_lo(k, band) or near_hi(k, cube_extent[2], band))
     else:
         # Wedge patch (cubed_sphere.cxx make_patch): the high side of the
         # radial (k) axis is the only genuine physical-outer face; both
@@ -216,7 +228,7 @@ def classify_leak(patch, i, j, k, vx, vy, vz, r0, r1,
 
     if is_interior:
         if patch == CARTESIAN:
-            axes = ((i, angular_extent), (j, angular_extent), (k, angular_extent))
+            axes = ((i, cube_extent[0]), (j, cube_extent[1]), (k, cube_extent[2]))
         else:
             axes = ((i, angular_extent), (j, angular_extent), (k, radial_extent))
         deep_interior = all(min(idx, extent - idx) > band for idx, extent in axes)
@@ -256,12 +268,18 @@ class Report:
 
 
 def process_file(nan_path, pre_path, coords_path, r0, r1, angular_cells,
-                 radial_cells, band, report, patch_overlap=0):
+                 radial_cells, band, report, patch_overlap=0,
+                 spherical=False, cube_ncells=None):
     coords = load_global_coords(coords_path)
     pre_values = load_value_table(pre_path)
 
     angular_extent = angular_cells + 2 * patch_overlap
     radial_extent = radial_cells + patch_overlap
+    # Llama's cube is sized from its independent cartesian_ncells; cubed_sphere
+    # reuses angular_cells (cube_ncells is then (angular_cells,)*3).
+    if cube_ncells is None:
+        cube_ncells = (angular_cells, angular_cells, angular_cells)
+    cube_extent = tuple(n + 2 * patch_overlap for n in cube_ncells)
 
     for fields in read_tsv_rows(nan_path):
         if len(fields) < 12:
@@ -306,7 +324,8 @@ def process_file(nan_path, pre_path, coords_path, r0, r1, angular_cells,
 
         if pre_is_sentinel and post_is_nan:
             subkind, expected_patch = classify_leak(
-                patch, i, j, k, vx, vy, vz, r0, r1, angular_extent, radial_extent, band)
+                patch, i, j, k, vx, vy, vz, r0, r1, angular_extent, radial_extent,
+                band, cube_extent, spherical=spherical)
             extra = row if expected_patch is None else row + ("expected patch", expected_patch, PATCH_NAMES.get(expected_patch))
             report.flag(f"LEAK-{subkind}", extra)
             continue
@@ -340,6 +359,16 @@ def main():
     ap.add_argument("--patch-overlap", type=int, default=None,
                     help="CapyrX_MultiPatch::patch_overlap (defaults to the value "
                          "found in the parameter file, or 0 if absent)")
+    ap.add_argument("--patch-system", choices=["cubed_sphere", "llama"], default=None,
+                    help="which patch system produced the TSV (defaults to the value found "
+                         "in the parameter file, or cubed_sphere). Selects the cube/wedge "
+                         "ownership rule (Llama uses a sphere, cubed_sphere a box) and how "
+                         "the cube patch's index range is sized.")
+    ap.add_argument("--cube-ncells-i", type=int, default=None,
+                    help="Llama cube resolution (CapyrX_MultiPatch::cartesian_ncells_i); "
+                         "defaults to the par-file value, or angular_cells for cubed_sphere")
+    ap.add_argument("--cube-ncells-j", type=int, default=None)
+    ap.add_argument("--cube-ncells-k", type=int, default=None)
     ap.add_argument("--band", type=int, default=None,
                     help="cell distance from a face counted as \"near\" it, for "
                          "LEAK-CORNER/LEAK-INTERIOR classification (defaults to "
@@ -353,16 +382,24 @@ def main():
     r0, r1 = args.inner_boundary, args.outer_boundary
     angular_cells, radial_cells = args.angular_cells, args.radial_cells
     patch_overlap = args.patch_overlap
+    patch_system = args.patch_system
+    cube_ni, cube_nj, cube_nk = args.cube_ncells_i, args.cube_ncells_j, args.cube_ncells_k
     band = args.band
 
     par_path = find_param_file(args.nan_test_tsv[0])
-    if None in (r0, r1, angular_cells, radial_cells, patch_overlap) and par_path:
+    needs_par = (None in (r0, r1, angular_cells, radial_cells, patch_overlap)
+                 or patch_system is None or None in (cube_ni, cube_nj, cube_nk))
+    if needs_par and par_path:
         params = parse_par_params(par_path)
         r0 = r0 if r0 is not None else params.get("inner_boundary_radius")
         r1 = r1 if r1 is not None else params.get("outer_boundary_radius")
         angular_cells = angular_cells if angular_cells is not None else params.get("angular_cells")
         radial_cells = radial_cells if radial_cells is not None else params.get("radial_cells")
         patch_overlap = patch_overlap if patch_overlap is not None else params.get("patch_overlap")
+        patch_system = patch_system if patch_system is not None else parse_patch_system(par_path)
+        cube_ni = cube_ni if cube_ni is not None else params.get("cartesian_ncells_i")
+        cube_nj = cube_nj if cube_nj is not None else params.get("cartesian_ncells_j")
+        cube_nk = cube_nk if cube_nk is not None else params.get("cartesian_ncells_k")
     if band is None and par_path:
         band = parse_ghost_size(par_path)
 
@@ -376,6 +413,17 @@ def main():
     angular_cells, radial_cells = int(angular_cells), int(radial_cells)
     patch_overlap = int(patch_overlap) if patch_overlap is not None else 0
     band = int(band) if band is not None else 2
+    if patch_system is None:
+        patch_system = "cubed_sphere"
+    # Llama splits cube/wedge ownership at the sphere r=R and sizes its cube from
+    # cartesian_ncells; cubed_sphere uses a box and reuses angular_cells.
+    spherical = (patch_system == "llama")
+    if patch_system == "llama":
+        cube_ncells = (int(cube_ni) if cube_ni is not None else angular_cells,
+                       int(cube_nj) if cube_nj is not None else angular_cells,
+                       int(cube_nk) if cube_nk is not None else angular_cells)
+    else:
+        cube_ncells = (angular_cells, angular_cells, angular_cells)
 
     if (args.pre or args.coords) and len(args.nan_test_tsv) > 1:
         ap.error("--pre/--coords can only be used with a single nan_test_tsv argument")
@@ -390,7 +438,8 @@ def main():
             ap.error(f"could not find a matching coordinatesx-vertex_coords TSV for {nan_path}; "
                      f"pass --coords explicitly")
         process_file(nan_path, pre_path, coords_path, r0, r1, angular_cells, radial_cells,
-                     band, report, patch_overlap=patch_overlap)
+                     band, report, patch_overlap=patch_overlap,
+                     spherical=spherical, cube_ncells=cube_ncells)
 
     print(report.summary())
     print()

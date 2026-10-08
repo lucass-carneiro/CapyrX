@@ -8,7 +8,7 @@
 # binary is required (building is the operator's responsibility).
 #
 # ---------------------------------------------------------------------------
-# THE MATRIX -- 38 runs plus 3 triplet checks + 1 convergence series = 42
+# THE MATRIX -- 41 runs plus 3 triplet checks + 2 convergence series = 46
 # verdicts, enumerated below in MATRIX[], never computed as a product. A product
 # is how a matrix comes to run 12 of its 300 cells and exit 0; every cell here is
 # written out, and every cell that does not reach a verdict is REPORTED, not
@@ -21,6 +21,8 @@
 #                                                                          (3 triplet checks)
 #   sconv   llama_smooth_{16,32,64}, 1 rank                        =  3  -> check_smooth_conv.py
 #                                                                          (1 convergence series: R1/R2 order)
+#   wconv   llama_wave_{16,32,64}, 1 rank                           =  3  -> check_wave_conv.py
+#                                                                          (1 convergence series: evolution self-conv + R1 seam)
 #
 # The 2-rank cells run, and they are not the 1-box-per-patch layout that aborts
 # in MPI_Alltoallv. That abort (CarpetX/src/interpolate.cxx, the
@@ -266,6 +268,16 @@ MATRIX=(
   "llama_smooth_16|smoothconvleg|llama_smooth_16|no|1|-"
   "llama_smooth_32|smoothconvleg|llama_smooth_32|no|1|-"
   "llama_smooth_64|smoothconvleg|llama_smooth_64|no|1|-"
+  # ---- Llama WaveToy evolution self-CONVERGENCE (R1/R2 under evolution), 1 rank
+  # Three resolutions of one Gaussian-pulse Llama WaveToy evolution to t=2.0; the
+  # legs only RUN here and are judged together by the WAVE_CONV series below. Each
+  # leg evolves a Gaussian blob out through the cube<->wedge and wedge<->wedge
+  # seams to the lin-extrap outer BC. out_tsv (3d) dumps every group at it0 and the
+  # final iteration (itlast=4N); the waveconvleg handler prunes each leg to just
+  # the final-iteration phi + coords the checker reads.
+  "llama_wave_16|waveconvleg|llama_wave_16|no|1|-"
+  "llama_wave_32|waveconvleg|llama_wave_32|no|1|-"
+  "llama_wave_64|waveconvleg|llama_wave_64|no|1|-"
 )
 # field | neumann-cell | linextrap-cell | none-cell | expected exit | expected
 # cross-patch cell count. Exit 0 (inert) and 1 (LIVE) are both PASS for the
@@ -295,6 +307,21 @@ SMOOTH_TRIPLETS=(
 SMOOTH_CONV=(
   "llama_smooth|llama_smooth_16|llama_smooth_32|llama_smooth_64|0|979416"
 )
+# series | leg-N1 | leg-N2 | leg-N3 | expected check exit | expected rows checked.
+# check_wave_conv.py reads the three legs' final-iteration `state` TSVs and fits
+# the Richardson SELF-convergence order of the evolved phi (no exact solution)
+# globally and separately in a cube<->wedge (R2) band, a wedge<->wedge (R1)
+# diagonal band, and the interior; the R1 gate is the seam-band vs interior-band
+# residual ratio (bounded and not growing across the two pairs). PASS (exit 0) iff
+# the global + both seam orders clear their floors and the seam ratios stay
+# bounded. The rows count is the coincident-point join size, same role as above.
+# Measured 2026-10-08, this machine, 1 rank (R=1, outer=4, overlap=2, order 4,
+# ghost 3, Gaussian sigma=0.5 at the origin, t=2.0): global order ~4.10, R2 ~4.29,
+# R1 ~4.21; R2/R1 seam/interior ratios 0.72/0.95, both shrinking under refinement
+# (no growing interface noise -> Step 11b remediation not triggered).
+WAVE_CONV=(
+  "llama_wave|llama_wave_16|llama_wave_32|llama_wave_64|0|27989"
+)
 # TSV group names emitted by each kind of run. The glob covers the per-rank
 # files a multi-rank run writes (.p0000, .p0001, ...); the checkers take several
 # TSVs and find each one's own coords/pre companion.
@@ -303,6 +330,9 @@ OWNER_TSV_GLOB="capyrx_testmultipatch-owner.it000000.p*.tsv"
 NAN_TSV_GLOB="capyrx_testouterbc-nan_test.it000000.p*.tsv"
 SMOOTH_TSV_GLOB="capyrx_testouterbc-smooth_test.it000000.p*.tsv"
 SMOOTHCONV_TSV_GLOB="capyrx_testmultipatch-test_data.it000000.p*.tsv"
+# After the waveconvleg handler prunes, only the final-iteration state survives, so
+# this matches exactly one file per 1-rank leg.
+WAVECONV_TSV_GLOB="capyrx_wavetoy-state.it*.p*.tsv"
 # =============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -312,6 +342,7 @@ CHECK_COLOR="$SCRIPT_DIR/check_color.py"
 CHECK_NAN="$SCRIPT_DIR/check_nan_test.py"
 CHECK_SMOOTH="$SCRIPT_DIR/check_smooth_test.py"
 CHECK_SMOOTH_CONV="$SCRIPT_DIR/check_smooth_conv.py"
+CHECK_WAVE_CONV="$SCRIPT_DIR/check_wave_conv.py"
 
 # scripts/../../../../exe  ==  <cactus>/exe
 CACTUS_SIM="${CACTUS_SIM:-$(cd "$SCRIPT_DIR/../../../.." 2>/dev/null && pwd)/exe/cactus_sim}"
@@ -333,7 +364,7 @@ fail_early() { echo "run_checks.sh: $*" >&2; exit 2; }
 
 [[ -x "$CACTUS_SIM" ]] || fail_early "cactus binary not found or not executable: $CACTUS_SIM (build it first, or set CACTUS_SIM)"
 [[ -d "$EXE_DIR"    ]] || fail_early "output/run dir does not exist: $EXE_DIR (set EXE_DIR)"
-for c in "$CHECK_COLOR" "$CHECK_NAN" "$CHECK_SMOOTH" "$CHECK_SMOOTH_CONV"; do
+for c in "$CHECK_COLOR" "$CHECK_NAN" "$CHECK_SMOOTH" "$CHECK_SMOOTH_CONV" "$CHECK_WAVE_CONV"; do
   [[ -f "$c" ]] || fail_early "missing checker: $c"
 done
 mkdir -p "$LOG_DIR" "$GEN_PAR_DIR"
@@ -492,6 +523,7 @@ echo
 
 declare -A SMOOTH_OK=()
 declare -A SMOOTHCONV_OK=()
+declare -A WAVECONV_OK=()
 
 for cell in "${MATRIX[@]}"; do
   IFS='|' read -r id kind base slave nr expect <<<"$cell"
@@ -535,6 +567,7 @@ for cell in "${MATRIX[@]}"; do
     nan)    tsvs=( "$EXE_DIR/$id"/$NAN_TSV_GLOB ) ;;
     smoothleg) tsvs=( "$EXE_DIR/$id"/$SMOOTH_TSV_GLOB ) ;;
     smoothconvleg) tsvs=( "$EXE_DIR/$id"/$SMOOTHCONV_TSV_GLOB ) ;;
+    waveconvleg) tsvs=( "$EXE_DIR/$id"/$WAVECONV_TSV_GLOB ) ;;
   esac
   if [[ ${#tsvs[@]} -eq 0 ]]; then
     record "CANNOT-RUN" "$id" "$nr" "$boxes" 0 "-" "the run produced no $kind TSV in $EXE_DIR/$id"
@@ -548,6 +581,21 @@ for cell in "${MATRIX[@]}"; do
   fi
   if [[ "$kind" == smoothconvleg ]]; then
     SMOOTHCONV_OK[$id]=1
+    record "PASS" "$id" "$nr" "$boxes" 0 "-" "ran; judged as part of its convergence series"
+    continue
+  fi
+  if [[ "$kind" == waveconvleg ]]; then
+    # out_tsv (3d) dumps every group at it0 and the final iteration; keep only the
+    # final-iteration phi + its coords (what check_wave_conv.py reads) and drop the
+    # rest, so the series glob is unambiguous and the battery's disk stays bounded.
+    ( cd "$EXE_DIR/$id" 2>/dev/null &&
+      last=$(ls capyrx_wavetoy-state.it*.p*.tsv 2>/dev/null |
+             grep -oE 'it[0-9]+' | sort -u | tail -1) &&
+      [[ -n "$last" ]] &&
+      ls ./*.tsv 2>/dev/null |
+        grep -vE "(capyrx_wavetoy-state|coordinatesx-vertex_coords)\.${last}\." |
+        xargs -r rm -f )
+    WAVECONV_OK[$id]=1
     record "PASS" "$id" "$nr" "$boxes" 0 "-" "ran; judged as part of its convergence series"
     continue
   fi
@@ -687,6 +735,56 @@ for s in "${SMOOTH_CONV[@]}"; do
     record "DRIFT" "${series}_conv" 1 "-" "$rc" "$rows" "$detail -- ${result_line:-}"
   elif [[ "$rc" == 1 && "$want_rc" != 1 ]]; then
     record "REGRESSION" "${series}_conv" 1 "-" "$rc" "$rows" "${result_line:-order below floor or donor dropped}"
+  else
+    record "PASS" "${series}_conv" 1 "-" "$rc" "$rows" "${result_line:-}"
+  fi
+done
+
+# ---- the Llama WaveToy evolution convergence series -------------------------
+for s in "${WAVE_CONV[@]}"; do
+  IFS='|' read -r series n1 n2 n3 want_rc want_rows <<<"$s"
+  n_planned=$((n_planned + 1))
+  missing=""
+  for leg in "$n1" "$n2" "$n3"; do
+    [[ -n "${WAVECONV_OK[$leg]:-}" ]] || missing="$missing $leg"
+  done
+  if [[ -n "$missing" ]]; then
+    if [[ -n "$CELLS_FILTER" && " $CELLS_FILTER " != *" $n1 "* ]]; then
+      n_dropped=$((n_dropped + 1)); DROPPED_IDS+=("${series}_conv")
+      record "DROPPED" "${series}_conv" 1 "-" "-" "-" "legs not in CELLS="
+    else
+      record "CANNOT-RUN" "${series}_conv" 1 "-" "-" "-" "leg(s) never produced output:$missing"
+    fi
+    continue
+  fi
+  echo "-- ${series}_conv  (N=16/32/64 evolution self-convergence)"
+  clog="$LOG_DIR/${series}_conv.check.log"
+  # Each leg is pruned to one final-iteration state TSV at 1 rank, so each glob is
+  # one file.
+  python3 "$CHECK_WAVE_CONV" \
+    "$EXE_DIR/$n1"/$WAVECONV_TSV_GLOB \
+    "$EXE_DIR/$n2"/$WAVECONV_TSV_GLOB \
+    "$EXE_DIR/$n3"/$WAVECONV_TSV_GLOB >"$clog" 2>&1
+  rc=$?
+  rows=$(rows_of "$clog")
+  result_line="$(grep -m1 '^RESULT:' "$clog" | cut -c1-120 || true)"
+  n_ran=$((n_ran + 1))
+  if [[ "$rc" -gt 2 || "$rc" == 2 ]]; then
+    record "CANNOT-RUN" "${series}_conv" 1 "-" "$rc" "$rows" \
+      "${result_line:-checker could not run; see $clog}"
+    continue
+  fi
+  if [[ "$rows" -le 0 ]]; then
+    record "CANNOT-RUN" "${series}_conv" 1 "-" "$rc" "$rows" "zero rows checked (see $clog)"
+    continue
+  fi
+  detail=""
+  [[ "$rc" == "$want_rc" ]] || detail="exit $rc != recorded $want_rc"
+  [[ "$rows" == "$want_rows" ]] || detail="$detail${detail:+; }rows=$rows != recorded $want_rows"
+  if [[ -n "$detail" ]]; then
+    record "DRIFT" "${series}_conv" 1 "-" "$rc" "$rows" "$detail -- ${result_line:-}"
+  elif [[ "$rc" == 1 && "$want_rc" != 1 ]]; then
+    record "REGRESSION" "${series}_conv" 1 "-" "$rc" "$rows" "${result_line:-order below floor or seam ratio unbounded}"
   else
     record "PASS" "${series}_conv" 1 "-" "$rc" "$rows" "${result_line:-}"
   fi

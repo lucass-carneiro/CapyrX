@@ -1,0 +1,97 @@
+# Llama WaveToy UNIGRID evolution + interpatch self-convergence -- resolution N=32.
+#
+# Step 11 of llama_patch_system_impl.md (Phase C: first evolution on the Llama
+# geometry). A Gaussian pulse (Pi = A exp(-(r-R0)^2/sigma^2), R0=0, so a blob at
+# the origin, well inside the cube) expands outward, crossing the cube<->wedge
+# (R2) seam at r=R and the wedge<->wedge (R1) angular seams in the shell, then
+# reaching the linear-extrapolation outer boundary. The field has no closed-form
+# solution on this geometry, so convergence is measured by RICHARDSON
+# SELF-CONVERGENCE across N = 16/32/64 (angular = radial = cube ncells, doubled)
+# at coincident vertices; scripts/check_wave_conv.py reads phi from the `state`
+# TSV, restricts to each point's owner patch (single-valued physical field), and
+# fits the order globally and separately in a seam band vs the interior band.
+#
+# Evolution order is 4 (WaveToy = 4th-order central FD + RK4). dt = cfl*(2/N), so
+# with cctk_itlast = 4N every resolution lands on the SAME physical time t = 2.0
+# (N=16 -> it64, N=32 -> it128, N=64 -> it256); self-convergence requires that
+# coincident time. The 2:1 cell doubling makes every coarse nominal-interior
+# vertex coincide with a fine one, so phi can be differenced without interpolation.
+#
+# Faithful-Llama config (satisfies the Step 5 guards): patch_overlap = 2 =
+# ceil(order/2), slave_overlap = no, interpolation_order = 4, ghost_size = 3,
+# sqrt(3)*R = 1.73 < outer = 4.0. poison_undefined_values = yes so a missing
+# interpatch donor aborts loudly. No KO dissipation here (that is Step 17).
+#
+# out_tsv (3d) has no variable filter -- it dumps every group with storage, so
+# out_tsv_every = 4N writes only it0 and the final iteration; the harness keeps
+# just the `state` and `vertex_coords` TSVs and deletes the rest.
+
+ActiveThorns = "
+    ADMBaseX
+    CarpetX
+    IOUtil
+    ODESolvers
+    CoordinatesX
+    CapyrX_MultiPatch
+    CapyrX_WaveToy
+"
+
+$cfl = 0.25
+
+Cactus::presync_mode       = "mixed-error"
+Cactus::cctk_show_schedule = no
+
+CarpetX::verbose                 = no
+CarpetX::poison_undefined_values = yes
+CarpetX::max_num_levels          = 1
+
+CarpetX::ghost_size          = 3
+CarpetX::interpolation_order = 4
+
+CarpetX::blocking_factor_x = 1
+CarpetX::blocking_factor_y = 1
+CarpetX::blocking_factor_z = 1
+
+ODESolvers::method = "RK4"
+CarpetX::dtfac     = $cfl
+
+CapyrX_MultiPatch::verbose        = no
+CapyrX_MultiPatch::patch_system   = "Llama"
+CapyrX_MultiPatch::patch_overlap  = 2
+CapyrX_MultiPatch::slave_overlap  = no
+
+CapyrX_MultiPatch::inner_boundary_radius = 1.0
+CapyrX_MultiPatch::outer_boundary_radius = 4.0
+CapyrX_MultiPatch::angular_cells         = 32
+CapyrX_MultiPatch::radial_cells          = 32
+CapyrX_MultiPatch::cartesian_ncells_i    = 32
+CapyrX_MultiPatch::cartesian_ncells_j    = 32
+CapyrX_MultiPatch::cartesian_ncells_k    = 32
+
+CapyrX_WaveToy::initial_condition = "Gaussian"
+CapyrX_WaveToy::amplitude         = 1.0
+CapyrX_WaveToy::gaussian_width    = 0.5
+CapyrX_WaveToy::gaussian_R0       = 0.0
+CapyrX_WaveToy::add_dissipation   = no
+CapyrX_WaveToy::use_newradx       = no
+
+CarpetX::boundary_x       = "linear extrapolation"
+CarpetX::boundary_y       = "linear extrapolation"
+CarpetX::boundary_z       = "linear extrapolation"
+CarpetX::boundary_upper_x = "linear extrapolation"
+CarpetX::boundary_upper_y = "linear extrapolation"
+CarpetX::boundary_upper_z = "linear extrapolation"
+
+Cactus::terminate   = "iteration"
+Cactus::cctk_itlast = 128
+
+IO::parfile_write = no
+IO::out_dir       = $parfile
+IO::out_every     = 128
+
+CarpetX::out_performance = no
+CarpetX::out_metadata    = no
+
+CarpetX::out_tsv       = yes
+CarpetX::out_tsv_every = 128
+CarpetX::out_tsv_vars  = ""

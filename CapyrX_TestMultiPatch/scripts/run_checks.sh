@@ -8,16 +8,19 @@
 # binary is required (building is the operator's responsibility).
 #
 # ---------------------------------------------------------------------------
-# THE MATRIX -- 35 runs plus 3 triplet checks = 38 verdicts, enumerated below
-# in MATRIX[], never computed as a product. A product is how a matrix comes to
-# run 12 of its 300 cells and exit 0; every cell here is written out, and every
-# cell that does not reach a verdict is REPORTED, not skipped.
+# THE MATRIX -- 38 runs plus 3 triplet checks + 1 convergence series = 42
+# verdicts, enumerated below in MATRIX[], never computed as a product. A product
+# is how a matrix comes to run 12 of its 300 cells and exit 0; every cell here is
+# written out, and every cell that does not reach a verdict is REPORTED, not
+# skipped.
 #
 #   colour  3 pars x slave_overlap {no,yes} x {1 rank, 2 ranks}   = 12  -> check_color.py
 #   owner   2 llama pars (owner marker), 1 rank                    =  2  -> check_color.py --owner
 #   nan     12 nan_*.par (10 cubed_sphere + 2 llama), 1 rank      = 12  -> check_nan_test.py
 #   smooth  smooth_{z,p,o}_{neumann,linextrap,none}, 1 rank       =  9  -> check_smooth_test.py
 #                                                                          (3 triplet checks)
+#   sconv   llama_smooth_{16,32,64}, 1 rank                        =  3  -> check_smooth_conv.py
+#                                                                          (1 convergence series: R1/R2 order)
 #
 # The 2-rank cells run, and they are not the 1-box-per-patch layout that aborts
 # in MPI_Alltoallv. That abort (CarpetX/src/interpolate.cxx, the
@@ -109,6 +112,20 @@
 #     CANNOT-RUN.
 #   * The one_over_r field is singular at the origin, so the `o` triplet carries
 #     a small number of non-finite cells the checker skips rather than flags.
+#
+#  check_smooth_conv.py
+#   * It reads `test_data` (the raw synced field u) and recomputes the exact
+#     field itself -- NOT the thorn's `interp` field, whose ghost zones are
+#     clobbered to 0 by the later SYNC: error in compute_deriv_error.
+#   * It measures ONLY single-donor FACE ghosts (exactly one index axis out of
+#     the patch's interior range). Overset corner/edge ghosts (>=2 axes out)
+#     blend 2-3 donors at order 4 and are excluded, as in the owner test.
+#   * The PASS floor is interpolation_order + 0.5 = 4.5, not 4: CarpetX's
+#     interpolation_order=4 is a degree-4 (5-point) stencil, so the interpatch
+#     fill error is O(h^5). R2 (cube<->wedge) empirically super-converges (~5.5);
+#     the floor does not penalise that. A one-sided floor, no upper bound.
+#   * exit 1 is a real FAILURE here (order below floor, or a dropped R2 donor),
+#     unlike the smooth triplets where exit 1 is the expected positive.
 #
 # ---------------------------------------------------------------------------
 # STREAMS: the two are kept SEPARATE (<id>.run.out / <id>.run.err) and must
@@ -238,6 +255,17 @@ MATRIX=(
   "smooth_o_neumann|smoothleg|smooth_o_neumann|no|1|-"
   "smooth_o_linextrap|smoothleg|smooth_o_linextrap|no|1|-"
   "smooth_o_none|smoothleg|smooth_o_none|no|1|-"
+  # ---- Llama smooth-field interpatch CONVERGENCE (R1/R2), 1 rank -------------
+  # Three resolutions (N = angular = radial = cube ncells, doubled) of one Llama
+  # standing-wave run; the legs only RUN here and are judged together by the
+  # SMOOTH_CONV series below (like the smooth triplets). The field is the standing
+  # wave, never the parabola (order-4 interpolation reproduces a quadratic
+  # exactly, giving no signal). Each leg also writes a large unrelated error-group
+  # TSV (the thorn's 10-var error dump, output unconditionally); the checker reads
+  # only the 1-var test_data TSV.
+  "llama_smooth_16|smoothconvleg|llama_smooth_16|no|1|-"
+  "llama_smooth_32|smoothconvleg|llama_smooth_32|no|1|-"
+  "llama_smooth_64|smoothconvleg|llama_smooth_64|no|1|-"
 )
 # field | neumann-cell | linextrap-cell | none-cell | expected exit | expected
 # cross-patch cell count. Exit 0 (inert) and 1 (LIVE) are both PASS for the
@@ -255,6 +283,18 @@ SMOOTH_TRIPLETS=(
   "smooth_p|smooth_p_neumann|smooth_p_linextrap|smooth_p_none|1|1512"
   "smooth_o|smooth_o_neumann|smooth_o_linextrap|smooth_o_none|1|1512"
 )
+# series | leg-N1 | leg-N2 | leg-N3 | expected check exit | expected rows checked.
+# check_smooth_conv.py reads the three legs' test_data TSVs, fits the interpatch
+# ghost-error order separately on the cube<->wedge (R2) and wedge<->wedge (R1)
+# seams, and PASSES (exit 0) iff both finest-pair orders clear the floor
+# interpolation_order + 0.5 = 4.5. Exit 1 = a family fell below the floor or an R2
+# donor dropped; exit 2 = could not run. The rows count (sum of R1+R2 face ghosts
+# over the three resolutions) pins the join, same role as the colour `rows=`.
+# Measured 2026-10-08, this machine, 1 rank (R=1, outer=4, overlap=2, order 4,
+# ghost 3, k=0.2 standing wave): R2 order ~5.53, R1 order ~5.01.
+SMOOTH_CONV=(
+  "llama_smooth|llama_smooth_16|llama_smooth_32|llama_smooth_64|0|979416"
+)
 # TSV group names emitted by each kind of run. The glob covers the per-rank
 # files a multi-rank run writes (.p0000, .p0001, ...); the checkers take several
 # TSVs and find each one's own coords/pre companion.
@@ -262,6 +302,7 @@ COLOR_TSV_GLOB="capyrx_testmultipatch-color.it000000.p*.tsv"
 OWNER_TSV_GLOB="capyrx_testmultipatch-owner.it000000.p*.tsv"
 NAN_TSV_GLOB="capyrx_testouterbc-nan_test.it000000.p*.tsv"
 SMOOTH_TSV_GLOB="capyrx_testouterbc-smooth_test.it000000.p*.tsv"
+SMOOTHCONV_TSV_GLOB="capyrx_testmultipatch-test_data.it000000.p*.tsv"
 # =============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -270,6 +311,7 @@ PAR_DIR="$THORN_DIR/par"
 CHECK_COLOR="$SCRIPT_DIR/check_color.py"
 CHECK_NAN="$SCRIPT_DIR/check_nan_test.py"
 CHECK_SMOOTH="$SCRIPT_DIR/check_smooth_test.py"
+CHECK_SMOOTH_CONV="$SCRIPT_DIR/check_smooth_conv.py"
 
 # scripts/../../../../exe  ==  <cactus>/exe
 CACTUS_SIM="${CACTUS_SIM:-$(cd "$SCRIPT_DIR/../../../.." 2>/dev/null && pwd)/exe/cactus_sim}"
@@ -291,7 +333,7 @@ fail_early() { echo "run_checks.sh: $*" >&2; exit 2; }
 
 [[ -x "$CACTUS_SIM" ]] || fail_early "cactus binary not found or not executable: $CACTUS_SIM (build it first, or set CACTUS_SIM)"
 [[ -d "$EXE_DIR"    ]] || fail_early "output/run dir does not exist: $EXE_DIR (set EXE_DIR)"
-for c in "$CHECK_COLOR" "$CHECK_NAN" "$CHECK_SMOOTH"; do
+for c in "$CHECK_COLOR" "$CHECK_NAN" "$CHECK_SMOOTH" "$CHECK_SMOOTH_CONV"; do
   [[ -f "$c" ]] || fail_early "missing checker: $c"
 done
 mkdir -p "$LOG_DIR" "$GEN_PAR_DIR"
@@ -449,6 +491,7 @@ echo "logs     : $LOG_DIR"
 echo
 
 declare -A SMOOTH_OK=()
+declare -A SMOOTHCONV_OK=()
 
 for cell in "${MATRIX[@]}"; do
   IFS='|' read -r id kind base slave nr expect <<<"$cell"
@@ -491,6 +534,7 @@ for cell in "${MATRIX[@]}"; do
     owner)  tsvs=( "$EXE_DIR/$id"/$OWNER_TSV_GLOB ) ;;
     nan)    tsvs=( "$EXE_DIR/$id"/$NAN_TSV_GLOB ) ;;
     smoothleg) tsvs=( "$EXE_DIR/$id"/$SMOOTH_TSV_GLOB ) ;;
+    smoothconvleg) tsvs=( "$EXE_DIR/$id"/$SMOOTHCONV_TSV_GLOB ) ;;
   esac
   if [[ ${#tsvs[@]} -eq 0 ]]; then
     record "CANNOT-RUN" "$id" "$nr" "$boxes" 0 "-" "the run produced no $kind TSV in $EXE_DIR/$id"
@@ -500,6 +544,11 @@ for cell in "${MATRIX[@]}"; do
   if [[ "$kind" == smoothleg ]]; then
     SMOOTH_OK[$id]=1
     record "PASS" "$id" "$nr" "$boxes" 0 "-" "ran; judged as part of its triplet"
+    continue
+  fi
+  if [[ "$kind" == smoothconvleg ]]; then
+    SMOOTHCONV_OK[$id]=1
+    record "PASS" "$id" "$nr" "$boxes" 0 "-" "ran; judged as part of its convergence series"
     continue
   fi
 
@@ -591,6 +640,55 @@ for t in "${SMOOTH_TRIPLETS[@]}"; do
     record "DRIFT" "${field}_triplet" 1 "-" "$rc" "$rows" "$detail -- ${result_line:-}"
   else
     record "PASS" "${field}_triplet" 1 "-" "$rc" "$rows" "${result_line:-}"
+  fi
+done
+
+# ---- the Llama smooth-field convergence series ------------------------------
+for s in "${SMOOTH_CONV[@]}"; do
+  IFS='|' read -r series n1 n2 n3 want_rc want_rows <<<"$s"
+  n_planned=$((n_planned + 1))
+  missing=""
+  for leg in "$n1" "$n2" "$n3"; do
+    [[ -n "${SMOOTHCONV_OK[$leg]:-}" ]] || missing="$missing $leg"
+  done
+  if [[ -n "$missing" ]]; then
+    if [[ -n "$CELLS_FILTER" && " $CELLS_FILTER " != *" $n1 "* ]]; then
+      n_dropped=$((n_dropped + 1)); DROPPED_IDS+=("${series}_conv")
+      record "DROPPED" "${series}_conv" 1 "-" "-" "-" "legs not in CELLS="
+    else
+      record "CANNOT-RUN" "${series}_conv" 1 "-" "-" "-" "leg(s) never produced output:$missing"
+    fi
+    continue
+  fi
+  echo "-- ${series}_conv  (N=16/32/64 interpatch convergence)"
+  clog="$LOG_DIR/${series}_conv.check.log"
+  # Each leg writes exactly one test_data TSV at 1 rank, so each glob is one file.
+  python3 "$CHECK_SMOOTH_CONV" --max-examples 20 \
+    "$EXE_DIR/$n1"/$SMOOTHCONV_TSV_GLOB \
+    "$EXE_DIR/$n2"/$SMOOTHCONV_TSV_GLOB \
+    "$EXE_DIR/$n3"/$SMOOTHCONV_TSV_GLOB >"$clog" 2>&1
+  rc=$?
+  rows=$(rows_of "$clog")
+  result_line="$(grep -m1 '^RESULT:' "$clog" | cut -c1-120 || true)"
+  n_ran=$((n_ran + 1))
+  if [[ "$rc" -gt 2 || "$rc" == 2 ]]; then
+    record "CANNOT-RUN" "${series}_conv" 1 "-" "$rc" "$rows" \
+      "${result_line:-checker could not run; see $clog}"
+    continue
+  fi
+  if [[ "$rows" -le 0 ]]; then
+    record "CANNOT-RUN" "${series}_conv" 1 "-" "$rc" "$rows" "zero rows checked (see $clog)"
+    continue
+  fi
+  detail=""
+  [[ "$rc" == "$want_rc" ]] || detail="exit $rc != recorded $want_rc"
+  [[ "$rows" == "$want_rows" ]] || detail="$detail${detail:+; }rows=$rows != recorded $want_rows"
+  if [[ -n "$detail" ]]; then
+    record "DRIFT" "${series}_conv" 1 "-" "$rc" "$rows" "$detail -- ${result_line:-}"
+  elif [[ "$rc" == 1 && "$want_rc" != 1 ]]; then
+    record "REGRESSION" "${series}_conv" 1 "-" "$rc" "$rows" "${result_line:-order below floor or donor dropped}"
+  else
+    record "PASS" "${series}_conv" 1 "-" "$rc" "$rows" "${result_line:-}"
   fi
 done
 

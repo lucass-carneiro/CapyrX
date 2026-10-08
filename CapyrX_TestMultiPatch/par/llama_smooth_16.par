@@ -1,0 +1,89 @@
+# Llama smooth-field interpatch convergence test -- resolution N=16 (coarse).
+#
+# Step 10 of llama_patch_system_impl.md. The thorn's always-on InterpError group
+# writes an analytic standing wave into test_data(interior) and runs ONE interpatch
+# SYNC, so test_data's interpatch ghosts hold the interpolated fill. We output
+# test_data (the raw synced field u), NOT the thorn's `interp` field: a later
+# SYNC: error in compute_deriv_error re-interpolates interp's ghosts from its
+# all-zero interior and clobbers them to 0. Run at N=16/32/64 and
+# scripts/check_smooth_conv.py recomputes the exact field, then measures the order
+# separately on the cube<->wedge (R2) and wedge<->wedge (R1) seams. CarpetX's
+# interpolation_order=4 is a degree-4 (5-point) stencil, so the fill error is
+# O(h^5): the nominal interpatch order is 5, not 4.
+#
+# The field is the STANDING WAVE, never the parabola: an order-4 interpolation
+# reproduces any quadratic (x^2+y^2+z^2) to machine precision, which would give a
+# zero convergence signal. The wavenumbers are lowered (k=0.2, wavelength 5) so
+# the coarse grid is already in the asymptotic h^4 regime and the fine grid does
+# not saturate at round-off.
+#
+# Faithful-Llama config (satisfies the Step 5 guards): patch_overlap = 2 =
+# ceil(order/2), slave_overlap = no, interpolation_order = 4, ghost_size = 3,
+# and sqrt(3)*R = 1.73 < outer = 4.0. poison_undefined_values = yes so a missing
+# interpatch donor aborts loudly rather than filling a ghost with garbage.
+
+ActiveThorns = "
+    CarpetX
+    IOUtil
+    CoordinatesX
+    CapyrX_MultiPatch
+    CapyrX_TestMultiPatch
+"
+
+Cactus::presync_mode = "mixed-error"
+Cactus::cctk_show_schedule = yes
+
+Cactus::terminate = "iteration"
+Cactus::cctk_itlast = 0
+
+CarpetX::verbose                 = yes
+CarpetX::poison_undefined_values = yes
+
+CarpetX::max_num_levels = 1
+
+CarpetX::ghost_size          = 3
+CarpetX::interpolation_order = 4
+
+CarpetX::blocking_factor_x = 1
+CarpetX::blocking_factor_y = 1
+CarpetX::blocking_factor_z = 1
+
+CapyrX_MultiPatch::verbose        =  yes
+CapyrX_MultiPatch::patch_system   = "Llama"
+CapyrX_MultiPatch::patch_overlap  = 2
+CapyrX_MultiPatch::slave_overlap  = no
+
+CapyrX_MultiPatch::inner_boundary_radius = 1.0
+CapyrX_MultiPatch::outer_boundary_radius = 4.0
+CapyrX_MultiPatch::angular_cells         = 16
+CapyrX_MultiPatch::radial_cells          = 16
+
+CapyrX_MultiPatch::cartesian_ncells_i = 16
+CapyrX_MultiPatch::cartesian_ncells_j = 16
+CapyrX_MultiPatch::cartesian_ncells_k = 16
+
+CapyrX_TestMultiPatch::test_data = "standing wave"
+CapyrX_TestMultiPatch::A  = 1.0
+CapyrX_TestMultiPatch::kx = 0.2
+CapyrX_TestMultiPatch::ky = 0.2
+CapyrX_TestMultiPatch::kz = 0.2
+
+CarpetX::boundary_x       = "dirichlet"
+CarpetX::boundary_y       = "dirichlet"
+CarpetX::boundary_z       = "dirichlet"
+CarpetX::boundary_upper_x = "dirichlet"
+CarpetX::boundary_upper_y = "dirichlet"
+CarpetX::boundary_upper_z = "dirichlet"
+
+IO::parfile_write = no
+IO::out_dir       = $parfile
+IO::out_every     = 1
+
+CarpetX::out_performance = no
+CarpetX::out_metadata    = no
+
+CarpetX::out_tsv = yes
+CarpetX::out_tsv_vars = "
+  CoordinatesX::vertex_coords
+  CapyrX_TestMultiPatch::test_data
+"

@@ -1,0 +1,71 @@
+# Same ownership test as llama_color.par, but with max_grid_size small enough
+# that AMReX splits every patch into multiple boxes. This makes
+# grid.loop_ghosts_device (src/testmultipatch.cxx) fire on intra-patch,
+# box-to-box faces as well, so a patch-interior point can appear both as a
+# box's own interior and as a neighbouring box's ghost copy. Post-SYNC both
+# must hold this patch's own owner marker (the intra-patch exchange refilled
+# the copy), which check_color.py --owner verifies as OWN-OWNER.
+
+ActiveThorns = "
+    CarpetX
+    IOUtil
+    CoordinatesX
+    CapyrX_MultiPatch
+    CapyrX_TestMultiPatch
+"
+
+Cactus::presync_mode = "mixed-error"
+Cactus::cctk_show_schedule = yes
+
+Cactus::terminate = "iteration"
+Cactus::cctk_itlast = 0
+
+CarpetX::verbose                 = yes
+CarpetX::poison_undefined_values = yes
+
+CarpetX::max_num_levels = 1
+
+CarpetX::ghost_size          = 3
+CarpetX::interpolation_order = 4
+
+CarpetX::blocking_factor_x = 1
+CarpetX::blocking_factor_y = 1
+CarpetX::blocking_factor_z = 1
+
+CarpetX::max_grid_size_x = 6
+CarpetX::max_grid_size_y = 6
+CarpetX::max_grid_size_z = 6
+
+CapyrX_MultiPatch::verbose        =  yes
+CapyrX_MultiPatch::patch_system   = "Llama"
+CapyrX_MultiPatch::patch_overlap  = 2
+CapyrX_MultiPatch::slave_overlap  = no
+
+CapyrX_MultiPatch::inner_boundary_radius = 1.0
+CapyrX_MultiPatch::outer_boundary_radius = 4.0
+CapyrX_MultiPatch::angular_cells         = 8
+CapyrX_MultiPatch::radial_cells          = 8
+
+CapyrX_MultiPatch::cartesian_ncells_i = 8
+CapyrX_MultiPatch::cartesian_ncells_j = 8
+CapyrX_MultiPatch::cartesian_ncells_k = 8
+
+CarpetX::boundary_x       = "dirichlet"
+CarpetX::boundary_y       = "dirichlet"
+CarpetX::boundary_z       = "dirichlet"
+CarpetX::boundary_upper_x = "dirichlet"
+CarpetX::boundary_upper_y = "dirichlet"
+CarpetX::boundary_upper_z = "dirichlet"
+
+IO::parfile_write = no
+IO::out_dir       = $parfile
+IO::out_every     = 1
+
+CarpetX::out_performance = no
+CarpetX::out_metadata    = no
+
+CarpetX::out_tsv = yes
+CarpetX::out_tsv_vars = "
+  CoordinatesX::vertex_coords
+  CapyrX_TestMultiPatch::owner
+"

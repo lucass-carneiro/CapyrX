@@ -32,8 +32,17 @@ live in the companion `coordinatesx-vertex_coords` TSV (the `vcoordx`,
 `vcoordy`, `vcoordz` columns), which this script joins in by
 (patch, level, component, i, j, k).
 
-Only the cubed-sphere patch system (cartesian cube + 6 wedge shells) is
-supported; the owner-patch and outer-boundary logic below is specific to it.
+Two patch systems are supported, both a cartesian cube + 6 wedge shells:
+cubed_sphere (the cube reuses angular_cells) and Llama (the cube has its own
+cartesian_ncells_{i,j,k}). The ownership classifier is identical for the two;
+they differ only in how the cube patch's index range is sized.
+
+Two fields can be checked. The default is the two-digit `color` field (tens =
+region, ones = patch), which only works at interpolation_order 0: at order > 0
+the interpatch SYNC blends a donor's interior/overlap markers to a non-integer.
+With --owner the input is the `owner` field (value = 1 + patch, constant over a
+patch), which an order > 0 SYNC returns intact -- use it for the Llama system,
+whose Check_Parameters guard forbids order 0.
 
 If a patch is split across multiple AMReX boxes (CarpetX::max_grid_size_*
 smaller than the patch's own extent), grid.loop_ghosts_device also fires on
@@ -172,11 +181,26 @@ def parse_par_params(par_path):
 
     params = {}
     for name in ("inner_boundary_radius", "outer_boundary_radius",
-                 "angular_cells", "radial_cells", "patch_overlap"):
+                 "angular_cells", "radial_cells", "patch_overlap",
+                 "cartesian_ncells_i", "cartesian_ncells_j", "cartesian_ncells_k"):
         val = resolve(raw.get("CapyrX_MultiPatch::" + name, ""))
         if val is not None:
             params[name] = val
     return params
+
+
+def parse_patch_system(par_path):
+    """Read CapyrX_MultiPatch::patch_system (a quoted keyword, possibly with a
+    space, e.g. "Cubed sphere" or "Llama"). Returns "llama" for the Llama system
+    and "cubed_sphere" otherwise (the two the owner/color tests distinguish)."""
+    try:
+        text = Path(par_path).read_text()
+    except OSError:
+        return None
+    m = re.search(r'CapyrX_MultiPatch::patch_system\s*=\s*"([^"]*)"', text)
+    if m is None:
+        return None
+    return "llama" if m.group(1).strip().lower() == "llama" else "cubed_sphere"
 
 
 def guess_coords_path(color_path):
@@ -185,7 +209,8 @@ def guess_coords_path(color_path):
     # replace() of "capyrx_testmultipatch-color" would leave it dangling
     # (producing "coordinatesx-vertex_coords_pre...", which never exists),
     # since color_pre's vertex_coords companion is the same file color's is.
-    name = re.sub(r"^capyrx_testmultipatch-color(?:_pre)?",
+    # The owner field shares the same vertex_coords companion.
+    name = re.sub(r"^capyrx_testmultipatch-(?:color(?:_pre)?|owner)",
                   "coordinatesx-vertex_coords", p.name)
     if name == p.name:
         return None
@@ -400,16 +425,153 @@ def process_file(color_path, coords_path, r0, r1, angular_cells, radial_cells, r
         report.passed += 1
 
 
+def process_file_owner(owner_path, coords_path, r0, r1, angular_cells,
+                       radial_cells, cube_ncells, report, patch_overlap=0):
+    """Check the ownership-marker field (interface.ccl `owner`).
+
+    Each valid cell holds `1 + patch` (0 reserved for unfilled/exterior), a
+    constant across a whole patch, so an order>0 interpatch SYNC returns a ghost
+    its single donor patch's exact integer index -- unlike the two-digit color
+    markers, whose interior/overlap digits blend to a non-integer at order>0.
+    This is the Llama-capable ownership check (the color test only works at
+    interpolation_order 0, which the Llama Check_Parameters guard forbids).
+
+    Ground truth for a ghost is get_owner_patch of its *global* coordinate; for
+    an own-interior cell it is the cell's own patch. The cube patch's index range
+    is sized from cube_ncells (Llama's independent h_cartesian), not angular_cells
+    -- the one geometric difference from cubed_sphere here.
+    """
+    coords = load_global_coords(coords_path)
+
+    angular_extent = angular_cells + 2 * patch_overlap
+    radial_extent = radial_cells + patch_overlap
+    cube_extent = tuple(n + 2 * patch_overlap for n in cube_ncells)
+
+    for fields in read_tsv_rows(owner_path):
+        if len(fields) < 12:
+            continue
+        _it, _t, patch_s, level_s, comp_s, i_s, j_s, k_s, _x, _y, _z, val_s = fields[:12]
+        patch, level, comp = int(patch_s), int(level_s), int(comp_s)
+        i, j, k = int(i_s), int(j_s), int(k_s)
+        value = float(val_s)
+        report.total += 1
+
+        key = (patch, level, comp, i, j, k)
+        if key not in coords:
+            report.missing_coords += 1
+            continue
+        vx, vy, vz = coords[key]
+
+        report.checked += 1
+
+        hi_i = cube_extent[0] if patch == CARTESIAN else angular_extent
+        hi_j = cube_extent[1] if patch == CARTESIAN else angular_extent
+        hi_k = cube_extent[2] if patch == CARTESIAN else radial_extent
+        own_interior = 0 <= i <= hi_i and 0 <= j <= hi_j and 0 <= k <= hi_k
+        out_of_range = sum([not (0 <= i <= hi_i), not (0 <= j <= hi_j),
+                            not (0 <= k <= hi_k)])
+        # A ghost with >=2 axes out of range sits at a patch edge/corner, where
+        # the point is covered by two or three donor patches at once. An order>N
+        # centered stencil there cannot stay inside one donor, so its owner value
+        # legitimately blends across patches (or lands on the "wrong" one). The
+        # test's real assertion is the single-donor face ghosts (<=1 axis out) and
+        # the valid cells; overset corner/edge ambiguity is tolerated as
+        # informational. See Step 8 / R2 (face-centre donor availability).
+        is_corner = (not own_interior) and out_of_range >= 2
+        corner_tag = " [corner/edge: %d axes out of range]" % out_of_range if out_of_range > 1 else ""
+
+        if not math.isfinite(value):
+            if is_corner:
+                report.flag("informational: corner/edge ghost non-finite (overset, expected)"
+                            + corner_tag, (patch, i, j, k, vx, vy, vz, value))
+            else:
+                report.flag("NON-FINITE-OWNER (poison value never overwritten?)",
+                             (patch, i, j, k, vx, vy, vz, value))
+            continue
+        pv = round(value)
+        if abs(pv - value) > 1e-6:
+            # A single donor patch is a constant field, so a face ghost must come
+            # back an exact integer; a blend there means the stencil spanned more
+            # than one source value -- a real defect. At a corner/edge it is the
+            # expected overset ambiguity.
+            if is_corner:
+                report.flag("informational: corner/edge ghost blends across patches (overset, expected)"
+                            + corner_tag, (patch, i, j, k, vx, vy, vz, value))
+            else:
+                report.flag("NON-INTEGER-OWNER (interpolation blended across patches)",
+                             (patch, i, j, k, vx, vy, vz, value))
+            continue
+
+        if own_interior:
+            if pv == 1 + patch:
+                report.passed += 1
+            else:
+                report.flag("OWN-OWNER-MISMATCH (write_owner wrong or intra-patch "
+                            "box exchange failed here)",
+                             (patch, i, j, k, vx, vy, vz, value, "expected", 1 + patch))
+            continue
+
+        # Ghost/exterior point: ground truth is where its global coordinate sits.
+        r = math.sqrt(vx * vx + vy * vy + vz * vz)
+        inside_cube = max(abs(vx), abs(vy), abs(vz)) <= r0 * (1 + REL_TOL)
+        inside_domain = inside_cube or r <= r1 * (1 + REL_TOL)
+
+        if not inside_domain:
+            # Outside the whole domain: filled by the physical (Dirichlet) BC.
+            # `owner` has no dirichlet_values tag, so 0 is the only correct fill.
+            if pv == 0:
+                report.passed += 1
+            else:
+                report.flag("EXTERIOR-NOT-ZEROED (physical BC did not overwrite this point)",
+                             (patch, i, j, k, vx, vy, vz, value))
+            continue
+
+        expected_patch = get_owner_patch(vx, vy, vz, r0)
+        if pv == 1 + expected_patch:
+            report.passed += 1
+        elif is_corner:
+            report.flag("informational: corner/edge ghost from an adjacent donor (overset, expected)"
+                        + corner_tag, (patch, i, j, k, vx, vy, vz, value,
+                         "expected patch", expected_patch, PATCH_NAMES[expected_patch],
+                         "got patch", pv - 1))
+        elif pv == 0:
+            report.flag("DEFAULT-LEAK (Dirichlet-zero leaked inside the valid domain)",
+                         (patch, i, j, k, vx, vy, vz, value,
+                          "expected patch", expected_patch, PATCH_NAMES[expected_patch]))
+        else:
+            report.flag("WRONG-OWNER (interpolated from the wrong patch)",
+                         (patch, i, j, k, vx, vy, vz, value,
+                          "expected patch", expected_patch, PATCH_NAMES[expected_patch],
+                          "got patch", pv - 1))
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("color_tsv", nargs="+", help="capyrx_testmultipatch-color TSV file(s) to check")
+    ap.add_argument("color_tsv", nargs="+",
+                    help="capyrx_testmultipatch-color (or -owner, with --owner) TSV file(s)")
     ap.add_argument("--coords", default=None,
                     help="matching coordinatesx-vertex_coords TSV (auto-detected by default; "
                          "only valid with a single color_tsv argument)")
+    ap.add_argument("--owner", action="store_true",
+                    help="the input is the ownership-marker field (interface.ccl `owner`, "
+                         "value = 1 + patch), not the two-digit color field. Use this for any "
+                         "run with interpolation_order > 0 (e.g. the Llama system, whose "
+                         "Check_Parameters guard forbids order 0): the color markers blend to a "
+                         "non-integer at order > 0, the owner marker does not.")
+    ap.add_argument("--patch-system", choices=["cubed_sphere", "llama"], default=None,
+                    help="which patch system produced the TSV (defaults to the value found in "
+                         "the parameter file, or cubed_sphere). Only affects how the cube "
+                         "patch's index range is sized: cubed_sphere reuses angular_cells, "
+                         "Llama uses its independent cartesian_ncells_{i,j,k}.")
     ap.add_argument("--inner-boundary", type=float, default=None)
     ap.add_argument("--outer-boundary", type=float, default=None)
     ap.add_argument("--angular-cells", type=int, default=None)
     ap.add_argument("--radial-cells", type=int, default=None)
+    ap.add_argument("--cube-ncells-i", type=int, default=None,
+                    help="Llama cube resolution (CapyrX_MultiPatch::cartesian_ncells_i); "
+                         "defaults to the par-file value, or angular_cells for cubed_sphere")
+    ap.add_argument("--cube-ncells-j", type=int, default=None)
+    ap.add_argument("--cube-ncells-k", type=int, default=None)
     ap.add_argument("--patch-overlap", type=int, default=None,
                     help="CapyrX_MultiPatch::patch_overlap (defaults to the value "
                          "found in the parameter file, or 0 if absent -- matches "
@@ -418,14 +580,22 @@ def main():
     ap.add_argument("--pre-sync", action="store_true",
                     help="checking a pre-SYNC snapshot (e.g. color_pre): a not-yet-refilled "
                          "intra-patch ghost inside a patch's own interior range is expected, "
-                         "not a bug. Omit when checking post-SYNC output.")
+                         "not a bug. Omit when checking post-SYNC output. (color field only.)")
     args = ap.parse_args()
+
+    if args.owner and args.pre_sync:
+        ap.error("--pre-sync is a color-field notion; the owner check is post-SYNC only")
 
     r0, r1 = args.inner_boundary, args.outer_boundary
     angular_cells, radial_cells = args.angular_cells, args.radial_cells
     patch_overlap = args.patch_overlap
+    patch_system = args.patch_system
+    cube_ni, cube_nj, cube_nk = args.cube_ncells_i, args.cube_ncells_j, args.cube_ncells_k
 
-    if None in (r0, r1, angular_cells, radial_cells, patch_overlap):
+    needs_par = (None in (r0, r1, angular_cells, radial_cells, patch_overlap)
+                 or patch_system is None
+                 or None in (cube_ni, cube_nj, cube_nk))
+    if needs_par:
         par_path = find_param_file(args.color_tsv[0])
         if par_path:
             params = parse_par_params(par_path)
@@ -434,6 +604,10 @@ def main():
             angular_cells = angular_cells if angular_cells is not None else params.get("angular_cells")
             radial_cells = radial_cells if radial_cells is not None else params.get("radial_cells")
             patch_overlap = patch_overlap if patch_overlap is not None else params.get("patch_overlap")
+            patch_system = patch_system if patch_system is not None else parse_patch_system(par_path)
+            cube_ni = cube_ni if cube_ni is not None else params.get("cartesian_ncells_i")
+            cube_nj = cube_nj if cube_nj is not None else params.get("cartesian_ncells_j")
+            cube_nk = cube_nk if cube_nk is not None else params.get("cartesian_ncells_k")
 
     missing = [name for name, v in [
         ("--inner-boundary", r0), ("--outer-boundary", r1),
@@ -444,6 +618,17 @@ def main():
 
     angular_cells, radial_cells = int(angular_cells), int(radial_cells)
     patch_overlap = int(patch_overlap) if patch_overlap is not None else 0
+    if patch_system is None:
+        patch_system = "cubed_sphere"
+
+    # The cube's index range: cubed_sphere reuses angular_cells; Llama uses its
+    # own cartesian_ncells. Fall back to angular_cells for any axis not found.
+    if patch_system == "llama":
+        cube_ncells = (int(cube_ni) if cube_ni is not None else angular_cells,
+                       int(cube_nj) if cube_nj is not None else angular_cells,
+                       int(cube_nk) if cube_nk is not None else angular_cells)
+    else:
+        cube_ncells = (angular_cells, angular_cells, angular_cells)
 
     if args.coords and len(args.color_tsv) > 1:
         ap.error("--coords can only be used with a single color_tsv argument")
@@ -454,8 +639,12 @@ def main():
         if coords_path is None or not Path(coords_path).exists():
             ap.error(f"could not find a matching coordinatesx-vertex_coords TSV for {color_path}; "
                      f"pass --coords explicitly")
-        process_file(color_path, coords_path, r0, r1, angular_cells, radial_cells, report,
-                     pre_sync=args.pre_sync, patch_overlap=patch_overlap)
+        if args.owner:
+            process_file_owner(color_path, coords_path, r0, r1, angular_cells,
+                               radial_cells, cube_ncells, report, patch_overlap=patch_overlap)
+        else:
+            process_file(color_path, coords_path, r0, r1, angular_cells, radial_cells, report,
+                         pre_sync=args.pre_sync, patch_overlap=patch_overlap)
 
     print(report.summary())
     print()

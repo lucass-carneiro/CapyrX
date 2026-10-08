@@ -489,6 +489,9 @@ extern "C" void CapyrX_TestMultiPatch_write_color(CCTK_ARGUMENTS) {
   constexpr auto ghost_marker = 30;
   constexpr auto overlap_marker = 40;
 
+  // 0 is reserved for an unfilled/exterior cell, so patch indices start at 1.
+  constexpr auto owner_marker = 1;
+
   // CapyrX_MultiPatch::patch_overlap is not this thorn's own parameter; read
   // it cross-thorn the same way CapyrX_MultiPatch itself reads
   // CarpetX::interpolation_order (see CapyrX_MultiPatch_Check_Parameters in
@@ -538,12 +541,19 @@ extern "C" void CapyrX_TestMultiPatch_write_color(CCTK_ARGUMENTS) {
         }
         color(p.I) =
             (in_overlap_band ? overlap_marker : interior_marker) + p.patch;
+        // Ownership marker: the patch index alone (offset by 1 so the cartesian
+        // patch, index 0, is distinct from the reserved 0 of an unfilled or
+        // exterior cell). Constant across every valid cell of a patch, so an
+        // order>0 SYNC of a ghost from a single donor returns the donor's exact
+        // integer index -- the two-digit color markers above do not.
+        owner(p.I) = owner_marker + p.patch;
       });
 
   grid.loop_bnd_device<0, 0, 0>(grid.nghostzones,
                                 [=] CCTK_DEVICE(const Loop::PointDesc &p)
                                     CCTK_ATTRIBUTE_ALWAYS_INLINE {
                                       color(p.I) = boundary_marker + p.patch;
+                                      owner(p.I) = owner_marker + p.patch;
                                     });
 
   grid.loop_ghosts_device<0, 0, 0>(grid.nghostzones,
@@ -551,6 +561,7 @@ extern "C" void CapyrX_TestMultiPatch_write_color(CCTK_ARGUMENTS) {
 
                                        CCTK_ATTRIBUTE_ALWAYS_INLINE {
                                          color(p.I) = ghost_marker + p.patch;
+                                         owner(p.I) = owner_marker + p.patch;
                                        });
 
   // Snapshot into color_pre before returning: the driver runs "SYNC: color"

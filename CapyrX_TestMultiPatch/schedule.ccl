@@ -4,6 +4,7 @@ STORAGE: test_data
 STORAGE: error
 STORAGE: color
 STORAGE: color_pre
+STORAGE: owner
 
 
 
@@ -86,5 +87,7 @@ SCHEDULE CapyrX_TestMultiPatch_write_color IN CapyrX_TestMultiPatch_Color
   READS: CoordinatesX::vertex_coords(everywhere)
   WRITES: color(everywhere)
   WRITES: color_pre(everywhere)
+  WRITES: owner(everywhere)
   SYNC: color
+  SYNC: owner
 } "Fill patch colors"

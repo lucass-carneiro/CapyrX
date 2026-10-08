@@ -43,6 +43,16 @@ CCTK_REAL color_pre TYPE=gf
     color_pre
 } "Snapshot of patch colors taken before interpatch SYNC; never itself synced"
 
+# Ownership marker that survives order>0 interpatch interpolation. Every valid
+# cell of a patch holds the same value (1 + patch index), so an order-N SYNC of
+# a ghost from a single donor patch returns that donor's exact integer -- unlike
+# the two-digit color markers, whose interior/overlap digits blend to a
+# non-integer at order>0. 0 is reserved for unfilled/exterior.
+CCTK_REAL owner TYPE=gf
+{
+    owner
+} "Patch ownership marker (1 + patch), interpolation-stable for order>0 SYNC"
+
 # nan_test, nan_test_pre, smooth_test and smooth_test_pre used to be declared
 # here and were written only by the two outer-boundary diagnostics, which
 # `run_outer_bc_tests` switched off by default.  CarpetX allocates a MultiFab

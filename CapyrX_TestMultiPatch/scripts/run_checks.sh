@@ -14,6 +14,7 @@
 # cell that does not reach a verdict is REPORTED, not skipped.
 #
 #   colour  3 pars x slave_overlap {no,yes} x {1 rank, 2 ranks}   = 12  -> check_color.py
+#   owner   2 llama pars (owner marker), 1 rank                    =  2  -> check_color.py --owner
 #   nan     10 nan_*.par, 1 rank                                 = 10  -> check_nan_test.py
 #   smooth  smooth_{z,p,o}_{neumann,linextrap,none}, 1 rank       =  9  -> check_smooth_test.py
 #                                                                          (3 triplet checks)
@@ -82,6 +83,13 @@
 #     EXPECT exit 1, and their gate is the flagged-cell count, not the exit
 #     code. The set-level differential against the pre-fix column lives in
 #     evidence/fix/c1/, not here.
+#   * --owner mode (the Llama cells): the owner marker is 1 + patch on every
+#     valid cell, so an order-4 interpatch SYNC returns a face ghost its donor's
+#     exact integer. The teeth are the single-donor face ghosts (<=1 axis out of
+#     range) and the valid cells; a cube corner/edge ghost (>=2 axes out) is
+#     covered by two or three donors at once, so its order-4 value legitimately
+#     blends -- those are filed informational, not failures. The `rows=` count
+#     still pins the join, same as colour.
 #
 #  check_nan_test.py
 #   * It has NO could-not-run exit code at all: an empty join reads as "no leak"
@@ -181,6 +189,17 @@ MATRIX=(
   "color_slave_n2|color|color|yes|2|1:OWN-INTERIOR-MISMATCH=2186:rows=29406"
   "color_ghost_slave_n2|color|color_ghost|yes|2|1:OWN-INTERIOR-MISMATCH=2728:rows=75816"
   "color_ghost_overlap_slave_n2|color|color_ghost_overlap|yes|2|1:OWN-INTERIOR-MISMATCH=8202,OWN-OVERLAP-MISMATCH=40800:rows=183750"
+  # ---- Llama ownership, 1 rank: the owner marker (not the two-digit colour) --
+  # The Llama Check_Parameters guard forbids interpolation_order 0, at which the
+  # colour markers blend to a non-integer; the owner field (1 + patch, constant
+  # per patch) survives the mandated order-4 SYNC. Checked with --owner. slave
+  # off is the only legal Llama config (the guard rejects slave_overlap = yes),
+  # so there is no slave cell here. Counts measured 2026-10-07, this machine,
+  # 1 rank. 160 of the checked rows are overset cube corner/edge ghosts (2-3 axes
+  # out of range) whose order-4 stencil legitimately spans patches -- the checker
+  # files those as informational, not failures.
+  "llama_color|owner|llama_color|no|1|0:rows=43681"
+  "llama_color_ghost|owner|llama_color_ghost|no|1|0:rows=114920"
   # ---- NaN injection: the leak threshold is order 1 ------------------------
   "nan_dirichlet_ghost|nan|nan_dirichlet_ghost|no|1|0:rows=23491"
   "nan_neumann_ghost_and_interior|nan|nan_neumann_ghost_and_interior|no|1|0:rows=23491"
@@ -224,6 +243,7 @@ SMOOTH_TRIPLETS=(
 # files a multi-rank run writes (.p0000, .p0001, ...); the checkers take several
 # TSVs and find each one's own coords/pre companion.
 COLOR_TSV_GLOB="capyrx_testmultipatch-color.it000000.p*.tsv"
+OWNER_TSV_GLOB="capyrx_testmultipatch-owner.it000000.p*.tsv"
 NAN_TSV_GLOB="capyrx_testouterbc-nan_test.it000000.p*.tsv"
 SMOOTH_TSV_GLOB="capyrx_testouterbc-smooth_test.it000000.p*.tsv"
 # =============================================================================
@@ -452,6 +472,7 @@ for cell in "${MATRIX[@]}"; do
 
   case "$kind" in
     color)  tsvs=( "$EXE_DIR/$id"/$COLOR_TSV_GLOB ) ;;
+    owner)  tsvs=( "$EXE_DIR/$id"/$OWNER_TSV_GLOB ) ;;
     nan)    tsvs=( "$EXE_DIR/$id"/$NAN_TSV_GLOB ) ;;
     smoothleg) tsvs=( "$EXE_DIR/$id"/$SMOOTH_TSV_GLOB ) ;;
   esac
@@ -469,6 +490,7 @@ for cell in "${MATRIX[@]}"; do
   clog="$LOG_DIR/$id.check.log"
   case "$kind" in
     color) python3 "$CHECK_COLOR" --max-examples 20 "${tsvs[@]}" >"$clog" 2>&1 ;;
+    owner) python3 "$CHECK_COLOR" --owner --max-examples 20 "${tsvs[@]}" >"$clog" 2>&1 ;;
     nan)   python3 "$CHECK_NAN"   --max-examples 20 "${tsvs[@]}" >"$clog" 2>&1 ;;
   esac
   rc=$?

@@ -40,10 +40,14 @@ get_owner_patch(const PatchParams &par,
 
   const auto r0{par.inner_boundary};
 
-  // The whole box [-R,R]^3, corners included, is cube-owned. The box-corner
-  // shell R < r < sqrt(3)R is deliberately cube-owned for donor purposes even
-  // though the wedges also hold interior cells there (overset, slave_overlap=no).
-  if (abs_x <= r0 && abs_y <= r0 && abs_z <= r0) {
+  // Ownership is split at the sphere r = R, reproducing real Llama's
+  // global_to_local_Thornburg04 (Coordinates/src/thornburg04.cc: rp2 <
+  // sphere_inner_radius^2 -> central cube). Only the inscribed sphere r < R is
+  // cube-owned; the box-corner shell R < r < sqrt(3)R goes to the wedges, which
+  // also hold interior cells there (overset). The cube patch grid is still the
+  // full box [-R,R]^3 -- this classifies ownership, not grid extent. Compared
+  // squared to avoid a sqrt.
+  if (abs_x * abs_x + abs_y * abs_y + abs_z * abs_z < r0 * r0) {
     return PatchPiece::cartesian;
   }
 
@@ -838,15 +842,15 @@ auto unit_test(std::size_t repetitions, std::size_t seed,
   }
 
   // global2local(local2global(local)) round-trip. The patch/local identity only
-  // holds in single-covered regions: a wedge local point near c=-1 lands in the
-  // cube's box-corner shell (R<r<sqrt(3)R), which is cube-owned (overset,
-  // design S3.2). There the position must still round-trip, but ownership
-  // legitimately switches to the cube, so assert identity only when the
-  // generated point is single-covered by the sampled patch.
+  // holds in single-covered regions: a cube local point in the box-corner shell
+  // (R<r<sqrt(3)R) is wedge-owned under the spherical rule (overset, design
+  // S3.2). There the position must still round-trip, but ownership legitimately
+  // switches to a wedge, so assert identity only when the generated point is
+  // single-covered by the sampled patch.
   //
   // Both branches must actually be exercised, else the test passes vacuously:
-  // count single-cover hits and overset corner-shell hits (a wedge sample
-  // reclassified to the cube) and require each to be non-zero below.
+  // count single-cover hits and overset corner-shell hits (a cube sample
+  // reclassified to a wedge) and require each to be non-zero below.
   std::size_t single_cover_hits{0};
   std::size_t overset_shell_hits{0};
   for (CCTK_INT i = 0; i < repetitions; i++) {
@@ -871,8 +875,10 @@ auto unit_test(std::size_t repetitions, std::size_t seed,
       ++single_cover_hits;
       passed = passed && p_i == p_f && isapprox(l_i(0), l_f(0)) &&
                isapprox(l_i(1), l_f(1)) && isapprox(l_i(2), l_f(2));
-    } else if (p_i != static_cast<int>(PatchPiece::cartesian) &&
-               owner == PatchPiece::cartesian) {
+    } else if (p_i == static_cast<int>(PatchPiece::cartesian) &&
+               owner != PatchPiece::cartesian) {
+      // A cube sample in the box-corner shell (R < r < sqrt(3)R) reclassified to
+      // a wedge -- the overset region under the spherical ownership rule.
       ++overset_shell_hits;
     }
 
@@ -931,17 +937,19 @@ auto unit_test(std::size_t repetitions, std::size_t seed,
     }
   }
 
-  // Box-corner shell (R < r < sqrt(3)R but still inside [-R,R]^3): cube-owned
-  // despite r > R. This pins the overset ownership rule of design S3.2.
+  // Box-corner shell: (0.9R, 0.9R, 0.9R) has r = 1.56R > R but all |coord| < R.
+  // Under the spherical ownership rule (matching Llama) this is wedge-owned
+  // (+x by the x>=y>=z tie-break), NOT cube-owned. This pins the overset rule of
+  // design S3.2 and guards against a regression back to the box classifier.
   {
     const auto s{CCTK_REAL{0.9} * par.inner_boundary};
     const svec_t global_coords{s, s, s};
     const auto owner{get_owner_patch(par, global_coords)};
 
-    if (owner != PatchPiece::cartesian) {
-      CCTK_VINFO("Box-corner-shell spot-check failed. Expected patch %i (cube) "
-                 "but got %i",
-                 static_cast<int>(PatchPiece::cartesian),
+    if (owner != PatchPiece::plus_x) {
+      CCTK_VINFO("Box-corner-shell spot-check failed. Expected patch %i (+x "
+                 "wedge) but got %i",
+                 static_cast<int>(PatchPiece::plus_x),
                  static_cast<int>(owner));
       all_pass = false;
     }

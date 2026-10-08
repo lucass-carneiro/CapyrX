@@ -34,8 +34,10 @@ live in the companion `coordinatesx-vertex_coords` TSV (the `vcoordx`,
 
 Two patch systems are supported, both a cartesian cube + 6 wedge shells:
 cubed_sphere (the cube reuses angular_cells) and Llama (the cube has its own
-cartesian_ncells_{i,j,k}). The ownership classifier is identical for the two;
-they differ only in how the cube patch's index range is sized.
+cartesian_ncells_{i,j,k}). They differ in two ways: how the cube patch's index
+range is sized, and the cube/wedge ownership boundary -- cubed_sphere uses a box
+(max|coord| <= R), Llama a sphere (r < R, matching real Llama). get_owner_patch
+takes a `spherical` flag selected from --patch-system.
 
 Two fields can be checked. The default is the two-digit `color` field (tens =
 region, ones = patch), which only works at interpolation_order 0: at order > 0
@@ -104,10 +106,21 @@ REL_TOL = 1e-9
 MAX_MISSING_COORDS_FRACTION = 0.5
 
 
-def get_owner_patch(x, y, z, r0):
-    """Faithful port of CubedSphere::get_owner_patch (cubed_sphere.cxx:23-83)."""
+def get_owner_patch(x, y, z, r0, spherical=False):
+    """Port of the C++ get_owner_patch. The wedge selection is identical for both
+    patch systems; only the cube region differs:
+
+      * cubed_sphere (spherical=False): box, max(|x|,|y|,|z|) <= R -> cube
+        (CubedSphere::get_owner_patch, cubed_sphere.cxx).
+      * Llama (spherical=True): sphere, x^2+y^2+z^2 < R^2 -> cube, matching real
+        Llama's global_to_local_Thornburg04 (thornburg04.cc) and CapyrX
+        Llama::get_owner_patch (llama/llama.cxx).
+    """
     ax, ay, az = abs(x), abs(y), abs(z)
-    if ax <= r0 and ay <= r0 and az <= r0:
+    if spherical:
+        if ax * ax + ay * ay + az * az < r0 * r0:
+            return CARTESIAN
+    elif ax <= r0 and ay <= r0 and az <= r0:
         return CARTESIAN
     coords = [ax, ay, az]
     max_idx = coords.index(max(coords))  # first-max wins ties, matches std::max_element
@@ -275,7 +288,7 @@ class Report:
 
 
 def process_file(color_path, coords_path, r0, r1, angular_cells, radial_cells, report,
-                 pre_sync=False, patch_overlap=0):
+                 pre_sync=False, patch_overlap=0, spherical=False):
     coords = load_global_coords(coords_path)
 
     # With patch_overlap > 0 (repos/CapyrX/CapyrX_MultiPatch/src/cubed_sphere/
@@ -386,7 +399,7 @@ def process_file(color_path, coords_path, r0, r1, angular_cells, radial_cells, r
                 report.passed += 1
             continue
 
-        expected_patch = get_owner_patch(vx, vy, vz, r0)
+        expected_patch = get_owner_patch(vx, vy, vz, r0, spherical=spherical)
         out_of_range = sum([
             not (0 <= i <= angular_extent),
             not (0 <= j <= angular_extent),
@@ -426,7 +439,8 @@ def process_file(color_path, coords_path, r0, r1, angular_cells, radial_cells, r
 
 
 def process_file_owner(owner_path, coords_path, r0, r1, angular_cells,
-                       radial_cells, cube_ncells, report, patch_overlap=0):
+                       radial_cells, cube_ncells, report, patch_overlap=0,
+                       spherical=False):
     """Check the ownership-marker field (interface.ccl `owner`).
 
     Each valid cell holds `1 + patch` (0 reserved for unfilled/exterior), a
@@ -526,7 +540,7 @@ def process_file_owner(owner_path, coords_path, r0, r1, angular_cells,
                              (patch, i, j, k, vx, vy, vz, value))
             continue
 
-        expected_patch = get_owner_patch(vx, vy, vz, r0)
+        expected_patch = get_owner_patch(vx, vy, vz, r0, spherical=spherical)
         if pv == 1 + expected_patch:
             report.passed += 1
         elif is_corner:
@@ -633,6 +647,11 @@ def main():
     if args.coords and len(args.color_tsv) > 1:
         ap.error("--coords can only be used with a single color_tsv argument")
 
+    # Llama splits cube/wedge ownership at the sphere r=R; cubed_sphere uses the
+    # box. The ground-truth get_owner_patch must match the system that wrote the
+    # data, or every corner-shell ghost is misjudged.
+    spherical = (patch_system == "llama")
+
     report = Report()
     for color_path in args.color_tsv:
         coords_path = Path(args.coords) if args.coords else guess_coords_path(color_path)
@@ -641,10 +660,11 @@ def main():
                      f"pass --coords explicitly")
         if args.owner:
             process_file_owner(color_path, coords_path, r0, r1, angular_cells,
-                               radial_cells, cube_ncells, report, patch_overlap=patch_overlap)
+                               radial_cells, cube_ncells, report, patch_overlap=patch_overlap,
+                               spherical=spherical)
         else:
             process_file(color_path, coords_path, r0, r1, angular_cells, radial_cells, report,
-                         pre_sync=args.pre_sync, patch_overlap=patch_overlap)
+                         pre_sync=args.pre_sync, patch_overlap=patch_overlap, spherical=spherical)
 
     print(report.summary())
     print()

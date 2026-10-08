@@ -262,9 +262,9 @@ MATRIX=(
   # standing-wave run; the legs only RUN here and are judged together by the
   # SMOOTH_CONV series below (like the smooth triplets). The field is the standing
   # wave, never the parabola (order-4 interpolation reproduces a quadratic
-  # exactly, giving no signal). Each leg also writes a large unrelated error-group
-  # TSV (the thorn's 10-var error dump, output unconditionally); the checker reads
-  # only the 1-var test_data TSV.
+  # exactly, giving no signal). The par files set out_tsv_vars = vertex_coords +
+  # test_data, so the (now variable-filtered) 3d TSV writes only those two groups;
+  # the checker reads the 1-var test_data TSV.
   "llama_smooth_16|smoothconvleg|llama_smooth_16|no|1|-"
   "llama_smooth_32|smoothconvleg|llama_smooth_32|no|1|-"
   "llama_smooth_64|smoothconvleg|llama_smooth_64|no|1|-"

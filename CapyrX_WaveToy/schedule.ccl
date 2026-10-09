@@ -54,6 +54,7 @@ if (use_newradx && add_dissipation)
     READS: CoordinatesX::vertex_coords(interior)
     READS: MultiPatch::vertex_Jacobians(interior)
     READS: state(interior)
+    READS: rhs(interior)
     WRITES: rhs(interior)
   } "Apply NewRadX boundary condition"
 }
@@ -66,6 +67,7 @@ if (use_newradx && !add_dissipation)
     READS: CoordinatesX::vertex_coords(interior)
     READS: MultiPatch::vertex_Jacobians(interior)
     READS: state(interior)
+    READS: rhs(interior)
     WRITES: rhs(interior)
   } "Apply NewRadX boundary condition"
 }

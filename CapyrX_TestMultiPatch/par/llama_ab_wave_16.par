@@ -1,0 +1,101 @@
+# Step 12 of llama_patch_system_impl.md -- A/B vs Thornburg06, LLAMA side, N=16.
+#
+# Isolates the central-cube COUPLING. This parfile and its Thornburg06 twin
+# (tb06_ab_wave_16.par) use an IDENTICAL wedge discretisation -- same R, outer,
+# angular_cells, radial_cells, patch_overlap, interpolation order, ghost width,
+# outer BC, initial data and time stepping. The ONLY structural difference is the
+# wedge inner radial face at r = R: here (Llama) it is an interpatch face fed by
+# the central cube; in the Thornburg06 twin it is a physical outer boundary (the
+# cube is absent -- a hole at r0). The A/B difference therefore isolates exactly
+# what the cube coupling changes relative to a plain inner BC.
+#
+# Initial data is a Gaussian SHELL in Pi at r_c = 2.5 (not the origin blob of the
+# llama_wave_* convergence runs): Thornburg06 has no cube to hold an origin pulse,
+# and both systems represent the shell identically at t=0 (the cube starts
+# quiescent, exp(-(R-r_c)^2/sigma^2) ~ 2e-16 at r0). The shell splits into equal
+# in/out-going waves. The inward half reaches r0 at t ~ 1.5 and the inner-face
+# difference is born there; by t_final = 2.0 that difference has propagated out to
+# r ~ 1.5 only. scripts/check_ab.py buckets the shared wedge vertices by radius:
+#   inner band r in [1.0, 1.6]  -> the O(1) cube coupling (test has teeth),
+#   outer band r in [2.5, 4.0]  -> causally isolated; must be ~roundoff
+#                                  (no cube-only signal leaking ahead of the wave).
+#
+# dt is PINNED (timestep_choice = "timestep", timestep = 0.5/N = cfl*2R/N) so both
+# systems step identically -- otherwise CarpetX would pick dt from each system's
+# own min spacing (cube dx for Llama, wedge min for Thornburg06) and a temporal
+# truncation difference would contaminate the whole domain. itlast = 4N lands
+# every resolution on t = 2.0. Dissipation is OFF in both runs so the only
+# difference is the inner face, not the (freshly ported) KO scheme.
+
+ActiveThorns = "
+    ADMBaseX
+    CarpetX
+    IOUtil
+    ODESolvers
+    CoordinatesX
+    CapyrX_MultiPatch
+    CapyrX_WaveToy
+"
+
+Cactus::presync_mode       = "mixed-error"
+Cactus::cctk_show_schedule = no
+
+CarpetX::verbose                 = no
+CarpetX::poison_undefined_values = yes
+CarpetX::max_num_levels          = 1
+
+CarpetX::ghost_size          = 3
+CarpetX::interpolation_order = 4
+
+CarpetX::blocking_factor_x = 1
+CarpetX::blocking_factor_y = 1
+CarpetX::blocking_factor_z = 1
+
+ODESolvers::method = "RK4"
+
+CarpetX::timestep_choice = "timestep"
+CarpetX::timestep        = 0.03125
+
+CapyrX_MultiPatch::verbose        = no
+CapyrX_MultiPatch::patch_system   = "Llama"
+CapyrX_MultiPatch::patch_overlap  = 2
+CapyrX_MultiPatch::slave_overlap  = no
+
+CapyrX_MultiPatch::inner_boundary_radius = 1.0
+CapyrX_MultiPatch::outer_boundary_radius = 4.0
+CapyrX_MultiPatch::angular_cells         = 16
+CapyrX_MultiPatch::radial_cells          = 24
+CapyrX_MultiPatch::cartesian_ncells_i    = 16
+CapyrX_MultiPatch::cartesian_ncells_j    = 16
+CapyrX_MultiPatch::cartesian_ncells_k    = 16
+
+CapyrX_WaveToy::initial_condition = "Gaussian"
+CapyrX_WaveToy::amplitude         = 1.0
+CapyrX_WaveToy::gaussian_width    = 0.25
+CapyrX_WaveToy::gaussian_R0       = 2.5
+CapyrX_WaveToy::add_dissipation   = no
+CapyrX_WaveToy::use_newradx       = no
+
+CarpetX::boundary_x       = "linear extrapolation"
+CarpetX::boundary_y       = "linear extrapolation"
+CarpetX::boundary_z       = "linear extrapolation"
+CarpetX::boundary_upper_x = "linear extrapolation"
+CarpetX::boundary_upper_y = "linear extrapolation"
+CarpetX::boundary_upper_z = "linear extrapolation"
+
+Cactus::terminate   = "iteration"
+Cactus::cctk_itlast = 64
+
+IO::parfile_write = no
+IO::out_dir       = $parfile
+IO::out_every     = 64
+
+CarpetX::out_performance = no
+CarpetX::out_metadata    = no
+
+CarpetX::out_tsv       = yes
+CarpetX::out_tsv_every = 64
+CarpetX::out_tsv_vars  = "
+  CoordinatesX::vertex_coords
+  CapyrX_WaveToy::state
+"

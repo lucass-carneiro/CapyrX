@@ -1,0 +1,84 @@
+# Step 12 of llama_patch_system_impl.md -- A/B vs Thornburg06, THORNBURG06 side, N=16.
+#
+# Reference (B) for the cube-coupling A/B: see llama_ab_wave_16.par (the A side)
+# for the full rationale. This run is the SAME six Thornburg wedges with the SAME
+# angular/radial resolution, patch_overlap, interpolation order, ghost width,
+# outer BC, Gaussian-shell initial data and (pinned) time step -- but WITHOUT the
+# central cube. The wedge inner radial face at r = R is therefore a physical outer
+# boundary (linear extrapolation), not an interpatch face fed by a cube. The
+# wedge<->wedge angular seams and the outer radial face are identical to the Llama
+# run (Thornburg06 absorbs patch_overlap on the angular faces exactly as Llama's
+# wedges do, and both radial faces are physical boundaries with no radial overlap),
+# so the A/B difference isolates only the inner-face treatment.
+#
+# cartesian_ncells_* are intentionally omitted: Thornburg06 has no cube patch.
+
+ActiveThorns = "
+    ADMBaseX
+    CarpetX
+    IOUtil
+    ODESolvers
+    CoordinatesX
+    CapyrX_MultiPatch
+    CapyrX_WaveToy
+"
+
+Cactus::presync_mode       = "mixed-error"
+Cactus::cctk_show_schedule = no
+
+CarpetX::verbose                 = no
+CarpetX::poison_undefined_values = yes
+CarpetX::max_num_levels          = 1
+
+CarpetX::ghost_size          = 3
+CarpetX::interpolation_order = 4
+
+CarpetX::blocking_factor_x = 1
+CarpetX::blocking_factor_y = 1
+CarpetX::blocking_factor_z = 1
+
+ODESolvers::method = "RK4"
+
+CarpetX::timestep_choice = "timestep"
+CarpetX::timestep        = 0.03125
+
+CapyrX_MultiPatch::verbose        = no
+CapyrX_MultiPatch::patch_system   = "Thornburg06"
+CapyrX_MultiPatch::patch_overlap  = 2
+CapyrX_MultiPatch::slave_overlap  = no
+
+CapyrX_MultiPatch::inner_boundary_radius = 1.0
+CapyrX_MultiPatch::outer_boundary_radius = 4.0
+CapyrX_MultiPatch::angular_cells         = 16
+CapyrX_MultiPatch::radial_cells          = 24
+
+CapyrX_WaveToy::initial_condition = "Gaussian"
+CapyrX_WaveToy::amplitude         = 1.0
+CapyrX_WaveToy::gaussian_width    = 0.25
+CapyrX_WaveToy::gaussian_R0       = 2.5
+CapyrX_WaveToy::add_dissipation   = no
+CapyrX_WaveToy::use_newradx       = no
+
+CarpetX::boundary_x       = "linear extrapolation"
+CarpetX::boundary_y       = "linear extrapolation"
+CarpetX::boundary_z       = "linear extrapolation"
+CarpetX::boundary_upper_x = "linear extrapolation"
+CarpetX::boundary_upper_y = "linear extrapolation"
+CarpetX::boundary_upper_z = "linear extrapolation"
+
+Cactus::terminate   = "iteration"
+Cactus::cctk_itlast = 64
+
+IO::parfile_write = no
+IO::out_dir       = $parfile
+IO::out_every     = 64
+
+CarpetX::out_performance = no
+CarpetX::out_metadata    = no
+
+CarpetX::out_tsv       = yes
+CarpetX::out_tsv_every = 64
+CarpetX::out_tsv_vars  = "
+  CoordinatesX::vertex_coords
+  CapyrX_WaveToy::state
+"

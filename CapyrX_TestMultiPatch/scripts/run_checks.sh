@@ -8,7 +8,7 @@
 # binary is required (building is the operator's responsibility).
 #
 # ---------------------------------------------------------------------------
-# THE MATRIX -- 47 runs plus 3 triplet checks + 3 convergence series = 53
+# THE MATRIX -- 48 runs plus 3 triplet checks + 3 convergence series = 54
 # verdicts, enumerated below in MATRIX[], never computed as a product. A product
 # is how a matrix comes to run 12 of its 300 cells and exit 0; every cell here is
 # written out, and every cell that does not reach a verdict is REPORTED, not
@@ -293,6 +293,19 @@ MATRIX=(
   "tb06_ab_wave_16|abconvleg|tb06_ab_wave_16|no|1|-"
   "tb06_ab_wave_32|abconvleg|tb06_ab_wave_32|no|1|-"
   "tb06_ab_wave_64|abconvleg|tb06_ab_wave_64|no|1|-"
+  # ---- Llama cube-only AMR (Phase D, Step 13), 1 rank -----------------------
+  # One Llama WaveToy run (N=32) with a second refinement level added by BoxInBox
+  # inside the cube only. check_amr.py reads the state TSV's `level` column and
+  # requires the cube (patch 0) to carry a level-1 band while all six wedges
+  # (patches 1-6) stay unigrid (level 0). The run itself is the "ghosts re-filled
+  # after regrid" gate: poison_undefined_values = yes aborts on any interpatch
+  # ghost the regrid repair failed to re-fill, so a clean exit 0 means repair
+  # ran. N=32 (not 16) because the cube's interpatch donor zone -- ~(patch_overlap
+  # + ghost_width + stencil) cells inward of r=R -- is too deep at N=16 to leave
+  # room for a refined region that both refines AND clears CarpetX's C-AMR2
+  # contract. Rows measured 2026-10-09, this machine, 1 rank (final-iteration
+  # cells over all 7 patches and both levels).
+  "llama_amr_32|amr|llama_amr_32|no|1|0:WEDGE-OVER-LEVEL0=0:rows=1114791"
 )
 # field | neumann-cell | linextrap-cell | none-cell | expected exit | expected
 # cross-patch cell count. Exit 0 (inert) and 1 (LIVE) are both PASS for the
@@ -363,6 +376,9 @@ SMOOTHCONV_TSV_GLOB="capyrx_testmultipatch-test_data.it000000.p*.tsv"
 # After the waveconvleg handler prunes, only the final-iteration state survives, so
 # this matches exactly one file per 1-rank leg.
 WAVECONV_TSV_GLOB="capyrx_wavetoy-state.it*.p*.tsv"
+# The AMR cell is NOT pruned: its state TSV holds it0 and the final iteration, and
+# check_amr.py picks the final iteration itself (it reads the `level` column).
+AMR_TSV_GLOB="capyrx_wavetoy-state.it*.p*.tsv"
 # =============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -374,6 +390,7 @@ CHECK_SMOOTH="$SCRIPT_DIR/check_smooth_test.py"
 CHECK_SMOOTH_CONV="$SCRIPT_DIR/check_smooth_conv.py"
 CHECK_WAVE_CONV="$SCRIPT_DIR/check_wave_conv.py"
 CHECK_AB="$SCRIPT_DIR/check_ab.py"
+CHECK_AMR="$SCRIPT_DIR/check_amr.py"
 
 # scripts/../../../../exe  ==  <cactus>/exe
 CACTUS_SIM="${CACTUS_SIM:-$(cd "$SCRIPT_DIR/../../../.." 2>/dev/null && pwd)/exe/cactus_sim}"
@@ -395,7 +412,7 @@ fail_early() { echo "run_checks.sh: $*" >&2; exit 2; }
 
 [[ -x "$CACTUS_SIM" ]] || fail_early "cactus binary not found or not executable: $CACTUS_SIM (build it first, or set CACTUS_SIM)"
 [[ -d "$EXE_DIR"    ]] || fail_early "output/run dir does not exist: $EXE_DIR (set EXE_DIR)"
-for c in "$CHECK_COLOR" "$CHECK_NAN" "$CHECK_SMOOTH" "$CHECK_SMOOTH_CONV" "$CHECK_WAVE_CONV" "$CHECK_AB"; do
+for c in "$CHECK_COLOR" "$CHECK_NAN" "$CHECK_SMOOTH" "$CHECK_SMOOTH_CONV" "$CHECK_WAVE_CONV" "$CHECK_AB" "$CHECK_AMR"; do
   [[ -f "$c" ]] || fail_early "missing checker: $c"
 done
 mkdir -p "$LOG_DIR" "$GEN_PAR_DIR"
@@ -601,6 +618,7 @@ for cell in "${MATRIX[@]}"; do
     smoothconvleg) tsvs=( "$EXE_DIR/$id"/$SMOOTHCONV_TSV_GLOB ) ;;
     waveconvleg) tsvs=( "$EXE_DIR/$id"/$WAVECONV_TSV_GLOB ) ;;
     abconvleg) tsvs=( "$EXE_DIR/$id"/$WAVECONV_TSV_GLOB ) ;;
+    amr)    tsvs=( "$EXE_DIR/$id"/$AMR_TSV_GLOB ) ;;
   esac
   if [[ ${#tsvs[@]} -eq 0 ]]; then
     record "CANNOT-RUN" "$id" "$nr" "$boxes" 0 "-" "the run produced no $kind TSV in $EXE_DIR/$id"
@@ -652,6 +670,7 @@ for cell in "${MATRIX[@]}"; do
     color) python3 "$CHECK_COLOR" --max-examples 20 "${tsvs[@]}" >"$clog" 2>&1 ;;
     owner) python3 "$CHECK_COLOR" --owner --max-examples 20 "${tsvs[@]}" >"$clog" 2>&1 ;;
     nan)   python3 "$CHECK_NAN"   --max-examples 20 "${tsvs[@]}" >"$clog" 2>&1 ;;
+    amr)   python3 "$CHECK_AMR"   --max-examples 20 "${tsvs[@]}" >"$clog" 2>&1 ;;
   esac
   rc=$?
   rows=$(rows_of "$clog")

@@ -1,0 +1,143 @@
+# Llama WaveToy with CUBE-ONLY AMR -- resolution N=32.
+#
+# Step 13 of llama_patch_system_impl.md (Phase D: mesh refinement confined to the
+# central cube). Based on llama_wave_32.par (Gaussian blob at the origin, faithful
+# config, lin-extrap outer BC, t_final = 2.0) with a second refinement level added
+# inside the cube only.
+#
+# WHY N=32, NOT N=16. The refined region must stay clear of the CUBE'S INTERPATCH
+# DONOR ZONE: the band of cube cells from which the wedges draw their inner-radial
+# interpatch ghosts. A wedge's innermost inner-radial ghost sits at global radius
+# r ~ R - (patch_overlap + ghost_width)*dr_wedge, and its order-4 donor stencil
+# reaches ~2 more cube cells deeper, so the donor zone extends inward of r = R by
+# about (overlap + ghost + 2) ~ 7 cells. If a refined box overlaps that zone,
+# CarpetX's C-AMR2 contract aborts (interpolate.cxx): a wedge ghost would be
+# answered from prolongated fine cube data where the seam fill expects evolved
+# coarse data. At N=16 (dx = 2R/16 = 0.125) that 7-cell zone nearly fills the
+# half-cube (8 cells), leaving no room for a meaningful refined region -- only a
+# degenerate 1-cell box clears it. N=32 halves dx, so the zone occupies ~7 cells
+# of 16 and the free central radius is ~0.56; a radius-0.4 box clears it with
+# margin (measured: "smallest interpatch clearance 9 coarse cells" at setup). The
+# radius-0.4 box also stays clear at every finer resolution, so Step 14's
+# convergence series can reuse it.
+#
+# CONFINEMENT IS BY CONSTRUCTION. BoxInBox places one cube-shaped region at the
+# origin with half-size 0.4, well inside the cube [-R,R]^3 = [-1,1]^3 (R =
+# inner_boundary_radius = 1.0). BoxInBox_Setup refines PATCH 0 ONLY
+# (boxinbox.cxx:109-115) -- it writes regrid_error = 0 on every other patch and
+# returns early -- and in the Llama make_system patch 0 IS the cube
+# (llama.cxx:778). So the six Thornburg wedges (patches 1-6) stay unigrid
+# (level 0): the box-in-box tags land only inside [-R,R]^3, which is what design
+# section 3.5 asks us to confirm.
+#
+# GHOSTS RE-FILLED AFTER REGRID (R4). After every regrid, CarpetX's
+# regrid_interpatch_repair_apply (schedule.cxx:2196 for new/remade levels, :2624
+# for level removal) re-fills the inter-patch ghosts by calling
+# MultiPatch_Interpolate, so the newly created level-1 cube band gets its
+# interpatch ghosts filled before evolution resumes. poison_undefined_values = yes
+# turns any un-refilled interpatch ghost into a loud abort, so a clean completion
+# is itself the "ghosts re-filled after regrid" gate.
+#
+# The AMR subcycles in time: cctk_itlast = 128 counts coarse-level steps and
+# dt_coarse = cfl * dx_cube, so the run lands on t = 2.0 (the level-1 cube takes
+# two substeps per coarse step). regrid_every = 16 re-runs the regrid+repair path
+# several times through the evolution; the box is static so the grid is stable,
+# but the level-1 creation at setup already exercises FillPatch_NewLevel + repair.
+#
+# This step makes NO thorn code change: the per-patch confinement (BoxInBox) and
+# the regrid repair (CarpetX) already exist. It is verified by
+# scripts/check_amr.py, which reads the state TSV's `level` column and asserts the
+# cube carries a level-1 band while the wedges hold level 0 only.
+
+ActiveThorns = "
+    ADMBaseX
+    BoxInBox
+    CarpetX
+    IOUtil
+    ODESolvers
+    CoordinatesX
+    CapyrX_MultiPatch
+    CapyrX_WaveToy
+"
+
+$cfl = 0.25
+
+Cactus::presync_mode       = "mixed-error"
+Cactus::cctk_show_schedule = no
+
+CarpetX::verbose                 = no
+CarpetX::poison_undefined_values = yes
+
+CarpetX::ghost_size          = 3
+CarpetX::interpolation_order = 4
+
+CarpetX::blocking_factor_x = 1
+CarpetX::blocking_factor_y = 1
+CarpetX::blocking_factor_z = 1
+
+ODESolvers::method = "RK4"
+CarpetX::dtfac     = $cfl
+
+CapyrX_MultiPatch::verbose        = no
+CapyrX_MultiPatch::patch_system   = "Llama"
+CapyrX_MultiPatch::patch_overlap  = 2
+CapyrX_MultiPatch::slave_overlap  = no
+
+CapyrX_MultiPatch::inner_boundary_radius = 1.0
+CapyrX_MultiPatch::outer_boundary_radius = 4.0
+CapyrX_MultiPatch::angular_cells         = 32
+CapyrX_MultiPatch::radial_cells          = 48
+CapyrX_MultiPatch::cartesian_ncells_i    = 32
+CapyrX_MultiPatch::cartesian_ncells_j    = 32
+CapyrX_MultiPatch::cartesian_ncells_k    = 32
+
+CapyrX_WaveToy::initial_condition = "Gaussian"
+CapyrX_WaveToy::amplitude         = 1.0
+CapyrX_WaveToy::gaussian_width    = 0.5
+CapyrX_WaveToy::gaussian_R0       = 0.0
+CapyrX_WaveToy::add_dissipation       = yes
+CapyrX_WaveToy::cart_diss_eps         = 0.15
+CapyrX_WaveToy::curv_diss_eps_a       = 0.15
+CapyrX_WaveToy::curv_diss_eps_b       = 0.15
+CapyrX_WaveToy::curv_diss_eps_c       = 0.15
+CapyrX_WaveToy::diss_max_step_damping = 1.0
+CapyrX_WaveToy::use_newradx           = no
+
+CarpetX::boundary_x       = "linear extrapolation"
+CarpetX::boundary_y       = "linear extrapolation"
+CarpetX::boundary_z       = "linear extrapolation"
+CarpetX::boundary_upper_x = "linear extrapolation"
+CarpetX::boundary_upper_y = "linear extrapolation"
+CarpetX::boundary_upper_z = "linear extrapolation"
+
+# ---- cube-only AMR ----------------------------------------------------------
+CarpetX::max_num_levels = 2
+CarpetX::regrid_every   = 16
+
+BoxInBox::num_regions  = 1
+BoxInBox::shape_1      = "cube"
+BoxInBox::num_levels_1 = 2
+BoxInBox::position_x_1 = 0.0
+BoxInBox::position_y_1 = 0.0
+BoxInBox::position_z_1 = 0.0
+BoxInBox::radius_1     = [
+  -1.0,
+  0.4
+]
+
+Cactus::terminate   = "iteration"
+Cactus::cctk_itlast = 128
+
+IO::parfile_write = no
+IO::out_dir       = $parfile
+IO::out_every     = 128
+
+CarpetX::out_performance = no
+CarpetX::out_metadata    = no
+
+CarpetX::out_tsv       = yes
+CarpetX::out_tsv_every = 128
+CarpetX::out_tsv_vars  = "
+  CoordinatesX::vertex_coords
+  CapyrX_WaveToy::state
+"

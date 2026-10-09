@@ -72,7 +72,9 @@ CapyrX_WaveToy::gaussian_R0         = 1.0
 CapyrX_WaveToy::use_newradx         = no
 CapyrX_WaveToy::add_dissipation     = no
 CapyrX_WaveToy::cart_diss_eps       = $diss_cart
-CapyrX_WaveToy::curv_diss_eps       = $diss_curv
+CapyrX_WaveToy::curv_diss_eps_a     = $diss_curv
+CapyrX_WaveToy::curv_diss_eps_b     = $diss_curv
+CapyrX_WaveToy::curv_diss_eps_c     = $diss_curv
 
 # Boundary conditions
 CarpetX::boundary_x       = "linear extrapolation"

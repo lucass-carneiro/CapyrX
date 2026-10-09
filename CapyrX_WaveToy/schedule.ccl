@@ -43,7 +43,35 @@ if (add_dissipation)
     READS: state(everywhere)
     READS: rhs(interior)
     WRITES: rhs(interior)
-  } "Calculate scalar wave RHS"
+  } "Add KO dissipation to the scalar wave RHS"
+
+  # The KO rates depend only on the grid, the parameters and dt, so where they
+  # are clamped (diss_max_step_damping) is checked once per BASEGRID traversal:
+  # initial grid, every regrid and recovery.
+  SCHEDULE GROUP CapyrX_WaveToy_DissipationCheckGroup AT basegrid \
+     AFTER CapyrX_MultiPatch_Coordinates_Setup
+  {
+  } "Check where the KO dissipation rates are clamped"
+
+  SCHEDULE CapyrX_WaveToy_reset_dissipation_check IN CapyrX_WaveToy_DissipationCheckGroup
+  {
+    LANG: C
+    OPTIONS: global
+  } "Reset the KO dissipation clamp diagnostics"
+
+  SCHEDULE CapyrX_WaveToy_check_dissipation IN CapyrX_WaveToy_DissipationCheckGroup \
+     AFTER CapyrX_WaveToy_reset_dissipation_check
+  {
+    LANG: C
+    READS: MultiPatch::vertex_Jacobians(interior)
+  } "Find the points where the KO dissipation rates are clamped"
+
+  SCHEDULE CapyrX_WaveToy_report_dissipation_check IN CapyrX_WaveToy_DissipationCheckGroup \
+     AFTER CapyrX_WaveToy_check_dissipation
+  {
+    LANG: C
+    OPTIONS: global
+  } "Warn about clamped KO dissipation rates"
 }
 
 if (use_newradx && add_dissipation)

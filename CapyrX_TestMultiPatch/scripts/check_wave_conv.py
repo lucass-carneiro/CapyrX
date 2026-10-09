@@ -6,8 +6,9 @@ llama_patch_system_impl.md (Phase C, first evolution on the Llama geometry).
 Unlike check_smooth_conv.py (a single interpatch SYNC against an analytic field),
 this reads the EVOLVED scalar-wave field phi after a Gaussian pulse has crossed
 the cube<->wedge (R2) and wedge<->wedge (R1) seams, and measures convergence by
-RICHARDSON SELF-CONVERGENCE across N = 16/32/64 (angular = radial = cube ncells,
-doubled). The pulse has no closed-form solution on this geometry, so there is no
+RICHARDSON SELF-CONVERGENCE across N = 16/32/64 (cube & angular = N; radial =
+1.5*N so dr_wedge = dx_cube; all 2:1-doubled). The pulse has no closed-form
+solution on this geometry, so there is no
 exact field to difference against; instead the order is read from
 
     E_pair(N) = || phi_N - phi_2N ||_2   (over coincident vertices),

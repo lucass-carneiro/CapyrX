@@ -11,14 +11,29 @@ BOOLEAN add_dissipation "Add Kreiss-Oliger dissipation"
 {
 } no
 
-CCTK_REAL cart_diss_eps "Kreiss-Oliger dissipation strength on cartesian patches"
+CCTK_REAL cart_diss_eps "Kreiss-Oliger dissipation strength on Cartesian patches, used in every direction"
 {
   0.0:*
 } 0.15
 
-CCTK_REAL curv_diss_eps "Kreiss-Oliger dissipation strength on curvilinear patches"
+CCTK_REAL curv_diss_eps_a "KO dissipation strength along the local a direction of curvilinear patches, relative to the local physical spacing h_min"
 {
   0.0:*
+} 0.15
+
+CCTK_REAL curv_diss_eps_b "KO dissipation strength along the local b direction of curvilinear patches, relative to the local physical spacing h_min"
+{
+  0.0:*
+} 0.15
+
+CCTK_REAL curv_diss_eps_c "KO dissipation strength along the local c direction of curvilinear patches, relative to the local physical spacing h_min"
+{
+  0.0:*
+} 0.15
+
+CCTK_REAL diss_max_step_damping "Upper bound on dt * sum_d R_d (per-step damping of the grid-scale mode); the KO rates are scaled down uniformly wherever it is exceeded"
+{
+  (0.0:*
 } 1.0
 
 BOOLEAN use_newradx "Use radiative boundary conditions"

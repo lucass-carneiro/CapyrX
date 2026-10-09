@@ -6,7 +6,8 @@
 # (R2) seam at r=R and the wedge<->wedge (R1) angular seams in the shell, then
 # reaching the linear-extrapolation outer boundary. The field has no closed-form
 # solution on this geometry, so convergence is measured by RICHARDSON
-# SELF-CONVERGENCE across N = 16/32/64 (angular = radial = cube ncells, doubled)
+# SELF-CONVERGENCE across N = 16/32/64 (cube & angular = N; radial = 1.5*N so
+# dr_wedge = (r1-r0)/radial = dx_cube = 2*r0/N; all 2:1-doubled across the series)
 # at coincident vertices; scripts/check_wave_conv.py reads phi from the `state`
 # TSV, restricts to each point's owner patch (single-valued physical field), and
 # fits the order globally and separately in a seam band vs the interior band.
@@ -20,7 +21,10 @@
 # Faithful-Llama config (satisfies the Step 5 guards): patch_overlap = 2 =
 # ceil(order/2), slave_overlap = no, interpolation_order = 4, ghost_size = 3,
 # sqrt(3)*R = 1.73 < outer = 4.0. poison_undefined_values = yes so a missing
-# interpatch donor aborts loudly. No KO dissipation here (that is Step 17).
+# interpatch donor aborts loudly. Direction-based KO dissipation is ON:
+# cart_diss_eps on the cube, curv_diss_eps_{a,b,c} relative to the local physical
+# spacing h_min on the wedges, clamped by diss_max_step_damping (same scheme as
+# CanudaX_BSSNMoL). Being O(h^5) it converges away, preserving the order-4 fit.
 #
 # out_tsv_vars limits the 3d dump to state + vertex_coords (what the checker
 # reads); out_tsv_every = 4N writes only it0 and the final iteration; the harness
@@ -63,7 +67,7 @@ CapyrX_MultiPatch::slave_overlap  = no
 CapyrX_MultiPatch::inner_boundary_radius = 1.0
 CapyrX_MultiPatch::outer_boundary_radius = 4.0
 CapyrX_MultiPatch::angular_cells         = 32
-CapyrX_MultiPatch::radial_cells          = 32
+CapyrX_MultiPatch::radial_cells          = 48
 CapyrX_MultiPatch::cartesian_ncells_i    = 32
 CapyrX_MultiPatch::cartesian_ncells_j    = 32
 CapyrX_MultiPatch::cartesian_ncells_k    = 32
@@ -72,8 +76,13 @@ CapyrX_WaveToy::initial_condition = "Gaussian"
 CapyrX_WaveToy::amplitude         = 1.0
 CapyrX_WaveToy::gaussian_width    = 0.5
 CapyrX_WaveToy::gaussian_R0       = 0.0
-CapyrX_WaveToy::add_dissipation   = no
-CapyrX_WaveToy::use_newradx       = no
+CapyrX_WaveToy::add_dissipation       = yes
+CapyrX_WaveToy::cart_diss_eps         = 0.15
+CapyrX_WaveToy::curv_diss_eps_a       = 0.15
+CapyrX_WaveToy::curv_diss_eps_b       = 0.15
+CapyrX_WaveToy::curv_diss_eps_c       = 0.15
+CapyrX_WaveToy::diss_max_step_damping = 1.0
+CapyrX_WaveToy::use_newradx           = no
 
 CarpetX::boundary_x       = "linear extrapolation"
 CarpetX::boundary_y       = "linear extrapolation"

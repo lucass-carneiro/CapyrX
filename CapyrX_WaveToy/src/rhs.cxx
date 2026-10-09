@@ -40,18 +40,6 @@ c4o_0_0_1(int dir, const Loop::PointDesc &p,
   return num * den;
 }
 
-template <std::size_t dir>
-static inline auto CCTK_ATTRIBUTE_ALWAYS_INLINE CCTK_DEVICE
-diss_5(const Loop::PointDesc &p,
-       const Loop::GF3D2<const CCTK_REAL> &gf) noexcept -> CCTK_REAL {
-  const auto fac{(1.0 / 64.0) * (1.0 / p.DX[dir])};
-  const auto stencil{gf(p.I - 3 * p.DI[dir]) - 6.0 * gf(p.I - 2 * p.DI[dir]) +
-                     15.0 * gf(p.I - 1 * p.DI[dir]) - 20.0 * gf(p.I) +
-                     15.0 * gf(p.I + 1 * p.DI[dir]) -
-                     6.0 * gf(p.I + 2 * p.DI[dir]) + gf(p.I + 3 * p.DI[dir])};
-  return fac * stencil;
-}
-
 extern "C" void CapyrX_WaveToy_RHS(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTSX_CapyrX_WaveToy_RHS;
   DECLARE_CCTK_PARAMETERS;
@@ -172,52 +160,6 @@ extern "C" void CapyrX_WaveToy_RHS(CCTK_ARGUMENTS) {
         Dx_rhs(p.I) = g_dalphaPi.dx;
         Dy_rhs(p.I) = g_dalphaPi.dy;
         Dz_rhs(p.I) = g_dalphaPi.dz;
-      });
-}
-
-extern "C" void CapyrX_WaveToy_Dissipation(CCTK_ARGUMENTS) {
-  DECLARE_CCTK_ARGUMENTSX_CapyrX_WaveToy_Dissipation;
-  DECLARE_CCTK_PARAMETERS;
-
-  using namespace Loop;
-  using std::sqrt;
-
-  const auto patch_is_cartesian =
-      static_cast<bool>(CCTK_IsFunctionAliased("MultiPatch_PatchIsCartesian"))
-          ? static_cast<bool>(MultiPatch_PatchIsCartesian(grid.patch))
-          : true;
-
-  const auto dissipation_epsilon =
-      patch_is_cartesian ? cart_diss_eps : curv_diss_eps;
-
-  grid.loop_int_device<0, 0, 0>(
-      grid.nghostzones,
-      [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-        const auto diss_phi{
-            dissipation_epsilon *
-            (diss_5<0>(p, phi) + diss_5<1>(p, phi) + diss_5<2>(p, phi))};
-
-        const auto diss_Pi{
-            dissipation_epsilon *
-            (diss_5<0>(p, Pi) + diss_5<1>(p, Pi) + diss_5<2>(p, Pi))};
-
-        const auto diss_Dx{
-            dissipation_epsilon *
-            (diss_5<0>(p, Dx) + diss_5<1>(p, Dx) + diss_5<2>(p, Dx))};
-
-        const auto diss_Dy{
-            dissipation_epsilon *
-            (diss_5<0>(p, Dy) + diss_5<1>(p, Dy) + diss_5<2>(p, Dy))};
-
-        const auto diss_Dz{
-            dissipation_epsilon *
-            (diss_5<0>(p, Dz) + diss_5<1>(p, Dz) + diss_5<2>(p, Dz))};
-
-        phi_rhs(p.I) += diss_phi;
-        Pi_rhs(p.I) += diss_Pi;
-        Dx_rhs(p.I) += diss_Dx;
-        Dy_rhs(p.I) += diss_Dy;
-        Dz_rhs(p.I) += diss_Dz;
       });
 }
 

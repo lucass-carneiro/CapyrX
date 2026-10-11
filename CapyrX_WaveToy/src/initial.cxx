@@ -6,6 +6,7 @@
 #include <loop_device.hxx>
 
 #include "standing_wave.hxx"
+#include "plane_wave.hxx"
 #include "gaussian.hxx"
 #include "quad_gaussian.hxx"
 
@@ -31,6 +32,27 @@ extern "C" void CapyrX_WaveToy_Initial(CCTK_ARGUMENTS) {
           Dx(p.I) = sw::Dx(amplitude, wave_kx, wave_ky, wave_kz, t, x, y, z);
           Dy(p.I) = sw::Dy(amplitude, wave_kx, wave_ky, wave_kz, t, x, y, z);
           Dz(p.I) = sw::Dz(amplitude, wave_kx, wave_ky, wave_kz, t, x, y, z);
+        });
+
+  } else if (CCTK_EQUALS(initial_condition, "plane wave")) {
+    grid.loop_all_device<0, 0, 0>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+          const auto t{cctk_time};
+          const auto x{vcoordx(p.I)};
+          const auto y{vcoordy(p.I)};
+          const auto z{vcoordz(p.I)};
+
+          phi(p.I) = pw::phi(amplitude, wave_kx, wave_ky, wave_kz, wave_x0,
+                             wave_y0, wave_z0, wave_t0, t, x, y, z);
+          Pi(p.I) = pw::Pi(amplitude, wave_kx, wave_ky, wave_kz, wave_x0,
+                           wave_y0, wave_z0, wave_t0, t, x, y, z);
+          Dx(p.I) = pw::Dx(amplitude, wave_kx, wave_ky, wave_kz, wave_x0,
+                           wave_y0, wave_z0, wave_t0, t, x, y, z);
+          Dy(p.I) = pw::Dy(amplitude, wave_kx, wave_ky, wave_kz, wave_x0,
+                           wave_y0, wave_z0, wave_t0, t, x, y, z);
+          Dz(p.I) = pw::Dz(amplitude, wave_kx, wave_ky, wave_kz, wave_x0,
+                           wave_y0, wave_z0, wave_t0, t, x, y, z);
         });
 
   } else if (CCTK_EQUALS(initial_condition, "Gaussian")) {

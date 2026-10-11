@@ -1,0 +1,96 @@
+# Llama WaveToy plane-wave A/B vs real Llama (LlamaWaveToy/Thornburg04) -- N=64.
+#
+# Step 16 of llama_patch_system_impl.md (Phase E). A travelling plane wave
+# phi = A cos(2*pi*(k.x + |k|*t)) (an exact Minkowski solution) is evolved and
+# the error vs the analytic solution is measured per band. The matching
+# LlamaWaveToy run lives in /home/lsanches/etk/AxiDil (par/lwt_pwave_*.par). The
+# grid is matched: R_in=1, R_out=4, cube=angular=N cells, radial=1.5N so
+# dr_wedge = dx_cube = 2/N; k=(0.5,0.5,0.5) exercises all six wedges alike.
+#
+# dt = cfl*(2/N) = 0.5/N, cctk_itlast = 2N so every resolution lands on t=1.0,
+# early enough that the outer-boundary signal (speed 1 from r=4) has only reached
+# r=3; the checker compares in r<2.5 (a 0.5 margin inside that front), leaving the cube<->wedge seams at r=1 and the interior clean of
+# the BC difference between the two codes. FD order 4 (4th-order central + RK4)
+# matches LlamaWaveToy's SummationByParts order 4 + RK4.
+#
+# scripts/check_llama_ab.py reads phi_error from the `error` group (owner points
+# only), buckets interior vs cube<->wedge seam, and fits the convergence order.
+
+ActiveThorns = "
+    ADMBaseX
+    CarpetX
+    IOUtil
+    ODESolvers
+    CoordinatesX
+    CapyrX_MultiPatch
+    CapyrX_WaveToy
+"
+
+$cfl = 0.25
+
+Cactus::presync_mode       = "mixed-error"
+Cactus::cctk_show_schedule = no
+
+CarpetX::verbose                 = no
+CarpetX::poison_undefined_values = yes
+CarpetX::max_num_levels          = 1
+
+CarpetX::ghost_size          = 3
+CarpetX::interpolation_order = 4
+
+CarpetX::blocking_factor_x = 1
+CarpetX::blocking_factor_y = 1
+CarpetX::blocking_factor_z = 1
+
+ODESolvers::method = "RK4"
+CarpetX::dtfac     = $cfl
+
+CapyrX_MultiPatch::verbose        = no
+CapyrX_MultiPatch::patch_system   = "Llama"
+CapyrX_MultiPatch::patch_overlap  = 2
+CapyrX_MultiPatch::slave_overlap  = no
+
+CapyrX_MultiPatch::inner_boundary_radius = 1.0
+CapyrX_MultiPatch::outer_boundary_radius = 4.0
+CapyrX_MultiPatch::angular_cells         = 64
+CapyrX_MultiPatch::radial_cells          = 96
+CapyrX_MultiPatch::cartesian_ncells_i    = 64
+CapyrX_MultiPatch::cartesian_ncells_j    = 64
+CapyrX_MultiPatch::cartesian_ncells_k    = 64
+
+CapyrX_WaveToy::initial_condition = "plane wave"
+CapyrX_WaveToy::amplitude         = 1.0
+CapyrX_WaveToy::wave_kx           = 0.5
+CapyrX_WaveToy::wave_ky           = 0.5
+CapyrX_WaveToy::wave_kz           = 0.5
+CapyrX_WaveToy::wave_x0           = 0.0
+CapyrX_WaveToy::wave_y0           = 0.0
+CapyrX_WaveToy::wave_z0           = 0.0
+CapyrX_WaveToy::wave_t0           = 0.0
+CapyrX_WaveToy::add_dissipation   = no
+CapyrX_WaveToy::use_newradx       = no
+
+CarpetX::boundary_x       = "linear extrapolation"
+CarpetX::boundary_y       = "linear extrapolation"
+CarpetX::boundary_z       = "linear extrapolation"
+CarpetX::boundary_upper_x = "linear extrapolation"
+CarpetX::boundary_upper_y = "linear extrapolation"
+CarpetX::boundary_upper_z = "linear extrapolation"
+
+Cactus::terminate   = "iteration"
+Cactus::cctk_itlast = 128
+
+IO::parfile_write = no
+IO::out_dir       = $parfile
+IO::out_every     = 128
+
+CarpetX::out_performance = no
+CarpetX::out_metadata    = no
+
+CarpetX::out_tsv       = yes
+CarpetX::out_tsv_every = 128
+CarpetX::out_tsv_vars  = "
+  CoordinatesX::vertex_coords
+  CapyrX_WaveToy::state
+  CapyrX_WaveToy::error
+"

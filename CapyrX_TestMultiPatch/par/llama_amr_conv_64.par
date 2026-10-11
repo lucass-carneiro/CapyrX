@@ -1,0 +1,116 @@
+# Llama WaveToy with CUBE-ONLY AMR -- convergence base N=64 (to t=2.0).
+#
+# Step 14 of llama_patch_system_impl.md (Phase D). The fine base of the two-base
+# AMR-vs-unigrid convergence measurement: identical to llama_amr_conv_32.par but at
+# N = 64 (cube & angular = 64, radial = 96 so dr_wedge = dx_cube), and evolved to
+# the same physical time t = 2.0 as the unigrid reference llama_wave_64.par. The
+# order fit is log2( ||phi_AMR(32) - phi_unigrid(32)|| / ||phi_AMR(64) -
+# phi_unigrid(64)|| ) over coincident level-0 vertices, globally and in the
+# refinement-boundary and patch-boundary bands (scripts/check_amr_conv.py).
+#
+# itlast = 512: with max_num_levels = 2 CarpetX uses dt = dtfac * dx_level1 =
+# dtfac * dx_cube / 2 = 0.25 * (2/64) / 2 = 0.00390625, so 512 * 0.00390625 = 2.0.
+# The unigrid llama_wave_64.par reaches t = 2.0 in 256 steps (un-halved dt).
+#
+# The radius-0.4 BoxInBox cube clears the cube's interpatch donor zone at N = 64
+# (the zone's physical depth shrinks with dx, the box radius is fixed), exactly as
+# at N = 32. Confinement, regrid repair (R4) and the slave_overlap = no [P453]
+# side-step are as in llama_amr_conv_32.par.
+
+ActiveThorns = "
+    ADMBaseX
+    BoxInBox
+    CarpetX
+    IOUtil
+    ODESolvers
+    CoordinatesX
+    CapyrX_MultiPatch
+    CapyrX_WaveToy
+"
+
+$cfl = 0.25
+
+Cactus::presync_mode       = "mixed-error"
+Cactus::cctk_show_schedule = no
+
+CarpetX::verbose                 = no
+CarpetX::poison_undefined_values = yes
+
+CarpetX::ghost_size          = 3
+CarpetX::interpolation_order = 4
+
+# See llama_amr_conv_32.par: the CarpetX default prolongation_order = 1 (O(h^2))
+# caps the AMR convergence at ~2; 5 restores the evolution order across the
+# refinement boundary and matches the production CanudaX BSSN parfiles.
+CarpetX::prolongation_order = 5
+
+CarpetX::blocking_factor_x = 1
+CarpetX::blocking_factor_y = 1
+CarpetX::blocking_factor_z = 1
+
+ODESolvers::method = "RK4"
+CarpetX::dtfac     = $cfl
+
+CapyrX_MultiPatch::verbose        = no
+CapyrX_MultiPatch::patch_system   = "Llama"
+CapyrX_MultiPatch::patch_overlap  = 2
+CapyrX_MultiPatch::slave_overlap  = no
+
+CapyrX_MultiPatch::inner_boundary_radius = 1.0
+CapyrX_MultiPatch::outer_boundary_radius = 4.0
+CapyrX_MultiPatch::angular_cells         = 64
+CapyrX_MultiPatch::radial_cells          = 96
+CapyrX_MultiPatch::cartesian_ncells_i    = 64
+CapyrX_MultiPatch::cartesian_ncells_j    = 64
+CapyrX_MultiPatch::cartesian_ncells_k    = 64
+
+CapyrX_WaveToy::initial_condition = "Gaussian"
+CapyrX_WaveToy::amplitude         = 1.0
+CapyrX_WaveToy::gaussian_width    = 0.5
+CapyrX_WaveToy::gaussian_R0       = 0.0
+CapyrX_WaveToy::add_dissipation       = yes
+CapyrX_WaveToy::cart_diss_eps         = 0.15
+CapyrX_WaveToy::curv_diss_eps_a       = 0.15
+CapyrX_WaveToy::curv_diss_eps_b       = 0.15
+CapyrX_WaveToy::curv_diss_eps_c       = 0.15
+CapyrX_WaveToy::diss_max_step_damping = 1.0
+CapyrX_WaveToy::use_newradx           = no
+
+CarpetX::boundary_x       = "linear extrapolation"
+CarpetX::boundary_y       = "linear extrapolation"
+CarpetX::boundary_z       = "linear extrapolation"
+CarpetX::boundary_upper_x = "linear extrapolation"
+CarpetX::boundary_upper_y = "linear extrapolation"
+CarpetX::boundary_upper_z = "linear extrapolation"
+
+# ---- cube-only AMR ----------------------------------------------------------
+CarpetX::max_num_levels = 2
+CarpetX::regrid_every   = 16
+
+BoxInBox::num_regions  = 1
+BoxInBox::shape_1      = "cube"
+BoxInBox::num_levels_1 = 2
+BoxInBox::position_x_1 = 0.0
+BoxInBox::position_y_1 = 0.0
+BoxInBox::position_z_1 = 0.0
+BoxInBox::radius_1     = [
+  -1.0,
+  0.4
+]
+
+Cactus::terminate   = "iteration"
+Cactus::cctk_itlast = 512
+
+IO::parfile_write = no
+IO::out_dir       = $parfile
+IO::out_every     = 512
+
+CarpetX::out_performance = no
+CarpetX::out_metadata    = no
+
+CarpetX::out_tsv       = yes
+CarpetX::out_tsv_every = 512
+CarpetX::out_tsv_vars  = "
+  CoordinatesX::vertex_coords
+  CapyrX_WaveToy::state
+"

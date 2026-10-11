@@ -114,7 +114,8 @@ SCHEDULE CapyrX_WaveToy_Energy AT analysis
 
 
 # Evolution error
-if (CCTK_EQUALS(initial_condition, "standing wave"))
+if (CCTK_EQUALS(initial_condition, "standing wave") ||
+    CCTK_EQUALS(initial_condition, "plane wave"))
 {
   SCHEDULE CapyrX_WaveToy_Error AT analysis
   {

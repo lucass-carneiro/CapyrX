@@ -3,6 +3,7 @@
 KEYWORD initial_condition "Initial condition"
 {
   "standing wave" :: "Standing wave"
+  "plane wave" :: "Travelling plane wave (matches LlamaWaveToy 'plane')"
   "Gaussian" :: "Gaussian"
   "Quadrupolar Gaussian" :: "Gaussian with a quadrupole moment that can be placed anywhere on the grid"
 } "standing wave"
@@ -64,6 +65,26 @@ CCTK_REAL wave_kz "kz wave number for wave initial data"
 {
   *:* :: ""
 } 1.0
+
+CCTK_REAL wave_x0 "Plane-wave space offset in x (LlamaWaveToy space_offset[0])"
+{
+  *:* :: ""
+} 0.0
+
+CCTK_REAL wave_y0 "Plane-wave space offset in y (LlamaWaveToy space_offset[1])"
+{
+  *:* :: ""
+} 0.0
+
+CCTK_REAL wave_z0 "Plane-wave space offset in z (LlamaWaveToy space_offset[2])"
+{
+  *:* :: ""
+} 0.0
+
+CCTK_REAL wave_t0 "Plane-wave time offset (LlamaWaveToy time_offset)"
+{
+  *:* :: ""
+} 0.0
 
 CCTK_REAL gaussian_width "width of Gaussian"
 {

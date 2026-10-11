@@ -1,0 +1,118 @@
+# Real-Llama REFERENCE for the plane-wave A/B -- LlamaWaveToy / Thornburg04, N=32.
+#
+# Step 16 of llama_patch_system_impl.md (Phase E). Runs with the AxiDil reference
+# exe (/home/lsanches/etk/AxiDil/Cactus/exe/cactus_sim), NOT the CapyrX exe. The
+# CapyrX counterpart is par/llama_pwave_16.par; the grid is matched: central cube
+# half-width = sphere_inner_radius = 1, outer = 4, cube = n_angular = N cells,
+# radial = (4-1)/h_radial = 1.5N so h_radial = h_cartesian = 2/N = dx_cube. The
+# travelling plane wave phi = A cos(2*pi*(k.x + |k|*t)), k=(0.5,0.5,0.5), is the
+# exact Minkowski solution both codes share; LWT_error stores error = numerical -
+# exact (exact re-evaluated at the current time).
+#
+# FD order 4 to match CapyrX: SummationByParts::order = 4 (=> Driver::ghost_size 2),
+# Interpolate2 order 4, patch_boundary_size = additional_overlap_size = 2. dt =
+# 0.5/N = 0.03125, 2N = 32 steps -> t = 1.0, the same comparison time as CapyrX
+# and early enough that the (radiative) outer boundary has only reached r = 3; the
+# A/B is measured in r < 2.5, a 0.5 margin inside that front.
+#
+# use_grid_coordinates = yes makes the 3d .asc carry GLOBAL Cartesian x,y,z so
+# scripts/check_llama_ab.py can band the error by radius exactly as on the CapyrX
+# side; the 1d lines carry u/error/exact for the seam field-diff.
+
+ActiveThorns = "InitBase"
+ActiveThorns = "LocalInterp AEILocalInterp"
+ActiveThorns = "Slab"
+ActiveThorns = "IOUtil"
+ActiveThorns = "Carpet CarpetLib CarpetInterp2 CarpetReduce LoopControl"
+ActiveThorns = "Boundary CartGrid3D CoordBase SymBase"
+ActiveThorns = "Time MoL"
+ActiveThorns = "Coordinates Interpolate2"
+ActiveThorns = "LlamaWaveToy SummationByParts GlobalDerivative"
+ActiveThorns = "CarpetIOBasic CarpetIOScalar CarpetIOASCII CarpetIOHDF5"
+
+Cactus::terminate                    = "iteration"
+Cactus::cctk_itlast                  = 64
+
+################### Time Integration ###################
+Time::timestep_method                = "given"
+Time::timestep                       = 0.015625
+
+MoL::ODE_Method                      = "Generic"
+MoL::Generic_Type                    = "RK"
+MoL::MoL_Intermediate_Steps          = 4
+MoL::MoL_Num_Scratch_Levels          = 3
+
+###################### Grid Setup ######################
+Carpet::domain_from_multipatch       = yes
+CartGrid3D::type                     = "multipatch"
+CartGrid3D::set_coordinate_ranges_on = "all maps"
+
+Driver::ghost_size                   = 2
+
+Coordinates::coordinate_system       = "Thornburg04"
+Coordinates::h_radial                = 0.0625
+Coordinates::h_cartesian             = 0.0625
+Coordinates::sphere_inner_radius     = 1.0
+Coordinates::sphere_outer_radius     = 4.0
+Coordinates::n_angular               = 32
+
+#################### Outer Boundary ####################
+Coordinates::outer_boundary_size     = 2
+LlamaWaveToy::outer_bound            = "radiative"
+
+################## Interpatch Boundary #################
+Coordinates::patch_boundary_size     = 2
+Coordinates::additional_overlap_size = 2
+Interpolate2::interpolator_order     = 4
+Interpolate2::continue_if_selftest_fails = no
+
+##################### Initial Data #####################
+LlamaWaveToy::metric                 = "Minkowski"
+LlamaWaveToy::initial_data           = "plane"
+LlamaWaveToy::amplitude              = 1.0
+LlamaWaveToy::wave_number[0]         = 0.5
+LlamaWaveToy::wave_number[1]         = 0.5
+LlamaWaveToy::wave_number[2]         = 0.5
+LlamaWaveToy::space_offset[0]        = 0.0
+LlamaWaveToy::space_offset[1]        = 0.0
+LlamaWaveToy::space_offset[2]        = 0.0
+LlamaWaveToy::time_offset            = 0.0
+
+######## Summation By Parts Finite Differecing #########
+SummationByParts::order                          = 4
+SummationByParts::use_dissipation                = no
+SummationByParts::onesided_interpatch_boundaries = no
+SummationByParts::onesided_outer_boundaries      = yes
+SummationByParts::sbp_upwind_deriv                   = yes
+SummationByParts::sbp_1st_deriv                      = yes
+SummationByParts::sbp_2nd_deriv                      = yes
+
+######################## Output ########################
+IO::out_dir                   = $parfile
+IO::out_fileinfo              = "none"
+IO::parfile_write             = "no"
+
+IOASCII::out_precision        = 17
+CarpetIOASCII::compact_format = yes
+CarpetIOASCII::output_ghost_points = no
+CarpetIOASCII::use_grid_coordinates = yes
+
+# 3d error with global coords for the banded convergence fit
+IOASCII::out3D_every          = 64
+IOASCII::out3D_vars           = "LlamaWaveToy::error"
+
+# 1d lines through the cube<->wedge seams for the field-diff
+IOASCII::out1D_every          = 64
+IOASCII::out1D_x              = yes
+IOASCII::out1D_y              = yes
+IOASCII::out1D_z              = yes
+IOASCII::out1D_d              = no
+IOASCII::out1D_vars           = "LlamaWaveToy::u LlamaWaveToy::error LlamaWaveToy::exact"
+
+# cheap global cross-check of the error L2 norm
+IOScalar::outScalar_every     = 64
+IOScalar::outScalar_reductions = "norm2"
+IOScalar::outScalar_vars      = "LlamaWaveToy::error"
+
+IOBasic::outInfo_every        = 16
+IOBasic::outInfo_vars         = "LlamaWaveToy::u"

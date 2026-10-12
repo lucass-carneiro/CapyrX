@@ -169,6 +169,14 @@ global2local(const PatchParams &par,
     break;
   }
 
+  // Equiangular inverse: the switch above returns the gnomonic coordinate
+  // g = tan(angle); convert back to the angular grid coordinate (angle / (pi/4)).
+  if (patch != PatchPiece::cartesian) {
+    constexpr CCTK_REAL four_over_pi = 1.27323954473516268615;
+    local_coords(0) = std::atan(local_coords(0)) * four_over_pi;
+    local_coords(1) = std::atan(local_coords(1)) * four_over_pi;
+  }
+
   return std_make_tuple(static_cast<int>(patch), local_coords);
 }
 
@@ -182,9 +190,19 @@ CCTK_HOST CCTK_DEVICE auto local2global(const PatchParams &par, int patch,
   const auto r0{par.inner_boundary};
   const auto r1{par.outer_boundary};
 
-  const auto a{local_coords(0)};
-  const auto b{local_coords(1)};
+  auto a{local_coords(0)};
+  auto b{local_coords(1)};
   const auto c{local_coords(2)};
+
+  // Equiangular angular coordinates (matching Llama's Thornburg04): the local
+  // angular grid coordinate in [-1,1] is the physical angle in units of pi/4,
+  // so the gnomonic coordinate used by the maps below is g = tan(angle). The
+  // central cube is Cartesian and is left untouched.
+  if (static_cast<PatchPiece>(patch) != PatchPiece::cartesian) {
+    constexpr CCTK_REAL quarter_pi = 0.78539816339744830961;
+    a = std::tan(a * quarter_pi);
+    b = std::tan(b * quarter_pi);
+  }
 
   svec_t global_coords = {0.0, 0.0, 0.0};
 
@@ -625,6 +643,43 @@ llama_jacs(const PatchParams &par, int patch, const svec_t &global_coords)
     assert(false);
 #endif
     break;
+  }
+
+  // Equiangular angular coordinates (matching Llama's Thornburg04). The J and dJ
+  // formulas above are for the gnomonic coordinate g = tan(angle); the grid
+  // coordinate is the angle itself, xi = (4/pi) atan(g) = f(g). Compose:
+  //   J_xi   = f'(g) J_g
+  //   dJ_xi  = f''(g) J_g J_g + f'(g) dJ_g
+  // on the two angular rows (0,1). The radial row (2) and the cube are unchanged.
+  if (static_cast<PatchPiece>(patch) != PatchPiece::cartesian) {
+    constexpr CCTK_REAL four_over_pi = 1.27323954473516268615;
+    CCTK_REAL g[2];
+    switch (static_cast<PatchPiece>(patch)) {
+    case PatchPiece::plus_x:  g[0] = z / x;  g[1] = y / x;  break;
+    case PatchPiece::plus_y:  g[0] = z / y;  g[1] = -x / y; break;
+    case PatchPiece::minus_x: g[0] = -z / x; g[1] = y / x;  break;
+    case PatchPiece::minus_y: g[0] = -z / y; g[1] = -x / y; break;
+    case PatchPiece::plus_z:  g[0] = -x / z; g[1] = y / z;  break;
+    case PatchPiece::minus_z: g[0] = -x / z; g[1] = -y / z; break;
+    default:                  g[0] = 0.0;    g[1] = 0.0;    break;
+    }
+    for (int row = 0; row < 2; ++row) {
+      const CCTK_REAL gg = g[row];
+      const CCTK_REAL denom = 1.0 + gg * gg;
+      const CCTK_REAL fp = four_over_pi / denom;                   // f'(g)
+      const CCTK_REAL fpp = four_over_pi * (-2.0 * gg) / (denom * denom); // f''(g)
+      const CCTK_REAL J0 = J(row)(0), J1 = J(row)(1), J2 = J(row)(2);
+      // dJ(row) is a symmetric matrix: write only the 6 independent components.
+      dJ(row)(0, 0) = fpp * J0 * J0 + fp * dJ(row)(0, 0);
+      dJ(row)(0, 1) = fpp * J0 * J1 + fp * dJ(row)(0, 1);
+      dJ(row)(0, 2) = fpp * J0 * J2 + fp * dJ(row)(0, 2);
+      dJ(row)(1, 1) = fpp * J1 * J1 + fp * dJ(row)(1, 1);
+      dJ(row)(1, 2) = fpp * J1 * J2 + fp * dJ(row)(1, 2);
+      dJ(row)(2, 2) = fpp * J2 * J2 + fp * dJ(row)(2, 2);
+      J(row)(0) = fp * J0;
+      J(row)(1) = fp * J1;
+      J(row)(2) = fp * J2;
+    }
   }
 
   return std_make_tuple(J, dJ);

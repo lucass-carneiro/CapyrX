@@ -376,12 +376,15 @@ SMOOTH_CONV=(
 # residual ratio (bounded and not growing across the two pairs). PASS (exit 0) iff
 # the global + both seam orders clear their floors and the seam ratios stay
 # bounded. The rows count is the coincident-point join size, same role as above.
-# Measured 2026-10-08, this machine, 1 rank (R=1, outer=4, overlap=2, order 4,
-# ghost 3, Gaussian sigma=0.5 at the origin, t=2.0): global order ~4.10, R2 ~4.29,
-# R1 ~4.21; R2/R1 seam/interior ratios 0.72/0.95, both shrinking under refinement
-# (no growing interface noise -> Step 11b remediation not triggered).
+# Re-measured 2026-10-13 on the EQUIANGULAR Llama grid (wedges + Thornburg06), this
+# machine, 1 rank (R=1, outer=4, overlap=2, order 4, ghost 3, Gaussian sigma=0.5 at
+# the origin, t=2.0): global order 3.928, R2 3.961, R1 3.920; seam ratios bounded
+# and not growing. The coincident-point join grew 27989->40097 because the
+# equiangular wedge vertices nest exactly across the 2:1 refinement (more coarse
+# vertices coincide with fine ones); the orders are unchanged. (Pre-equiangular:
+# rows 27989, global ~4.10, R2 ~4.29, R1 ~4.21.)
 WAVE_CONV=(
-  "llama_wave|llama_wave_16|llama_wave_32|llama_wave_64|0|27989"
+  "llama_wave|llama_wave_16|llama_wave_32|llama_wave_64|0|40097"
 )
 # series | llama-N1 | llama-N2 | llama-N3 | tb06-N1 | tb06-N2 | tb06-N3 |
 #   expected check exit | expected rows checked.

@@ -1,0 +1,85 @@
+# Llama WaveToy UNIGRID reference for the cube-AMR convergence test -- base N=64.
+#
+# Fine base of the two-base AMR-vs-unigrid convergence measurement; see
+# llama_amr_uni_32.par for the full rationale. Pinned dt = dtfac * dx_cube/2 =
+# 0.25*(2/64)/2 = 0.00390625, so 512 steps reach t = 2.0 -- the SAME time and the
+# SAME dt as the AMR run llama_amr_conv_64.par. The timestep is pinned (not auto)
+# so the reference reaches t = 2.0 regardless of which patch is the dt-limiter on
+# the equiangular grid (where the minimum spacing is a wedge cell, not the cube).
+
+ActiveThorns = "
+    ADMBaseX
+    CarpetX
+    IOUtil
+    ODESolvers
+    CoordinatesX
+    CapyrX_MultiPatch
+    CapyrX_WaveToy
+"
+
+Cactus::presync_mode       = "mixed-error"
+Cactus::cctk_show_schedule = no
+
+CarpetX::verbose                 = no
+CarpetX::poison_undefined_values = yes
+CarpetX::max_num_levels          = 1
+
+CarpetX::ghost_size          = 3
+CarpetX::interpolation_order = 4
+
+CarpetX::blocking_factor_x = 1
+CarpetX::blocking_factor_y = 1
+CarpetX::blocking_factor_z = 1
+
+ODESolvers::method       = "RK4"
+CarpetX::timestep_choice = "timestep"
+CarpetX::timestep        = 0.00390625
+
+CapyrX_MultiPatch::verbose        = no
+CapyrX_MultiPatch::patch_system   = "Llama"
+CapyrX_MultiPatch::patch_overlap  = 2
+CapyrX_MultiPatch::slave_overlap  = no
+
+CapyrX_MultiPatch::inner_boundary_radius = 1.0
+CapyrX_MultiPatch::outer_boundary_radius = 4.0
+CapyrX_MultiPatch::angular_cells         = 64
+CapyrX_MultiPatch::radial_cells          = 96
+CapyrX_MultiPatch::cartesian_ncells_i    = 64
+CapyrX_MultiPatch::cartesian_ncells_j    = 64
+CapyrX_MultiPatch::cartesian_ncells_k    = 64
+
+CapyrX_WaveToy::initial_condition = "Gaussian"
+CapyrX_WaveToy::amplitude         = 1.0
+CapyrX_WaveToy::gaussian_width    = 0.5
+CapyrX_WaveToy::gaussian_R0       = 0.0
+CapyrX_WaveToy::add_dissipation       = yes
+CapyrX_WaveToy::cart_diss_eps         = 0.15
+CapyrX_WaveToy::curv_diss_eps_a       = 0.15
+CapyrX_WaveToy::curv_diss_eps_b       = 0.15
+CapyrX_WaveToy::curv_diss_eps_c       = 0.15
+CapyrX_WaveToy::diss_max_step_damping = 1.0
+CapyrX_WaveToy::use_newradx           = no
+
+CarpetX::boundary_x       = "linear extrapolation"
+CarpetX::boundary_y       = "linear extrapolation"
+CarpetX::boundary_z       = "linear extrapolation"
+CarpetX::boundary_upper_x = "linear extrapolation"
+CarpetX::boundary_upper_y = "linear extrapolation"
+CarpetX::boundary_upper_z = "linear extrapolation"
+
+Cactus::terminate   = "iteration"
+Cactus::cctk_itlast = 512
+
+IO::parfile_write = no
+IO::out_dir       = $parfile
+IO::out_every     = 512
+
+CarpetX::out_performance = no
+CarpetX::out_metadata    = no
+
+CarpetX::out_tsv       = yes
+CarpetX::out_tsv_every = 512
+CarpetX::out_tsv_vars  = "
+  CoordinatesX::vertex_coords
+  CapyrX_WaveToy::state
+"

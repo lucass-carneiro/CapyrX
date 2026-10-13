@@ -26,8 +26,8 @@
 #   abconv  {llama,tb06}_ab_wave_{16,32,64}, 1 rank                 =  6  -> check_ab.py
 #                                                                          (1 A/B series: isolate central-cube coupling)
 #   amr     llama_amr_32 (cube-only AMR structure), 1 rank          =  1  -> check_amr.py
-#   amrconv llama_amr_conv_{32,64}, 1 rank                           =  2  -> check_amr_conv.py
-#                                                                          (1 convergence series: AMR-vs-unigrid order, reuses llama_wave_{32,64})
+#   amrconv llama_amr_conv_{32,64} + llama_amr_uni_{32,64}, 1 rank   =  4  -> check_amr_conv.py
+#                                                                          (1 convergence series: AMR-vs-dedicated-unigrid order, pinned dt)
 #   bssnconv llama_bssn_{16,32,64}, 1 rank                            =  3  -> check_bssn_conv.py
 #                                                                          (1 convergence series: gauge-wave ||ham||/||mom|| order + R1/R2 seam)
 #
@@ -312,18 +312,23 @@ MATRIX=(
   # cells over all 7 patches and both levels).
   "llama_amr_32|amr|llama_amr_32|no|1|0:WEDGE-OVER-LEVEL0=0:rows=1114791"
   # ---- Llama cube-AMR CONVERGENCE (Phase D, Step 14), 1 rank ----------------
-  # Two cube-AMR bases (N = 32, 64) evolved to t = 2.0, each differenced against
-  # the unigrid run at the same base (llama_wave_32 / llama_wave_64, already run by
-  # the WAVE_CONV series above and reused here -- no extra unigrid runs). The legs
-  # only RUN here; the AMR_CONV series below judges them together via
+  # Two cube-AMR bases (N = 32, 64) evolved to t = 2.0, each differenced against a
+  # DEDICATED unigrid run at the same base (llama_amr_uni_32 / llama_amr_uni_64).
+  # The legs only RUN here; the AMR_CONV series below judges them together via
   # check_amr_conv.py (order of ||phi_AMR - phi_unigrid|| across the two bases,
   # globally and in the refinement-boundary and cube<->wedge seam bands). The
-  # amrconvleg handler prunes each AMR leg to its final-iteration state + coords.
-  # itlast is 2N here (256, 512): with max_num_levels = 2 CarpetX uses
-  # dt = dtfac*dx_finest = half the unigrid dt, so reaching the unigrid's t = 2.0
-  # takes twice the iterations.
+  # amrconvleg handler prunes each leg to its final-iteration state + coords.
+  # itlast is 8N here (256, 512) with a PINNED dt = dtfac*dx_cube/2: the AMR and
+  # the dedicated unigrid use the SAME pinned dt, so both reach t = 2.0 regardless
+  # of the grid geometry. (The old design reused llama_wave_{32,64} with auto dt;
+  # on the equiangular grid the unigrid's auto dt is wedge-limited, so it reached
+  # t = 1.333 not t = 2.0 and the A/B difference became a non-converging O(1)
+  # constant. The dedicated pinned-dt unigrid fixes this and leaves WAVE_CONV
+  # untouched.)
   "llama_amr_conv_32|amrconvleg|llama_amr_conv_32|no|1|-"
   "llama_amr_conv_64|amrconvleg|llama_amr_conv_64|no|1|-"
+  "llama_amr_uni_32|amrconvleg|llama_amr_uni_32|no|1|-"
+  "llama_amr_uni_64|amrconvleg|llama_amr_uni_64|no|1|-"
   # ---- Llama BSSN gauge-wave constraint CONVERGENCE (Phase E, Step 17), 1 rank
   # Three resolutions of one gauge-wave BSSN evolution to t=2.0; the legs only RUN
   # here and are judged together by the BSSN_CONV series below. The gauge wave is an
@@ -405,18 +410,22 @@ AB_CONV=(
 # seam bands. PASS (exit 0) iff the global order clears --order-floor, both boundary
 # bands clear --seam-order-floor, and the coarse global RMS is above --min-signal
 # (so the AMR actually changed the solution -- the teeth). The unigrid legs are the
-# same llama_wave_32/64 the WAVE_CONV series runs. The rows count is the coincident
-# level-0 point total over both bases.
-# Measured 2026-10-09, this machine, 1 rank (R=1, outer=4, overlap=2, order 4,
+# DEDICATED llama_amr_uni_32/64 runs (pinned dt matching the AMR runs), NOT the
+# WAVE_CONV llama_wave runs: on the equiangular grid llama_wave's auto dt is
+# wedge-limited and lands at t = 1.333, a time mismatch that made the difference a
+# non-converging O(1) constant. The rows count is the coincident level-0 point
+# total over both bases.
+# Measured 2026-10-12, this machine, 1 rank (R=1, outer=4, overlap=2, order 4,
 # ghost 3, prolongation_order=5, radius-0.4 BoxInBox cube, Gaussian sigma=0.5 at
-# origin, t=2.0): global order 4.26, refinement-boundary 4.86, cube<->wedge 4.37.
+# origin, EQUIANGULAR grid, pinned dt, t=2.0): rows=2923818, global order 3.922,
+# refinement-boundary 4.209, cube<->wedge 4.092.
 # KEY: this needs CarpetX::prolongation_order = 5 in the AMR par files. At the
 # CarpetX default (prolongation_order = 1, linear) the coarse-fine interface is only
 # O(h^2) and the measured order collapses to ~2.3 (global 2.29, refine 2.19, seam
 # 2.76) regardless of the FD/interpatch order -- the AMR analogue of the interpatch
 # interpolation_order requirement.
 AMR_CONV=(
-  "llama_amr|llama_amr_conv_32|llama_amr_conv_64|llama_wave_32|llama_wave_64|0|1092282"
+  "llama_amr|llama_amr_conv_32|llama_amr_conv_64|llama_amr_uni_32|llama_amr_uni_64|0|2923818"
 )
 # series | leg-N1 | leg-N2 | leg-N3 | expected check exit | expected rows checked.
 # check_bssn_conv.py reads the three legs' final-iteration ham TSVs (deriving the
@@ -1023,11 +1032,8 @@ for s in "${AMR_CONV[@]}"; do
   IFS='|' read -r series a1 a2 u1 u2 want_rc want_rows <<<"$s"
   n_planned=$((n_planned + 1))
   missing=""
-  for leg in "$a1" "$a2"; do
+  for leg in "$a1" "$a2" "$u1" "$u2"; do
     [[ -n "${AMRCONV_OK[$leg]:-}" ]] || missing="$missing $leg"
-  done
-  for leg in "$u1" "$u2"; do
-    [[ -n "${WAVECONV_OK[$leg]:-}" ]] || missing="$missing $leg"
   done
   if [[ -n "$missing" ]]; then
     if [[ -n "$CELLS_FILTER" && " $CELLS_FILTER " != *" $a1 "* ]]; then

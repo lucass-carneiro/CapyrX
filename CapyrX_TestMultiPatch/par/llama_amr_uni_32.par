@@ -1,0 +1,100 @@
+# Llama WaveToy UNIGRID reference for the cube-AMR convergence test -- base N=32.
+#
+# Step 14 of llama_patch_system_impl.md (Phase D). This is the max_num_levels = 1
+# reference that llama_amr_conv_32.par (the refined-cube run) is differenced
+# against at coincident level-0 vertices to measure whether the cube refinement
+# preserves the evolution order (scripts/check_amr_conv.py).
+#
+# WHY A DEDICATED UNIGRID WITH A PINNED TIMESTEP (not a reuse of llama_wave_32).
+# The A/B difference phi_AMR - phi_unigrid is only a truncation error if the two
+# runs are at the SAME physical time. Both runs here take their timestep from the
+# cube's level-1 spacing, dt = dtfac * dx_cube/2 = 0.25*(2/32)/2 = 0.0078125, so
+# 256 steps reach t = 2.0. llama_wave_32.par uses auto dt (dtfac * min_spacing):
+# on the EQUIANGULAR Llama grid the minimum spacing is a wedge cell, not the cube,
+# so its auto dt is smaller than the cube value and it lands at t = 1.333 in its
+# 4N = 128 steps -- a different time, which turns the A/B difference into a
+# non-converging O(1) constant (order ~0). Pinning dt here decouples the reference
+# from the grid geometry and makes it reach t = 2.0 with the SAME dt as the AMR
+# run, so the difference isolates the spatial refinement alone. (dt = 0.0078125 is
+# below the wedge CFL limit the auto path picks, so it is stable.)
+#
+# Faithful-Llama config as in llama_wave_32.par: patch_overlap = 2, slave_overlap
+# = no, interpolation_order = 4, ghost_size = 3, lin-extrap outer BC, direction-
+# based KO dissipation on. Same Gaussian blob initial data as llama_amr_conv_32.
+
+ActiveThorns = "
+    ADMBaseX
+    CarpetX
+    IOUtil
+    ODESolvers
+    CoordinatesX
+    CapyrX_MultiPatch
+    CapyrX_WaveToy
+"
+
+Cactus::presync_mode       = "mixed-error"
+Cactus::cctk_show_schedule = no
+
+CarpetX::verbose                 = no
+CarpetX::poison_undefined_values = yes
+CarpetX::max_num_levels          = 1
+
+CarpetX::ghost_size          = 3
+CarpetX::interpolation_order = 4
+
+CarpetX::blocking_factor_x = 1
+CarpetX::blocking_factor_y = 1
+CarpetX::blocking_factor_z = 1
+
+ODESolvers::method       = "RK4"
+CarpetX::timestep_choice = "timestep"
+CarpetX::timestep        = 0.0078125
+
+CapyrX_MultiPatch::verbose        = no
+CapyrX_MultiPatch::patch_system   = "Llama"
+CapyrX_MultiPatch::patch_overlap  = 2
+CapyrX_MultiPatch::slave_overlap  = no
+
+CapyrX_MultiPatch::inner_boundary_radius = 1.0
+CapyrX_MultiPatch::outer_boundary_radius = 4.0
+CapyrX_MultiPatch::angular_cells         = 32
+CapyrX_MultiPatch::radial_cells          = 48
+CapyrX_MultiPatch::cartesian_ncells_i    = 32
+CapyrX_MultiPatch::cartesian_ncells_j    = 32
+CapyrX_MultiPatch::cartesian_ncells_k    = 32
+
+CapyrX_WaveToy::initial_condition = "Gaussian"
+CapyrX_WaveToy::amplitude         = 1.0
+CapyrX_WaveToy::gaussian_width    = 0.5
+CapyrX_WaveToy::gaussian_R0       = 0.0
+CapyrX_WaveToy::add_dissipation       = yes
+CapyrX_WaveToy::cart_diss_eps         = 0.15
+CapyrX_WaveToy::curv_diss_eps_a       = 0.15
+CapyrX_WaveToy::curv_diss_eps_b       = 0.15
+CapyrX_WaveToy::curv_diss_eps_c       = 0.15
+CapyrX_WaveToy::diss_max_step_damping = 1.0
+CapyrX_WaveToy::use_newradx           = no
+
+CarpetX::boundary_x       = "linear extrapolation"
+CarpetX::boundary_y       = "linear extrapolation"
+CarpetX::boundary_z       = "linear extrapolation"
+CarpetX::boundary_upper_x = "linear extrapolation"
+CarpetX::boundary_upper_y = "linear extrapolation"
+CarpetX::boundary_upper_z = "linear extrapolation"
+
+Cactus::terminate   = "iteration"
+Cactus::cctk_itlast = 256
+
+IO::parfile_write = no
+IO::out_dir       = $parfile
+IO::out_every     = 256
+
+CarpetX::out_performance = no
+CarpetX::out_metadata    = no
+
+CarpetX::out_tsv       = yes
+CarpetX::out_tsv_every = 256
+CarpetX::out_tsv_vars  = "
+  CoordinatesX::vertex_coords
+  CapyrX_WaveToy::state
+"

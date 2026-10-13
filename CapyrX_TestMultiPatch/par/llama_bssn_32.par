@@ -1,0 +1,175 @@
+# Llama BSSN UNIGRID evolution + constraint self-convergence -- resolution N=32.
+#
+# Step 17 of llama_patch_system_impl.md (Phase E de-risk): the first full BSSN
+# evolution on the Llama geometry, before the decisive head-on Psi4 A/B (Step 18).
+# The initial data is a gauge wave (gxx = 1 - A sin(2 pi x / d), A = 0.01, d = 2),
+# an EXACT nonlinear vacuum solution that is smooth everywhere -- unlike the
+# Teukolsky wave, whose 1/r^5 coefficients overflow at the origin-centered cube
+# vertex and on the z-axis (it needs an offset grid the Llama cube cannot have).
+# The continuum Hamiltonian and momentum constraints are identically zero, so the
+# discrete constraint norm IS the truncation error and converges to zero at the
+# evolution order. The constraint is gauge-independent, so 1+log slicing (which
+# makes the numerical lapse drift from the exact gauge-wave lapse) does not spoil
+# the test. The wave varies in x across every patch, crossing the cube<->wedge
+# (R2) seam at r=r0 and the wedge<->wedge (R1) angular seams.
+#
+# Because the continuum constraints are 0, ||ham||/||mom|| IS the truncation error,
+# so the order comes DIRECTLY from the norm ratios across N = 16/32/64 (angular =
+# cube = N; radial = N so dr_wedge = (r1-r0)/radial = dx_cube = 2*r0/N; all
+# 2:1-doubled) at the same physical time t = 1.0; scripts/check_bssn_conv.py reads
+# ham/mom from the TSV, restricts to each point's owner patch (single-valued), and
+# fits the order in the causally-clean interior r < 3.5, globally, and in the R2/R1
+# seam bands. The outer boundary (radiative) is inconsistent with a PLANE gauge
+# wave and injects an O(h) error that spreads inward from r1; the measurement is
+# kept inside the region that error has not reached by t = 1.
+#
+# Evolution order is 4 (derivs_order = 4 + RK4). The time step is PINNED
+# (timestep = cfl*2*r0/N = 0.5/N for r0=2, cfl=0.25; so cctk_itlast = N lands
+# every resolution on t = 1.0) because CarpetX's dtfac picks the minimum LOCAL
+# spacing over all patches, which differs between resolutions in a way that would
+# break the coincident-time requirement. The fastest BSSN gauge speed is ~2.25, so
+# by t = 1 the outer-boundary error has reached only r ~ 3.75 (r1 - 2.25*1); the
+# measurement region r < 3.5 (cube + R2 seam + inner R1 seams) stays clean.
+#
+# KO dissipation is ON so both branches of the Carpet/Llama scheme are exercised:
+# the cube (patch 0, is_cartesian) uses the uniform-h Cartesian branch; the six
+# wedges use the curvilinear branch, R_d = diss_eps_{a,b,c} / h_min with h_min
+# from the Llama wedge Jacobian (reused verbatim from thornburg06), clamped by
+# diss_max_step_damping. diss_order = 5 reads +/-3, within ghost_size = 3.
+# Being O(h^5) the dissipation converges away and preserves the order-4 fit.
+#
+# Faithful-Llama config (Step 5 guards): patch_overlap = 2 = ceil(order/2),
+# slave_overlap = no, interpolation_order = 4, ghost_size = 3,
+# sqrt(3)*r0 = 3.46 < r1 = 6. poison_undefined_values = yes.
+
+$N        = 32
+$cfl      = 0.25
+$r0       = 2.0
+$r1       = 6.0
+$timestep = $cfl * 2.0 * $r0 / $N
+$itlast   = 1 * $N
+
+ActiveThorns = "
+    ADMBaseX
+    CarpetX
+    IOUtil
+    ODESolvers
+    CoordinatesX
+    TmunuBaseX
+    CapyrX_MultiPatch
+    CanudaX_ExactID
+    CanudaX_BSSNMoL
+"
+
+Cactus::presync_mode       = "mixed-error"
+Cactus::cctk_show_schedule = no
+
+CarpetX::verbose                 = no
+CarpetX::poison_undefined_values = yes
+CarpetX::max_num_levels          = 1
+
+CarpetX::ghost_size          = 3
+CarpetX::interpolation_order = 4
+
+CarpetX::blocking_factor_x = 1
+CarpetX::blocking_factor_y = 1
+CarpetX::blocking_factor_z = 1
+
+ODESolvers::method       = "RK4"
+CarpetX::timestep_choice = "timestep"
+CarpetX::timestep        = $timestep
+
+CapyrX_MultiPatch::verbose        = no
+CapyrX_MultiPatch::patch_system   = "Llama"
+CapyrX_MultiPatch::patch_overlap  = 2
+CapyrX_MultiPatch::slave_overlap  = no
+
+CapyrX_MultiPatch::inner_boundary_radius = 2.0
+CapyrX_MultiPatch::outer_boundary_radius = 6.0
+CapyrX_MultiPatch::angular_cells         = 32
+CapyrX_MultiPatch::radial_cells          = 32
+CapyrX_MultiPatch::cartesian_ncells_i    = 32
+CapyrX_MultiPatch::cartesian_ncells_j    = 32
+CapyrX_MultiPatch::cartesian_ncells_k    = 32
+
+################################################################################
+# Initial data: gauge wave (exact vacuum solution, smooth everywhere)
+################################################################################
+
+ADMBaseX::initial_data    = "GaugeWave"
+ADMBaseX::initial_lapse   = "GaugeWave"
+ADMBaseX::initial_shift   = "GaugeWave"
+ADMBaseX::initial_dtlapse = "zero"
+ADMBaseX::initial_dtshift = "zero"
+
+CanudaX_ExactID::wave_amplitude = 0.01
+CanudaX_ExactID::wave_period    = 2.0
+
+################################################################################
+# Evolution (BSSN, 4th-order FD, 1+log + Gamma-driver gauge)
+################################################################################
+
+CanudaX_BSSNMoL::derivs_order           = 4
+CanudaX_BSSNMoL::use_advection_stencils = yes
+
+CanudaX_BSSNMoL::slicing_condition  = "1+log"
+CanudaX_BSSNMoL::zeta_alpha         = 1
+CanudaX_BSSNMoL::kappa_alpha        = 2.0
+CanudaX_BSSNMoL::precollapsed_lapse = no
+CanudaX_BSSNMoL::zeta_beta          = 1
+CanudaX_BSSNMoL::beta_Alp           = 1
+CanudaX_BSSNMoL::beta_Gamma         = 0.75
+CanudaX_BSSNMoL::eta_beta           = 1.0
+CanudaX_BSSNMoL::eta_transition     = no
+CanudaX_BSSNMoL::chi_gamma          = 0.0
+
+CanudaX_BSSNMoL::make_aa_tracefree  = yes
+CanudaX_BSSNMoL::reset_dethh        = yes
+CanudaX_BSSNMoL::stress_energy_state = no
+
+CanudaX_BSSNMoL::impose_floors_at_initial = yes
+CanudaX_BSSNMoL::conf_fac_floor           = 1.0e-08
+
+# KO dissipation: both branches, modest uniform eps (NOT the d8 cubed_sphere
+# values, which were tuned to the inflated-cube map). R_d is Jacobian-derived.
+CanudaX_BSSNMoL::add_KO_dissipation    = yes
+CanudaX_BSSNMoL::diss_order            = 5
+CanudaX_BSSNMoL::diss_eps              = 0.1
+CanudaX_BSSNMoL::diss_eps_a            = 0.1
+CanudaX_BSSNMoL::diss_eps_b            = 0.1
+CanudaX_BSSNMoL::diss_eps_c            = 0.1
+CanudaX_BSSNMoL::diss_max_step_damping = 1.0
+
+CanudaX_BSSNMoL::boundary_conditions = "radiative"
+
+CanudaX_BSSNMoL::calculate_constraints       = yes
+CanudaX_BSSNMoL::calculate_constraints_every = $itlast
+
+CarpetX::boundary_x       = "linear extrapolation"
+CarpetX::boundary_y       = "linear extrapolation"
+CarpetX::boundary_z       = "linear extrapolation"
+CarpetX::boundary_upper_x = "linear extrapolation"
+CarpetX::boundary_upper_y = "linear extrapolation"
+CarpetX::boundary_upper_z = "linear extrapolation"
+
+################################################################################
+# Termination and output
+################################################################################
+
+Cactus::terminate   = "iteration"
+Cactus::cctk_itlast = $itlast
+
+IO::parfile_write = no
+IO::out_dir       = $parfile
+IO::out_every     = $itlast
+
+CarpetX::out_performance = no
+CarpetX::out_metadata    = no
+
+CarpetX::out_tsv       = yes
+CarpetX::out_tsv_every = $itlast
+CarpetX::out_tsv_vars  = "
+  CoordinatesX::vertex_coords
+  CanudaX_BSSNMoL::ham
+  CanudaX_BSSNMoL::mom
+"

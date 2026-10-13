@@ -28,6 +28,8 @@
 #   amr     llama_amr_32 (cube-only AMR structure), 1 rank          =  1  -> check_amr.py
 #   amrconv llama_amr_conv_{32,64}, 1 rank                           =  2  -> check_amr_conv.py
 #                                                                          (1 convergence series: AMR-vs-unigrid order, reuses llama_wave_{32,64})
+#   bssnconv llama_bssn_{16,32,64}, 1 rank                            =  3  -> check_bssn_conv.py
+#                                                                          (1 convergence series: gauge-wave ||ham||/||mom|| order + R1/R2 seam)
 #
 # The 2-rank cells run, and they are not the 1-box-per-patch layout that aborts
 # in MPI_Alltoallv. That abort (CarpetX/src/interpolate.cxx, the
@@ -322,6 +324,16 @@ MATRIX=(
   # takes twice the iterations.
   "llama_amr_conv_32|amrconvleg|llama_amr_conv_32|no|1|-"
   "llama_amr_conv_64|amrconvleg|llama_amr_conv_64|no|1|-"
+  # ---- Llama BSSN gauge-wave constraint CONVERGENCE (Phase E, Step 17), 1 rank
+  # Three resolutions of one gauge-wave BSSN evolution to t=2.0; the legs only RUN
+  # here and are judged together by the BSSN_CONV series below. The gauge wave is an
+  # exact vacuum solution (continuum ham/mom == 0), so ||ham||/||mom|| IS the
+  # truncation error and converges to zero at the evolution order. out_tsv dumps
+  # ham, mom and vertex_coords at it0 and the final iteration (itlast=2N); the
+  # bssnconvleg handler prunes each leg to just the final-iteration ham/mom/coords.
+  "llama_bssn_16|bssnconvleg|llama_bssn_16|no|1|-"
+  "llama_bssn_32|bssnconvleg|llama_bssn_32|no|1|-"
+  "llama_bssn_64|bssnconvleg|llama_bssn_64|no|1|-"
 )
 # field | neumann-cell | linextrap-cell | none-cell | expected exit | expected
 # cross-patch cell count. Exit 0 (inert) and 1 (LIVE) are both PASS for the
@@ -376,10 +388,14 @@ WAVE_CONV=(
 # roundoff or CONVERGES with resolution (the inner-face difference's numerical
 # precursor dies away -- no persistent cube-only signal leaking outward). The rows
 # count is the joined-vertex total over the three resolutions.
-# Measured 2026-10-09, this machine, 1 rank (R=1, outer=4, overlap=2, order 4,
+# Measured 2026-10-12, this machine, 1 rank (R=1, outer=4, overlap=2, order 4,
 # ghost 3, Gaussian shell sigma=0.25 at r=2.5, pinned dt, t=2.0, dissipation off).
+# Re-pinned on the EQUIANGULAR grid: both systems now use equiangular wedges
+# (Llama f53e2d7, Thornburg06 this change), so the two grids share wedge vertices
+# again (2812296 joined vs only 711 when Thornburg06 was still gnomonic). The A/B
+# physics is unchanged: inner O(1) (5.97e-3), far isolated (7.36e-8, order 3.57).
 AB_CONV=(
-  "llama_ab|llama_ab_wave_16|llama_ab_wave_32|llama_ab_wave_64|tb06_ab_wave_16|tb06_ab_wave_32|tb06_ab_wave_64|0|2811047"
+  "llama_ab|llama_ab_wave_16|llama_ab_wave_32|llama_ab_wave_64|tb06_ab_wave_16|tb06_ab_wave_32|tb06_ab_wave_64|0|2812296"
 )
 # series | amr-N1 | amr-N2 | uni-N1 | uni-N2 | expected check exit | expected rows.
 # check_amr_conv.py differences each cube-AMR run against the unigrid run at the
@@ -402,6 +418,27 @@ AB_CONV=(
 AMR_CONV=(
   "llama_amr|llama_amr_conv_32|llama_amr_conv_64|llama_wave_32|llama_wave_64|0|1092282"
 )
+# series | leg-N1 | leg-N2 | leg-N3 | expected check exit | expected rows checked.
+# check_bssn_conv.py reads the three legs' final-iteration ham TSVs (deriving the
+# mom + vertex_coords companions), restricts each point to its owner patch, and
+# fits the DIRECT convergence order of ||ham|| and ||mom|| (the gauge-wave continuum
+# constraints are 0, so the norm is the truncation error) globally, in the
+# causally-clean interior r < r1 - c*t, and in the cube<->wedge (R2) and
+# wedge<->wedge (R1) seam bands. PASS (exit 0) iff the global/causal orders clear
+# --order-floor, both seam orders clear --seam-order-floor, and the seam/interior
+# norm ratio stays bounded and not growing. The rows count is the owner-point total
+# over the three resolutions. Measured on the EQUIANGULAR Llama grid (commit
+# f53e2d7); the evolution order is 4 (derivs_order 4 + RK4).
+# Measured 2026-10-12, this machine, 1 rank (R=2, outer=6, overlap=2, order 4,
+# ghost 3, equiangular wedge grid f53e2d7, gauge wave A=0.01 d=2, t=1.0, KO on):
+# causal ham order 3.88, R2 cube<->wedge 3.62, R1 wedge<->wedge 3.72, interior 3.94
+# (||mom|| orders 3.87-3.93); seam/interior ratios 0.68-0.76, growth < 1.32. The
+# all-r global band (order 0.39) is outer-BC-contaminated and informational only --
+# the radiative BC is inconsistent with a plane gauge wave, so the measurement is
+# confined to the causally-clean interior r < 3.5 at t = 1.
+BSSN_CONV=(
+  "llama_bssn|llama_bssn_16|llama_bssn_32|llama_bssn_64|0|2230478"
+)
 # TSV group names emitted by each kind of run. The glob covers the per-rank
 # files a multi-rank run writes (.p0000, .p0001, ...); the checkers take several
 # TSVs and find each one's own coords/pre companion.
@@ -416,6 +453,10 @@ WAVECONV_TSV_GLOB="capyrx_wavetoy-state.it*.p*.tsv"
 # The AMR cell is NOT pruned: its state TSV holds it0 and the final iteration, and
 # check_amr.py picks the final iteration itself (it reads the `level` column).
 AMR_TSV_GLOB="capyrx_wavetoy-state.it*.p*.tsv"
+# After the bssnconvleg handler prunes, only the final-iteration ham survives (plus
+# its mom + vertex_coords companions, which the checker finds by name). The checker
+# takes the ham TSV as its primary argument.
+BSSNCONV_TSV_GLOB="canudax_bssnmol-ham.it*.p*.tsv"
 # =============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -429,6 +470,7 @@ CHECK_WAVE_CONV="$SCRIPT_DIR/check_wave_conv.py"
 CHECK_AB="$SCRIPT_DIR/check_ab.py"
 CHECK_AMR="$SCRIPT_DIR/check_amr.py"
 CHECK_AMR_CONV="$SCRIPT_DIR/check_amr_conv.py"
+CHECK_BSSN_CONV="$SCRIPT_DIR/check_bssn_conv.py"
 
 # scripts/../../../../exe  ==  <cactus>/exe
 CACTUS_SIM="${CACTUS_SIM:-$(cd "$SCRIPT_DIR/../../../.." 2>/dev/null && pwd)/exe/cactus_sim}"
@@ -450,7 +492,7 @@ fail_early() { echo "run_checks.sh: $*" >&2; exit 2; }
 
 [[ -x "$CACTUS_SIM" ]] || fail_early "cactus binary not found or not executable: $CACTUS_SIM (build it first, or set CACTUS_SIM)"
 [[ -d "$EXE_DIR"    ]] || fail_early "output/run dir does not exist: $EXE_DIR (set EXE_DIR)"
-for c in "$CHECK_COLOR" "$CHECK_NAN" "$CHECK_SMOOTH" "$CHECK_SMOOTH_CONV" "$CHECK_WAVE_CONV" "$CHECK_AB" "$CHECK_AMR" "$CHECK_AMR_CONV"; do
+for c in "$CHECK_COLOR" "$CHECK_NAN" "$CHECK_SMOOTH" "$CHECK_SMOOTH_CONV" "$CHECK_WAVE_CONV" "$CHECK_AB" "$CHECK_AMR" "$CHECK_AMR_CONV" "$CHECK_BSSN_CONV"; do
   [[ -f "$c" ]] || fail_early "missing checker: $c"
 done
 mkdir -p "$LOG_DIR" "$GEN_PAR_DIR"
@@ -612,6 +654,7 @@ declare -A SMOOTHCONV_OK=()
 declare -A WAVECONV_OK=()
 declare -A ABCONV_OK=()
 declare -A AMRCONV_OK=()
+declare -A BSSNCONV_OK=()
 
 for cell in "${MATRIX[@]}"; do
   IFS='|' read -r id kind base slave nr expect <<<"$cell"
@@ -658,6 +701,7 @@ for cell in "${MATRIX[@]}"; do
     waveconvleg) tsvs=( "$EXE_DIR/$id"/$WAVECONV_TSV_GLOB ) ;;
     abconvleg) tsvs=( "$EXE_DIR/$id"/$WAVECONV_TSV_GLOB ) ;;
     amrconvleg) tsvs=( "$EXE_DIR/$id"/$WAVECONV_TSV_GLOB ) ;;
+    bssnconvleg) tsvs=( "$EXE_DIR/$id"/$BSSNCONV_TSV_GLOB ) ;;
     amr)    tsvs=( "$EXE_DIR/$id"/$AMR_TSV_GLOB ) ;;
   esac
   if [[ ${#tsvs[@]} -eq 0 ]]; then
@@ -716,6 +760,21 @@ for cell in "${MATRIX[@]}"; do
         grep -vE "(capyrx_wavetoy-state|coordinatesx-vertex_coords)\.${last}\." |
         xargs -r rm -f )
     AMRCONV_OK[$id]=1
+    record "PASS" "$id" "$nr" "$boxes" 0 "-" "ran; judged as part of its convergence series"
+    continue
+  fi
+  if [[ "$kind" == bssnconvleg ]]; then
+    # out_tsv dumps ham, mom and vertex_coords at it0 and the final iteration; keep
+    # only the final-iteration ham + mom + coords (what check_bssn_conv.py reads) and
+    # drop the rest, so the series glob is unambiguous and disk stays bounded.
+    ( cd "$EXE_DIR/$id" 2>/dev/null &&
+      last=$(ls canudax_bssnmol-ham.it*.p*.tsv 2>/dev/null |
+             grep -oE 'it[0-9]+' | sort -u | tail -1) &&
+      [[ -n "$last" ]] &&
+      ls ./*.tsv 2>/dev/null |
+        grep -vE "(canudax_bssnmol-ham|canudax_bssnmol-mom|coordinatesx-vertex_coords)\.${last}\." |
+        xargs -r rm -f )
+    BSSNCONV_OK[$id]=1
     record "PASS" "$id" "$nr" "$boxes" 0 "-" "ran; judged as part of its convergence series"
     continue
   fi
@@ -1006,6 +1065,56 @@ for s in "${AMR_CONV[@]}"; do
     record "REGRESSION" "${series}_amrconv" 1 "-" "$rc" "$rows" "${result_line:-order below floor across a boundary}"
   else
     record "PASS" "${series}_amrconv" 1 "-" "$rc" "$rows" "${result_line:-}"
+  fi
+done
+
+# ---- the Llama BSSN gauge-wave constraint convergence series ----------------
+for s in "${BSSN_CONV[@]}"; do
+  IFS='|' read -r series n1 n2 n3 want_rc want_rows <<<"$s"
+  n_planned=$((n_planned + 1))
+  missing=""
+  for leg in "$n1" "$n2" "$n3"; do
+    [[ -n "${BSSNCONV_OK[$leg]:-}" ]] || missing="$missing $leg"
+  done
+  if [[ -n "$missing" ]]; then
+    if [[ -n "$CELLS_FILTER" && " $CELLS_FILTER " != *" $n1 "* ]]; then
+      n_dropped=$((n_dropped + 1)); DROPPED_IDS+=("${series}_bssnconv")
+      record "DROPPED" "${series}_bssnconv" 1 "-" "-" "-" "legs not in CELLS="
+    else
+      record "CANNOT-RUN" "${series}_bssnconv" 1 "-" "-" "-" "leg(s) never produced output:$missing"
+    fi
+    continue
+  fi
+  echo "-- ${series}_bssnconv  (N=16/32/64 gauge-wave constraint convergence)"
+  clog="$LOG_DIR/${series}_bssnconv.check.log"
+  # Each leg is pruned to one final-iteration ham TSV at 1 rank, so each glob is one
+  # file; the checker derives the mom + coords companions by name.
+  python3 "$CHECK_BSSN_CONV" \
+    "$EXE_DIR/$n1"/$BSSNCONV_TSV_GLOB \
+    "$EXE_DIR/$n2"/$BSSNCONV_TSV_GLOB \
+    "$EXE_DIR/$n3"/$BSSNCONV_TSV_GLOB >"$clog" 2>&1
+  rc=$?
+  rows=$(rows_of "$clog")
+  result_line="$(grep -m1 '^RESULT:' "$clog" | cut -c1-120 || true)"
+  n_ran=$((n_ran + 1))
+  if [[ "$rc" -gt 2 || "$rc" == 2 ]]; then
+    record "CANNOT-RUN" "${series}_bssnconv" 1 "-" "$rc" "$rows" \
+      "${result_line:-checker could not run; see $clog}"
+    continue
+  fi
+  if [[ "$rows" -le 0 ]]; then
+    record "CANNOT-RUN" "${series}_bssnconv" 1 "-" "$rc" "$rows" "zero rows checked (see $clog)"
+    continue
+  fi
+  detail=""
+  [[ "$rc" == "$want_rc" ]] || detail="exit $rc != recorded $want_rc"
+  [[ "$rows" == "$want_rows" ]] || detail="$detail${detail:+; }rows=$rows != recorded $want_rows"
+  if [[ -n "$detail" ]]; then
+    record "DRIFT" "${series}_bssnconv" 1 "-" "$rc" "$rows" "$detail -- ${result_line:-}"
+  elif [[ "$rc" == 1 && "$want_rc" != 1 ]]; then
+    record "REGRESSION" "${series}_bssnconv" 1 "-" "$rc" "$rows" "${result_line:-order below floor or seam ratio unbounded}"
+  else
+    record "PASS" "${series}_bssnconv" 1 "-" "$rc" "$rows" "${result_line:-}"
   fi
 done
 

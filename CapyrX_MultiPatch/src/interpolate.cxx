@@ -146,6 +146,13 @@ struct InterpolationCache {
 
 static InterpolationCache g_interp_cache;
 
+// The cached setup owns AMReX particle containers whose storage comes from
+// AMReX arenas, so it must be released before amrex::Finalize deletes them.
+extern "C" void CapyrX_MultiPatch_Interpolate_Shutdown() {
+  g_interp_cache.setup.reset();
+  g_interp_cache.epoch = -1;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 // AMR-B2 INSTRUMENT.  WHICH LEVELS DID THE CALLER ASK FOR, AND WHICH ONES DOES

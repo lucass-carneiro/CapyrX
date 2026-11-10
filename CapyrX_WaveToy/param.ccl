@@ -5,6 +5,7 @@ KEYWORD initial_condition "Initial condition"
   "standing wave" :: "Standing wave"
   "plane wave" :: "Travelling plane wave (matches LlamaWaveToy 'plane')"
   "Gaussian" :: "Gaussian"
+  "multipole l=2, m=2" :: "Gaussian shell in Pi with a real Y22 profile (matches LlamaWaveToy 'multipole l=2, m=2')"
   "Quadrupolar Gaussian" :: "Gaussian with a quadrupole moment that can be placed anywhere on the grid"
 } "standing wave"
 

@@ -8,6 +8,7 @@
 #include "standing_wave.hxx"
 #include "plane_wave.hxx"
 #include "gaussian.hxx"
+#include "multipole_gaussian.hxx"
 #include "quad_gaussian.hxx"
 
 namespace CapyrX::WaveToy {
@@ -65,6 +66,22 @@ extern "C" void CapyrX_WaveToy_Initial(CCTK_ARGUMENTS) {
 
           phi(p.I) = 0.0;
           Pi(p.I) = gauss::Pi(amplitude, gaussian_width, gaussian_R0, x, y, z);
+          Dx(p.I) = 0.0;
+          Dy(p.I) = 0.0;
+          Dz(p.I) = 0.0;
+        });
+
+  } else if (CCTK_EQUALS(initial_condition, "multipole l=2, m=2")) {
+    grid.loop_all_device<0, 0, 0>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+          const auto x{vcoordx(p.I)};
+          const auto y{vcoordy(p.I)};
+          const auto z{vcoordz(p.I)};
+
+          phi(p.I) = 0.0;
+          Pi(p.I) =
+              mp_gauss::Pi(amplitude, gaussian_width, gaussian_R0, x, y, z);
           Dx(p.I) = 0.0;
           Dy(p.I) = 0.0;
           Dz(p.I) = 0.0;

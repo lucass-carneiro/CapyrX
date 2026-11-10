@@ -26,6 +26,12 @@ if (!CCTK_EQUALS(patch_system, "none"))
     OPTIONS: meta
   } "Check multipatch parameters"
 
+  SCHEDULE CapyrX_MultiPatch_Interpolate_Shutdown AT shutdown BEFORE Driver_Shutdown
+  {
+    LANG: C
+    OPTIONS: meta
+  } "Release the cached interpolation setup before AMReX is finalized"
+
   if (run_unit_tests)
   {
     SCHEDULE CapyrX_MultiPatch_Run_Unit_Tests AT wragh
